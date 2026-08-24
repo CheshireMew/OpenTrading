@@ -1,6 +1,6 @@
 {
   "name": "heimdall",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "> **海姆达尔** —— 北欧神话中的光之神，拥有千里眼和顺风耳，守护彩虹桥并预知未来。",
   "main": ".codex_browser_check.js",
   "directories": {
@@ -8,7 +8,7 @@
     "test": "test"
   },
   "scripts": {
-    "sync:contracts": "node scripts/run_backend_python.mjs scripts/generate_frontend_contracts.py",
+    "sync:contracts": "node scripts/run_backend_python.mjs -m scripts.generate_frontend_contracts",
     "build:frontend": "npm run sync:contracts && npm --prefix frontend run build",
     "test": "node scripts/run_backend_python.mjs -m pytest",
     "test:backend": "node scripts/run_backend_python.mjs -m pytest"
@@ -19,7 +19,10 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "AGPL-3.0-or-later",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/CheshireMew/Heimdall/issues"

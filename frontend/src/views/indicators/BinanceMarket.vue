@@ -2,7 +2,7 @@
   <div class="app-page">
     <div class="app-page-inner-wide">
       <section class="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] 2xl:grid-cols-[1.6fr_1fr] 2xl:gap-8">
-        <div class="space-y-6">
+        <div class="min-w-0 space-y-6">
           <section class="space-y-4">
             <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div>
@@ -42,8 +42,9 @@
                   </div>
                 </div>
 
-                <div class="overflow-x-auto">
-                  <table class="min-w-full text-left text-sm">
+                <p class="app-table-scroll-hint">{{ t('common.horizontalScrollHint') }}</p>
+                <div class="app-table-scroll" tabindex="0" :aria-label="t('common.horizontalScrollHint')">
+                  <table class="min-w-[58rem] text-left text-sm">
                     <thead class="app-table-head">
                       <tr>
                         <th class="px-5 py-3 font-semibold">{{ t('binanceMarket.columns.asset') }}</th>
@@ -134,8 +135,9 @@
                     {{ spotSort.field === 'price_change_pct' ? (spotSort.direction === 'desc' ? t('binanceMarket.tables.sortByGainers') : t('binanceMarket.tables.sortByLosers')) : t('binanceMarket.tables.sortByVolume') }}
                   </div>
                 </div>
-                <div class="overflow-x-auto">
-                  <table class="min-w-full text-left text-sm">
+                <p class="app-table-scroll-hint">{{ t('common.horizontalScrollHint') }}</p>
+                <div class="app-table-scroll" tabindex="0" :aria-label="t('common.horizontalScrollHint')">
+                  <table class="min-w-[44rem] text-left text-sm">
                     <thead class="app-table-head">
                       <tr>
                         <th class="px-5 py-3 font-semibold">{{ t('binanceMarket.columns.asset') }}</th>
@@ -191,7 +193,7 @@
           </section>
         </div>
 
-        <div class="space-y-6">
+        <div class="min-w-0 space-y-6">
           <section class="space-y-4">
             <section class="grid grid-cols-2 gap-3 lg:grid-cols-4">
               <article
@@ -269,8 +271,9 @@
                   </div>
                 </div>
 
-                <div class="overflow-x-auto">
-                  <table class="min-w-full text-left text-sm">
+                <p class="app-table-scroll-hint">{{ t('common.horizontalScrollHint') }}</p>
+                <div class="app-table-scroll" tabindex="0" :aria-label="t('common.horizontalScrollHint')">
+                  <table class="min-w-[56rem] text-left text-sm">
                     <thead class="app-table-head">
                       <tr>
                         <th class="px-5 py-3 font-semibold">{{ t('binanceMarket.columns.asset') }}</th>
@@ -343,6 +346,7 @@
       :chart-data="chartData"
       :volume-data="volumeData"
       :loading-more="chartLoadingMore"
+      :chart-error="chartError"
       :contract-detail="contractDetail"
       :contract-detail-loading="contractDetailLoading"
       :contract-detail-error="contractDetailError"
@@ -357,6 +361,7 @@
       :format-reason="formatReason"
       @close="closeChart"
       @load-more="loadMoreChartHistory"
+      @retry-chart="retryChart"
       @update:timeframe="chartTimeframe = $event"
     />
   </div>
@@ -396,6 +401,7 @@ const {
   chartData,
   volumeData,
   chartLoadingMore,
+  chartError,
   contractDetail,
   contractDetailLoading,
   contractDetailError,
@@ -403,6 +409,7 @@ const {
   closeChart,
   openMonitorDetail,
   loadMoreChartHistory,
+  retryChart,
   summaryCards,
   fetchData,
   toggleSpotSort,

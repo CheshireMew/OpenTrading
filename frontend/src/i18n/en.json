@@ -1,12 +1,20 @@
 {
   "app": {
     "title": "Heimdall",
-    "subtitle": "AI Crypto Assistant"
+    "subtitle": "AI Crypto Assistant",
+    "skipToContent": "Skip to main content",
+    "openMenu": "Open navigation menu",
+    "closeMenu": "Close navigation menu",
+    "primaryNavigation": "Primary navigation",
+    "bootstrapLoadFailed": "Some shared market data could not be loaded.",
+    "retry": "Retry"
+  },
+  "pages": {
+    "notFound": "Page not found"
   },
   "nav": {
     "realtime": "Dashboard",
     "indicators": "Indicators",
-    "macro": "Macro",
     "marketSignals": "Market Signals",
     "binanceMarket": "Binance Market",
     "web3Rank": "Web3 Ranks",
@@ -30,9 +38,7 @@
     "US10Y": "US 10Y Treasury Yield",
     "NASDAQ": "NASDAQ Composite",
     "GOLD": "Gold Spot Price",
-    "HY_SPREAD": "High Yield Spread",
     "FED_RATE": "Fed Funds Rate",
-    "FED_BALANCE": "Fed Balance Sheet",
     "HASHRATE": "BTC Hashrate",
     "DIFFICULTY": "Mining Difficulty",
     "STABLECOIN_CAP": "Stablecoin Market Cap",
@@ -47,7 +53,73 @@
     "BTC_DRAWDOWN": "BTC Drawdown from ATH"
   },
   "dashboard": {
-    "loadingHistory": "Loading History..."
+    "loadingHistory": "Loading History...",
+    "historyLoadFailed": "Market history could not be loaded.",
+    "tradeSetup": "Trade Setup",
+    "initialMargin": "Initial Margin",
+    "style": "Style",
+    "decisionMode": "Decision Mode",
+    "builtInRules": "Built-in Rules",
+    "aiDecision": "AI Decision",
+    "strategy": "Strategy",
+    "strategies": {
+      "maxReturn": "Maximum Return",
+      "steadyBreakout": "Steady Breakout",
+      "pullbackReversal": "Pullback Reversal"
+    },
+    "analyzing": "Analyzing...",
+    "askDirection": "Ask Long / Short",
+    "unsupported": "Unsupported Symbol",
+    "long": "Long",
+    "short": "Short",
+    "rules": "Rules",
+    "entry": "Entry",
+    "target": "Target",
+    "stop": "Stop",
+    "riskReward": "Risk / Reward",
+    "aiTimeout": "AI request timed out. Please try again.",
+    "rulesTimeout": "Rule analysis timed out. Please try again.",
+    "setupFailed": "Unable to generate a trade setup right now.",
+    "tradeSetupUnavailable": "No trade setup is available right now.",
+    "openSettings": "Open model settings",
+    "tradeSetupErrors": {
+      "kline_insufficient": "More market history is needed before a setup can be generated.",
+      "indicators_incomplete": "Indicators are still being calculated. Try again after the next update.",
+      "no_clear_signal": "Long and short conditions are not clear yet. Wait for the next candle.",
+      "model_not_configured": "AI analysis is not configured yet. Add a model API key in Settings.",
+      "model_output_unavailable": "The AI service did not return a usable result. Please retry.",
+      "model_hold": "The model recommends waiting instead of opening a position.",
+      "model_plan_incomplete": "The model did not provide a complete entry, target, and stop.",
+      "model_price_structure_invalid": "The model returned an invalid price structure, so it was not displayed."
+    }
+  },
+  "marketSignals": {
+    "title": "On-chain, Sentiment, and Technical Indicators",
+    "subtitle": "Review cycle position, stablecoin liquidity, and mining network indicators together across a longer historical window.",
+    "coverage": "Indicator Coverage",
+    "overview": "Market Status Overview",
+    "refresh": "Refresh Indicators",
+    "refreshing": "Refreshing...",
+    "currentIndicators": "Current Indicators",
+    "fromGroups": "Across {count} groups",
+    "lastUpdated": "Last updated {time}",
+    "itemCount": "{count} items",
+    "notUpdated": "Not updated",
+    "collectingHistory": "Collecting history ({count}/2 points available)",
+    "groups": {
+      "cycle": {
+        "title": "Cycle & Sentiment",
+        "description": "Start with Bitcoin's cycle position and outside attention to judge whether conditions are crowded or cooling."
+      },
+      "stablecoins": {
+        "title": "Stablecoin Liquidity",
+        "description": "Compare total stablecoin supply with USDC and USDT to track changes in on-market dollar purchasing power."
+      },
+      "mining": {
+        "title": "Mining & Network",
+        "description": "Review difficulty, hashrate, and major miner breakeven levels to assess production costs and security-budget pressure."
+      }
+    }
   },
   "symbolSearch": {
     "title": "Symbol Search",
@@ -71,6 +143,7 @@
     "loading": "Loading...",
     "close": "Close",
     "loadingMoreHistory": "Loading more history...",
+    "chartLoadFailed": "Chart history could not be loaded.",
     "loadFailed": "Failed to load Binance market data.",
     "rankTitle": "Rankings",
     "rankSubtitle": "The left side keeps the market browsing board.",
@@ -258,6 +331,8 @@
     "days": "Days",
     "compare": "Compare Pairs",
     "analyzing": "Analyzing...",
+    "loadFailed": "Comparison data could not be loaded. Please retry.",
+    "invalidConfig": "Choose two different symbols and enter a range from 1 to 90 days.",
     "ratio": "Ratio",
     "tf": {
       "1m": "1 Minute",
@@ -309,6 +384,8 @@
     "btcPrice": "BTC Price",
     "averageCost": "Average Cost",
     "simFailed": "Simulation failed",
+    "invalidConfig": "Choose a symbol and enter a positive amount. The optional start date must be within the supported range.",
+    "syntheticHistoryWarning": "This result includes synthetic BTC price proxy data from 2010–2011. Use it only for rough simulation, not as observed historical performance.",
     "fgLabels": {
       "extremeFear": "Extreme Fear",
       "fear": "Fear",
@@ -318,6 +395,27 @@
     }
   },
   "portfolioBalance": {
+    "defaultPortfolioName": "Long-Term Core Portfolio",
+    "defaultPortfolioNumbered": "Portfolio {count}",
+    "copyName": "{name} Copy",
+    "createPortfolio": "Create portfolio",
+    "emptyTitle": "Create your first portfolio",
+    "emptyDescription": "Start with a blank portfolio for your own holdings, or deliberately load the clearly labeled example template. Nothing is created or valued until you choose.",
+    "createBlank": "Create blank portfolio",
+    "useSample": "Use example template",
+    "samplePortfolioName": "Example Portfolio",
+    "deletePortfolio": "Delete portfolio",
+    "confirmDelete": "Move “{name}” to the recycle bin? You can restore it later.",
+    "importBackup": "Import backup",
+    "exportBackup": "Export backup",
+    "reload": "Reload from server",
+    "importFailed": "The portfolio backup could not be imported.",
+    "exportFailed": "The portfolio backup could not be exported.",
+    "recycleBin": "Recycle bin",
+    "loadMoreDeleted": "Load more deleted portfolios",
+    "restore": "Restore",
+    "loadingSavedPortfolios": "Loading saved portfolios…",
+    "saving": "Saving…",
     "eyebrow": "Portfolio Rebalance",
     "title": "Portfolio Balance",
     "subtitle": "Track the portfolio with live prices and directly see how much each asset should be increased or reduced.",
@@ -357,6 +455,7 @@
     "addAsset": "Add Asset",
     "copyPortfolio": "Copy Portfolio",
     "remove": "Remove",
+    "removeAsset": "Remove {symbol}",
     "symbol": "Asset",
     "targetWeight": "Target Weight",
     "currentValue": "Current Value ({currency})",
@@ -414,12 +513,33 @@
     "equityCurve": "Equity Curve",
     "equity": "Equity",
     "drawdown": "Drawdown",
-    "pnlAbs": "P/L"
+    "pnlAbs": "P/L",
+    "feedback": {
+      "initialized": "Initialized {count} assets",
+      "initializedWithFailures": "Initialized {count}; failed: {symbols}",
+      "refreshed": "Refreshed {count} assets",
+      "refreshedWithFailures": "Refreshed {count}; failed: {symbols}",
+      "refreshFailed": "Failed to refresh market prices",
+      "created": "New portfolio created",
+      "copied": "Portfolio copied",
+      "deleted": "Portfolio moved to the recycle bin",
+      "restored": "Portfolio restored",
+      "chooseStartDate": "Choose a simulation start date first",
+      "insufficientHistory": "There is not enough historical data to run the simulation",
+      "simulationInputsChanged": "Portfolio inputs changed during the simulation. Run it again",
+      "simulationCreated": "Created a historical simulation from {start} to {end}",
+      "simulationFailed": "Portfolio history simulation failed",
+      "historyProcessingFailed": "Historical data processing failed. Please try again later.",
+      "addTargetFirst": "Add at least one asset first",
+      "noLivePrices": "No live prices could be loaded for any asset",
+      "historySymbolsFailed": "Historical data failed for: {symbols}"
+    }
   },
   "halving": {
     "nextHalving": "Next Halving",
     "daysLeft": "Days left",
     "currentPrice": "Current Price",
+    "currentPriceLoadFailed": "The current price could not be refreshed. Historical data is still available.",
     "cycleProgress": "Current Cycle Progress",
     "inProgress": "In Progress",
     "chartTitle": "Bitcoin Halving Cycles",
@@ -430,6 +550,7 @@
     "linear": "Linear",
     "phases": "Phases",
     "loading": "Loading historical data...",
+    "retry": "Reload",
     "today": "Today",
     "daysTo": "{days} Days to {phase}",
     "bullRunEnds": "Bull Run Ends",
@@ -448,13 +569,46 @@
     "version": "Version",
     "db": "Database",
     "cache": "Cache",
-    "production": "Production"
+    "production": "Production",
+    "llmProvider": "Model Provider",
+    "llmDescription": "Used for AI analysis and long/short decisions.",
+    "apiKeySet": "API Key configured",
+    "apiKeyUnset": "API Key not configured",
+    "provider": "Provider",
+    "apiKeyPlaceholder": "Enter API Key",
+    "reasoningMode": "Reasoning Mode",
+    "saving": "Saving...",
+    "saveConfig": "Save Configuration",
+    "fredSource": "FRED Data Source",
+    "fredDescription": "Used for Treasury yields, the federal funds rate, and macro indexes.",
+    "fredApiKeyPlaceholder": "Enter FRED API Key",
+    "save": "Save",
+    "source": "Source",
+    "loadFailed": "Failed to load configuration",
+    "saved": "Configuration saved",
+    "saveFailed": "Failed to save configuration",
+    "fredSaved": "FRED API Key saved",
+    "fredSaveFailed": "Failed to save FRED API Key",
+    "clearKey": "Clear API Key",
+    "clearLlmConfirm": "Clear the saved model API key? AI analysis will become unavailable.",
+    "clearFredConfirm": "Clear the saved FRED API key? FRED-backed data may become unavailable.",
+    "keyCleared": "API Key cleared",
+    "clearFailed": "Failed to clear API Key",
+    "cacheBackends": {
+      "redis": "Redis with in-memory cache",
+      "memory_fallback": "In-memory fallback (Redis unavailable)",
+      "unavailable": "Unavailable"
+    }
   },
   "common": {
+    "close": "Close",
+    "marketIndicatorsLoadFailed": "Failed to load market indicators",
+    "priceHistoryLoadFailed": "Failed to load price history",
     "noData": "No data available",
     "noHistory": "No historical data yet",
     "waitingData": "Waiting for background data collection...",
-    "error": "An error occurred"
+    "error": "An error occurred",
+    "horizontalScrollHint": "Swipe or scroll horizontally to see all columns"
   },
   "notFound": {
     "message": "Page not found",

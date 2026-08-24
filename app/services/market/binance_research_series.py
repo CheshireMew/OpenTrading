@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from app.infra.executor import run_database
-from app.services.persistence_ports import BinanceMarketResearchStorePort
+from app.application.persistence_ports import BinanceMarketResearchStorePort
 
 JsonLoader = Callable[..., Awaitable[Any]]
 SeriesNormalizer = Callable[[str, Any], dict[str, Any]]

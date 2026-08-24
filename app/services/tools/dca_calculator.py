@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from config import settings
-from utils.time_manager import TimeManager
+from utils.time import get_timezone
 
 
 def prepare_dca_dataset(
@@ -19,7 +19,7 @@ def prepare_dca_dataset(
 ) -> pd.DataFrame:
     all_df = pd.DataFrame(klines, columns=["timestamp", "open", "high", "low", "close", "volume"])
     all_df["datetime"] = pd.to_datetime(all_df["timestamp"], unit="ms", utc=True)
-    tz_obj = TimeManager.get_timezone(timezone)
+    tz_obj = get_timezone(timezone)
     all_df["local_dt"] = all_df["datetime"].dt.tz_convert(tz_obj)
 
     daily_df = all_df.set_index("datetime").resample("D").agg({"close": "last"}).dropna()

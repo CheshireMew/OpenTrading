@@ -1,5 +1,7 @@
 import type { BinanceWeb3HeatRankItemResponse } from './contracts'
 import type { SortDirection } from './binanceMarketShared'
+export { WEB3_ALL_CHAIN_ID, WEB3_SUPPORTED_CHAIN_OPTIONS } from './generatedWeb3Chains'
+import { WEB3_ALL_CHAIN_ID } from './generatedWeb3Chains'
 
 export type Web3HeatRankSortField = 'heat_score' | 'percent_change_24h' | 'market_cap' | 'liquidity'
 
@@ -12,15 +14,6 @@ export type Web3TokenDialogState = {
   open: boolean
   token: BinanceWeb3HeatRankItemResponse | null
 }
-
-export const WEB3_ALL_CHAIN_ID = 'all'
-
-export const WEB3_SUPPORTED_CHAIN_OPTIONS = [
-  { label: 'Ethereum', value: '1' },
-  { label: 'BSC', value: '56' },
-  { label: 'Base', value: '8453' },
-  { label: 'Solana', value: 'CT_501' },
-]
 
 export const WEB3_KLINE_INTERVALS = ['5min', '15min', '1h', '4h', '1d']
 

@@ -1,3 +1,5 @@
+from dataclasses import asdict
+
 import pytest
 
 from app.domain.market.trade_setup import TradeSetupEngine, TradeSetupRequest
@@ -27,7 +29,7 @@ def test_trade_setup_engine_builds_long_plan_from_bullish_snapshot():
         {"atr": 5.0, "ema": 120.0, "rsi": 58.0, "macd": (1.0, 0.7, 0.3)},
     )
 
-    result = result.model_dump()
+    result = asdict(result)
     setup = result["setup"]
     assert setup["side"] == "long"
     assert setup["entry"] == 130.0
@@ -35,6 +37,8 @@ def test_trade_setup_engine_builds_long_plan_from_bullish_snapshot():
     assert setup["risk_reward"] == pytest.approx(2.4)
     assert setup["risk_amount"] == 6.0
     assert setup["source"] == "rules"
+    assert result["status"] == "ready"
+    assert result["error_code"] is None
 
 
 def test_trade_setup_engine_builds_short_plan_from_bearish_snapshot():
@@ -44,7 +48,7 @@ def test_trade_setup_engine_builds_short_plan_from_bearish_snapshot():
         {"atr": 4.0, "ema": 120.0, "rsi": 45.0, "macd": (-1.0, -0.7, -0.3)},
     )
 
-    result = result.model_dump()
+    result = asdict(result)
     setup = result["setup"]
     assert setup["side"] == "short"
     assert setup["target"] < setup["entry"] < setup["stop"]
@@ -58,9 +62,10 @@ def test_trade_setup_engine_waits_when_snapshot_is_unclear():
         {"atr": 4.0, "ema": 120.0, "rsi": 78.0, "macd": (0.1, 0.1, 0.0)},
     )
 
-    result = result.model_dump()
+    result = asdict(result)
     assert result["setup"] is None
-    assert "等待" in result["reason"]
+    assert result["status"] == "waiting"
+    assert result["error_code"] == "no_clear_signal"
 
 
 def test_trade_setup_engine_applies_strategy_reward_profile():
@@ -77,7 +82,7 @@ def test_trade_setup_engine_applies_strategy_reward_profile():
         {"atr": 5.0, "ema": 120.0, "rsi": 58.0, "macd": (1.0, 0.7, 0.3)},
     )
 
-    result = result.model_dump()
+    result = asdict(result)
     assert result["setup"]["risk_reward"] == pytest.approx(1.8)
     assert result["setup"]["risk_amount"] == 10.0
 
@@ -97,12 +102,13 @@ def test_trade_setup_engine_normalizes_valid_ai_plan():
         {"side": "LONG", "entry": 130.0, "target": 145.0, "stop": 124.0, "confidence": 73, "reason": "AI看多"},
     )
 
-    result = result.model_dump()
+    result = asdict(result)
     setup = result["setup"]
     assert setup["side"] == "long"
     assert setup["risk_reward"] == pytest.approx(2.5)
     assert setup["source"] == "ai"
     assert result["source"] == "ai"
+    assert result["status"] == "ready"
 
 
 def test_trade_setup_engine_rejects_invalid_ai_plan():
@@ -120,6 +126,7 @@ def test_trade_setup_engine_rejects_invalid_ai_plan():
         {"side": "LONG", "entry": 130.0, "target": 120.0, "stop": 124.0, "confidence": 73},
     )
 
-    result = result.model_dump()
+    result = asdict(result)
     assert result["setup"] is None
-    assert "已拒绝显示" in result["reason"]
+    assert result["status"] == "rejected"
+    assert result["error_code"] == "model_price_structure_invalid"

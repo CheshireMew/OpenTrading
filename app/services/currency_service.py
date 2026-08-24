@@ -5,7 +5,7 @@ from typing import Any
 
 import httpx
 
-from app.domain.market.symbol_catalog import get_usd_equivalent_symbols
+from app.services.market.symbol_catalog import get_usd_equivalent_symbols
 from app.infra.executor import run_external_io
 from config import settings
 from utils.logger import logger

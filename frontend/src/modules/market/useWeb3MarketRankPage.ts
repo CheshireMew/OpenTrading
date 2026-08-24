@@ -1,4 +1,4 @@
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { useTheme } from '@/composables/useTheme'
@@ -85,22 +85,11 @@ export function useWeb3MarketRankPage() {
     }
   }
 
-  const handleEscape = (event: KeyboardEvent) => {
-    if (event.key === 'Escape' && heatRank.web3Dialog.value.open) {
-      heatRank.closeWeb3Token()
-    }
-  }
-
   watch(chainId, fetchData)
 
   onMounted(() => {
-    window.addEventListener('keydown', handleEscape)
     void fetchData()
     void heatRank.fetchWeb3HeatRank()
-  })
-
-  onUnmounted(() => {
-    window.removeEventListener('keydown', handleEscape)
   })
 
   return {

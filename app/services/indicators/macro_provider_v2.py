@@ -3,15 +3,14 @@
 优先使用 FRED API（稳定可靠），降级到 YFinance
 """
 import requests as req_sync
-import yfinance as yf
 from datetime import datetime, timedelta
 import asyncio
 from typing import List, Dict, Any, Optional
 from .base_provider import BaseIndicatorProvider, logger
 from config import settings
-from app.domain.market.dli_catalog import MACRO_INDICATOR_SOURCES
-from app.infra.executor import run_external_io
-from app.services.fred_api_config_service import get_fred_api_key
+from app.domain.market.indicator_catalog import MACRO_INDICATOR_SOURCES
+from app.infra.executor import run_database, run_external_io
+from app.services.fred_api_config_service import read_fred_api_key
 
 
 class MacroProviderV2(BaseIndicatorProvider):
@@ -22,18 +21,16 @@ class MacroProviderV2(BaseIndicatorProvider):
     2. YFinance (fallback)
     """
 
-    def __init__(self):
+    def __init__(self, latest_timestamp_reader=None):
         super().__init__()
-
-    @property
-    def fred_api_key(self) -> str:
-        return get_fred_api_key()
+        self._latest_timestamp_reader = latest_timestamp_reader
+        self._latest_timestamps: dict[str, datetime] = {}
 
     async def _fetch_fred_api(self, series_id: str, indicator_id: str) -> Optional[List[Dict[str, Any]]]:
         """
         从 FRED 官方 API 获取数据（使用 sync requests 在线程池中执行，避免 httpx async TLS 问题）
         """
-        fred_api_key = self.fred_api_key
+        fred_api_key = await run_external_io(read_fred_api_key)
         if not fred_api_key:
             logger.warning("FRED_API_KEY not configured, skipping FRED source")
             return None
@@ -47,6 +44,12 @@ class MacroProviderV2(BaseIndicatorProvider):
                 'sort_order': 'desc',
                 'limit': 3650
             }
+            latest_timestamp = self._latest_timestamps.get(indicator_id)
+            if latest_timestamp is not None:
+                observation_start = latest_timestamp - timedelta(
+                    days=max(int(settings.MARKET_INDICATOR_OVERLAP_DAYS), 1)
+                )
+                params['observation_start'] = observation_start.strftime('%Y-%m-%d')
             res = req_sync.get(url, params=params, timeout=settings.FRED_REQUEST_TIMEOUT)
             if res.status_code == 200:
                 data = res.json()
@@ -73,61 +76,12 @@ class MacroProviderV2(BaseIndicatorProvider):
 
         return None
 
-    async def _fetch_treasury_tga(self) -> Optional[List[Dict[str, Any]]]:
-        def _get():
-            start_date = (datetime.now() - timedelta(days=3650)).strftime("%Y-%m-%d")
-            url = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operating_cash_balance"
-            points_by_date: dict[datetime, float] = {}
-            account_types = [
-                "Federal Reserve Account",
-                "Treasury General Account (TGA) Closing Balance",
-            ]
-            for account_type in account_types:
-                page_number = 1
-                total_pages = 1
-                while page_number <= total_pages:
-                    params = {
-                        "fields": "record_date,account_type,open_today_bal,close_today_bal",
-                        "filter": f"record_date:gte:{start_date},account_type:eq:{account_type}",
-                        "sort": "record_date",
-                        "page[number]": page_number,
-                        "page[size]": 1000,
-                    }
-                    res = req_sync.get(
-                        url,
-                        params=params,
-                        headers={"Accept": "application/json", "User-Agent": "Heimdall/1.0"},
-                        timeout=settings.FRED_REQUEST_TIMEOUT,
-                    )
-                    if res.status_code != 200:
-                        return None
-
-                    payload = res.json()
-                    total_pages = int(payload.get("meta", {}).get("total-pages") or 1)
-                    for row in payload.get("data", []):
-                        value_str = row.get("close_today_bal")
-                        if value_str in (None, "", "null", "."):
-                            value_str = row.get("open_today_bal")
-                        if value_str in (None, "", "null", "."):
-                            continue
-                        timestamp = datetime.strptime(row["record_date"], "%Y-%m-%d")
-                        points_by_date[timestamp] = float(value_str)
-                    page_number += 1
-            return [
-                {"indicator_id": "TGA", "timestamp": timestamp, "value": value}
-                for timestamp, value in sorted(points_by_date.items())
-            ] or None
-
-        try:
-            return await run_external_io(_get)
-        except Exception as e:
-            logger.error(f"Failed to fetch Treasury TGA: {e}")
-            return None
-
     async def _fetch_yfinance_ticker(self, ticker: str, indicator_id: str) -> Optional[Dict[str, Any]]:
         """从 Yahoo Finance 拉取（降级备用）"""
         try:
             def _get():
+                import yfinance as yf
+
                 # 不传 session，让 yfinance 自动使用 curl_cffi
                 tkr = yf.Ticker(ticker)
                 hist = tkr.history(period="5d")
@@ -156,14 +110,8 @@ class MacroProviderV2(BaseIndicatorProvider):
         多源降级获取
         优先 FRED -> 降级 YFinance
         """
-        if indicator_id == "TGA":
-            result = await self._fetch_treasury_tga()
-            if result:
-                logger.info("[OK] TGA from Treasury Fiscal Data")
-                return result
-
         # 尝试 FRED
-        if fred_id and self.fred_api_key:
+        if fred_id:
             result = await self._fetch_fred_api(fred_id, indicator_id)
             if result:
                 logger.info(f"[OK] {indicator_id} from FRED")
@@ -182,18 +130,26 @@ class MacroProviderV2(BaseIndicatorProvider):
         return []
 
     async def fetch_data(self) -> List[Dict[str, Any]]:
-        results = []
-
-        for source in MACRO_INDICATOR_SOURCES:
-            result = await self._get_indicator_with_fallback(
-                source.fred_id,
-                source.yf_ticker,
-                source.indicator_id,
+        if self._latest_timestamp_reader is not None:
+            indicator_ids = [source.indicator_id for source in MACRO_INDICATOR_SOURCES]
+            self._latest_timestamps = await run_database(
+                lambda: self._latest_timestamp_reader(indicator_ids)
             )
 
-            results.extend(result)
+        semaphore = asyncio.Semaphore(3)
 
-        return results
+        async def fetch_source(source):
+            async with semaphore:
+                return await self._get_indicator_with_fallback(
+                    source.fred_id,
+                    source.yf_ticker,
+                    source.indicator_id,
+                )
+
+        batches = await asyncio.gather(
+            *(fetch_source(source) for source in MACRO_INDICATOR_SOURCES)
+        )
+        return [point for batch in batches for point in batch]
 
 if __name__ == "__main__":
     async def main():

@@ -28,20 +28,20 @@
       <section class="app-panel p-6">
         <div class="mb-6 flex items-center justify-between gap-4">
           <div>
-            <h3 class="app-section-title">大模型提供商</h3>
-            <p class="app-muted mt-1 text-sm">用于 AI 分析和 AI 多空判断。</p>
+            <h3 class="app-section-title">{{ $t('settings.llmProvider') }}</h3>
+            <p class="app-muted mt-1 text-sm">{{ $t('settings.llmDescription') }}</p>
           </div>
           <span
             class="px-3 py-1 text-xs font-semibold"
             :class="form.apiKeySet ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'"
           >
-            {{ form.apiKeySet ? 'API Key 已设置' : 'API Key 未设置' }}
+            {{ form.apiKeySet ? $t('settings.apiKeySet') : $t('settings.apiKeyUnset') }}
           </span>
         </div>
 
         <div class="grid gap-5 md:grid-cols-2">
           <label class="space-y-2">
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">平台</span>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $t('settings.provider') }}</span>
             <select v-model="form.provider" class="input" @change="handleProviderChange">
               <option v-for="preset in presets" :key="preset.id" :value="preset.id">
                 {{ preset.label }}
@@ -56,7 +56,7 @@
               class="input"
               type="password"
               autocomplete="off"
-              :placeholder="form.apiKeyPreview || '请输入 API Key'"
+              :placeholder="form.apiKeyPreview || $t('settings.apiKeyPlaceholder')"
             />
           </label>
 
@@ -83,7 +83,7 @@
 
         <label v-if="form.provider === 'deepseek'" class="mt-5 flex items-center justify-between border border-[#e4ded3] px-4 py-3 dark:border-gray-700">
           <span>
-            <span class="block text-sm font-medium text-gray-900 dark:text-white">推理模式</span>
+            <span class="block text-sm font-medium text-gray-900 dark:text-white">{{ $t('settings.reasoningMode') }}</span>
             <span class="block text-xs text-gray-500 dark:text-gray-400">
               {{ form.reasoningEnabled ? 'deepseek-reasoner' : 'deepseek-chat' }}
             </span>
@@ -97,7 +97,10 @@
             :disabled="saving || !canSave"
             @click="saveConfig"
           >
-            {{ saving ? '保存中...' : '保存配置' }}
+            {{ saving ? $t('settings.saving') : $t('settings.saveConfig') }}
+          </button>
+          <button v-if="form.apiKeySet" type="button" class="app-button-secondary px-4 py-2 text-rose-600 dark:text-rose-300" :disabled="saving" @click="clearLlmApiKey">
+            {{ $t('settings.clearKey') }}
           </button>
           <span v-if="message" class="text-sm text-emerald-600 dark:text-emerald-300">{{ message }}</span>
           <span v-if="error" class="text-sm text-rose-600 dark:text-rose-300">{{ error }}</span>
@@ -107,14 +110,14 @@
       <section class="app-panel p-6">
         <div class="mb-6 flex items-center justify-between gap-4">
           <div>
-            <h3 class="app-section-title">FRED 数据源</h3>
-            <p class="app-muted mt-1 text-sm">用于美债收益率、联邦基金利率和宏观指数数据。</p>
+            <h3 class="app-section-title">{{ $t('settings.fredSource') }}</h3>
+            <p class="app-muted mt-1 text-sm">{{ $t('settings.fredDescription') }}</p>
           </div>
           <span
             class="px-3 py-1 text-xs font-semibold"
             :class="fredForm.apiKeySet ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'"
           >
-            {{ fredForm.apiKeySet ? 'API Key 已设置' : 'API Key 未设置' }}
+            {{ fredForm.apiKeySet ? $t('settings.apiKeySet') : $t('settings.apiKeyUnset') }}
           </span>
         </div>
 
@@ -126,7 +129,7 @@
               class="input"
               type="password"
               autocomplete="off"
-              :placeholder="fredForm.apiKeyPreview || '请输入 FRED API Key'"
+              :placeholder="fredForm.apiKeyPreview || $t('settings.fredApiKeyPlaceholder')"
             />
           </label>
 
@@ -135,12 +138,15 @@
             :disabled="fredSaving || !canSaveFred"
             @click="saveFredConfig"
           >
-            {{ fredSaving ? '保存中...' : '保存' }}
+            {{ fredSaving ? $t('settings.saving') : $t('settings.save') }}
+          </button>
+          <button v-if="fredForm.apiKeySet" type="button" class="app-button-secondary px-4 py-2 text-rose-600 dark:text-rose-300" :disabled="fredSaving" @click="clearFredApiKey">
+            {{ $t('settings.clearKey') }}
           </button>
         </div>
 
         <div class="mt-3 flex items-center gap-3 text-sm">
-          <span class="text-gray-500 dark:text-gray-400">来源: {{ fredForm.source }}</span>
+          <span class="text-gray-500 dark:text-gray-400">{{ $t('settings.source') }}: {{ fredForm.source }}</span>
           <span v-if="fredMessage" class="text-emerald-600 dark:text-emerald-300">{{ fredMessage }}</span>
           <span v-if="fredError" class="text-rose-600 dark:text-rose-300">{{ fredError }}</span>
         </div>
@@ -149,9 +155,9 @@
       <section class="app-panel p-6">
         <div class="grid gap-3 text-sm text-stone-600 dark:text-gray-400 md:grid-cols-2">
           <div>{{ $t('settings.env') }}: {{ $t('settings.production') }}</div>
-          <div>{{ $t('settings.version') }}: 2.0.0 (Vue + FastAPI)</div>
+          <div>{{ $t('settings.version') }}: {{ systemConfig?.version || '-' }} (Vue + FastAPI)</div>
           <div>{{ $t('settings.db') }}: {{ systemConfig?.runtime?.database_engine || '-' }}</div>
-          <div>{{ $t('settings.cache') }}: {{ systemConfig?.runtime?.cache_backend || '-' }}</div>
+          <div>{{ $t('settings.cache') }}: {{ systemConfig?.runtime?.cache_backend ? $t(`settings.cacheBackends.${systemConfig.runtime.cache_backend}`, systemConfig.runtime.cache_backend) : '-' }}</div>
         </div>
       </section>
     </div>
@@ -190,6 +196,8 @@ const {
   handleProviderChange,
   saveConfig,
   saveFredConfig,
+  clearLlmApiKey,
+  clearFredApiKey,
 } = useSystemSettingsPage()
 </script>
 

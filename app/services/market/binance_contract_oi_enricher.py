@@ -4,6 +4,8 @@ import asyncio
 from typing import TYPE_CHECKING, Any
 
 from app.infra.executor import run_database
+from app.domain.market.math import percentage_change
+from config import settings
 
 from .binance_numbers import safe_float
 from .ttl_cache import TtlMemoryCache
@@ -15,7 +17,7 @@ if TYPE_CHECKING:
 CONTRACT_OI_CACHE_TTL_SECONDS = 300.0
 CONTRACT_OI_ENRICHMENT_TIMEOUT_SECONDS = 8.0
 CONTRACT_OI_REQUEST_TIMEOUT_SECONDS = 2.5
-CONTRACT_OI_CANDIDATE_LIMIT = 80
+CONTRACT_OI_CANDIDATE_LIMIT = settings.BINANCE_CONTRACT_OI_CANDIDATE_LIMIT
 
 
 class BinanceContractOpenInterestEnricher:
@@ -114,4 +116,4 @@ class BinanceContractOpenInterestEnricher:
         previous = safe_float(items[-1 - lookback].get("sum_open_interest"))
         if current is None or previous in (None, 0):
             return None
-        return (current - previous) / previous * 100
+        return percentage_change(current, previous)

@@ -2,25 +2,21 @@ import { defineStore } from 'pinia'
 import { marketHistoryApi } from './api'
 import { useKlineStore } from './klineStore'
 import type { MarketHistoryResponse } from './contracts'
-import { MARKET_CACHE_TTL_MS, type CacheEntry } from './cacheTypes'
-import { createResourceCache } from './resourceCache'
+import { MARKET_CACHE_TTL_MS } from './cacheTypes'
+import { createResourceLoader, createResourceState, isResourceLoading, readResource, readResourceError, type ResourceState } from './resourceCache'
 
 interface PriceHistoryState {
-  priceHistoryCache: Record<string, CacheEntry<MarketHistoryResponse>>
-  priceHistoryLoading: Record<string, boolean>
-  priceHistoryErrors: Record<string, string>
+  resources: ResourceState<MarketHistoryResponse>
 }
 
-const priceHistoryResource = createResourceCache()
+const priceHistoryResource = createResourceLoader<MarketHistoryResponse>()
 const priceHistoryKey = (symbol: string, timeframe: string, startDate: string) => (
   `symbol:${symbol}:timeframe:${timeframe}:start_date:${startDate}`
 )
 
 export const usePriceHistoryStore = defineStore('priceHistory', {
   state: (): PriceHistoryState => ({
-    priceHistoryCache: {},
-    priceHistoryLoading: {},
-    priceHistoryErrors: {},
+    resources: createResourceState<MarketHistoryResponse>(12),
   }),
 
   actions: {
@@ -29,15 +25,15 @@ export const usePriceHistoryStore = defineStore('priceHistory', {
     },
 
     readPriceHistory(symbol: string, timeframe: string, startDate: string): MarketHistoryResponse | null {
-      return this.priceHistoryCache[this.getPriceHistoryCacheKey(symbol, timeframe, startDate)]?.data || null
+      return readResource(this.resources, this.getPriceHistoryCacheKey(symbol, timeframe, startDate))
     },
 
     isPriceHistoryLoading(symbol: string, timeframe: string, startDate: string): boolean {
-      return Boolean(this.priceHistoryLoading[this.getPriceHistoryCacheKey(symbol, timeframe, startDate)])
+      return isResourceLoading(this.resources, this.getPriceHistoryCacheKey(symbol, timeframe, startDate))
     },
 
     getPriceHistoryError(symbol: string, timeframe: string, startDate: string): string {
-      return this.priceHistoryErrors[this.getPriceHistoryCacheKey(symbol, timeframe, startDate)] || ''
+      return readResourceError(this.resources, this.getPriceHistoryCacheKey(symbol, timeframe, startDate))
     },
 
     async getPriceHistory(
@@ -47,22 +43,14 @@ export const usePriceHistoryStore = defineStore('priceHistory', {
       options: { force?: boolean } = {},
     ): Promise<MarketHistoryResponse | null> {
       const key = this.getPriceHistoryCacheKey(symbol, timeframe, startDate)
-      return priceHistoryResource.load({
-        cache: this.priceHistoryCache,
+      return priceHistoryResource.load(this.resources, {
         key,
         ttlMs: MARKET_CACHE_TTL_MS.priceHistory,
         force: options.force,
         load: () => marketHistoryApi.getPriceHistory({ symbol, timeframe, start_date: startDate }),
-        onLoadStart: () => {
-          this.priceHistoryLoading[key] = true
-          this.priceHistoryErrors[key] = ''
-        },
-        onLoadEnd: () => {
-          this.priceHistoryLoading[key] = false
-        },
-        onLoadError: (error) => {
+        errorKey: 'common.priceHistoryLoadFailed',
+        onError: (error) => {
           console.error('Price history fetch failed', error)
-          this.priceHistoryErrors[key] = '历史价格数据加载失败'
         },
         onWrite: (response) => {
           if (response.items?.length) {

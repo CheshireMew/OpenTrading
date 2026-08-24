@@ -11,19 +11,21 @@
       <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
         <div>
           <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400">{{ $t('dca.pair') }}</label>
-          <SymbolSearchBox v-model="config.symbol" />
+          <SymbolSearchBox v-model="config.symbol" :aria-label="$t('dca.pair')" />
         </div>
         <div>
           <AppDateField
             v-model="config.start_date"
             :label="$t('dca.startDate')"
+            :min="dcaStartMin"
+            :max="dcaStartMax"
             input-class="app-control w-full"
             label-class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400"
           />
         </div>
         <div>
-          <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400">{{ $t('dca.investTime') }}</label>
-          <select v-model="config.investment_time" class="app-control w-full">
+          <label for="dca-investment-time" class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400">{{ $t('dca.investTime') }}</label>
+          <select id="dca-investment-time" v-model="config.investment_time" class="app-control w-full">
             <option value="00:00">00:00</option>
             <option value="02:00">02:00</option>
             <option value="04:00">04:00</option>
@@ -42,8 +44,8 @@
         
         <!-- Strategy Selector -->
         <div>
-           <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400">{{ $t('dca.strategy') }}</label>
-           <select v-model="config.strategy" class="app-control w-full">
+           <label for="dca-strategy" class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400">{{ $t('dca.strategy') }}</label>
+           <select id="dca-strategy" v-model="config.strategy" class="app-control w-full">
              <option value="standard">{{ $t('dca.strategies.standard') }}</option>
              <option value="ema_deviation">{{ $t('dca.strategies.ema20') }}</option>
              <option value="rsi_dynamic">{{ $t('dca.strategies.rsi') }}</option>
@@ -59,15 +61,15 @@
         </div>
 
         <div>
-          <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400">
+          <label for="dca-amount" class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400">
               {{ config.strategy === 'value_averaging' ? $t('dca.dailyTarget', { currency: displayCurrency }) : $t('dca.dailyBase', { currency: displayCurrency }) }}
           </label>
-          <input v-model.number="displayAmount" type="number" class="app-control w-full" />
+          <input id="dca-amount" v-model.number="displayAmount" type="number" min="0" class="app-control w-full" />
         </div>
 
         <!-- Strategy Params (Conditional) -->
         <div v-if="config.strategy !== 'standard' && config.strategy !== 'value_averaging'">
-           <label class="mb-1 flex justify-between text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400">
+           <label for="dca-strength" class="mb-1 flex justify-between text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400">
               <span>{{ $t('dca.strength') }}</span>
               <span class="text-gray-500 font-normal">
                   {{
@@ -78,14 +80,22 @@
                   }}
               </span>
            </label>
-           <input v-model.number="config.strategy_params.multiplier" type="number" step="0.1" class="app-control w-full" />
+           <input id="dca-strength" v-model.number="config.strategy_params.multiplier" type="number" min="0" step="0.1" class="app-control w-full" />
         </div>
         
-        <button @click="runSimulation" :disabled="loading" class="app-button-primary col-span-1 flex items-center justify-center px-6 py-2 md:col-span-2">
+        <button @click="runSimulation" :disabled="loading || !canRunSimulation" class="app-button-primary col-span-1 flex items-center justify-center px-6 py-2 md:col-span-2">
           <span v-if="loading" class="mr-2 animate-spin">⟳</span>
           {{ $t('dca.calculate') }}
         </button>
       </div>
+    </div>
+
+    <div v-if="errorMessage" role="alert" class="border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200">
+      {{ errorMessage }}
+    </div>
+
+    <div v-if="result?.data_quality === 'synthetic_and_exchange_proxy'" role="note" class="border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+      {{ $t('dca.syntheticHistoryWarning') }}
     </div>
 
     <!-- Market Indicators Card -->
@@ -210,6 +220,7 @@ const {
   config,
   displayAmount,
   loading,
+  errorMessage,
   result,
   marketData,
   roiChartCanvas,
@@ -218,6 +229,9 @@ const {
   runSimulation,
   isPositiveRoi,
   isIndexSelected,
+  dcaStartMin,
+    dcaStartMax,
+    canRunSimulation,
   sentimentClass,
   displayCurrency,
   formatMoney,

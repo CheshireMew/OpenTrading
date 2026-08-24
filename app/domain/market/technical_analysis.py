@@ -172,20 +172,6 @@ class TechnicalAnalysis:
         return realized_volatility * math.sqrt(periods_per_year)
 
     @staticmethod
-    def periods_per_year_for_timeframe(timeframe):
-        mapping = {
-            "1m": 525600,
-            "5m": 105120,
-            "15m": 35040,
-            "30m": 17520,
-            "1h": 8760,
-            "4h": 2190,
-            "1d": 365,
-            "1w": 52,
-        }
-        return mapping.get(timeframe, 365)
-
-    @staticmethod
     def analyze_trend(price, ema20):
         """简单的趋势判断"""
         if price > ema20:

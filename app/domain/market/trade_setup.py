@@ -2,13 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Literal
 
-from app.contracts.dto.market import TradeSetupResponse, TradeSetupResponseItem
 from app.domain.market.trade_setup_rules import (
-    SIDE_RULES,
-    STRATEGY_PROFILES,
-    STYLE_PROFILES,
     build_rule_trade_plan,
     resolve_rule_side,
     rolling_high,
@@ -28,15 +24,43 @@ class TradeSetupRequest:
     mode: str = "rules"
 
 
+@dataclass(frozen=True)
+class TradeSetup:
+    side: str
+    entry: float
+    target: float
+    stop: float
+    risk_reward: float
+    confidence: int
+    risk_amount: float
+    entry_time: int
+    style: str
+    strategy: str
+    source: str
+
+
+@dataclass(frozen=True)
+class TradeSetupResult:
+    symbol: str
+    timeframe: str
+    timestamp: str
+    current_price: float | None
+    setup: TradeSetup | None
+    reason: str
+    source: str
+    status: Literal["ready", "waiting", "unavailable", "rejected"]
+    error_code: str | None
+
+
 class TradeSetupEngine:
     def build_rules(
         self,
         request: TradeSetupRequest,
         kline_data: list[list[float]],
         indicators: dict[str, Any],
-    ) -> TradeSetupResponse:
+    ) -> TradeSetupResult:
         if len(kline_data) < 30:
-            return self._empty(request, "K线数量不足，暂时不生成开单方案")
+            return self._empty(request, "Not enough market history", error_code="kline_insufficient")
 
         current_price = float(kline_data[-1][4])
         atr = self._positive_float(indicators.get("atr"))
@@ -46,11 +70,11 @@ class TradeSetupEngine:
         macd_hist = self._positive_or_negative_float(macd[2] if isinstance(macd, tuple) else macd.get("histogram"))
 
         if current_price <= 0 or atr is None or ema is None or rsi is None or macd_hist is None:
-            return self._empty(request, "指标还不完整，暂时不生成开单方案")
+            return self._empty(request, "Indicators are not ready", error_code="indicators_incomplete")
 
         side = self._resolve_side(current_price=current_price, ema=ema, rsi=rsi, macd_hist=macd_hist)
         if not side:
-            return self._empty(request, "多空条件不清晰，先等待下一根K线")
+            return self._empty(request, "No clear directional signal", error_code="no_clear_signal")
 
         support_price = rolling_low(kline_data, 20)
         resistance_price = rolling_high(kline_data, 20)
@@ -65,7 +89,7 @@ class TradeSetupEngine:
         )
 
         risk_amount = max(request.account_size, 0) * style_profile(request.style)["risk_pct"]
-        setup = TradeSetupResponseItem(
+        setup = TradeSetup(
             side=side,
             entry=plan["entry"],
             target=plan["target"],
@@ -78,7 +102,7 @@ class TradeSetupEngine:
             strategy=request.strategy,
             source="rules",
         )
-        return TradeSetupResponse(
+        return TradeSetupResult(
             symbol=request.symbol,
             timeframe=request.timeframe,
             timestamp=datetime.now(timezone.utc).isoformat(),
@@ -86,6 +110,8 @@ class TradeSetupEngine:
             setup=setup,
             reason=self._reason(side=side, current_price=current_price, ema=ema, rsi=rsi, macd_hist=macd_hist),
             source="rules",
+            status="ready",
+            error_code=None,
         )
 
     def build_ai(
@@ -93,27 +119,56 @@ class TradeSetupEngine:
         request: TradeSetupRequest,
         kline_data: list[list[float]],
         ai_payload: dict[str, Any] | None,
-    ) -> TradeSetupResponse:
+        model_error_code: str | None = None,
+    ) -> TradeSetupResult:
         if not ai_payload:
-            return self._empty(request, "AI暂时没有返回可用方案", source="ai")
+            return self._empty(
+                request,
+                "AI service is unavailable",
+                source="ai",
+                status="unavailable",
+                error_code=model_error_code or "model_output_unavailable",
+            )
         if not kline_data:
-            return self._empty(request, "K线数量不足，暂时不生成开单方案", source="ai")
+            return self._empty(
+                request,
+                "Not enough market history",
+                source="ai",
+                error_code="kline_insufficient",
+            )
 
         current_price = float(kline_data[-1][4])
         side = self._normalize_side(ai_payload.get("side") or ai_payload.get("signal"))
         if not side:
-            return self._empty(request, str(ai_payload.get("reason") or "AI建议等待"), source="ai")
+            return self._empty(
+                request,
+                str(ai_payload.get("reason") or "The model recommends waiting"),
+                source="ai",
+                error_code="model_hold",
+            )
 
-        entry = self._positive_float(ai_payload.get("entry")) or current_price
-        target = self._positive_float(ai_payload.get("target") or ai_payload.get("take_profit"))
-        stop = self._positive_float(ai_payload.get("stop") or ai_payload.get("stop_loss"))
-        if target is None or stop is None:
-            return self._empty(request, "AI没有给出完整的目标和止损", source="ai")
+        entry = self._positive_float(ai_payload.get("entry"))
+        target = self._positive_float(ai_payload.get("target"))
+        stop = self._positive_float(ai_payload.get("stop"))
+        if entry is None or target is None or stop is None:
+            return self._empty(
+                request,
+                "The model did not provide a complete plan",
+                source="ai",
+                status="rejected",
+                error_code="model_plan_incomplete",
+            )
         if not self._levels_match_side(side=side, entry=entry, target=target, stop=stop):
-            return self._empty(request, "AI返回的价格结构不成立，已拒绝显示", source="ai")
+            return self._empty(
+                request,
+                "The model returned an invalid price structure",
+                source="ai",
+                status="rejected",
+                error_code="model_price_structure_invalid",
+            )
 
         risk_reward = abs(target - entry) / abs(entry - stop)
-        setup = TradeSetupResponseItem(
+        setup = TradeSetup(
             side=side,
             entry=entry,
             target=target,
@@ -126,14 +181,16 @@ class TradeSetupEngine:
             strategy=request.strategy,
             source="ai",
         )
-        return TradeSetupResponse(
+        return TradeSetupResult(
             symbol=request.symbol,
             timeframe=request.timeframe,
             timestamp=datetime.now(timezone.utc).isoformat(),
             current_price=current_price,
             setup=setup,
-            reason=str(ai_payload.get("reason") or ai_payload.get("reasoning") or "AI已生成交易方案"),
+            reason=str(ai_payload.get("reason") or ai_payload.get("reasoning") or "The model generated a trade plan"),
             source="ai",
+            status="ready",
+            error_code=None,
         )
 
     def _resolve_side(self, *, current_price: float, ema: float, rsi: float, macd_hist: float) -> str | None:
@@ -157,8 +214,16 @@ class TradeSetupEngine:
         macd_state = "偏强" if macd_hist >= 0 else "偏弱"
         return f"{direction}：价格{ema_state}EMA，MACD {macd_state}，RSI {rsi:.1f}"
 
-    def _empty(self, request: TradeSetupRequest, reason: str, *, source: str | None = None) -> TradeSetupResponse:
-        return TradeSetupResponse(
+    def _empty(
+        self,
+        request: TradeSetupRequest,
+        reason: str,
+        *,
+        source: str | None = None,
+        status: Literal["waiting", "unavailable", "rejected"] = "waiting",
+        error_code: str,
+    ) -> TradeSetupResult:
+        return TradeSetupResult(
             symbol=request.symbol,
             timeframe=request.timeframe,
             timestamp=datetime.now(timezone.utc).isoformat(),
@@ -166,6 +231,8 @@ class TradeSetupEngine:
             setup=None,
             reason=reason,
             source=source or request.mode,
+            status=status,
+            error_code=error_code,
         )
 
     def _style_profile(self, style: str) -> dict[str, float]:

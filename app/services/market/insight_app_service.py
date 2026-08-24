@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from app.contracts.dto.market import DliLiquidityResponse, MarketIndicatorResponse, TradeSetupResponse
+from app.application.errors import InvalidRequestError
+from app.application.model_contracts import TradeSetupModelOutput
+from app.contracts.dto.market_insight import MarketIndicatorResponse
 from app.domain.market.prompt_engine import PromptEngine
-from app.domain.market.trade_setup import TradeSetupEngine, TradeSetupRequest
+from app.domain.market.trade_setup import TradeSetupEngine, TradeSetupRequest, TradeSetupResult
 from app.services.market.indicator_service import IndicatorService
 from app.services.market.query_app_service import MarketQueryAppService
-from app.infra.executor import run_database
+from app.infra.executor import run_database, run_external_io
 
 
 class MarketInsightAppService:
@@ -30,18 +32,12 @@ class MarketInsightAppService:
     ) -> list[MarketIndicatorResponse]:
         return self.indicator_service.get_indicators(category=category, days=days)
 
-    def get_dli_liquidity(self, days: int, change_days: int = 30) -> DliLiquidityResponse:
-        return self.indicator_service.get_dli_liquidity(days=days, change_days=change_days)
-
     async def get_indicators_async(
         self,
         category: str | None,
         days: int,
     ) -> list[MarketIndicatorResponse]:
         return await run_database(lambda: self.get_indicators(category=category, days=days))
-
-    async def get_dli_liquidity_async(self, days: int, change_days: int = 30) -> DliLiquidityResponse:
-        return await run_database(lambda: self.get_dli_liquidity(days=days, change_days=change_days))
 
     async def get_trade_setup(
         self,
@@ -53,9 +49,9 @@ class MarketInsightAppService:
         style: str,
         strategy: str,
         mode: str,
-    ) -> TradeSetupResponse:
+    ) -> TradeSetupResult:
         if mode not in {"rules", "ai"}:
-            raise ValueError("无效判断方式。可选: rules, ai")
+            raise InvalidRequestError("无效判断方式。可选: rules, ai")
 
         snapshot = await self.market_query_service.load_snapshot(
             symbol=symbol,
@@ -79,9 +75,14 @@ class MarketInsightAppService:
                 indicators,
             )
 
-        llm_client = self.llm_client_factory()
+        llm_client = await run_external_io(self.llm_client_factory)
         if not llm_client:
-            return self.trade_setup_engine.build_ai(request, kline_data, None)
+            return self.trade_setup_engine.build_ai(
+                request,
+                kline_data,
+                None,
+                model_error_code="model_client_unavailable",
+            )
         prompt = PromptEngine.build_trade_setup_prompt(
             symbol,
             timeframe,
@@ -91,5 +92,15 @@ class MarketInsightAppService:
             style,
             strategy,
         )
-        ai_payload = await llm_client.analyze(prompt)
-        return self.trade_setup_engine.build_ai(request, kline_data, ai_payload)
+        model_result = await llm_client.analyze(
+            prompt,
+            response_model=TradeSetupModelOutput,
+            purpose="trade_setup",
+        )
+        ai_payload = model_result.output.model_dump(mode="json") if model_result.succeeded else None
+        return self.trade_setup_engine.build_ai(
+            request,
+            kline_data,
+            ai_payload,
+            model_error_code=model_result.error_code,
+        )

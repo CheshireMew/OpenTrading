@@ -2,7 +2,6 @@
 使用 Binance API 获取黄金价格（通过 PAXG - Paxos Gold）
 PAXG 是锚定实物黄金的代币，1 PAXG = 1 盎司黄金
 """
-import ccxt
 import asyncio
 from typing import Optional, Dict, Any
 from datetime import datetime
@@ -17,12 +16,16 @@ class CryptoGoldProvider(BaseIndicatorProvider):
 
     def __init__(self):
         super().__init__()
-        self.exchange = ccxt.binance()
+        self.exchange = None
 
     async def _fetch_gold_price(self) -> Optional[Dict[str, Any]]:
         """获取黄金价格（通过PAXG）"""
         try:
             def _get():
+                if self.exchange is None:
+                    import ccxt
+
+                    self.exchange = ccxt.binance()
                 ticker = self.exchange.fetch_ticker('PAXG/USDT')
                 return {
                     "indicator_id": "GOLD",

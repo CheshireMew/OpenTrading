@@ -1,18 +1,21 @@
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
 from pathlib import Path
 
 import pytest
 from fastapi import Request
-from fastapi.testclient import TestClient
 
 import app.lifecycle as lifecycle_module
 import app.main as main_module
 import app.web as web_module
 import app.background_runtime as background_runtime_module
 from app.exceptions import unhandled_exception_handler
-from app.runtime import AppRuntimeServices
+from app.runtime import (
+    AppRuntimeServices,
+    BackgroundRuntimeServices,
+    IndicatorRuntimeServices,
+    InfraRuntimeServices,
+)
 
 
 @pytest.mark.asyncio
@@ -27,7 +30,7 @@ async def test_lifespan_monitors_and_stops_managers(monkeypatch):
             events.append("shutdown")
 
     class FakeSchedulerRuntime:
-        def start(self):
+        async def start(self, _owner_id=""):
             events.append("start_scheduler")
 
         async def shutdown(self):
@@ -65,26 +68,14 @@ async def test_lifespan_monitors_and_stops_managers(monkeypatch):
         def dispose(self):
             events.append("dispose_db")
 
-    paper_manager = FakeManager()
-    snapshot = FakeSnapshot()
-    binance_market = FakeBinanceMarket()
-
     monkeypatch.setattr(lifecycle_module, "_init_db", lambda *_args: events.append("init_db"))
     monkeypatch.setattr(
         lifecycle_module,
         "build_app_runtime_services",
         lambda _role=None: AppRuntimeServices(
-            database_runtime=FakeDatabaseRuntime(),
-            cache_service=object(),
-            exchange_gateway=object(),
-            kline_store=object(),
-            market_data_service=object(),
-            market_indicator_repository=object(),
-            dli_cache=object(),
-            binance_market_snapshot=snapshot,
-            binance_market_intel=binance_market,
-            binance_market_research_store=object(),
-            market_scheduler_runtime=FakeSchedulerRuntime(),
+            infra=InfraRuntimeServices(FakeDatabaseRuntime(), object()),
+            indicators=IndicatorRuntimeServices(object(), object()),
+            background=BackgroundRuntimeServices(FakeSchedulerRuntime()),
         ),
     )
     monkeypatch.setattr(
@@ -122,6 +113,17 @@ def test_root_returns_frontend_boot_payload_when_build_missing(
     assert response.status_code == 200
     assert response.json()["message"] == "Heimdall API is running"
     assert response.json()["docs"] == "/docs"
+
+
+def test_validation_errors_keep_the_string_error_contract(api_harness):
+    response = api_harness["client"].post(
+        "/api/v1/tools/dca_simulate",
+        json={"amount": -1},
+    )
+
+    assert response.status_code == 422
+    assert isinstance(response.json()["detail"], str)
+    assert "amount" in response.json()["detail"]
 
 
 def test_root_and_spa_fallback_serve_built_frontend(api_harness, monkeypatch):
@@ -192,3 +194,9 @@ def test_frontend_fallback_rejects_unknown_reserved_paths(api_harness):
     response = api_harness["client"].get("/api/private")
 
     assert response.status_code == 404
+
+
+def test_dollar_liquidity_dashboard_api_is_retired():
+    registered_paths = {getattr(route, "path", None) for route in main_module.app.routes}
+
+    assert "/indicators/dli" not in registered_paths

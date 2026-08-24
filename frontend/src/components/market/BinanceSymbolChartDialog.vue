@@ -1,21 +1,28 @@
 <template>
   <div
     v-if="open"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-2 backdrop-blur-sm sm:p-4"
     @click.self="$emit('close')"
   >
-    <section class="flex h-[min(88vh,820px)] w-full max-w-7xl flex-col overflow-hidden border border-[#d8d1c5] bg-[#fbfaf7] shadow-2xl dark:border-slate-700 dark:bg-slate-800">
-      <header class="flex flex-wrap items-center justify-between gap-4 border-b border-[#e4ded3] px-6 py-5 dark:border-slate-700">
-        <div>
+    <section
+      ref="dialogRef"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="binance-chart-dialog-title"
+      tabindex="-1"
+      class="flex h-[min(88vh,820px)] w-full max-w-7xl flex-col overflow-hidden border border-[#d8d1c5] bg-[#fbfaf7] shadow-2xl outline-none dark:border-slate-700 dark:bg-slate-800"
+    >
+      <header class="flex flex-wrap items-center justify-between gap-3 border-b border-[#e4ded3] px-4 py-4 dark:border-slate-700 sm:px-6 sm:py-5">
+        <div class="min-w-0 flex-1">
           <div class="flex items-center gap-3">
             <span class="border border-[#e4ded3] bg-white px-3 py-1 text-xs font-semibold text-stone-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">{{ marketLabel }}</span>
-            <h3 class="text-2xl font-semibold text-slate-900 dark:text-white">{{ title }}</h3>
+            <h3 id="binance-chart-dialog-title" class="text-2xl font-semibold text-slate-900 dark:text-white">{{ title }}</h3>
           </div>
           <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">{{ symbol || '--' }}</p>
         </div>
 
-        <div class="flex items-center gap-3">
-          <div class="flex flex-wrap gap-2 border border-[#e4ded3] bg-white p-1 dark:border-slate-700 dark:bg-slate-900">
+        <div class="flex w-full min-w-0 items-center gap-2 sm:w-auto">
+          <div class="flex min-w-0 flex-1 gap-2 overflow-x-auto border border-[#e4ded3] bg-white p-1 dark:border-slate-700 dark:bg-slate-900 sm:flex-none">
             <button
               v-for="item in timeframes"
               :key="item"
@@ -30,16 +37,22 @@
 
           <button
             type="button"
-            class="border border-[#e4ded3] bg-white px-4 py-2 text-sm font-medium text-stone-600 transition hover:bg-[#f1ece3] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+            class="inline-flex h-10 w-10 flex-none items-center justify-center border border-[#e4ded3] bg-white text-stone-600 transition hover:bg-[#f1ece3] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+            :aria-label="t('binanceMarket.close')"
+            :title="t('binanceMarket.close')"
             @click="$emit('close')"
           >
-            {{ t('binanceMarket.close') }}
+            <XMarkIcon class="h-5 w-5" />
           </button>
         </div>
       </header>
 
-      <div class="grid min-h-0 flex-1 bg-slate-950" :class="hasSidePanel ? 'lg:grid-cols-[minmax(0,1fr)_460px]' : ''">
-        <div class="relative min-h-[420px] p-4">
+      <div class="grid min-h-0 flex-1 overflow-y-auto bg-slate-950 lg:overflow-hidden" :class="hasSidePanel ? 'lg:grid-cols-[minmax(0,1fr)_460px]' : ''">
+        <div class="relative min-h-[320px] p-4 sm:min-h-[420px]">
+          <div v-if="chartError" role="alert" class="absolute left-1/2 top-6 z-20 flex -translate-x-1/2 items-center gap-3 border border-rose-500/30 bg-rose-950/90 px-4 py-2 text-sm text-rose-200 shadow-lg">
+            <span>{{ chartError }}</span>
+            <button type="button" class="font-semibold underline" @click="emit('retryChart')">{{ t('app.retry') }}</button>
+          </div>
           <div
             v-if="loadingMore"
             class="absolute left-1/2 top-6 z-10 -translate-x-1/2 bg-[#0f6b4f] px-3 py-1 text-xs font-semibold text-white shadow-lg"
@@ -54,7 +67,7 @@
           />
         </div>
 
-        <aside v-if="hasSidePanel" class="overflow-y-auto border-t border-slate-800 bg-white p-5 dark:bg-slate-800 lg:border-l lg:border-t-0">
+        <aside v-if="hasSidePanel" class="border-t border-slate-800 bg-white p-5 dark:bg-slate-800 lg:overflow-y-auto lg:border-l lg:border-t-0">
           <div v-if="monitorItem" class="flex items-start justify-between gap-3">
             <div>
               <p class="text-sm text-slate-500 dark:text-slate-400">{{ renderFollowStatus(monitorItem.follow_status) }}</p>
@@ -185,10 +198,13 @@
 </template>
 
 <script setup lang="ts">
+import { XMarkIcon } from '@heroicons/vue/24/outline'
 import TradingViewChart from '@/components/TradingViewChart.vue'
+import { useModalDialog } from '@/composables/useModalDialog'
 import type { BinanceBreakoutMonitorItem, BinanceContractResearchDetail, CandlestickData, VolumeData } from '@/modules/market/contracts'
-import { computed, defineComponent, h } from 'vue'
+import { computed, defineComponent, h, toRef } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { percentChange } from '@/utils/number'
 
 const { t } = useI18n()
 
@@ -203,6 +219,7 @@ const props = defineProps<{
   chartData: CandlestickData[]
   volumeData: VolumeData[]
   loadingMore: boolean
+  chartError?: string
   contractDetail?: BinanceContractResearchDetail | null
   contractDetailLoading?: boolean
   contractDetailError?: string
@@ -217,11 +234,14 @@ const props = defineProps<{
   formatReason?: (reason: string | null | undefined) => string
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   close: []
   loadMore: []
+  retryChart: []
   'update:timeframe': [timeframe: string]
 }>()
+
+const { dialogRef } = useModalDialog(toRef(props, 'open'), () => emit('close'))
 
 const renderScore = (value: number | null | undefined) => props.formatScore?.(value) ?? '--'
 const renderSigned = (value: number | null | undefined, digits = 2, suffix = '%', withSign = true) => (
@@ -260,7 +280,7 @@ const openInterestChange24h = computed(() => {
   const current = Number(items.at(-1)?.sum_open_interest)
   const previous = Number(items.at(-25)?.sum_open_interest)
   if (!Number.isFinite(current) || !Number.isFinite(previous) || previous === 0) return null
-  return (current - previous) / previous * 100
+  return percentChange(current, previous)
 })
 const forceOrderQuoteSum = computed(() => (
   (props.contractDetail?.force_orders.items || []).reduce((sum, item) => sum + (Number(item.cum_quote) || 0), 0)

@@ -1,352 +1,97 @@
 <template>
   <div class="app-page">
     <div class="app-page-inner-wide">
-    <div class="grid gap-6 xl:grid-cols-[20rem_minmax(0,1fr)]">
-      <aside class="space-y-6">
-        <section class="app-panel p-5">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <div class="app-eyebrow">
-                {{ $t('portfolioBalance.eyebrow') }}
-              </div>
-              <h1 class="mt-2 text-2xl font-semibold text-stone-950 dark:text-white">
-                {{ $t('portfolioBalance.title') }}
-              </h1>
-            </div>
-            <button
-              type="button"
-              class="inline-flex h-11 w-11 items-center justify-center border border-[#b8d2c4] bg-[#edf3ee] text-[#0f6b4f] transition hover:bg-[#e1ece4] dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200 dark:hover:bg-emerald-900/50"
-              @click="createPortfolio"
-            >
-              <PlusIcon class="h-5 w-5" />
-            </button>
-          </div>
+      <div class="grid gap-6 xl:grid-cols-[20rem_minmax(0,1fr)]">
+        <PortfolioBalanceSidebar
+          :portfolios="portfolios"
+          :deleted-portfolios="deletedPortfolios"
+          :has-more-deleted-portfolios="hasMoreDeletedPortfolios"
+          :active-portfolio-id="activePortfolioId"
+          :plan="plan"
+          :storage-ready="storageReady"
+          :storage-loading="storageLoading"
+          :storage-saving="storageSaving"
+          :storage-error="storageError"
+          :portfolio-file-error="portfolioFileError"
+          @create="handleCreatePortfolio"
+          @export="exportBackup"
+          @import-file="importBackup"
+          @reload="reloadPortfolios"
+          @select="selectPortfolio"
+          @copy="handleCopyPortfolio"
+          @delete="confirmDeletePortfolio"
+          @restore="handleRestorePortfolio"
+          @load-more-deleted="handleLoadMoreDeletedPortfolios"
+        />
 
-          <div class="mt-5 space-y-3">
-            <div
-              v-for="portfolio in portfolios"
-              :key="portfolio.id"
-              class="w-full border px-4 py-4 text-left transition"
-              :class="portfolio.id === activePortfolioId
-                ? 'border-[#b8d2c4] bg-[#edf3ee] dark:border-emerald-700 dark:bg-emerald-950/30'
-                : 'border-stone-200 bg-[#fbfaf7] hover:border-stone-300 dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-slate-600'"
-            >
-              <div class="flex items-start justify-between gap-3">
-                <button type="button" class="min-w-0 flex-1 text-left" @click="selectPortfolio(portfolio.id)">
-                  <div class="truncate text-base font-semibold text-slate-900 dark:text-white">{{ portfolio.name }}</div>
-                </button>
-                <button
-                  type="button"
-                  class="inline-flex h-8 w-8 items-center justify-center border border-transparent text-slate-400 transition hover:border-[#b8d2c4] hover:text-[#0f6b4f] dark:hover:border-emerald-800 dark:hover:text-emerald-300"
-                  :aria-label="$t('portfolioBalance.copyPortfolio')"
-                  :title="$t('portfolioBalance.copyPortfolio')"
-                  @click.stop="copyPortfolio(portfolio.id)"
-                >
-                  <DocumentDuplicateIcon class="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  class="inline-flex h-8 w-8 items-center justify-center border border-transparent text-slate-400 transition hover:border-rose-200 hover:text-rose-600 dark:hover:border-rose-800 dark:hover:text-rose-300"
-                  @click.stop="deletePortfolio(portfolio.id)"
-                >
-                  <TrashIcon class="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="app-panel p-5">
-          <h2 class="app-section-title">{{ $t('portfolioBalance.strategyTitle') }}</h2>
-
-          <div class="mt-4 space-y-3">
-            <div class="px-4 py-4" :class="strategyCardClass(plan.suggestedAction)">
-              <div class="text-xs font-semibold uppercase tracking-wide">{{ $t('portfolioBalance.nextAction') }}</div>
-              <div class="mt-2 text-lg font-semibold">{{ $t(`portfolioBalance.suggestedActions.${plan.suggestedAction}`) }}</div>
-              <div class="mt-1 text-sm opacity-80">{{ $t(`portfolioBalance.reasons.${plan.suggestedReason}`) }}</div>
-            </div>
-            <div class="grid grid-cols-2 gap-3 text-sm">
-              <div class="border border-stone-200 bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/60">
-                <div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.nextReviewDate') }}</div>
-                <div class="mt-1 font-semibold text-slate-900 dark:text-white">{{ formatDate(plan.nextReviewDate) }}</div>
-              </div>
-              <div class="border border-stone-200 bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/60">
-                <div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.daysUntilReview') }}</div>
-                <div class="mt-1 font-semibold text-slate-900 dark:text-white">{{ plan.daysUntilReview }}</div>
-              </div>
+        <main v-if="storageReady && !storageLoading && activePortfolio" class="min-w-0 space-y-6">
+          <PortfolioBalanceSetup
+            :active-portfolio="activePortfolio"
+            :tracking="tracking"
+            :strategy="strategy"
+            :plan="plan"
+            :market-loading="marketLoading"
+            :source-message="sourceMessage"
+            :source-error="sourceError"
+            @update-name="activePortfolio.name = $event"
+            @update-inception-date="tracking.inceptionDate = $event"
+            @refresh-prices="refreshMarketPrices"
+            @add-asset="addAsset"
+            @update-review-frequency="strategy.reviewFrequency = $event"
+            @update-tracking-capital="tracking.virtualCapital = $event"
+            @update-rebalance-band="strategy.rebalanceBand = $event"
+            @update-min-trade-amount="strategy.minTradeAmount = $event"
+          />
+          <PortfolioAssetsTable
+            :assets="assets"
+            :plan="plan"
+            :can-remove-asset="canRemoveAsset"
+            @update-symbol="updateAssetSymbol"
+            @update-weight="updateAssetTargetWeight"
+            @remove="removeAsset"
+          />
+          <PortfolioSimulationPanel
+            :simulation="simulation"
+            :result="simulationResult"
+            :loading="simulationLoading"
+            :today="today"
+            @run="runSimulation"
+            @update-start-date="simulation.simulationStartDate = $event"
+            @update-initial-capital="simulation.initialCapital = $event"
+          />
+        </main>
+        <section v-else-if="storageReady && !storageLoading" class="app-panel flex min-h-[24rem] min-w-0 items-center justify-center p-8 text-center">
+          <div class="max-w-lg">
+            <h2 class="app-section-title text-xl">{{ $t('portfolioBalance.emptyTitle') }}</h2>
+            <p class="app-muted mt-3 text-sm leading-6">{{ $t('portfolioBalance.emptyDescription') }}</p>
+            <div class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+              <button type="button" class="app-button-primary px-5 py-3" :disabled="storageSaving" @click="handleCreatePortfolio">{{ $t('portfolioBalance.createBlank') }}</button>
+              <button type="button" class="app-button-secondary px-5 py-3" :disabled="storageSaving" @click="handleCreateSamplePortfolio">{{ $t('portfolioBalance.useSample') }}</button>
             </div>
           </div>
         </section>
-      </aside>
-
-      <main v-if="activePortfolio" class="space-y-6">
-        <section class="app-hero-panel p-6">
-          <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_26rem]">
-            <div>
-              <div class="grid gap-4 md:grid-cols-2">
-                <label class="block">
-                  <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">{{ $t('portfolioBalance.portfolioName') }}</span>
-                  <input v-model.trim="activePortfolio.name" type="text" class="app-control w-full px-4 py-3" />
-                </label>
-                <AppDateField
-                  v-model="tracking.inceptionDate"
-                  :label="$t('portfolioBalance.inceptionDate')"
-                  input-class="app-control w-full px-4 py-3"
-                  label-class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300"
-                />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div class="border border-[#e4ded3] bg-white/80 p-4 backdrop-blur dark:border-slate-700 dark:bg-slate-900/70">
-                <div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.totalValue') }}</div>
-                <div class="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{{ displayTotalValue }}</div>
-              </div>
-              <div class="border border-[#e4ded3] bg-white/80 p-4 backdrop-blur dark:border-slate-700 dark:bg-slate-900/70">
-                <div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.outOfBand') }}</div>
-                <div class="mt-2 text-2xl font-semibold text-amber-600 dark:text-amber-300">{{ displayOutOfBand }}</div>
-              </div>
-              <div class="border border-[#e4ded3] bg-white/80 p-4 backdrop-blur dark:border-slate-700 dark:bg-slate-900/70">
-                <div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.maxDrift') }}</div>
-                <div class="mt-2 text-2xl font-semibold text-rose-600 dark:text-rose-300">{{ displayMaxDrift }}</div>
-              </div>
-              <div class="border border-[#e4ded3] bg-white/80 p-4 backdrop-blur dark:border-slate-700 dark:bg-slate-900/70">
-                <div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  {{ $t('portfolioBalance.virtualCapital', { currency: displayCurrency }) }}
-                </div>
-                <div class="mt-2 text-2xl font-semibold text-emerald-600 dark:text-emerald-300">
-                  {{ displayTrackingCapital }}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="app-panel p-6">
-          <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h2 class="text-xl font-semibold text-stone-950 dark:text-white">{{ $t('portfolioBalance.configTitle') }}</h2>
-            </div>
-            <div class="flex flex-wrap gap-3">
-              <button
-                type="button"
-                class="inline-flex items-center justify-center border border-[#b8d2c4] bg-[#edf3ee] px-4 py-2 text-sm font-medium text-[#0f6b4f] transition hover:bg-[#e1ece4] disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200 dark:hover:bg-emerald-900/50"
-                :disabled="marketLoading"
-                @click="refreshMarketPrices"
-              >
-                <ArrowPathIcon class="mr-2 h-4 w-4" />
-                {{ marketLoading ? $t('portfolioBalance.refreshing') : $t('portfolioBalance.refreshPrices') }}
-              </button>
-              <button
-                type="button"
-                class="app-button-secondary inline-flex items-center justify-center px-4 py-2"
-                @click="addAsset"
-              >
-                <PlusIcon class="mr-2 h-4 w-4" />
-                {{ $t('portfolioBalance.addAsset') }}
-              </button>
-            </div>
-          </div>
-
-          <div v-if="sourceMessage || sourceError" class="mt-4 space-y-2 text-sm">
-            <div v-if="sourceMessage" class="border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800 dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-200">
-              {{ sourceMessage }}
-            </div>
-            <div v-if="sourceError" class="border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-200">
-              {{ sourceError }}
-            </div>
-          </div>
-
-          <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <label class="block">
-              <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.reviewFrequency') }}</span>
-              <select v-model="strategy.reviewFrequency" class="app-control w-full px-4 py-3">
-                <option value="daily">{{ $t('portfolioBalance.frequencies.daily') }}</option>
-                <option value="weekly">{{ $t('portfolioBalance.frequencies.weekly') }}</option>
-                <option value="monthly">{{ $t('portfolioBalance.frequencies.monthly') }}</option>
-                <option value="quarterly">{{ $t('portfolioBalance.frequencies.quarterly') }}</option>
-              </select>
-            </label>
-            <label class="block">
-              <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.virtualCapital', { currency: displayCurrency }) }}</span>
-              <input v-model.number="displayTrackingCapitalInput" type="number" min="0" step="1000" class="app-control w-full px-4 py-3" />
-            </label>
-            <label class="block">
-              <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.rebalanceBand') }}</span>
-              <input v-model.number="strategy.rebalanceBand" type="number" min="0" max="100" step="0.5" class="app-control w-full px-4 py-3" />
-            </label>
-            <label class="block">
-              <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.minTradeAmount', { currency: displayCurrency }) }}</span>
-              <input v-model.number="displayMinTradeAmountInput" type="number" min="0" step="100" class="app-control w-full px-4 py-3" />
-            </label>
-          </div>
-        </section>
-
-        <section class="app-panel p-6">
-          <div class="overflow-hidden border border-[#e4ded3] dark:border-slate-700">
-            <div class="overflow-x-auto">
-              <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-                <thead class="app-table-head dark:bg-slate-900/60">
-                  <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    <th class="px-4 py-3">{{ $t('portfolioBalance.symbol') }}</th>
-                    <th class="px-4 py-3">
-                      <span :class="hasExactTargetWeightSum ? 'text-emerald-600 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300'">
-                        {{ $t('portfolioBalance.targetWeight') }} ({{ formatWeightSum(plan.targetWeightInputSum) }})
-                      </span>
-                    </th>
-                    <th class="px-4 py-3">{{ $t('portfolioBalance.price', { currency: displayCurrency }) }}</th>
-                    <th class="px-4 py-3">{{ $t('portfolioBalance.unitsHeld') }}</th>
-                    <th class="px-4 py-3">{{ $t('portfolioBalance.currentValue', { currency: displayCurrency }) }}</th>
-                    <th class="px-4 py-3">{{ $t('portfolioBalance.trackingDiffValue', { currency: displayCurrency }) }}</th>
-                    <th class="px-4 py-3">{{ $t('portfolioBalance.remove') }}</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-800">
-                  <tr v-for="asset in assets" :key="asset.id">
-                    <td class="px-4 py-3">
-                      <SymbolSearchBox
-                        :model-value="asset.symbol"
-                        output-mode="base"
-                        :allowed-classes="['crypto', 'index', 'cash']"
-                        :placeholder="$t('portfolioBalance.emptySymbol')"
-                        trigger-class="!w-32 !bg-white dark:!bg-slate-900"
-                        :disabled-label="$t('symbolSearch.unavailable')"
-                        @update:model-value="updateAssetSymbol(asset.id, String($event))"
-                      />
-                    </td>
-                    <td class="px-4 py-3">
-                      <input
-                        :value="asset.targetWeight"
-                        type="number"
-                        min="0"
-                        step="0.5"
-                        class="app-control w-28 px-3 py-2"
-                        @input="updateAssetTargetWeight(asset.id, readInputValue($event))"
-                      />
-                    </td>
-                    <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
-                      {{ asset.currentPrice ? formatAssetPrice(asset) : '--' }}
-                    </td>
-                    <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
-                      {{ asset.units ? asset.units.toFixed(8) : '--' }}
-                    </td>
-                    <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
-                      {{ asset.currentPrice && asset.units ? formatAssetMoney(asset, holdingValue(asset)) : '--' }}
-                    </td>
-                    <td class="px-4 py-3" :class="returnClass(readPlanAsset(asset.id)?.trackingDiffValue || 0)">
-                      {{ asset.currentPrice && asset.units ? signedAssetMoney(asset, readPlanAsset(asset.id)?.trackingDiffValue || 0) : '--' }}
-                    </td>
-                    <td class="px-4 py-3">
-                      <button
-                        type="button"
-                        class="inline-flex items-center border border-slate-300 px-3 py-2 text-sm text-slate-500 transition hover:border-rose-300 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:border-rose-500 dark:hover:text-rose-300"
-                        :disabled="!canRemoveAsset"
-                        @click="removeAsset(asset.id)"
-                      >
-                        <TrashIcon class="h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <section class="app-panel p-6">
-          <div class="flex flex-col gap-3">
-            <div class="flex items-center justify-between gap-4">
-              <h2 class="text-xl font-semibold text-stone-950 dark:text-white">{{ $t('portfolioBalance.simulationTitle') }}</h2>
-              <button
-                type="button"
-                class="inline-flex items-center justify-center border border-[#b8d2c4] bg-[#edf3ee] px-4 py-2 text-sm font-medium text-[#0f6b4f] transition hover:bg-[#e1ece4] disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200 dark:hover:bg-emerald-900/50"
-                :disabled="simulationLoading"
-                @click="runSimulation"
-              >
-                <ArrowPathIcon class="mr-2 h-4 w-4" />
-                {{ simulationLoading ? $t('portfolioBalance.simulating') : $t('portfolioBalance.simulationRun') }}
-              </button>
-            </div>
-            <div class="grid gap-4 lg:grid-cols-2">
-              <AppDateField
-                v-model="simulation.simulationStartDate"
-                :label="$t('portfolioBalance.simulationStartDate')"
-                :max="today"
-              />
-              <label class="block">
-                <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.simulationInitialCapital', { currency: displayCurrency }) }}</span>
-                <input v-model.number="displaySimulationInitialCapitalInput" type="number" min="0" step="1000" class="app-control w-full px-4 py-3" />
-              </label>
-            </div>
-          </div>
-
-          <div v-if="simulationResult" class="mt-5 space-y-5">
-            <div class="border border-stone-200 bg-[#fbfaf7] p-4 dark:border-slate-700 dark:bg-slate-900/60">
-              <div class="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t('portfolioBalance.equityCurve') }}</div>
-              <div class="h-[320px]">
-              <PortfolioEquityChart :points="simulationResult.equityCurve" />
-              </div>
-            </div>
-            <div class="grid grid-cols-2 gap-3 xl:grid-cols-8">
-              <div class="border border-stone-200 bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/60">
-                <div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.simulationStartDate') }}</div>
-                <div class="mt-1 font-semibold text-slate-900 dark:text-white">{{ formatDate(simulationResult.startDate) }}</div>
-              </div>
-              <div class="border border-stone-200 bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/60">
-                <div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.simulationEndDate') }}</div>
-                <div class="mt-1 font-semibold text-slate-900 dark:text-white">{{ formatDate(simulationResult.endDate) }}</div>
-              </div>
-              <div class="border border-stone-200 bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/60">
-                <div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.totalReturn') }}</div>
-                <div class="mt-1 font-semibold" :class="returnClass(simulationResult.totalReturnPct)">{{ signedPercent(simulationResult.totalReturnPct) }}</div>
-              </div>
-              <div class="border border-stone-200 bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/60">
-                <div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.annualizedReturn') }}</div>
-                <div class="mt-1 font-semibold" :class="returnClass(simulationResult.annualizedReturnPct || 0)">{{ simulationResult.annualizedReturnPct === null ? '--' : signedPercent(simulationResult.annualizedReturnPct) }}</div>
-              </div>
-              <div class="border border-stone-200 bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/60">
-                <div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.maxDrawdown') }}</div>
-                <div class="mt-1 font-semibold text-rose-600 dark:text-rose-300">{{ formatPercent(simulationResult.maxDrawdownPct) }}</div>
-              </div>
-              <div class="border border-stone-200 bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/60">
-                <div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.reviewCount') }}</div>
-                <div class="mt-1 font-semibold text-slate-900 dark:text-white">{{ simulationResult.reviewCount }}</div>
-              </div>
-              <div class="border border-stone-200 bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/60">
-                <div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.outOfBandReviewCount') }}</div>
-                <div class="mt-1 font-semibold text-amber-600 dark:text-amber-300">{{ simulationResult.outOfBandReviewCount }}</div>
-              </div>
-              <div class="border border-stone-200 bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/60">
-                <div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.rebalanceCount') }}</div>
-                <div class="mt-1 font-semibold text-slate-900 dark:text-white">{{ simulationResult.rebalanceCount }}</div>
-              </div>
-            </div>
-          </div>
-          <div v-else class="mt-5 border border-stone-200 bg-[#fbfaf7] px-4 py-6 text-center text-sm text-stone-500 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-400">
-            {{ $t('portfolioBalance.noSimulation') }}
-          </div>
-        </section>
-      </main>
-    </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
-import { ArrowPathIcon, DocumentDuplicateIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline'
-import AppDateField from '@/components/AppDateField.vue'
-import PortfolioEquityChart from '@/components/PortfolioEquityChart.vue'
-import SymbolSearchBox from '@/components/SymbolSearchBox.vue'
+import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import PortfolioAssetsTable from '@/components/portfolio/PortfolioAssetsTable.vue'
+import PortfolioBalanceSetup from '@/components/portfolio/PortfolioBalanceSetup.vue'
+import PortfolioBalanceSidebar from '@/components/portfolio/PortfolioBalanceSidebar.vue'
+import PortfolioSimulationPanel from '@/components/portfolio/PortfolioSimulationPanel.vue'
 import { usePortfolioBalancePage } from '@/modules/tools'
-import { computePortfolioAssetHoldingValue } from '@/modules/tools/portfolioBalance'
-import { findSymbolCatalogItem, useSymbolCatalog } from '@/modules/market'
-import { formatDate, formatPercent, formatSignedPercent as signedPercent } from '@/modules/format'
-import { useMoney } from '@/composables/useMoney'
+import { parsePortfolioImportFile } from '@/modules/tools/portfolioBalance'
+import { useSymbolCatalog } from '@/modules/market'
+import { apiErrorMessage } from '@/api/request'
 import { todayLocalIsoDate } from '@/utils/localDate'
 
 const {
   portfolios,
+  deletedPortfolios,
+  hasMoreDeletedPortfolios,
   activePortfolioId,
   activePortfolio,
   assets,
@@ -359,70 +104,73 @@ const {
   simulationLoading,
   sourceMessage,
   sourceError,
+  storageReady,
+  storageLoading,
+  storageSaving,
+  storageError,
   simulationResult,
   selectPortfolio,
   createPortfolio,
+  createSamplePortfolio,
   copyPortfolio,
   deletePortfolio,
+  restorePortfolio,
   addAsset,
   removeAsset,
   updateAssetSymbol,
   updateAssetTargetWeight,
   refreshMarketPrices,
   runSimulation,
+  importPortfolioDocument,
+  exportPortfolioDocument,
+  reloadPortfolios,
+  loadMoreDeletedPortfolios,
 } = usePortfolioBalancePage()
+const { t } = useI18n()
 const { loadSymbols } = useSymbolCatalog()
-const { displayCurrency, formatMoney, formatSignedMoney, formatDisplayNumber, fromDisplayAmount } = useMoney()
-
 const today = todayLocalIsoDate()
-const formatQuoteMoney = (value) => formatMoney(value, 'USDT')
-const signedQuoteMoney = (value) => formatSignedMoney(value, 'USDT')
-const assetMeta = (asset) => findSymbolCatalogItem(asset?.symbol || '')
-const assetCurrency = (asset) => assetMeta(asset)?.pricing_currency || assetMeta(asset)?.currency || 'USDT'
-const formatAssetPrice = (asset) => formatMoney(asset.currentPrice, assetCurrency(asset))
-const formatAssetMoney = (asset, value) => formatMoney(value, assetCurrency(asset))
-const signedAssetMoney = (asset, value) => formatSignedMoney(value, assetCurrency(asset))
-const formatWeightSum = (value) => `${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}%`
-const holdingValue = (asset) => computePortfolioAssetHoldingValue(asset)
-const readInputValue = (event) => event?.target?.value || ''
-const hasExactTargetWeightSum = computed(() => Math.abs(Number(plan.value?.targetWeightInputSum || 0) - 100) < 0.005)
-const readPlanAsset = (assetId) => plan.value.assets.find((item) => item.id === assetId) || null
-const displayTotalValue = computed(() => formatQuoteMoney(plan.value?.totalValue || 0))
-const displayTrackingCapital = computed(() => formatQuoteMoney(plan.value?.trackingCapital || 0))
-const displayMaxDrift = computed(() => formatPercent(plan.value?.maxDriftWeight || 0))
-const displayOutOfBand = computed(() => String(plan.value?.outOfBandCount || 0))
-const displayTrackingCapitalInput = computed({
-  get: () => formatDisplayNumber(tracking.value.virtualCapital, 'USDT', 2),
-  set: (value) => {
-    tracking.value.virtualCapital = fromDisplayAmount(value, 'USDT') ?? tracking.value.virtualCapital
-  },
-})
-const displayMinTradeAmountInput = computed({
-  get: () => formatDisplayNumber(strategy.value.minTradeAmount, 'USDT', 2),
-  set: (value) => {
-    strategy.value.minTradeAmount = fromDisplayAmount(value, 'USDT') ?? strategy.value.minTradeAmount
-  },
-})
-const displaySimulationInitialCapitalInput = computed({
-  get: () => formatDisplayNumber(simulation.value.initialCapital, 'USDT', 2),
-  set: (value) => {
-    simulation.value.initialCapital = fromDisplayAmount(value, 'USDT') ?? simulation.value.initialCapital
-  },
-})
-
-const strategyCardClass = (action) => {
-  if (action === 'full') return 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-200'
-  if (action === 'cashflow') return 'bg-[#edf3ee] text-[#0f6b4f] dark:bg-emerald-950/40 dark:text-emerald-200'
-  return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200'
+const portfolioFileError = ref('')
+const runPortfolioAction = async (action) => {
+  try {
+    await action()
+  } catch {
+    // The persistence layer has already populated storageError for inline recovery.
+  }
+}
+const handleCreatePortfolio = () => runPortfolioAction(createPortfolio)
+const handleCreateSamplePortfolio = () => runPortfolioAction(createSamplePortfolio)
+const handleCopyPortfolio = (portfolioId) => runPortfolioAction(() => copyPortfolio(portfolioId))
+const handleRestorePortfolio = (portfolioId) => runPortfolioAction(() => restorePortfolio(portfolioId))
+const handleLoadMoreDeletedPortfolios = () => runPortfolioAction(loadMoreDeletedPortfolios)
+const confirmDeletePortfolio = async (portfolioId) => {
+  const portfolio = portfolios.find((item) => item.id === portfolioId)
+  if (!portfolio || !window.confirm(t('portfolioBalance.confirmDelete', { name: portfolio.name }))) return
+  await runPortfolioAction(() => deletePortfolio(portfolioId))
+}
+const exportBackup = async () => {
+  portfolioFileError.value = ''
+  try {
+    const document = await exportPortfolioDocument()
+    const blob = new Blob([JSON.stringify(document, null, 2)], { type: 'application/json;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const anchor = window.document.createElement('a')
+    anchor.href = url
+    anchor.download = `heimdall-portfolios-${todayLocalIsoDate()}.json`
+    anchor.click()
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    portfolioFileError.value = apiErrorMessage(error, t('portfolioBalance.exportFailed'))
+  }
+}
+const importBackup = async (file) => {
+  portfolioFileError.value = ''
+  try {
+    const document = await parsePortfolioImportFile(file)
+    await importPortfolioDocument(document, 'merge')
+  } catch (error) {
+    portfolioFileError.value = apiErrorMessage(error, t('portfolioBalance.importFailed'))
+  }
 }
 
-const returnClass = (value) => {
-  if (value > 0) return 'text-emerald-600 dark:text-emerald-300'
-  if (value < 0) return 'text-rose-600 dark:text-rose-300'
-  return 'text-slate-600 dark:text-slate-300'
-}
-
-onMounted(() => {
-  loadSymbols()
-})
+onMounted(loadSymbols)
 </script>

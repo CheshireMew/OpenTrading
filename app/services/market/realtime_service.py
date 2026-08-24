@@ -4,10 +4,15 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from app.contracts.dto.market import RealtimeResponse
+from app.application.model_contracts import MarketAnalysisModelOutput
+from app.contracts.dto.market_history import RealtimeResponse
 from app.contracts.market_history import build_realtime_response
 from config import settings
-from app.domain.market.constants import DEFAULT_ATR_PERIOD, DEFAULT_VOLATILITY_PERIOD
+from app.domain.market.constants import (
+    DEFAULT_ATR_PERIOD,
+    DEFAULT_VOLATILITY_PERIOD,
+    periods_per_year_for_timeframe,
+)
 from app.domain.market.prompt_engine import PromptEngine
 from app.domain.market.technical_analysis import TechnicalAnalysis
 from app.services.market.market_data_service import MarketDataService
@@ -43,7 +48,7 @@ class RealtimeService:
         annualized_volatility = TechnicalAnalysis.calculate_annualized_volatility(
             closes,
             period=volatility_period,
-            periods_per_year=TechnicalAnalysis.periods_per_year_for_timeframe(timeframe),
+            periods_per_year=periods_per_year_for_timeframe(timeframe),
         )
         macd = TechnicalAnalysis.calculate_macd(
             closes, settings.MACD_FAST, settings.MACD_SLOW, settings.MACD_SIGNAL
@@ -104,4 +109,14 @@ class RealtimeService:
             kline_data,
             indicators,
         )
-        return await llm_client.analyze(prompt)
+        result = await llm_client.analyze(
+            prompt,
+            response_model=MarketAnalysisModelOutput,
+            purpose="realtime_market_analysis",
+        )
+        if result.succeeded:
+            return result.output.model_dump(mode="json")
+        return {
+            "status": result.status,
+            "error_code": result.error_code,
+        }

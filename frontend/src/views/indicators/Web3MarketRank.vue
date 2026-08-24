@@ -40,8 +40,9 @@
           </button>
         </div>
         <div v-if="web3Error" class="border-b border-rose-100 bg-rose-50 px-5 py-3 text-sm text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">{{ web3Error }}</div>
-        <div class="overflow-x-auto">
-          <table class="min-w-full text-left text-sm">
+        <p class="app-table-scroll-hint">{{ t('common.horizontalScrollHint') }}</p>
+        <div class="app-table-scroll" tabindex="0" :aria-label="t('common.horizontalScrollHint')">
+          <table class="min-w-[72rem] text-left text-sm">
             <thead class="app-table-head">
               <tr>
                 <th class="px-5 py-3 font-semibold">{{ t('web3Rank.columns.rank') }}</th>
@@ -105,7 +106,7 @@
                 </td>
                 <td class="px-5 py-4 font-semibold text-[#0f6b4f] dark:text-emerald-300">{{ formatScore(item.heat_score) }}</td>
                 <td class="px-5 py-4">
-                  <div class="flex flex-wrap gap-1.5 text-xs">
+                  <div class="flex max-w-[24rem] flex-wrap gap-1.5 text-xs">
                     <span v-if="item.ranks?.top_search" class="app-chip">{{ t('web3Rank.signals.search') }} #{{ item.ranks.top_search }}</span>
                     <span v-if="item.ranks?.trending" class="app-chip">{{ t('web3Rank.signals.trending') }} #{{ item.ranks.trending }}</span>
                     <span v-if="item.metrics?.social_hype" class="rounded-full bg-violet-500/10 px-2 py-1 text-violet-600 dark:text-violet-300">{{ t('web3Rank.signals.social') }} {{ formatCompact(item.metrics.social_hype) }}</span>
@@ -130,8 +131,9 @@
         <div class="app-panel-header">
           <h3 class="app-section-title">{{ t('web3Rank.addressPnlTitle') }}</h3>
         </div>
-        <div class="overflow-x-auto">
-          <table class="min-w-full text-left text-sm">
+        <p class="app-table-scroll-hint">{{ t('common.horizontalScrollHint') }}</p>
+        <div class="app-table-scroll" tabindex="0" :aria-label="t('common.horizontalScrollHint')">
+          <table class="min-w-[52rem] text-left text-sm">
             <thead class="app-table-head">
               <tr>
                 <th class="px-5 py-3 font-semibold">{{ t('web3Rank.columns.address') }}</th>

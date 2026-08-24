@@ -1,8 +1,8 @@
 import asyncio
 import logging
 
-from app.application.indicators.ports import DliCacheInvalidator, IndicatorProvider, MarketIndicatorWriter
-from app.domain.market.dli_catalog import market_indicator_meta_catalog
+from app.application.indicators.ports import IndicatorProvider, MarketIndicatorWriter
+from app.domain.market.indicator_catalog import market_indicator_meta_catalog
 
 logger = logging.getLogger(__name__)
 
@@ -14,36 +14,45 @@ class MarketIndicatorCronJob:
         *,
         repository: MarketIndicatorWriter,
         providers: list[IndicatorProvider],
-        dli_cache: DliCacheInvalidator | None = None,
     ):
         self.repository = repository
         self.providers = providers
-        self.dli_cache = dli_cache
 
-    async def run(self):
-        """执行聚合逻辑"""
+    async def collect(self) -> list:
+        """Collect all provider results and fail when no provider completed."""
         logger.info("Starting MarketIndicator Cron Job...")
 
+        results = await asyncio.gather(
+            *(provider.fetch_data() for provider in self.providers),
+            return_exceptions=True,
+        )
         all_data_points = []
-        for provider in self.providers:
-            try:
-                points = await provider.fetch_data()
-                all_data_points.extend(points)
-            except Exception as e:
-                logger.error(f"Error fetching from provider {provider.__class__.__name__}: {e}")
+        completed_provider_count = 0
+        for provider, points in zip(self.providers, results):
+            if isinstance(points, Exception):
+                logger.error(
+                    "Error fetching from provider %s: %s",
+                    provider.__class__.__name__,
+                    points,
+                )
+                continue
+            completed_provider_count += 1
+            all_data_points.extend(points)
 
-        if all_data_points:
-            self._save_to_db(all_data_points)
-            if self.dli_cache is not None:
-                self.dli_cache.invalidate_all()
+        if completed_provider_count == 0:
+            raise RuntimeError("All market indicator providers failed")
+
+        return all_data_points
+
+    def persist(self, data_points: list) -> None:
+        if data_points:
+            self.repository.upsert_points(data_points, market_indicator_meta_catalog())
+
+    async def run(self):
+        """Compatibility entry point for callers that own a blocking context."""
+        all_data_points = await self.collect()
+        self.persist(all_data_points)
 
         logger.info(f"MarketIndicator Cron Job Complete. Inserted {len(all_data_points)} records.")
-
-    def _save_to_db(self, data_points: list):
-        """将获取到的指标数据点插入数据表"""
-        try:
-            self.repository.upsert_points(data_points, market_indicator_meta_catalog())
-        except Exception as e:
-            logger.error(f"Failed to save Market Indicator to DB: {e}")
-            raise
+        return len(all_data_points)
 

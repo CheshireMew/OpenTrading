@@ -7,8 +7,9 @@ from fastapi import Depends, Query, Request
 from app.contracts.frontend import FrontendContractRouter
 from app.dependencies import get_index_data_service
 from app.rate_limit import limiter
-from app.contracts.dto.market import MarketIndexHistoryResponse, MarketIndexResponse
+from app.contracts.dto.market_catalog import MarketIndexHistoryResponse, MarketIndexResponse
 from app.contracts.market_history import build_ohlcv_points
+from app.domain.market.index_catalog import INDEX_CATALOG
 from config import settings
 
 
@@ -48,9 +49,8 @@ def _index_history_response(record: Any) -> MarketIndexHistoryResponse:
 
 @router.get("/indexes", response_model=list[MarketIndexResponse])
 async def list_market_indexes(
-    service = Depends(get_index_data_service),
 ):
-    return [_index_response(record) for record in await service.list_indexes_async()]
+    return [_index_response(record) for record in INDEX_CATALOG.values()]
 
 
 @router.get("/indexes/history", response_model=MarketIndexHistoryResponse)

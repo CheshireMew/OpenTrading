@@ -1,5 +1,4 @@
 import httpx
-import ccxt
 import time
 import asyncio
 from typing import List, Dict, Any, Optional
@@ -7,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from .base_provider import BaseIndicatorProvider, logger
 from config import settings
 from app.infra.executor import run_external_io
+from app.services.market.ttl_cache import TtlMemoryCache
 
 class TechCalculatorProvider(BaseIndicatorProvider):
     """
@@ -15,10 +15,22 @@ class TechCalculatorProvider(BaseIndicatorProvider):
     数据源: Binance (via CCXT) + Mempool.space
     """
 
+    def __init__(self):
+        super().__init__()
+        self._expensive_cache = TtlMemoryCache(
+            settings.MARKET_EXPENSIVE_INDICATOR_TTL,
+            copy_value=dict,
+        )
+
     async def _calculate_200wma(self) -> Optional[Dict[str, Any]]:
         """计算比特币的 200 周移动平均线 (数据源: Binance CCXT)"""
+        cached = self._expensive_cache.get("200wma")
+        if cached is not None:
+            return cached
         try:
             def _get():
+                import ccxt
+
                 exchange = ccxt.binance({'enableRateLimit': True})
                 # 200周 ≈ 1400天，多拿一些确保够
                 since = int((datetime.now() - timedelta(days=1500)).timestamp() * 1000)
@@ -35,7 +47,10 @@ class TechCalculatorProvider(BaseIndicatorProvider):
                     "timestamp": datetime.fromtimestamp(last_ts, tz=timezone.utc),
                     "value": round(wma_200, 2)
                 }
-            return await run_external_io(_get)
+            result = await run_external_io(_get)
+            if result is not None:
+                self._expensive_cache.set("200wma", result)
+            return result
         except Exception as e:
             logger.error(f"Failed to calculate 200WMA: {e}")
             return None
@@ -95,8 +110,13 @@ class TechCalculatorProvider(BaseIndicatorProvider):
 
     async def _calculate_drawdown(self) -> Optional[Dict[str, Any]]:
         """计算 BTC 距历史最高点的回撤幅度 (%) (数据源: Binance CCXT)"""
+        cached = self._expensive_cache.get("drawdown")
+        if cached is not None:
+            return cached
         try:
             def _get():
+                import ccxt
+
                 exchange = ccxt.binance({'enableRateLimit': True})
                 # Binance BTC/USDT 数据从 2017年8月开始
                 all_data = []
@@ -124,7 +144,10 @@ class TechCalculatorProvider(BaseIndicatorProvider):
                     "timestamp": datetime.fromtimestamp(last_ts, tz=timezone.utc),
                     "value": round(drawdown, 2)
                 }
-            return await run_external_io(_get)
+            result = await run_external_io(_get)
+            if result is not None:
+                self._expensive_cache.set("drawdown", result)
+            return result
         except Exception as e:
             logger.error(f"Failed to calculate BTC drawdown: {e}")
             return None

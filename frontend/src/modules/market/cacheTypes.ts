@@ -1,6 +1,7 @@
 export interface CacheEntry<TData> {
   data: TData
   timestamp: number
+  lastAccessed: number
 }
 
 export const MARKET_CACHE_TTL_MS = {
@@ -8,7 +9,6 @@ export const MARKET_CACHE_TTL_MS = {
   marketIndicators: 300_000,
   sentimentFresh: 300_000,
   sentimentRefresh: 60_000,
-  macroLiquidity: 300_000,
   priceHistory: 1_800_000,
 } as const
 
@@ -28,8 +28,18 @@ export const writeCacheEntry = <TData>(
   data: TData,
   maxEntries: number = MARKET_CACHE_LIMITS.keyedResource,
 ) => {
-  cache[key] = { data, timestamp: Date.now() }
+  const now = Date.now()
+  cache[key] = { data, timestamp: now, lastAccessed: now }
   pruneCacheEntries(cache, maxEntries)
+}
+
+export const touchCacheEntry = <TData>(
+  cache: Record<string, CacheEntry<TData>>,
+  key: string,
+): CacheEntry<TData> | undefined => {
+  const entry = cache[key]
+  if (entry) entry.lastAccessed = Date.now()
+  return entry
 }
 
 export const pruneCacheEntries = <TData>(
@@ -39,7 +49,7 @@ export const pruneCacheEntries = <TData>(
   const keys = Object.keys(cache)
   if (keys.length <= maxEntries) return
   keys
-    .sort((left, right) => cache[left].timestamp - cache[right].timestamp)
+    .sort((left, right) => cache[left].lastAccessed - cache[right].lastAccessed)
     .slice(0, keys.length - maxEntries)
     .forEach((key) => {
       delete cache[key]

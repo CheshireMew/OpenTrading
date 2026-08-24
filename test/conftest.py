@@ -2,19 +2,20 @@
 Shared pytest fixtures for Heimdall tests.
 """
 from contextlib import asynccontextmanager
-from pathlib import Path
-import sys
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
-
 import app.main as main_module
-from app.runtime import AppRuntimeServices
+from app.runtime import (
+    ApiRuntimeServices,
+    AppRuntimeServices,
+    IndicatorRuntimeServices,
+    InfraRuntimeServices,
+    MarketRuntimeServices,
+    SystemRuntimeServices,
+    ToolRuntimeServices,
+)
 from app.infra.db import build_database_runtime
 from app.infra.db.schema_runtime import prepare_db
 from config.settings import AppSettings
@@ -139,18 +140,35 @@ def api_harness(installed_database_runtime):
     }
     app = main_module.app
     app.state.runtime_services = AppRuntimeServices(
-        database_runtime=installed_database_runtime,
-        cache_service=object(),
-        market_query_service=services["market_query_app"],
-        market_insight_service=services["market_insight_app"],
-        binance_market_intel=services["binance_market_service"],
-        binance_web3_ranks=services["binance_web3_ranks"],
-        binance_web3_heat_ranks=services["binance_web3_heat_ranks"],
-        binance_web3_tokens=services["binance_web3_tokens"],
-        tools_app_service=services["tools_app"],
-        currency_rate_service=services["currency_rate"],
-        llm_config_service=services["llm_config"],
-        fred_api_config_service=services["fred_api_config"],
+        infra=InfraRuntimeServices(installed_database_runtime, object()),
+        indicators=IndicatorRuntimeServices(object(), object()),
+        api=ApiRuntimeServices(
+            system=SystemRuntimeServices(
+                services["currency_rate"],
+                services["llm_config"],
+                services["fred_api_config"],
+            ),
+            market=MarketRuntimeServices(
+                exchange_gateway=object(),
+                kline_store=object(),
+                data=object(),
+                realtime=object(),
+                query=services["market_query_app"],
+                insight=services["market_insight_app"],
+                websocket=object(),
+                indexes=object(),
+                binance_research_store=object(),
+                binance_intel=services["binance_market_service"],
+                binance_snapshot=object(),
+                web3_ranks=services["binance_web3_ranks"],
+                web3_heat_ranks=services["binance_web3_heat_ranks"],
+                web3_tokens=services["binance_web3_tokens"],
+                sentiment_client=object(),
+                sentiment_repository=object(),
+                sentiment=object(),
+            ),
+            tools=ToolRuntimeServices(object(), object(), services["tools_app"], object()),
+        ),
     )
     app.state.database_error = None
     original_lifespan = app.router.lifespan_context

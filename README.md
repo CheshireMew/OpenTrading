@@ -1,277 +1,156 @@
-# Heimdall 🛡️
+# Heimdall
 
-> **海姆达尔** —— 北欧神话中的光之神，拥有千里眼和顺风耳，守护彩虹桥并预知未来。
+Heimdall 是一个本地运行的加密货币市场研究与组合分析应用。它把行情、技术指标、市场信号、可配置的大模型分析和几种长期投资工具放在同一个 FastAPI + Vue 界面中。
 
-**Heimdall** 是一个基于 AI 的加密货币交易智能投顾工具。它如同神话中的守护者一般，全天候监控市场，通过技术分析和 AI 深度学习发现潜在的交易机会，并及时提醒你。
+它不会连接账户下单，也不保证收益。模型输出和历史回测类结果只能作为研究材料，不能替代个人判断。
 
-## ✨ 核心特性
+## 当前功能
 
-- 🔍 **智能发现** - 通过可配置的大模型分析市场趋势和技术指标
-- 📊 **多维度分析** - 支持 EMA、MACD、RSI、ATR 等核心技术指标
-- 🌐 **多交易所支持** - 基于 [CCXT](https://github.com/ccxt/ccxt)，支持 Binance、OKX、Bybit 等主流交易所
-- 🎯 **非自动交易** - 专注于"机会发现"和"投资建议"，不涉及自动下单
-- 🧩 **模块化设计** - 高内聚、低耦合，易于扩展和维护
-- 🧰 **轻量工具** - 支持 DCA、币种对比、组合平衡和减半周期观察
+- 实时行情、EMA、MACD、RSI、ATR 和结构化模型分析
+- 市场信号、Binance 合约市场与 Web3 排行
+- 币种对比、DCA 模拟、减半周期观察
+- 多组合配置、服务端持久化、软删除恢复、JSON 导入与导出
+- 独立的 API 与后台运行进程，数据库心跳、即时首次采集和运行健康检查
+- 设置页中的模型提供商、FRED 和显示货币配置
 
-## 🚫 非目标
+组合数据保存在数据库中，不再依赖浏览器临时快照。多个窗口同时修改时会通过版本号拒绝覆盖；删除的组合可以在回收区恢复。
 
-- ❌ 不是自动交易机器人（No Auto Trading）
-- ❌ 不是高频交易系统（No HFT）
-- ❌ 不保证盈利（DYOR - Do Your Own Research）
+## 环境要求
 
-## 启动
-
-推荐使用统一启动脚本。它会分别启动 API、background runtime 和前端开发服务：
-
-```powershell
-.\dev_start.bat
-```
-
-如需手动启动，API 和后台运行时必须分成两个进程：
-
-```powershell
-$env:APP_RUNTIME_ROLE = "api"
-.\venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-
-$env:APP_RUNTIME_ROLE = "background"
-.\venv\Scripts\python.exe scripts\run_background_runtime.py
-
-cd frontend
-npm run dev
-```
-
-构建前端后，后端会直接托管 `frontend/dist`，生产环境只保留这一套入口。
-
-## 📦 安装
-
-### 1. 环境要求
+当前项目只验收 Windows。
 
 - Python 3.12.x
-- pip
-- Node.js / npm
-- Python 技术指标依赖固定使用 `TA-Lib==0.6.8`。
+- Node.js 22.12.0 或更高版本
+- npm
+- PostgreSQL，或用于本地研究的 SQLite
+- Redis 可选；不可用时应用会使用内存缓存
 
-### 2. 克隆项目
+Python 依赖的可复现安装清单是 `requirements.lock`，前端依赖由 `frontend/package-lock.json` 固定。抽象依赖同时记录在 `pyproject.toml` 和 `requirements.txt` 中。
 
-```bash
-git clone <your-repo-url>
-cd Heimdall
-```
+## 安装
 
-### 3. 安装依赖
+在项目根目录执行：
 
 ```powershell
 py -3.12 -m venv venv
-.\venv\Scripts\python.exe -m pip install --upgrade pip setuptools wheel
-.\venv\Scripts\python.exe -m pip install -r requirements.txt
+.\venv\Scripts\python.exe -m pip install --require-hashes -r requirements.lock
 
-cd frontend
+Push-Location frontend
 npm ci
+Pop-Location
 ```
 
-### 4. 配置环境变量
+复制配置模板：
 
-```bash
-# 复制环境变量模板
-cp .env.example .env
-
-# 编辑 .env 文件，填写你的模型服务 API Key
-# DEEPSEEK_API_KEY=sk-your-actual-api-key-here
+```powershell
+Copy-Item .env.example .env
 ```
 
-> **获取 DeepSeek API Key**: 访问 [DeepSeek Platform](https://platform.deepseek.com/api_keys) 注册并创建 API Key
+`DATABASE_URL` 是唯一数据库入口，必须显式配置。例如，把本地 SQLite 数据放到 D 盘：
 
-### 5. 初始化数据库
-
-```bash
-python scripts/prepare_db.py
+```dotenv
+DATABASE_URL=sqlite:///D:/Tools/HeimdallData/heimdall.db
 ```
 
-数据库结构由 Alembic 管理。`DATABASE_URL` 是唯一数据库入口；服务器部署请配置 PostgreSQL 连接串，例如 `postgresql://user:password@host:5432/heimdall`。发现未配置数据库或未迁移结构会直接报错，避免运行时继续写入错误数据库或错误表结构。
+正常长期运行建议使用 PostgreSQL：
 
-## 🚀 快速开始
-
-### 测试数据获取
-
-```bash
-python test/test_market_data_service.py
+```dotenv
+DATABASE_URL=postgresql://user:password@localhost:5432/heimdall
 ```
 
-验证是否能成功从交易所获取 K 线数据。
+模型 API Key、FRED、Redis 和运行目录等配置见 `.env.example`。Redis 未配置或不可用不会阻止启动；模型未配置时，相关接口会返回明确的不可用状态，不会伪造分析结果。
 
-### 测试技术指标计算
+初始化或升级数据库：
 
-```bash
-python test/test_technical_analysis.py
+```powershell
+.\venv\Scripts\python.exe -m scripts.prepare_db
 ```
 
-验证 EMA、MACD、RSI、ATR 等指标计算是否正确。
+## 启动
 
-### 启动 Web Dashboard 📊
-
-Heimdall 提供了一个现代化的 Web 界面，基于 **FastAPI** 构建，用于实时市场监控和轻量投资工具。
+推荐使用 Windows 启动器：
 
 ```powershell
 .\dev_start.bat
 ```
 
-启动后访问: [http://localhost:8000](http://localhost:8000)
+启动器会依次完成数据库迁移、API 存活检查、后台进程就绪检查，最后再启动前端。三个进程分别运行，避免网页可打开但定时采集没有工作的假就绪状态。
 
-**API文档**（自动生成）:
+如果 `.env` 使用本机 PostgreSQL 且对应 Windows 服务尚未运行，启动器会只为“启动该服务”弹出一次 UAC 确认；应用的 API、后台进程和前端仍以当前普通用户运行。取消确认时，启动器会停止并明确显示需要手动启动的服务名，不会在数据库不可用时继续启动出一个假就绪页面。
 
-- Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
-- ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+默认地址：
 
-包含功能：
+- 前端：http://127.0.0.1:4173
+- API：http://127.0.0.1:8000
+- API 文档：http://127.0.0.1:8000/docs
+- 存活检查：http://127.0.0.1:8000/health/live
+- 完整就绪检查：http://127.0.0.1:8000/health
 
-- **实时分析**: 查看实时价格、指标 (EMA/RSI/MACD) 和 AI 建议
-- **币种对比**: 专业K线对比工具，支持多周期切换和三图联动
-- **DCA模拟器**: 定投历史模拟工具
-- **组合平衡**: 轻量资产配置与再平衡观察
-- **配置管理**: 界面化查看系统参数
+手动启动时也要保持三个终端：
 
-## ⚙️ 配置说明
+```powershell
+# 终端 1：API
+$env:APP_RUNTIME_ROLE = "api"
+.\venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 
-### 修改监控的交易对
+# 终端 2：后台运行时
+$env:APP_RUNTIME_ROLE = "background"
+.\venv\Scripts\python.exe -m scripts.run_background_runtime
 
-编辑 `config/settings.py`：
-
-```python
-SYMBOLS = [
-    'BTC/USDT',
-    'ETH/USDT',
-    'SOL/USDT',
-    'DOGE/USDT',  # 添加更多交易对
-]
+# 终端 3：前端
+Push-Location frontend
+npm run dev -- --host 127.0.0.1 --port 4173 --strictPort
 ```
 
-### 修改 K 线周期
+构建后的 `frontend/dist` 会由 FastAPI 直接托管；开发期由 Vite 代理 API。
 
-```python
-TIMEFRAME = '1h'  # 可选: '1m', '5m', '15m', '1h', '4h', '1d'
+## 验证
+
+后端测试和语法检查：
+
+```powershell
+.\venv\Scripts\python.exe -m compileall -q app config scripts test utils
+.\venv\Scripts\python.exe -m pytest -q
 ```
 
-### 修改技术指标参数
+前端契约和构建：
 
-```python
-EMA_PERIOD = 20      # EMA 周期
-RSI_PERIOD = 14      # RSI 周期
-MACD_FAST = 12       # MACD 快线
-MACD_SLOW = 26       # MACD 慢线
-MACD_SIGNAL = 9      # MACD 信号线
-```
-
-### 切换交易所
-
-```python
-EXCHANGE_ID = 'binance'  # 可选: 'okx', 'bybit', 'gate' 等 CCXT 支持的交易所
-```
-
-## 📂 项目结构
-
-```
-Heimdall/
-├── app/                     # FastAPI 后端应用
-│   ├── main.py              # FastAPI 入口
-│   ├── routers/             # HTTP 路由入口
-│   ├── services/            # 应用服务层
-│   ├── domain/              # 纯业务规则与指标计算
-│   ├── infra/               # 数据库、缓存、外部服务
-│   ├── application/         # 用例编排层
-│   └── contracts/           # 请求/响应 contract，前端类型从这里生成
-├── config/
-│   └── settings.py          # 全局配置
-├── frontend/                # Vue + Vite 前端工程
-│   ├── src/                 # 前端源码
-│   │   ├── views/           # 页面层
-│   │   ├── modules/         # 功能模块层
-│   │   ├── api/             # API 访问层
-│   │   └── components/      # 复用组件
-│   └── dist/                # 构建产物（由后端托管）
-├── utils/
-│   └── logger.py            # 日志工具
-├── test/                    # 测试套件
-│   └── ...
-├── requirements.txt         # Python 依赖
-├── alembic/                 # 数据库迁移
-└── .env.example             # 环境变量模板
-```
-
-## 🧪 测试
-
-### 单元测试
-
-```bash
-pytest
-```
-
-### 前端契约与构建
-
-```bash
-npm run sync:contracts
-npm --prefix frontend run typecheck
+```powershell
+$env:HEIMDALL_PYTHON = (Resolve-Path .\venv\Scripts\python.exe)
 npm run build:frontend
 ```
 
-各业务模块的 `generatedContracts.ts` 和 `frontend/src/api/routes.ts` 都由后端 Pydantic contract 生成，不要手写修改。
+`npm run build:frontend` 会先从 FastAPI 路由和 Pydantic 模型重新生成 TypeScript 契约，再执行类型检查和 Vite 构建。以下生成文件不应手写：
 
-运行时产生的日志和临时文件默认写入项目根目录下的 `.heimdall_runtime/`。这个目录已被 Git 忽略；如需迁移到其他磁盘，可在环境变量中显式配置 `RUNTIME_ROOT_DIR`、`LOG_DIR` 和 `TEMP_DIR`。
+- `frontend/src/api/errors.ts`
+- `frontend/src/api/routes.ts`
+- `frontend/src/modules/market/generatedContracts.ts`
+- `frontend/src/modules/system/generatedContracts.ts`
+- `frontend/src/modules/tools/generatedContracts.ts`
 
-## 🔧 高级功能
+CI 在 `windows-latest` 上使用 Python 3.12.10 和 Node.js 22.23.0，依赖安装、测试、前端构建和契约漂移都是阻断项。
 
-- [x] Web Dashboard 可视化界面
-- [x] 后台任务运行时
-- [x] DCA、币种对比、组合平衡
-- [ ] 多渠道通知（邮件 / Telegram / 企业微信）
+## 数据和运行文件
 
-## ❓ FAQ
+运行日志、临时文件、配置 JSON 和后台锁默认写入项目根目录的 `.heimdall_runtime`。可以通过 `RUNTIME_ROOT_DIR`、`LOG_DIR` 和 `TEMP_DIR` 把它们统一放到其他磁盘。
 
-### 1. 如何配置模型 API Key？
+`data/btc_history_early.json` 含早期合成数据和后续交易所代理数据。精确日期边界、生成过程、文件哈希和适用限制见 `data/README.md`。DCA 页面会在结果涉及合成区间时显示数据质量警告。
 
-默认可以使用 DeepSeek，也可以在设置页切换到其他预设或自定义模型服务。API Key 可以写入 `.env`，也可以在界面配置。
+外部数据源、可选降级路径和诊断命令见 `docs/DATA_SOURCES.md`。
 
-### 2. 支持哪些交易所？
+## 项目结构
 
-理论上支持所有 [CCXT](https://github.com/ccxt/ccxt) 支持的交易所（200+ 个），常用的有：
+```text
+app/          FastAPI 入口、业务服务、领域模型、基础设施和 HTTP 契约
+alembic/      数据库迁移
+config/       应用配置
+data/         随仓库提供的数据及来源说明
+frontend/     Vue 3、Vite 和 TypeScript 前端
+scripts/      可通过 python -m scripts.<name> 调用的命令
+test/         后端与契约测试
+archived/     保留的历史实现和过期项目材料，不属于当前运行入口
+```
 
-- Binance
-- OKX
-- Bybit
-- Gate.io
-- Coinbase
-- Kraken
+## 许可证
 
-### 3. 可以添加自定义技术指标吗？
-
-可以！在 `app/domain/market/technical_analysis.py` 中添加新的静态方法即可，参考现有的 `calculate_ema` 等实现。
-
-### 4. AI 分析准确吗？
-
-AI 仅提供参考建议，不保证准确性。**加密货币投资有风险，请谨慎决策，自行承担风险。**
-
-### 5. 程序会自动下单吗？
-
-**不会**。Heimdall 的定位是"智能投顾"，只负责发现机会和提供建议，不涉及资金操作。
-
-### 6. 如何让程序持续运行？
-
-可以使用以下方式：
-
-- **Linux/macOS**: `crontab` 定时任务
-- **Windows**: 任务计划程序
-- **应用后台运行时**: 使用 `APP_RUNTIME_ROLE=background` 独立运行 scheduler 和周期性维护任务
-- **Docker**: 容器化部署（规划中）
-
-## ⚖️ 免责声明
-
-本项目仅供学习和研究使用。加密货币市场波动剧烈，投资有风险。使用本工具产生的任何投资决策及其后果，由用户自行承担。开发者不对任何资金损失负责。
-
-**请务必理性投资，切勿盲目跟单。**
-
-## 📄 许可
-
-MIT License
-
----
-
-**Built with ❤️ by Heimdall Team**
+本项目采用 GNU Affero General Public License v3.0 or later。完整文本见 `LICENSE`，文件级边界和第三方材料见 `LICENSING.md` 与 `THIRD_PARTY_NOTICES.md`。

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from app.contracts.dto.market import RealtimeResponse
+from app.contracts.dto.market_history import RealtimeResponse
 from app.exceptions import ServiceUnavailableError
 from app.infra.executor import run_external_io
 from app.services.market.app_service_support import validate_market_request
@@ -54,10 +54,13 @@ class MarketRealtimeQueryService:
         resolved_timeframe = timeframe or settings.TIMEFRAME
         resolved_limit = limit or settings.LIMIT
         try:
-            snapshot = await self.load_snapshot(
+            return await self._build_realtime_response(
                 symbol=symbol,
                 timeframe=resolved_timeframe,
                 limit=resolved_limit,
+                use_ai=True,
+                include_type=False,
+                ai_log_context="HTTP",
             )
         except Exception as exc:
             err_str = str(exc).lower()
@@ -65,24 +68,6 @@ class MarketRealtimeQueryService:
                 logger.error(f"实时行情连接失败: {exc}")
                 raise ServiceUnavailableError("无法连接到交易所 (Network Error)") from exc
             raise
-        kline_data = snapshot.kline_data
-        indicators = snapshot.indicators
-
-        ai_analysis = None
-        llm_client = self.llm_client_factory()
-        if llm_client:
-            try:
-                ai_analysis = await self.realtime_service.maybe_run_ai(llm_client, symbol, kline_data, indicators)
-            except Exception as exc:
-                logger.warning(f"AI 分析失败: {exc}")
-        return self.realtime_service.build_response(
-            symbol,
-            resolved_timeframe,
-            kline_data,
-            indicators,
-            ai_analysis=ai_analysis,
-        )
-
     async def get_realtime_ws_payload(
         self,
         *,
@@ -91,6 +76,25 @@ class MarketRealtimeQueryService:
         limit: int,
         use_ai: bool,
     ) -> RealtimeResponse:
+        return await self._build_realtime_response(
+            symbol=symbol,
+            timeframe=timeframe,
+            limit=limit,
+            use_ai=use_ai,
+            include_type=True,
+            ai_log_context="WebSocket",
+        )
+
+    async def _build_realtime_response(
+        self,
+        *,
+        symbol: str,
+        timeframe: str,
+        limit: int,
+        use_ai: bool,
+        include_type: bool,
+        ai_log_context: str,
+    ) -> RealtimeResponse:
         snapshot = await self.load_snapshot(
             symbol=symbol,
             timeframe=timeframe,
@@ -98,20 +102,43 @@ class MarketRealtimeQueryService:
         )
         kline_data = snapshot.kline_data
         indicators = snapshot.indicators
-
-        ai_analysis = None
-        if use_ai:
-            llm_client = self.llm_client_factory()
-            if llm_client:
-                try:
-                    ai_analysis = await self.realtime_service.maybe_run_ai(llm_client, symbol, kline_data, indicators)
-                except Exception as exc:
-                    logger.warning(f"WS AI 分析失败: {exc}")
+        ai_analysis = await self._run_ai_analysis(
+            symbol=symbol,
+            kline_data=kline_data,
+            indicators=indicators,
+            enabled=use_ai,
+            log_context=ai_log_context,
+        )
         return self.realtime_service.build_response(
             symbol,
             timeframe,
             kline_data,
             indicators,
             ai_analysis=ai_analysis,
-            include_type=True,
+            include_type=include_type,
         )
+
+    async def _run_ai_analysis(
+        self,
+        *,
+        symbol: str,
+        kline_data: Any,
+        indicators: Any,
+        enabled: bool,
+        log_context: str,
+    ) -> Any | None:
+        if not enabled:
+            return None
+        llm_client = self.llm_client_factory()
+        if llm_client is None:
+            return None
+        try:
+            return await self.realtime_service.maybe_run_ai(
+                llm_client,
+                symbol,
+                kline_data,
+                indicators,
+            )
+        except Exception as exc:
+            logger.warning(f"{log_context} AI 分析失败: {exc}")
+            return None

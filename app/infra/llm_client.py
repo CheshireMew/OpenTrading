@@ -1,144 +1,292 @@
 from __future__ import annotations
 
 import asyncio
-import json
-from typing import Any
+from time import perf_counter
+from typing import Any, TypeVar
+from uuid import uuid4
 
 import httpx
+from pydantic import BaseModel, ValidationError
 
+from app.application.model_contracts import ModelCallResult, ModelCallStatus
+from app.infra.llm_provider import LLMProviderAdapter
+from app.infra.structured_json import decode_strict_json_object
 from config import settings
 from utils.logger import logger
 
 
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
-MAX_RETRIES = 3
-BASE_DELAY = 1.0
+MAX_ATTEMPTS = 3
+BASE_DELAY_SECONDS = 1.0
+MAX_RETRY_DELAY_SECONDS = 30.0
+ModelOutputT = TypeVar("ModelOutputT", bound=BaseModel)
+
+
+class LLMClientFactory:
+    def __init__(self, llm_config_service: Any) -> None:
+        self._llm_config_service = llm_config_service
+        self._http_client = httpx.AsyncClient(
+            limits=httpx.Limits(max_connections=16, max_keepalive_connections=8),
+        )
+
+    def __call__(self) -> "LLMClient":
+        return LLMClient(
+            llm_config=self._llm_config_service.read_effective_config(),
+            http_client=self._http_client,
+        )
+
+    async def aclose(self) -> None:
+        await self._http_client.aclose()
 
 
 class LLMClient:
-    def __init__(self, llm_config: dict[str, Any] | None = None) -> None:
-        llm_config = llm_config or {
-            "provider": "deepseek",
-            "apiKey": settings.DEEPSEEK_API_KEY,
-            "baseUrl": settings.DEEPSEEK_BASE_URL,
-            "modelId": settings.AI_MODEL,
-        }
-        self.provider = llm_config["provider"]
-        self.api_key = llm_config["apiKey"]
-        self.base_url = llm_config["baseUrl"]
-        self.model = llm_config["modelId"]
-        self.request_timeout = self._request_timeout_seconds()
+    def __init__(
+        self,
+        llm_config: dict[str, Any] | None = None,
+        *,
+        http_client: httpx.AsyncClient,
+    ) -> None:
+        self._provider = LLMProviderAdapter(llm_config)
+        self.provider = self._provider.provider
+        self.model = self._provider.model
+        self.request_timeout = self._provider.request_timeout
+        self._http_client = http_client
 
-        if not self.api_key or len(self.api_key) < 10 or "sk-your-key" in self.api_key:
-            logger.warning("[Security] LLM API Key 未配置或无效。AI 分析功能将不可用。")
-            self.api_key = None
+    async def analyze(
+        self,
+        prompt: str,
+        *,
+        response_model: type[ModelOutputT],
+        purpose: str,
+    ) -> ModelCallResult[ModelOutputT]:
+        request_id = uuid4().hex
+        started_at = perf_counter()
+        if not self._provider.configured:
+            return self._finish(
+                request_id=request_id,
+                started_at=started_at,
+                purpose=purpose,
+                status="unavailable",
+                error_code="model_not_configured",
+            )
 
-        self.headers = self._headers()
+        try:
+            payload = self._provider.build_payload(prompt, response_model)
+        except ValueError:
+            return self._finish(
+                request_id=request_id,
+                started_at=started_at,
+                purpose=purpose,
+                status="unavailable",
+                error_code="structured_output_mode_unsupported",
+            )
 
-    async def analyze(self, prompt: str) -> dict[str, Any] | None:
-        if not self.api_key:
-            return None
+        if settings.LLM_TRACE_CONTENT:
+            logger.debug(
+                "event=model_trace_request request_id=%s provider=%s model=%s purpose=%s prompt=%r",
+                request_id,
+                self.provider,
+                self.model,
+                purpose,
+                prompt,
+            )
 
-        payload = self._payload(prompt)
-        url = self._endpoint()
-        logger.info(f"[LLM][Request] provider={self.provider} model={self.model} url={url}\n{prompt}")
-
-        last_error: Exception | None = None
-        for attempt in range(MAX_RETRIES):
+        last_error_code = "provider_transport_error"
+        for attempt in range(1, MAX_ATTEMPTS + 1):
+            logger.info(
+                "event=model_call_started request_id=%s provider=%s model=%s purpose=%s attempt=%s",
+                request_id,
+                self.provider,
+                self.model,
+                purpose,
+                attempt,
+            )
             try:
-                async with httpx.AsyncClient(timeout=httpx.Timeout(timeout=self.request_timeout, connect=min(self.request_timeout, 10.0))) as client:
-                    response = await client.post(url, headers=self.headers, json=payload)
-                    if response.status_code in RETRYABLE_STATUS_CODES:
-                        delay = BASE_DELAY * (2 ** attempt)
-                        retry_after = response.headers.get("Retry-After")
-                        if retry_after:
-                            try:
-                                delay = float(retry_after)
-                            except ValueError:
-                                pass
-                        logger.warning(
-                            f"LLM API returned {response.status_code}, retrying in {delay:.1f}s "
-                            f"(attempt {attempt + 1}/{MAX_RETRIES})"
-                        )
-                        await asyncio.sleep(delay)
-                        continue
-                    response.raise_for_status()
-                    data = response.json()
-
-                content = self._content_from_response(data)
-                logger.info(f"[LLM][Response] provider={self.provider} model={self.model}\n{content}")
-                try:
-                    return json.loads(content.replace("```json", "").replace("```", "").strip())
-                except json.JSONDecodeError:
-                    logger.error("AI 返回的内容不是有效的 JSON")
-                    return None
-            except httpx.RequestError as exc:
-                last_error = exc
-                if attempt < MAX_RETRIES - 1:
-                    delay = BASE_DELAY * (2 ** attempt)
-                    error_text = str(exc) or repr(exc)
-                    logger.warning(
-                        f"LLM API connection error ({exc.__class__.__name__}): {error_text}, "
-                        f"retrying in {delay:.1f}s"
-                    )
-                    await asyncio.sleep(delay)
+                response = await self._http_client.post(
+                    self._provider.endpoint(),
+                    headers=self._provider.headers(),
+                    json=payload,
+                    timeout=httpx.Timeout(
+                        timeout=self.request_timeout,
+                        connect=min(self.request_timeout, 10.0),
+                    ),
+                )
+            except httpx.TimeoutException:
+                last_error_code = "provider_timeout"
+                if attempt < MAX_ATTEMPTS:
+                    await self._wait_before_retry(request_id, purpose, attempt, last_error_code)
                     continue
-            except httpx.HTTPStatusError as exc:
-                logger.error(f"API 请求失败 status={exc.response.status_code}: {exc}")
-                return None
-            except Exception as exc:
-                logger.error(f"未知错误: {exc}")
-                return None
+                break
+            except httpx.RequestError:
+                last_error_code = "provider_transport_error"
+                if attempt < MAX_ATTEMPTS:
+                    await self._wait_before_retry(request_id, purpose, attempt, last_error_code)
+                    continue
+                break
 
-        logger.error(f"LLM API failed after {MAX_RETRIES} retries: {last_error}")
-        return None
+            if response.status_code in RETRYABLE_STATUS_CODES:
+                last_error_code = "provider_temporarily_unavailable"
+                if attempt < MAX_ATTEMPTS:
+                    await self._wait_before_retry(
+                        request_id,
+                        purpose,
+                        attempt,
+                        last_error_code,
+                        retry_after=response.headers.get("Retry-After"),
+                    )
+                    continue
+                break
+            if response.is_error:
+                return self._finish(
+                    request_id=request_id,
+                    started_at=started_at,
+                    purpose=purpose,
+                    status="failed",
+                    error_code=f"provider_http_{response.status_code}",
+                )
+            if len(response.content) > settings.LLM_RESPONSE_MAX_BYTES:
+                return self._finish(
+                    request_id=request_id,
+                    started_at=started_at,
+                    purpose=purpose,
+                    status="failed",
+                    error_code="provider_response_too_large",
+                )
 
-    def _headers(self) -> dict[str, str]:
-        if self.provider == "anthropic":
-            return {
-                "x-api-key": f"{self.api_key}",
-                "anthropic-version": "2023-06-01",
-                "Content-Type": "application/json",
-            }
-        return {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-        }
+            try:
+                envelope = decode_strict_json_object(response.text)
+                content, response_error = self._provider.extract_content(envelope)
+            except (TypeError, ValueError, KeyError):
+                return self._finish(
+                    request_id=request_id,
+                    started_at=started_at,
+                    purpose=purpose,
+                    status="failed",
+                    error_code="invalid_response_envelope",
+                )
 
-    def _payload(self, prompt: str) -> dict[str, Any]:
-        if self.provider == "anthropic":
-            return {
-                "model": self.model,
-                "max_tokens": 2048,
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": settings.LLM_TEMPERATURE,
-            }
-        return {
-            "model": self.model,
-            "messages": [{"role": "user", "content": prompt}],
-            "temperature": settings.LLM_TEMPERATURE,
-            "stream": False,
-        }
+            if response_error:
+                status: ModelCallStatus = "refused" if response_error == "model_refused" else "failed"
+                return self._finish(
+                    request_id=request_id,
+                    started_at=started_at,
+                    purpose=purpose,
+                    status=status,
+                    error_code=response_error,
+                )
+            if not content.strip():
+                return self._finish(
+                    request_id=request_id,
+                    started_at=started_at,
+                    purpose=purpose,
+                    status="failed",
+                    error_code="empty_model_output",
+                )
+            if len(content.encode("utf-8")) > settings.LLM_RESPONSE_MAX_BYTES:
+                return self._finish(
+                    request_id=request_id,
+                    started_at=started_at,
+                    purpose=purpose,
+                    status="failed",
+                    error_code="model_output_too_large",
+                )
 
-    def _endpoint(self) -> str:
-        base_url = (self.base_url or "").rstrip("/")
-        if self.provider == "anthropic":
-            return f"{base_url}/messages"
-        if "/v1" in base_url or "/openai" in base_url:
-            return f"{base_url}/chat/completions"
-        return f"{base_url}/v1/chat/completions"
+            if settings.LLM_TRACE_CONTENT:
+                logger.debug(
+                    "event=model_trace_response request_id=%s provider=%s model=%s purpose=%s content=%r",
+                    request_id,
+                    self.provider,
+                    self.model,
+                    purpose,
+                    content,
+                )
+            try:
+                decoded = decode_strict_json_object(content)
+            except (TypeError, ValueError):
+                return self._finish(
+                    request_id=request_id,
+                    started_at=started_at,
+                    purpose=purpose,
+                    status="failed",
+                    error_code="invalid_model_json",
+                )
+            try:
+                output = response_model.model_validate(decoded)
+            except ValidationError:
+                return self._finish(
+                    request_id=request_id,
+                    started_at=started_at,
+                    purpose=purpose,
+                    status="failed",
+                    error_code="model_schema_invalid",
+                )
+            return self._finish(
+                request_id=request_id,
+                started_at=started_at,
+                purpose=purpose,
+                status="success",
+                output=output,
+            )
 
-    def _content_from_response(self, data: dict[str, Any]) -> str:
-        if self.provider == "anthropic":
-            content_items = data.get("content") or []
-            for item in content_items:
-                if item.get("type") == "text" and item.get("text"):
-                    return item["text"]
-            return ""
-        return data["choices"][0]["message"]["content"]
+        return self._finish(
+            request_id=request_id,
+            started_at=started_at,
+            purpose=purpose,
+            status="failed",
+            error_code=last_error_code,
+        )
 
-    def _request_timeout_seconds(self) -> float:
-        timeout = max(float(settings.LLM_REQUEST_TIMEOUT), 1.0)
-        if self.provider == "deepseek" and self.model == "deepseek-reasoner":
-            return max(timeout, 120.0)
-        return timeout
+    async def _wait_before_retry(
+        self,
+        request_id: str,
+        purpose: str,
+        attempt: int,
+        error_code: str,
+        *,
+        retry_after: str | None = None,
+    ) -> None:
+        delay = BASE_DELAY_SECONDS * (2 ** (attempt - 1))
+        if retry_after:
+            try:
+                delay = float(retry_after)
+            except ValueError:
+                pass
+        delay = max(0.0, min(delay, MAX_RETRY_DELAY_SECONDS))
+        logger.warning(
+            "event=model_call_retry request_id=%s provider=%s model=%s purpose=%s attempt=%s error_code=%s delay_seconds=%.1f",
+            request_id,
+            self.provider,
+            self.model,
+            purpose,
+            attempt,
+            error_code,
+            delay,
+        )
+        await asyncio.sleep(delay)
+
+    def _finish(
+        self,
+        *,
+        request_id: str,
+        started_at: float,
+        purpose: str,
+        status: ModelCallStatus,
+        error_code: str | None = None,
+        output: ModelOutputT | None = None,
+    ) -> ModelCallResult[ModelOutputT]:
+        logger.info(
+            "event=model_call_finished request_id=%s provider=%s model=%s purpose=%s status=%s error_code=%s duration_ms=%s",
+            request_id,
+            self.provider,
+            self.model,
+            purpose,
+            status,
+            error_code or "none",
+            round((perf_counter() - started_at) * 1000),
+        )
+        return ModelCallResult(
+            status=status,
+            output=output,
+            error_code=error_code,
+            request_id=request_id,
+        )

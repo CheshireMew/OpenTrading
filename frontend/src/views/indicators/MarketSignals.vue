@@ -1,15 +1,15 @@
 <template>
-  <div :class="['signal-page min-h-full overflow-y-auto text-slate-900 transition-colors dark:text-slate-100', theme === 'dark' ? 'signal-page--dark' : 'signal-page--light']">
+  <div :class="['signal-page min-h-full text-slate-900 transition-colors dark:text-slate-100', theme === 'dark' ? 'signal-page--dark' : 'signal-page--light']">
     <section class="flex w-full flex-col gap-8 px-3 py-5 sm:px-4 lg:px-5 xl:px-6">
       <div class="signal-hero max-w-4xl space-y-4 border-b border-stone-200 pb-6 dark:border-slate-800">
         <div class="signal-kicker inline-flex items-center gap-2 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
           Market Signal Monitor
         </div>
         <h1 class="signal-title max-w-3xl text-4xl font-semibold leading-tight dark:text-white sm:text-5xl">
-          链上、情绪与技术指标
+          {{ t('marketSignals.title') }}
         </h1>
         <p class="max-w-3xl text-sm leading-6 text-stone-600 dark:text-slate-400 sm:text-base">
-          把周期位置、稳定币流动性和矿工网络指标放在同一页，用更长的历史窗口观察趋势。
+          {{ t('marketSignals.subtitle') }}
         </p>
       </div>
 
@@ -20,24 +20,24 @@
       <div class="signal-panel p-5">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <div class="panel-kicker">指标覆盖</div>
-            <h2 class="mt-2 text-lg font-semibold text-slate-950 dark:text-white">市场状态总览</h2>
+            <div class="panel-kicker">{{ t('marketSignals.coverage') }}</div>
+            <h2 class="mt-2 text-lg font-semibold text-slate-950 dark:text-white">{{ t('marketSignals.overview') }}</h2>
           </div>
           <button class="signal-primary-button self-start" :disabled="loading" @click="refresh">
-            {{ loading ? '刷新中...' : '刷新指标' }}
+            {{ loading ? t('marketSignals.refreshing') : t('marketSignals.refresh') }}
           </button>
         </div>
 
         <div class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <div class="summary-card summary-card--primary">
-            <span>当前指标</span>
+            <span>{{ t('marketSignals.currentIndicators') }}</span>
             <strong>{{ totalCount }}</strong>
-            <em>来自 {{ populatedGroupCount }} 个分组</em>
+            <em>{{ t('marketSignals.fromGroups', { count: populatedGroupCount }) }}</em>
           </div>
           <div v-for="group in groups" :key="group.definition.id" class="summary-card">
             <span>{{ group.definition.title }}</span>
             <strong>{{ group.cards.length }}</strong>
-            <em>最近更新 {{ group.latestUpdatedLabel }}</em>
+            <em>{{ t('marketSignals.lastUpdated', { time: group.latestUpdatedLabel }) }}</em>
           </div>
         </div>
       </div>
@@ -54,7 +54,7 @@
               <h2 class="mt-2 text-lg font-semibold text-slate-950 dark:text-white">{{ group.definition.title }}</h2>
               <p class="mt-1 text-sm text-slate-500 dark:text-slate-500">{{ group.definition.description }}</p>
             </div>
-            <div class="text-sm font-semibold text-slate-500 dark:text-slate-400">{{ group.cards.length }} 项</div>
+            <div class="text-sm font-semibold text-slate-500 dark:text-slate-400">{{ t('marketSignals.itemCount', { count: group.cards.length }) }}</div>
           </div>
 
           <div v-if="group.cards.length > 0" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -77,9 +77,9 @@
               </div>
 
               <div class="mt-3">
-                <IndicatorChart v-if="card.indicator.history.length > 0" :indicator="card.indicator" height="h-44" />
-                <div v-else class="flex h-44 items-center justify-center text-sm text-stone-400 dark:text-slate-500">
-                  {{ $t('common.noHistory') }}
+                <IndicatorChart v-if="card.indicator.history.length >= 2" :indicator="card.indicator" height="h-44" />
+                <div v-else class="flex h-44 items-center justify-center px-4 text-center text-sm text-stone-400 dark:text-slate-500">
+                  {{ $t('marketSignals.collectingHistory', { count: card.indicator.history.length }) }}
                 </div>
               </div>
 
@@ -100,11 +100,13 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import IndicatorChart from '@/components/IndicatorChart.vue'
 import { useTheme } from '@/composables/useTheme'
 import { useMarketSignalIndicators } from '@/modules/market'
 
 const { theme } = useTheme()
+const { t } = useI18n()
 const { loading, error, groups, totalCount, populatedGroupCount, load, refresh } = useMarketSignalIndicators()
 
 const changeToneClass = (value: number | null) => {
@@ -161,6 +163,10 @@ onMounted(() => {
   color: #14110f;
   font-family: Georgia, "Times New Roman", serif;
   letter-spacing: 0;
+}
+
+.signal-page--dark .signal-title {
+  color: #f8fafc;
 }
 
 .panel-kicker {

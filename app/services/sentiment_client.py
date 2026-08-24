@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 import requests
 
-from app.contracts.sentiment import SentimentRecord
+from app.domain.market.sentiment import SentimentRecord
 
 
 class SentimentApiClient:

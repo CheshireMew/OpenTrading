@@ -4,7 +4,7 @@ import os
 from contextlib import contextmanager
 from pathlib import Path
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine, make_url
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -12,10 +12,10 @@ from config.settings import AppSettings
 
 
 class DatabaseRuntime:
-    def __init__(self, *, database_url: str, source: str) -> None:
+    def __init__(self, *, database_url: str, source: str, connect_timeout: int = 3) -> None:
         self.database_url = database_url
         self.source = source
-        self.engine = self._create_engine(database_url)
+        self.engine = self._create_engine(database_url, connect_timeout=connect_timeout)
         self.session_factory = sessionmaker(bind=self.engine, expire_on_commit=False)
 
     def get_session(self) -> Session:
@@ -37,7 +37,7 @@ class DatabaseRuntime:
         self.engine.dispose()
 
     @staticmethod
-    def _create_engine(database_url: str) -> Engine:
+    def _create_engine(database_url: str, *, connect_timeout: int) -> Engine:
         if database_url.startswith("sqlite"):
             sqlite_path = make_url(database_url).database
             if sqlite_path and sqlite_path != ":memory:":
@@ -50,12 +50,33 @@ class DatabaseRuntime:
         }
 
         if database_url.startswith("sqlite"):
-            engine_kwargs["connect_args"] = {"check_same_thread": False}
+            engine_kwargs["connect_args"] = {
+                "check_same_thread": False,
+                "timeout": max(int(connect_timeout), 1),
+            }
         else:
             engine_kwargs["pool_size"] = 10
             engine_kwargs["max_overflow"] = 20
+            if database_url.startswith("postgresql"):
+                engine_kwargs["connect_args"] = {
+                    "connect_timeout": max(int(connect_timeout), 1)
+                }
 
-        return create_engine(database_url, **engine_kwargs)
+        engine = create_engine(database_url, **engine_kwargs)
+        if database_url.startswith("sqlite"):
+            busy_timeout_ms = max(int(connect_timeout), 1) * 1000
+
+            @event.listens_for(engine, "connect")
+            def configure_sqlite(dbapi_connection, _connection_record) -> None:
+                cursor = dbapi_connection.cursor()
+                try:
+                    cursor.execute("PRAGMA foreign_keys=ON")
+                    cursor.execute(f"PRAGMA busy_timeout={busy_timeout_ms}")
+                    cursor.execute("PRAGMA journal_mode=WAL")
+                finally:
+                    cursor.close()
+
+        return engine
 
 
 def resolve_database_url(app_settings: AppSettings) -> tuple[str, str]:
@@ -71,4 +92,8 @@ def resolve_database_url(app_settings: AppSettings) -> tuple[str, str]:
 
 def build_database_runtime(app_settings: AppSettings) -> DatabaseRuntime:
     database_url, source = resolve_database_url(app_settings)
-    return DatabaseRuntime(database_url=database_url, source=source)
+    return DatabaseRuntime(
+        database_url=database_url,
+        source=source,
+        connect_timeout=app_settings.DATABASE_CONNECT_TIMEOUT,
+    )

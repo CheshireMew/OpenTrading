@@ -28,6 +28,10 @@ class BinanceMarketSnapshotService:
         self._store = BinanceMarketSnapshotStore()
         self._tasks: list[asyncio.Task] = []
         self._running = False
+        self._seed_completed = False
+        self._seed_success_count = 0
+        self._seed_error: str | None = None
+        self._seed_lock = asyncio.Lock()
         self._reconnect_delay = settings.BINANCE_MARKET_SNAPSHOT_RECONNECT_DELAY
         self._spot_ticker_loader = spot_ticker_loader
         self._usdm_ticker_loader = usdm_ticker_loader
@@ -43,6 +47,9 @@ class BinanceMarketSnapshotService:
         if self._running:
             return
         self._running = True
+        self._seed_completed = False
+        self._seed_success_count = 0
+        self._seed_error = None
         self._tasks = [
             asyncio.create_task(
                 self.seed(
@@ -66,6 +73,23 @@ class BinanceMarketSnapshotService:
             await asyncio.gather(*tasks, return_exceptions=True)
         self._tasks = []
 
+    def health_snapshot(self) -> dict[str, Any]:
+        if not self._running:
+            status = "stopped"
+        elif not self._seed_completed:
+            status = "starting"
+        elif self._seed_error is not None or self._seed_success_count == 0:
+            status = "failed"
+        else:
+            status = "ready"
+        return {
+            "status": status,
+            "seedCompleted": self._seed_completed,
+            "seedSuccessCount": self._seed_success_count,
+            "activeStreams": sum(1 for task in self._tasks[1:] if not task.done()),
+            "error": self._seed_error,
+        }
+
     async def seed(
         self,
         *,
@@ -73,25 +97,43 @@ class BinanceMarketSnapshotService:
         usdm_ticker_loader: TickerLoader | None = None,
         usdm_mark_loader: MarkPriceLoader | None = None,
     ) -> None:
-        loaders = (
-            ("spot_ticker", spot_ticker_loader, self._apply_spot_ticker_response),
-            ("usdm_ticker", usdm_ticker_loader, self._apply_usdm_ticker_response),
-            ("usdm_mark", usdm_mark_loader, self._apply_usdm_mark_response),
-        )
-        results = await asyncio.gather(
-            *(loader() for _, loader, _ in loaders if loader is not None),
-            return_exceptions=True,
-        )
-        result_index = 0
-        for key, loader, applier in loaders:
-            if loader is None:
-                continue
-            result = results[result_index]
-            result_index += 1
-            if isinstance(result, Exception):
-                logger.warning("Binance snapshot seed failed: %s (%s)", key, result)
-                continue
-            await applier(result)
+        async with self._seed_lock:
+            self._seed_completed = False
+            self._seed_success_count = 0
+            self._seed_error = None
+            try:
+                if await self._store.has_market_page_snapshot():
+                    self._seed_success_count = 1
+                    return
+                loaders = (
+                    ("spot_ticker", spot_ticker_loader, self._apply_spot_ticker_response),
+                    ("usdm_ticker", usdm_ticker_loader, self._apply_usdm_ticker_response),
+                    ("usdm_mark", usdm_mark_loader, self._apply_usdm_mark_response),
+                )
+                results = await asyncio.gather(
+                    *(loader() for _, loader, _ in loaders if loader is not None),
+                    return_exceptions=True,
+                )
+                result_index = 0
+                errors: list[str] = []
+                for key, loader, applier in loaders:
+                    if loader is None:
+                        continue
+                    result = results[result_index]
+                    result_index += 1
+                    if isinstance(result, Exception):
+                        logger.warning("Binance snapshot seed failed: %s (%s)", key, result)
+                        errors.append(f"{key}: {result}")
+                        continue
+                    await applier(result)
+                    self._seed_success_count += 1
+                if self._seed_success_count == 0:
+                    self._seed_error = "; ".join(errors) or "No Binance snapshot loader completed"
+            except Exception as exc:
+                self._seed_error = str(exc)
+                logger.exception("Binance snapshot seed failed unexpectedly")
+            finally:
+                self._seed_completed = True
 
     async def get_market_page_snapshot(self) -> dict[str, Any]:
         return await self._store.market_page_snapshot()

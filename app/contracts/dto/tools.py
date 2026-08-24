@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel
 
 from app.contracts.tools import ComparePairsCommand, DcaStrategyKey, SimulateDcaCommand
@@ -22,6 +24,7 @@ class DCAResponse(BaseModel):
     pricing_symbol: str | None = None
     pricing_name: str | None = None
     pricing_currency: str | None = None
+    data_quality: Literal["exchange", "synthetic_and_exchange_proxy", "index_proxy"]
     start_date: str
     end_date: str
     target_time: str
@@ -60,4 +63,5 @@ class ToolsPageContractResponse(BaseModel):
     dca_defaults: SimulateDcaCommand
     dca_strategies: list[DcaStrategyKey]
     dca_multiplier_default: float
+    dca_max_days: int
     compare_defaults: ComparePairsCommand

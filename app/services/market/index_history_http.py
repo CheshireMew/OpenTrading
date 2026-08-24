@@ -10,6 +10,7 @@ import requests
 from app.domain.market.index_catalog import IndexInstrument
 from app.services.market.index_history_contracts import IndexFetchResult
 from app.services.market.index_history_parsing import IndexHistoryParsing
+from app.services.market.index_source_catalog import IndexSourceBinding
 from config import settings
 
 
@@ -17,14 +18,15 @@ class EastmoneyIndexHistoryProvider(IndexHistoryParsing):
     def fetch_history(
         self,
         instrument: IndexInstrument,
+        source: IndexSourceBinding,
         start_dt: datetime,
         end_dt: datetime,
     ) -> IndexFetchResult:
-        if not instrument.eastmoney_secid:
+        if not source.eastmoney_secid:
             return IndexFetchResult(data=[], source="eastmoney")
 
         params = {
-            "secid": instrument.eastmoney_secid,
+            "secid": source.eastmoney_secid,
             "fields1": "f1,f2,f3,f4,f5,f6",
             "fields2": "f51,f52,f53,f54,f55,f56,f57",
             "klt": "101",
@@ -40,7 +42,7 @@ class EastmoneyIndexHistoryProvider(IndexHistoryParsing):
                     "https://push2his.eastmoney.com/api/qt/stock/kline/get",
                     params=params,
                     headers={"User-Agent": "Mozilla/5.0", "Referer": "https://quote.eastmoney.com/"},
-                    timeout=settings.FRED_REQUEST_TIMEOUT,
+                    timeout=settings.INDEX_HISTORY_REQUEST_TIMEOUT,
                 )
                 break
             except requests.RequestException as exc:
@@ -62,16 +64,17 @@ class SohuIndexHistoryProvider(IndexHistoryParsing):
     def fetch_history(
         self,
         instrument: IndexInstrument,
+        source: IndexSourceBinding,
         start_dt: datetime,
         end_dt: datetime,
     ) -> IndexFetchResult:
-        if not instrument.sohu_code:
+        if not source.sohu_code:
             return IndexFetchResult(data=[], source="sohu")
 
         response = requests.get(
             "https://q.stock.sohu.com/hisHq",
             params={
-                "code": instrument.sohu_code,
+                "code": source.sohu_code,
                 "start": start_dt.strftime("%Y%m%d"),
                 "end": end_dt.strftime("%Y%m%d"),
                 "stat": "1",
@@ -80,7 +83,7 @@ class SohuIndexHistoryProvider(IndexHistoryParsing):
                 "rt": "json",
             },
             headers={"User-Agent": "Mozilla/5.0"},
-            timeout=settings.FRED_REQUEST_TIMEOUT,
+            timeout=settings.INDEX_HISTORY_REQUEST_TIMEOUT,
         )
         response.raise_for_status()
         payload = response.json()
@@ -97,10 +100,11 @@ class BaostockIndexHistoryProvider(IndexHistoryParsing):
     def fetch_history(
         self,
         instrument: IndexInstrument,
+        source: IndexSourceBinding,
         start_dt: datetime,
         end_dt: datetime,
     ) -> IndexFetchResult:
-        if not instrument.baostock_code:
+        if not source.baostock_code:
             return IndexFetchResult(data=[], source="baostock")
 
         try:
@@ -114,7 +118,7 @@ class BaostockIndexHistoryProvider(IndexHistoryParsing):
 
         try:
             query = bs.query_history_k_data_plus(
-                instrument.baostock_code,
+                source.baostock_code,
                 "date,open,high,low,close,volume",
                 start_date=start_dt.strftime("%Y-%m-%d"),
                 end_date=end_dt.strftime("%Y-%m-%d"),
@@ -147,16 +151,17 @@ class CboeIndexHistoryProvider(IndexHistoryParsing):
     def fetch_history(
         self,
         instrument: IndexInstrument,
+        source: IndexSourceBinding,
         start_dt: datetime,
         end_dt: datetime,
     ) -> IndexFetchResult:
-        if not instrument.cboe_csv_url:
+        if not source.cboe_csv_url:
             return IndexFetchResult(data=[], source="cboe")
 
         response = requests.get(
-            instrument.cboe_csv_url,
+            source.cboe_csv_url,
             headers={"User-Agent": "Mozilla/5.0"},
-            timeout=settings.FRED_REQUEST_TIMEOUT,
+            timeout=settings.INDEX_HISTORY_REQUEST_TIMEOUT,
         )
         response.raise_for_status()
         reader = csv.DictReader(io.StringIO(response.text))
@@ -189,15 +194,16 @@ class YFinanceIndexHistoryProvider(IndexHistoryParsing):
     def fetch_history(
         self,
         instrument: IndexInstrument,
+        source: IndexSourceBinding,
         start_dt: datetime,
         end_dt: datetime,
     ) -> IndexFetchResult:
-        if not instrument.yfinance_symbol:
+        if not source.yfinance_symbol:
             return IndexFetchResult(data=[], source="yfinance")
 
         import yfinance as yf
 
-        history = yf.Ticker(instrument.yfinance_symbol).history(
+        history = yf.Ticker(source.yfinance_symbol).history(
             start=start_dt.strftime("%Y-%m-%d"),
             end=(end_dt + timedelta(days=1)).strftime("%Y-%m-%d"),
             interval="1d",

@@ -3,8 +3,9 @@ from __future__ import annotations
 from datetime import datetime
 
 from app.contracts.frontend import FrontendContractRouter
-from app.domain.market.symbol_catalog import list_market_search_items
-from app.contracts.dto.market import ApiStatusResponse, MarketSymbolSearchResponse
+from app.services.market.symbol_catalog import list_market_search_items
+from app.contracts.dto.market_catalog import ApiStatusResponse, MarketSymbolSearchResponse
+from app.product import APP_VERSION
 
 router = FrontendContractRouter(frontend_contract_target="market", tags=["Market Data"])
 
@@ -18,7 +19,7 @@ async def list_market_symbols():
 async def get_api_status():
     return ApiStatusResponse(
         status="running",
-        version="2.0.0",
+        version=APP_VERSION,
         framework="FastAPI",
         dependencies="ready",
         timestamp=datetime.now().isoformat(),

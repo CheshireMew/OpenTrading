@@ -455,3 +455,39 @@ async def test_market_page_payload_does_not_wait_unbounded_for_oi_enrichment(mon
     rows = response["contract_boards"]["price_change_pct_desc"]["items"]
     assert [item["symbol"] for item in rows] == ["AUSDT", "BUSDT"]
     assert [item["oi_change_24h_pct"] for item in rows] == [None, None]
+
+
+@pytest.mark.asyncio
+async def test_dynamic_binance_chart_uses_requested_market_and_maps_ohlcv(monkeypatch, installed_database_runtime):
+    service = make_market_intel_service(installed_database_runtime)
+    captured: dict[str, object] = {}
+
+    async def fake_usdm_klines(**kwargs):
+        captured.update(kwargs)
+        return {
+            "exchange": "binance",
+            "market": "usdm",
+            "symbol": kwargs["symbol"],
+            "interval": kwargs["interval"],
+            "items": make_breakout_klines(2.0, bars=2),
+        }
+
+    monkeypatch.setattr(service.usdm, "get_klines", fake_usdm_klines)
+    response = await service.page.get_chart_klines(
+        market="usdm",
+        symbol="PROMUSDT",
+        interval="15m",
+        limit=2,
+        end_time=1718000000000,
+    )
+
+    assert captured == {
+        "symbol": "PROMUSDT",
+        "interval": "15m",
+        "limit": 2,
+        "start_time": None,
+        "end_time": 1718000000000,
+    }
+    assert response.symbol == "PROMUSDT"
+    assert response.timeframe == "15m"
+    assert [item.timestamp for item in response.items] == [1717000000000, 1717000900000]

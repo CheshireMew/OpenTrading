@@ -1,4 +1,5 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import { useMoney } from '@/composables/useMoney'
 import { useTheme } from '@/composables/useTheme'
@@ -9,6 +10,7 @@ import { marketInsightApi } from './api'
 import { useKlineSeries } from './useKlineSeries'
 
 export function useDashboardPage() {
+  const { t } = useI18n()
   const { theme } = useTheme()
   const { displayCurrency, formatMoney, formatDisplayNumber, fromDisplayAmount } = useMoney()
 
@@ -44,6 +46,15 @@ export function useDashboardPage() {
   const visibleTimeframes = computed(() => currentAssetClass.value === 'index' ? ['1d'] : timeframes)
   const activeTradeSetup = computed(() => tradeSetupResult.value?.setup || null)
   const canAskTradeSetup = computed(() => currentAssetClass.value === 'crypto')
+  const tradeSetupMessage = computed(() => {
+    const result = tradeSetupResult.value
+    if (!result || result.setup) return ''
+    const code = result.error_code || 'model_output_unavailable'
+    const key = `dashboard.tradeSetupErrors.${code}`
+    const localized = t(key)
+    return localized === key ? t('dashboard.tradeSetupUnavailable') : localized
+  })
+  const tradeSetupNeedsConfiguration = computed(() => tradeSetupResult.value?.error_code === 'model_not_configured')
   const displayAccountSize = computed({
     get: () => Number(formatDisplayNumber(accountSize.value, 'USDT', 2) || 0),
     set: (value) => {
@@ -54,7 +65,9 @@ export function useDashboardPage() {
     chartData,
     volumeData,
     loadingMore,
+    loadError: klineLoadError,
     loadMore,
+    retry: retryKline,
   } = useKlineSeries(currentSymbol, currentTimeframe)
 
   const handleSymbolSelect = (item: MarketSymbolSearchResponse) => {
@@ -93,7 +106,7 @@ export function useDashboardPage() {
       tradeSetupAbortController = null
       tradeSetupAbortTimer = null
       tradeSetupLoading.value = false
-      tradeSetupError.value = decisionMode.value === 'ai' ? 'AI 请求超时，请重试' : '规则分析超时，请重试'
+      tradeSetupError.value = t(decisionMode.value === 'ai' ? 'dashboard.aiTimeout' : 'dashboard.rulesTimeout')
     }, decisionMode.value === 'ai' ? 180000 : 20000)
     try {
       const response = await marketInsightApi.getTradeSetup({
@@ -112,7 +125,7 @@ export function useDashboardPage() {
       if (controller.signal.aborted) return
       console.error('Trade setup failed', error)
       tradeSetupResult.value = null
-      tradeSetupError.value = '暂时无法生成多空方案'
+      tradeSetupError.value = t('dashboard.setupFailed')
     } finally {
       if (tradeSetupAbortController !== controller) return
       if (tradeSetupAbortTimer !== null) {
@@ -153,10 +166,14 @@ export function useDashboardPage() {
     tradeSetupError,
     activeTradeSetup,
     canAskTradeSetup,
+    tradeSetupMessage,
+    tradeSetupNeedsConfiguration,
     chartData,
     volumeData,
     loadingMore,
+    klineLoadError,
     loadMore,
+    retryKline,
     handleSymbolSelect,
     formatTradePrice,
     askTradeSetup,

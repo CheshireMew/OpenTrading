@@ -47,9 +47,14 @@
       </div>
     </div>
 
+    <div v-if="error" role="alert" class="flex flex-col gap-3 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200 sm:flex-row sm:items-center sm:justify-between">
+      <span>{{ error }}</span>
+      <button type="button" class="app-button-secondary flex-shrink-0" @click="retry">{{ $t('halving.retry') }}</button>
+    </div>
+
     <!-- Main Chart -->
     <div class="app-panel p-6">
-      <div class="flex flex-col sm:flex-row justify-between items-center mb-6">
+      <div class="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
            <h2 class="flex items-center text-xl font-semibold text-stone-950 dark:text-white">
              <ChartBarIcon class="mr-2 h-6 w-6 text-[#0f6b4f]" />
@@ -66,7 +71,7 @@
            </p>
         </div>
 
-        <div class="flex items-center space-x-4 mt-4 sm:mt-0">
+        <div class="flex w-full flex-wrap items-center gap-4 sm:mt-0 sm:w-auto">
            <!-- Scale Toggle -->
            <div class="flex border border-stone-200 bg-white p-1 dark:border-slate-700 dark:bg-gray-700">
                <button 
@@ -94,7 +99,7 @@
         </div>
       </div>
       
-      <div class="app-chart-frame relative h-[600px] w-full">
+      <div class="app-chart-frame relative h-[420px] w-full sm:h-[520px] lg:h-[600px]">
         <canvas ref="chartCanvas"></canvas>
         <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-[#f7f4ed]/80 backdrop-blur-sm dark:bg-gray-900/80">
           <div class="flex flex-col items-center">
@@ -114,6 +119,8 @@ import { useHalvingPage } from '@/modules/market'
 
 const {
   loading,
+  error,
+  retry,
   chartCanvas,
   currentPrice,
   showPhases,

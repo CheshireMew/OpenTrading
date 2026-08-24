@@ -1,26 +1,6 @@
 from __future__ import annotations
 
-
-def timeframe_to_ms(timeframe: str) -> int:
-    if timeframe.endswith("min"):
-        try:
-            return int(timeframe[:-3]) * 60_000
-        except (TypeError, ValueError):
-            return 0
-
-    unit = timeframe[-1]
-    try:
-        value = int(timeframe[:-1])
-    except (TypeError, ValueError):
-        return 0
-    multipliers = {
-        "m": 60_000,
-        "h": 3_600_000,
-        "d": 86_400_000,
-        "w": 604_800_000,
-        "M": 2_592_000_000,
-    }
-    return value * multipliers.get(unit, 0)
+from app.domain.market.constants import timeframe_to_milliseconds
 
 
 def merge_missing_ranges(ranges: list[tuple[int, int]]) -> list[tuple[int, int]]:
@@ -54,7 +34,7 @@ def collect_missing_ranges(
     if not cached_klines:
         return [(start_ts, end_ts_exclusive)]
 
-    timeframe_ms = timeframe_to_ms(timeframe)
+    timeframe_ms = timeframe_to_milliseconds(timeframe)
     missing_ranges: list[tuple[int, int]] = []
     sorted_rows = sorted(cached_klines, key=lambda row: row[0])
     first_cached = int(sorted_rows[0][0])
@@ -91,7 +71,7 @@ def is_recent_cache_usable(
 ) -> bool:
     if len(cached) < limit:
         return False
-    timeframe_ms = timeframe_to_ms(timeframe)
+    timeframe_ms = timeframe_to_milliseconds(timeframe)
     if timeframe_ms <= 0:
         return False
     latest_open_ts = int(cached[-1][0])

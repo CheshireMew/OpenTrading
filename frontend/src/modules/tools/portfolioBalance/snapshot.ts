@@ -143,11 +143,10 @@ export const createPortfolioBalancePortfolio = (
     name: readString(overrides.name, '新组合'),
     assets: Array.isArray(overrides.assets) && overrides.assets.length
       ? overrides.assets.map((asset) => normalizePortfolioBalanceAsset(asset))
-      : createDefaultPortfolioBalanceAssets(),
+      : [createPortfolioBalanceAsset()],
     strategy: normalizePortfolioBalanceStrategyConfig(overrides.strategy),
     tracking: normalizePortfolioBalanceTrackingConfig(overrides.tracking),
     simulation: normalizePortfolioBalanceSimulationConfig(overrides.simulation),
-    lastSimulationResult: normalizePortfolioSimulationSummary(overrides.lastSimulationResult),
     holdingsInitializedAt: typeof overrides.holdingsInitializedAt === 'string' ? overrides.holdingsInitializedAt : null,
     lastPriceUpdatedAt: typeof overrides.lastPriceUpdatedAt === 'string' ? overrides.lastPriceUpdatedAt : null,
     seedCapital: typeof overrides.seedCapital === 'number' ? overrides.seedCapital : null,
@@ -172,21 +171,16 @@ export const copyPortfolioBalancePortfolio = (
   strategy: { ...source.strategy },
   tracking: { ...source.tracking },
   simulation: { ...source.simulation },
-  lastSimulationResult: source.lastSimulationResult
-    ? {
-        ...source.lastSimulationResult,
-        equityCurve: source.lastSimulationResult.equityCurve.map((point) => ({ ...point })),
-      }
-    : null,
   holdingsInitializedAt: source.holdingsInitializedAt,
   lastPriceUpdatedAt: source.lastPriceUpdatedAt,
   seedCapital: source.seedCapital,
   holdingsSource: source.holdingsSource,
 })
 
-export const createDefaultPortfolioCollection = (): PortfolioBalancePortfolio[] => ([
+export const createDefaultPortfolioCollection = (defaultName = '长期核心组合'): PortfolioBalancePortfolio[] => ([
   createPortfolioBalancePortfolio({
-    name: '长期核心组合',
+    name: defaultName,
+    assets: createDefaultPortfolioBalanceAssets(),
   }),
 ])
 
@@ -209,7 +203,6 @@ export const normalizePortfolioBalancePortfolio = (value: unknown): PortfolioBal
     strategy: normalizePortfolioBalanceStrategyConfig(value.strategy),
     tracking: normalizePortfolioBalanceTrackingConfig(value.tracking),
     simulation: normalizePortfolioBalanceSimulationConfig(value.simulation),
-    lastSimulationResult: normalizePortfolioSimulationSummary(value.lastSimulationResult),
     holdingsInitializedAt: typeof value.holdingsInitializedAt === 'string' ? value.holdingsInitializedAt : null,
     lastPriceUpdatedAt: typeof value.lastPriceUpdatedAt === 'string' ? value.lastPriceUpdatedAt : null,
     seedCapital: typeof value.seedCapital === 'number' ? value.seedCapital : null,
@@ -219,17 +212,22 @@ export const normalizePortfolioBalancePortfolio = (value: unknown): PortfolioBal
   }
 }
 
-export const createDefaultPortfolioBalanceSnapshot = (): PortfolioBalanceSnapshot => {
-  const portfolios = createDefaultPortfolioCollection()
+export const createDefaultPortfolioBalanceSnapshot = (defaultName?: string): PortfolioBalanceSnapshot => {
+  const portfolios = createDefaultPortfolioCollection(defaultName)
   return {
     activePortfolioId: portfolios[0].id,
     portfolios,
   }
 }
 
+export const createEmptyPortfolioBalanceSnapshot = (): PortfolioBalanceSnapshot => ({
+  activePortfolioId: '',
+  portfolios: [],
+})
+
 export const normalizePortfolioBalanceSnapshot = (
   value: unknown,
-  fallback = createDefaultPortfolioBalanceSnapshot(),
+  fallback = createEmptyPortfolioBalanceSnapshot(),
 ): PortfolioBalanceSnapshot => {
   const defaults = fallback
   if (!isRecord(value)) return defaults
@@ -241,12 +239,12 @@ export const normalizePortfolioBalanceSnapshot = (
 
   return {
     activePortfolioId: nextActivePortfolioId,
-    portfolios: portfolios.length ? portfolios : [createPortfolioBalancePortfolio()],
+    portfolios,
   }
 }
 
 export const buildPortfolioBalanceSnapshot = (snapshot: PortfolioBalanceSnapshot): PortfolioBalanceSnapshot => (
-  normalizePortfolioBalanceSnapshot(snapshot)
+  normalizePortfolioBalanceSnapshot(snapshot, createEmptyPortfolioBalanceSnapshot())
 )
 
 export const touchPortfolio = (portfolio: PortfolioBalancePortfolio) => {

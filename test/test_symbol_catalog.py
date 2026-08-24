@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.domain.market.symbol_catalog import get_usd_equivalent_symbols
+from app.services.market.symbol_catalog import get_usd_equivalent_symbols
 from app.routers.market import list_market_symbols
 
 

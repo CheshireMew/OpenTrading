@@ -14,12 +14,12 @@ import type {
   TradeSetupResponse,
   MarketHistoryResponse,
   MarketHistoryBatchResponse,
-  DliLiquidityResponse,
   MarketIndicatorResponse,
   MarketIndexHistoryResponse,
   MarketSymbolSearchResponse,
   GetBinanceMarketContractDetailQueryParams,
   GetBinanceMarketPageQueryParams,
+  GetBinanceMarketKlinesQueryParams,
   GetBinanceWeb3AddressPnlRankQueryParams,
   GetBinanceWeb3HeatRankBoardsQueryParams,
   GetBinanceWeb3TokenAuditQueryParams,
@@ -34,7 +34,6 @@ import type {
   GetMarketFullHistoryBatchQueryParams,
   GetMarketFullHistoryQueryParams,
   GetMarketHistoryQueryParams,
-  GetDliLiquidityQueryParams,
   GetMarketIndicatorsQueryParams,
   GetRealtimeAnalysisQueryParams,
   GetTradeSetupQueryParams,
@@ -44,7 +43,6 @@ const MARKET_API_TIMEOUT_MS = {
   standard: 15000,
   liveMarket: 30000,
   history: 30000,
-  macroLiquidity: 60000,
   externalMarket: 30000,
   aiTradeSetup: 180000,
 } as const
@@ -77,10 +75,6 @@ export const marketInsightApi = {
 
   getIndicators(params: GetMarketIndicatorsQueryParams): Promise<MarketIndicatorResponse[]> {
     return apiGet('get_market_indicators', { query: params })
-  },
-
-  getDliLiquidity(params: GetDliLiquidityQueryParams): Promise<DliLiquidityResponse> {
-    return apiGet('get_dli_liquidity', { query: params, timeout: MARKET_API_TIMEOUT_MS.macroLiquidity })
   },
 }
 
@@ -125,6 +119,10 @@ export const marketIndexApi = {
 }
 
 export const binanceMarketApi = {
+  getBinanceMarketKlines(params: GetBinanceMarketKlinesQueryParams): Promise<MarketHistoryResponse> {
+    return apiGet('get_binance_market_klines', { query: params, timeout: MARKET_API_TIMEOUT_MS.externalMarket })
+  },
+
   getBinanceMarketContractDetail(params: GetBinanceMarketContractDetailQueryParams): Promise<BinanceContractResearchDetailResponse> {
     return apiGet('get_binance_market_contract_detail', { query: params, timeout: MARKET_API_TIMEOUT_MS.externalMarket })
   },

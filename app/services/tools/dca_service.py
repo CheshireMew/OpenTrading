@@ -3,14 +3,13 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Any
 
-from app.domain.market.symbol_catalog import resolve_market_asset
+from app.services.market.symbol_catalog import resolve_market_asset
 from app.services.market.market_data_service import MarketDataService
 from app.services.market.index_data_service import IndexDataService
 from app.services.sentiment_service import SentimentService
-from app.services.tools.dca_calculator import prepare_dca_dataset, simulate_dca_schedule
 from config import settings
 from utils.logger import logger
-from utils.time_manager import TimeManager
+from utils.time import now_in_timezone, to_utc
 
 
 class DCAService:
@@ -39,8 +38,10 @@ class DCAService:
         strategy_params: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         try:
+            from app.services.tools.dca_calculator import prepare_dca_dataset, simulate_dca_schedule
+
             target_h, target_m = map(int, target_time_str.split(":"))
-            now_local = TimeManager.get_now(timezone)
+            now_local = now_in_timezone(timezone)
 
             start_dt_local = datetime.strptime(start_date_str, "%Y-%m-%d")
             if end_date_str:
@@ -57,8 +58,8 @@ class DCAService:
             )
 
             buffer_days = settings.DCA_INDICATOR_BUFFER_DAYS
-            fetch_start_utc = TimeManager.convert_to_utc(start_dt_local - timedelta(days=buffer_days + 1), timezone)
-            fetch_end_utc = TimeManager.convert_to_utc(end_dt_local + timedelta(days=1), timezone)
+            fetch_start_utc = to_utc(start_dt_local - timedelta(days=buffer_days + 1), timezone)
+            fetch_end_utc = to_utc(end_dt_local + timedelta(days=1), timezone)
             resolved_asset = resolve_market_asset(symbol)
             if not resolved_asset or resolved_asset["asset_class"] == "cash":
                 return {"error": "无效标的"}
@@ -110,6 +111,14 @@ class DCAService:
             if not history:
                 return {"error": "无符合时间的数据点 (可能数据太短)"}
 
+            uses_synthetic_btc_history = (
+                not is_index
+                and normalized_symbol == "BTC/USDT"
+                and "timestamp" in target_klines.columns
+                and not target_klines.empty
+                and int(target_klines["timestamp"].min()) < settings.BTC_SYNTHETIC_HISTORY_CUTOFF_TS
+            )
+
             if is_index:
                 current_price = klines[-1][4]
             else:
@@ -130,6 +139,13 @@ class DCAService:
                 "pricing_symbol": index_pricing.pricing_symbol if is_index else normalized_symbol,
                 "pricing_name": index_pricing.pricing_name if is_index else normalized_symbol,
                 "pricing_currency": index_pricing.pricing_currency if is_index else "USDT",
+                "data_quality": (
+                    "index_proxy"
+                    if is_index
+                    else "synthetic_and_exchange_proxy"
+                    if uses_synthetic_btc_history
+                    else "exchange"
+                ),
                 "start_date": start_date_str,
                 "end_date": end_dt_local.strftime("%Y-%m-%d"),
                 "target_time": target_time_str,

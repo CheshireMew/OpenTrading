@@ -2,14 +2,15 @@ from __future__ import annotations
 
 import csv
 import io
-from datetime import datetime, timezone
+from datetime import datetime
 
 import requests
 
 from app.domain.market.index_catalog import IndexInstrument
 from app.services.market.index_history_contracts import IndexFetchResult
 from app.services.market.index_history_parsing import IndexHistoryParsing
-from app.services.fred_api_config_service import get_fred_api_key
+from app.services.market.index_source_catalog import IndexSourceBinding
+from app.services.fred_api_config_service import read_fred_api_key
 from config import settings
 
 
@@ -17,21 +18,22 @@ class FredIndexHistoryProvider(IndexHistoryParsing):
     def fetch_history(
         self,
         instrument: IndexInstrument,
+        source: IndexSourceBinding,
         start_dt: datetime,
         end_dt: datetime,
     ) -> IndexFetchResult:
-        if not instrument.fred_series_id:
+        if not source.fred_series_id:
             return IndexFetchResult(data=[], source="fred")
 
-        fred_api_key = get_fred_api_key()
+        fred_api_key = read_fred_api_key()
         if fred_api_key:
-            result = self._fetch_api_history(instrument, start_dt, end_dt, fred_api_key)
+            result = self._fetch_api_history(source, start_dt, end_dt, fred_api_key)
             if result.data:
                 return result
 
         response = requests.get(
             "https://fred.stlouisfed.org/graph/fredgraph.csv",
-            params={"id": instrument.fred_series_id},
+            params={"id": source.fred_series_id},
             headers={"User-Agent": "Mozilla/5.0"},
             timeout=settings.FRED_REQUEST_TIMEOUT,
         )
@@ -40,7 +42,7 @@ class FredIndexHistoryProvider(IndexHistoryParsing):
         data: list[list[float]] = []
         for row in reader:
             date_text = row.get("observation_date") or row.get("DATE") or row.get("date")
-            value_text = row.get(instrument.fred_series_id)
+            value_text = row.get(source.fred_series_id)
             if not date_text or not value_text or value_text == ".":
                 continue
             row_dt = self.parse_date(date_text)
@@ -60,7 +62,7 @@ class FredIndexHistoryProvider(IndexHistoryParsing):
             f"https://api.frankfurter.app/{start_dt.strftime('%Y-%m-%d')}..{end_dt.strftime('%Y-%m-%d')}",
             params={"from": currency, "to": "USD"},
             headers={"User-Agent": "Mozilla/5.0"},
-            timeout=settings.FRED_REQUEST_TIMEOUT,
+            timeout=settings.INDEX_HISTORY_REQUEST_TIMEOUT,
         )
         response.raise_for_status()
         payload = response.json()
@@ -73,7 +75,7 @@ class FredIndexHistoryProvider(IndexHistoryParsing):
 
     def _fetch_api_history(
         self,
-        instrument: IndexInstrument,
+        source: IndexSourceBinding,
         start_dt: datetime,
         end_dt: datetime,
         fred_api_key: str,
@@ -81,7 +83,7 @@ class FredIndexHistoryProvider(IndexHistoryParsing):
         response = requests.get(
             settings.FRED_API_URL,
             params={
-                "series_id": instrument.fred_series_id,
+                "series_id": source.fred_series_id,
                 "api_key": fred_api_key,
                 "file_type": "json",
                 "observation_start": start_dt.strftime("%Y-%m-%d"),

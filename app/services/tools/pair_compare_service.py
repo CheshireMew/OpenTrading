@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from app.domain.market.symbol_catalog import resolve_market_asset
+from app.domain.market.constants import timeframe_to_milliseconds
+from app.services.market.symbol_catalog import resolve_market_asset
 from app.services.market.market_data_service import MarketDataService
 from app.services.market.index_data_service import IndexDataService
 from config import settings
@@ -90,20 +91,9 @@ class PairCompareService:
         ).require_complete(symbol=resolved["symbol"], timeframe=base_timeframe)
 
     def _aggregate_klines(self, klines: list[list[float]], target_timeframe: str) -> list[list[float]]:
-        timeframe_minutes = {
-            "5m": 5,
-            "15m": 15,
-            "30m": 30,
-            "1h": 60,
-            "4h": 240,
-            "1d": 1440,
-            "1w": 10080,
-            "1M": 43200,
-        }
-        if target_timeframe not in timeframe_minutes:
+        interval_ms = timeframe_to_milliseconds(target_timeframe)
+        if interval_ms <= 0:
             return klines
-
-        interval_ms = timeframe_minutes[target_timeframe] * 60 * 1000
         aggregated: list[list[float]] = []
         current_bucket: list[float] | None = None
         for ts, open_price, high, low, close, volume in klines:

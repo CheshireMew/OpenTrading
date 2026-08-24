@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from app.contracts.dto.market import MarketIndexHistoryResponse
+from app.contracts.dto.market_catalog import MarketIndexHistoryResponse
 from app.contracts.market_history import build_ohlcv_points
 from app.services.tools.pair_compare_service import PairCompareService
 

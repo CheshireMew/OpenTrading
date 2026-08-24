@@ -1,6 +1,6 @@
 import { toBaseSymbol } from '@/modules/market'
 
-import { buildPortfolioSimulationSummary } from './simulation'
+import { buildPortfolioSimulationSummary, portfolioSimulationInputKey } from './simulation'
 import { fetchPortfolioPriceMap, loadPortfolioSimulationHistory } from './data'
 import {
   applyLatestMarketPrices,
@@ -11,11 +11,16 @@ import {
   createPortfolioBalanceAsset,
   readPortfolioSyntheticPrice,
 } from './assets'
-import { toPortfolioUserError } from './errors'
+import { PortfolioDataError, toPortfolioUserError, type PortfolioTranslate } from './errors'
 import { copyPortfolioInCollection, createPortfolioInCollection, deletePortfolioFromCollection } from './portfolioCrud'
 import type { PortfolioBalancePageState } from './state'
+import type { PortfolioPersistence } from './persistence'
 
-export const createPortfolioBalancePageCommands = (state: PortfolioBalancePageState) => {
+export const createPortfolioBalancePageCommands = (
+  state: PortfolioBalancePageState,
+  t: PortfolioTranslate,
+  persistence: PortfolioPersistence,
+) => {
   let marketRefreshTimer: ReturnType<typeof setTimeout> | null = null
 
   const clearScheduledMarketRefresh = () => {
@@ -40,16 +45,16 @@ export const createPortfolioBalancePageCommands = (state: PortfolioBalancePageSt
       if (needsSeed) {
         seedPortfolioHoldingsFromMarket(portfolio, priceBySymbol)
         state.sourceMessage.value = failedSymbols.length
-          ? `已初始化 ${successCount} 个，失败: ${failedSymbols.join(', ')}`
-          : `已初始化 ${successCount} 个标的`
+          ? t('portfolioBalance.feedback.initializedWithFailures', { count: successCount, symbols: failedSymbols.join(', ') })
+          : t('portfolioBalance.feedback.initialized', { count: successCount })
       } else {
         applyLatestMarketPrices(portfolio, priceBySymbol)
         state.sourceMessage.value = failedSymbols.length
-          ? `已刷新 ${successCount} 个，失败: ${failedSymbols.join(', ')}`
-          : `已刷新 ${successCount} 个标的`
+          ? t('portfolioBalance.feedback.refreshedWithFailures', { count: successCount, symbols: failedSymbols.join(', ') })
+          : t('portfolioBalance.feedback.refreshed', { count: successCount })
       }
     } catch (error: unknown) {
-      state.sourceError.value = toPortfolioUserError(error, '刷新市场价格失败')
+      state.sourceError.value = toPortfolioUserError(error, 'portfolioBalance.feedback.refreshFailed', t)
     } finally {
       state.marketLoading.value = false
     }
@@ -67,31 +72,63 @@ export const createPortfolioBalancePageCommands = (state: PortfolioBalancePageSt
   }
 
   const selectPortfolio = (portfolioId: string) => {
+    state.clearSimulationResult()
     state.activePortfolioId.value = portfolioId
     state.resetFeedback()
+    void persistence.loadSimulation(portfolioId).catch(() => undefined)
   }
 
-  const createPortfolio = () => {
-    state.activePortfolioId.value = createPortfolioInCollection(state.portfolios)
-    state.sourceMessage.value = '已创建新组合'
+  const createPortfolioFromTemplate = async (sample: boolean) => {
+    state.clearSimulationResult()
+    state.activePortfolioId.value = createPortfolioInCollection(
+      state.portfolios,
+      sample
+        ? t('portfolioBalance.samplePortfolioName')
+        : t('portfolioBalance.defaultPortfolioNumbered', { count: state.portfolios.length + 1 }),
+      sample,
+    )
+    state.sourceMessage.value = t('portfolioBalance.feedback.created')
     state.sourceError.value = ''
+    await persistence.saveNow(true)
+    await persistence.loadSimulation(state.activePortfolioId.value)
   }
+  const createPortfolio = () => createPortfolioFromTemplate(false)
+  const createSamplePortfolio = () => createPortfolioFromTemplate(true)
 
-  const copyPortfolio = (portfolioId: string) => {
-    const nextPortfolioId = copyPortfolioInCollection(state.portfolios, portfolioId)
+  const copyPortfolio = async (portfolioId: string) => {
+    const sourceName = state.portfolios.find((portfolio) => portfolio.id === portfolioId)?.name || t('portfolioBalance.defaultPortfolioName')
+    const nextPortfolioId = copyPortfolioInCollection(
+      state.portfolios,
+      portfolioId,
+      t('portfolioBalance.copyName', { name: sourceName }),
+    )
     if (!nextPortfolioId) return
+    state.clearSimulationResult()
     state.activePortfolioId.value = nextPortfolioId
-    state.sourceMessage.value = '组合已复制'
+    state.sourceMessage.value = t('portfolioBalance.feedback.copied')
     state.sourceError.value = ''
+    await persistence.saveNow(true)
+    await persistence.loadSimulation(state.activePortfolioId.value)
   }
 
-  const deletePortfolio = (portfolioId: string) => {
+  const deletePortfolio = async (portfolioId: string) => {
+    state.clearSimulationResult()
     state.activePortfolioId.value = deletePortfolioFromCollection(
       state.portfolios,
       portfolioId,
       state.activePortfolioId.value,
+      t('portfolioBalance.defaultPortfolioName'),
     )
-    state.sourceMessage.value = '组合已删除'
+    state.sourceMessage.value = t('portfolioBalance.feedback.deleted')
+    state.sourceError.value = ''
+    await persistence.saveNow(true)
+    await persistence.loadDeleted(true)
+    await persistence.loadSimulation(state.activePortfolioId.value)
+  }
+
+  const restorePortfolio = async (portfolioId: string) => {
+    await persistence.restore(portfolioId)
+    state.sourceMessage.value = t('portfolioBalance.feedback.restored')
     state.sourceError.value = ''
   }
 
@@ -151,12 +188,13 @@ export const createPortfolioBalancePageCommands = (state: PortfolioBalancePageSt
 
     state.simulationLoading.value = true
     state.resetFeedback()
-    state.updateActivePortfolio((currentPortfolio) => {
-      currentPortfolio.lastSimulationResult = null
-    })
+    state.clearSimulationResult(portfolio.id)
     try {
+      await persistence.saveNow(true)
       const startText = portfolio.simulation.simulationStartDate
-      if (!startText) throw new Error('请先选择模拟开始日期')
+      if (!startText) throw new PortfolioDataError('portfolioBalance.feedback.chooseStartDate')
+      const portfolioId = portfolio.id
+      const inputKey = portfolioSimulationInputKey(portfolio)
 
       const historyBySymbol = await loadPortfolioSimulationHistory(portfolio, startText)
       const nextResult = buildPortfolioSimulationSummary(
@@ -166,14 +204,19 @@ export const createPortfolioBalancePageCommands = (state: PortfolioBalancePageSt
         portfolio.simulation,
         startText,
       )
-      if (!nextResult) throw new Error('历史样本不足，无法生成模拟结果')
-
-      state.updateActivePortfolio((currentPortfolio) => {
-        currentPortfolio.lastSimulationResult = nextResult
-      })
-      state.sourceMessage.value = `已生成 ${nextResult.startDate} 到 ${nextResult.endDate} 的历史模拟结果`
+      if (!nextResult) throw new PortfolioDataError('portfolioBalance.feedback.insufficientHistory')
+      const currentPortfolio = state.activePortfolio.value
+      if (
+        !currentPortfolio
+        || currentPortfolio.id !== portfolioId
+        || portfolioSimulationInputKey(currentPortfolio) !== inputKey
+      ) {
+        throw new PortfolioDataError('portfolioBalance.feedback.simulationInputsChanged')
+      }
+      await persistence.saveSimulation(portfolioId, nextResult)
+      state.sourceMessage.value = t('portfolioBalance.feedback.simulationCreated', { start: nextResult.startDate, end: nextResult.endDate })
     } catch (error: unknown) {
-      state.sourceError.value = toPortfolioUserError(error, '组合历史模拟失败')
+      state.sourceError.value = toPortfolioUserError(error, 'portfolioBalance.feedback.simulationFailed', t)
     } finally {
       state.simulationLoading.value = false
     }
@@ -185,8 +228,10 @@ export const createPortfolioBalancePageCommands = (state: PortfolioBalancePageSt
     scheduleMarketRefresh,
     selectPortfolio,
     createPortfolio,
+    createSamplePortfolio,
     copyPortfolio,
     deletePortfolio,
+    restorePortfolio,
     addAsset,
     removeAsset,
     updateAssetSymbol,

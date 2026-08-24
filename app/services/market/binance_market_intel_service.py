@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import asyncio
+
 from config import settings
-from app.services.persistence_ports import CacheServicePort, BinanceMarketResearchStorePort
+from app.application.persistence_ports import CacheServicePort, BinanceMarketResearchStorePort
 
 from .binance_api_support import BinanceApiSupport
 from .binance_market_page_service import BinanceMarketPageService
@@ -45,8 +47,15 @@ class BinanceMarketIntelService:
             snapshot_service=self.snapshot_service,
         )
 
-    def start(self) -> None:
+    async def start(self) -> None:
+        await self.snapshot_service.start()
         self.page.start()
 
     async def shutdown(self) -> None:
-        await self.page.shutdown()
+        await asyncio.gather(
+            self.page.shutdown(),
+            self.snapshot_service.shutdown(),
+            self.spot.client.aclose(),
+            self.usdm.client.aclose(),
+            return_exceptions=True,
+        )

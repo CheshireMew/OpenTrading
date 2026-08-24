@@ -2,27 +2,23 @@ from __future__ import annotations
 
 import asyncio
 import os
+import uuid
 from dataclasses import dataclass
-from enum import StrEnum
+from enum import Enum
 from pathlib import Path
 
 from app.runtime import AppRuntimeServices, RuntimeRole, runtime_role_has_target
-from app.runtime import validate_runtime_services
 from config import settings
+from utils.logger import logger
+from app.infra.persistence.runtime_status_repository import BACKGROUND_COMPONENT
 
 
-class BackgroundRuntimeStatus(StrEnum):
+class BackgroundRuntimeStatus(str, Enum):
     DISABLED = "disabled"
     STANDBY = "standby"
     STARTING = "starting"
     READY = "ready"
     FAILED = "failed"
-
-
-def _logger():
-    from utils.logger import logger
-
-    return logger
 
 
 class _ProcessFileLock:
@@ -86,6 +82,7 @@ class BackgroundRuntimeController:
         self._lock = _ProcessFileLock(settings.BACKGROUND_RUNTIME_LOCK_PATH)
         self._state = BackgroundRuntimeState(status=BackgroundRuntimeStatus.DISABLED)
         self._startup_task: asyncio.Task[None] | None = None
+        self._owner_id = f"{os.getpid()}-{uuid.uuid4().hex}"
 
     @property
     def state(self) -> BackgroundRuntimeState:
@@ -105,6 +102,13 @@ class BackgroundRuntimeController:
             return
 
         self._state = BackgroundRuntimeState(status=BackgroundRuntimeStatus.STARTING, owner=True)
+        runtime_status = self.runtime_services.infra.runtime_status
+        if runtime_status is not None:
+            await asyncio.to_thread(
+                runtime_status.mark_starting,
+                BACKGROUND_COMPONENT,
+                self._owner_id,
+            )
         self._startup_task = asyncio.create_task(self._bootstrap(), name="background-runtime-startup")
 
     async def wait_until_started(self) -> None:
@@ -120,23 +124,44 @@ class BackgroundRuntimeController:
 
         if self._state.owner:
             await self._shutdown_runtime_services()
+            runtime_status = self.runtime_services.infra.runtime_status
+            if runtime_status is not None:
+                await asyncio.to_thread(
+                    runtime_status.mark_stopped,
+                    BACKGROUND_COMPONENT,
+                    self._owner_id,
+                )
         await asyncio.to_thread(self._lock.release)
         if self._state.status != BackgroundRuntimeStatus.FAILED:
             self._state = BackgroundRuntimeState(status=BackgroundRuntimeStatus.DISABLED, owner=False)
 
     async def _bootstrap(self) -> None:
         try:
-            validate_runtime_services(self.runtime_services, "background")
-            self.runtime_services.require("market_scheduler_runtime").start()
+            await self.runtime_services.require_background().market_scheduler.start(self._owner_id)
+            runtime_status = self.runtime_services.infra.runtime_status
+            if runtime_status is not None:
+                await asyncio.to_thread(
+                    runtime_status.mark_ready,
+                    BACKGROUND_COMPONENT,
+                    self._owner_id,
+                )
             self._state = BackgroundRuntimeState(status=BackgroundRuntimeStatus.READY, owner=True)
         except asyncio.CancelledError:
             raise
         except Exception as exc:
             await self._shutdown_runtime_services()
+            runtime_status = self.runtime_services.infra.runtime_status
+            if runtime_status is not None:
+                await asyncio.to_thread(
+                    runtime_status.mark_failed,
+                    BACKGROUND_COMPONENT,
+                    self._owner_id,
+                    error_code="startup_failed",
+                    error_detail=str(exc),
+                )
             self._state = BackgroundRuntimeState(status=BackgroundRuntimeStatus.FAILED, owner=True, error=exc)
-            _logger().error(f"后台运行时启动失败: {exc}", exc_info=True)
+            logger.error(f"后台运行时启动失败: {exc}", exc_info=True)
 
     async def _shutdown_runtime_services(self) -> None:
-        service = self.runtime_services.market_scheduler_runtime
-        if service is not None:
-            await service.shutdown()
+        if self.runtime_services.background is not None:
+            await self.runtime_services.background.market_scheduler.shutdown()

@@ -2,16 +2,15 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.domain.market.web3_chains import (
+    WEB3_ALL_CHAIN_ID,
+    WEB3_CHAIN_BY_ID,
+    WEB3_CHAIN_CATALOG,
+)
 from .binance_numbers import safe_float, to_float, to_int
 
-WEB3_ALL_CHAINS_ID = "all"
-SUPPORTED_WEB3_CHAIN_IDS = ("1", "56", "8453", "CT_501")
-WEB3_CHAIN_PLATFORMS = {
-    "1": "ethereum",
-    "56": "bsc",
-    "8453": "base",
-    "CT_501": "solana",
-}
+WEB3_ALL_CHAINS_ID = WEB3_ALL_CHAIN_ID
+SUPPORTED_WEB3_CHAIN_IDS = tuple(chain.chain_id for chain in WEB3_CHAIN_CATALOG)
 
 
 def asset_url(path: Any) -> str | None:
@@ -97,7 +96,8 @@ def token_key(item: dict[str, Any]) -> str | None:
 
 
 def chain_platform(chain_id: Any) -> str | None:
-    return WEB3_CHAIN_PLATFORMS.get(str(chain_id))
+    chain = WEB3_CHAIN_BY_ID.get(str(chain_id))
+    return chain.platform if chain else None
 
 
 def normalize_web3_chain_id(chain_id: Any) -> str | None:

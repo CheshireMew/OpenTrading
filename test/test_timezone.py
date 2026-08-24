@@ -4,31 +4,26 @@ from datetime import datetime
 from unittest.mock import MagicMock
 
 import pytz
-from utils.time_manager import TimeManager
-from app.services.market.kline_range_loader import OhlcvRangeResult
-from app.services.tools.dca_service import DCAService as DCACalculator
+from utils.time import to_utc
+from app.services.market.history_range_coordinator import OhlcvRangeResult
+from app.services.tools.dca_service import DCAService
 
 class TestTimezoneLogic(unittest.TestCase):
-    def test_time_manager_basics(self):
-        print("\n--- Testing TimeManager ---")
+    def test_time_conversion_basics(self):
         # Test UTC Conversion
         # 2024-01-01 00:00 Beijing -> 2023-12-31 16:00 UTC
         local_time_str = "2024-01-01 00:00:00"
-        utc_dt = TimeManager.convert_to_utc(local_time_str, "Asia/Shanghai")
+        utc_dt = to_utc(local_time_str, "Asia/Shanghai")
         
         expected_utc = datetime(2023, 12, 31, 16, 0, 0, tzinfo=pytz.UTC)
         self.assertEqual(utc_dt, expected_utc)
-        print("TimeManager conversion test passed.")
 
     def test_dca_calculator_timezone(self):
-        print("\n--- Testing DCACalculator Timezone Filtering ---")
-        calc = DCACalculator(
+        calc = DCAService(
             market_data_service=MagicMock(),
             sentiment_service=MagicMock(),
             index_data_service=MagicMock(),
         )
-        calc.index_data_service.get_instrument.return_value = None
-        
         # Scenario: User wants to buy at 08:00 Beijing Time.
         # 08:00 Beijing = 00:00 UTC.
         # We provide data at 00:00 UTC. It should match.
@@ -67,7 +62,6 @@ class TestTimezoneLogic(unittest.TestCase):
             self.fail(f"DCA Failed: {res['error']}")
             
         # Check history. Should have 1 entry (Match)
-        print(f"Result History Length: {len(res['history'])}")
         self.assertEqual(len(res['history']), 1)
         self.assertEqual(res['history'][0]['price'], 100)
         
@@ -85,8 +79,3 @@ class TestTimezoneLogic(unittest.TestCase):
         )
         self.assertEqual(len(res2['history']), 1)
         self.assertEqual(res2['history'][0]['price'], 101)
-        
-        print("DCACalculator timezone filtering passed.")
-
-if __name__ == '__main__':
-    unittest.main()

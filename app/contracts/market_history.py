@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.contracts.dto.market import (
+from app.contracts.dto.market_history import (
     CurrentPriceBatchItemResponse,
     CurrentPriceBatchResponse,
     CurrentPriceResponse,

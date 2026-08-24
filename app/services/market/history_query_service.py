@@ -4,15 +4,19 @@ import asyncio
 from datetime import datetime
 from typing import Callable, Literal
 
+from app.application.errors import InvalidRequestError
+
 from app.contracts.market_history import (
     build_kline_tail_response,
     build_market_history_batch_response,
     build_market_history_response,
 )
-from app.contracts.dto.market import KlineTailResponse, MarketHistoryBatchResponse, MarketHistoryResponse
+from app.contracts.dto.market_history import KlineTailResponse, MarketHistoryBatchResponse, MarketHistoryResponse
 from app.infra.executor import run_database, run_external_io
 from app.services.market.app_service_support import validate_market_request
 from app.services.market.market_data_service import MarketDataService
+from app.domain.market.constants import timeframe_to_milliseconds
+from config import settings
 
 
 class MarketHistoryQueryService:
@@ -41,7 +45,7 @@ class MarketHistoryQueryService:
         limit: int,
     ) -> MarketHistoryResponse:
         validate_market_request(symbol, timeframe)
-        rows = await run_database(
+        rows = await run_external_io(
             lambda: self.market_data_service.get_recent_candles(
                 symbol,
                 timeframe,
@@ -119,17 +123,25 @@ class MarketHistoryQueryService:
             seen_symbols.add(symbol)
             normalized_symbols.append(symbol)
 
-        series = await asyncio.gather(
-            *[
-                self._load_full_history_rows(
+        if len(normalized_symbols) > settings.HISTORY_BATCH_MAX_SYMBOLS:
+            raise InvalidRequestError(
+                f"批量历史数据一次最多查询 {settings.HISTORY_BATCH_MAX_SYMBOLS} 个标的"
+            )
+
+        semaphore = asyncio.Semaphore(max(int(settings.HISTORY_BATCH_CONCURRENCY), 1))
+
+        async def load_one(symbol: str):
+            async with semaphore:
+                return await self._load_full_history_rows(
                     symbol=symbol,
                     timeframe=timeframe,
                     start_date=start_date,
                     fetch_policy=fetch_policy,
                     persist_klines=persist_klines,
                 )
-                for symbol in normalized_symbols
-            ],
+
+        series = await asyncio.gather(
+            *(load_one(symbol) for symbol in normalized_symbols),
         )
         return build_market_history_batch_response(
             timeframe=timeframe,
@@ -167,9 +179,19 @@ class MarketHistoryQueryService:
         try:
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
         except ValueError as exc:
-            raise ValueError("start_date 必须是 YYYY-MM-DD") from exc
+            raise InvalidRequestError("start_date 必须是 YYYY-MM-DD") from exc
 
         end_dt = datetime.now()
+        interval_ms = timeframe_to_milliseconds(timeframe)
+        if interval_ms > 0:
+            estimated_points = int(
+                max((end_dt - start_dt).total_seconds() * 1000, 0) / interval_ms
+            ) + 1
+            if estimated_points > settings.FULL_HISTORY_MAX_POINTS:
+                raise InvalidRequestError(
+                    "历史范围过大：当前周期最多返回 "
+                    f"{settings.FULL_HISTORY_MAX_POINTS} 个数据点，请缩短日期范围或使用更大周期"
+                )
         if fetch_policy == "cache_only":
             result = self.market_data_service.load_cached_ohlcv_range(
                 symbol,
@@ -185,4 +207,4 @@ class MarketHistoryQueryService:
                 end_dt,
                 persist_klines=persist_klines,
             )
-        return result.rows, result.missing_ranges
+        return result.rows[-settings.FULL_HISTORY_MAX_POINTS :], result.missing_ranges

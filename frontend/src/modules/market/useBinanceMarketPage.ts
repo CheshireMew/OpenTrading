@@ -26,13 +26,6 @@ export function useBinanceMarketPage() {
   const market = useBinanceMarketMonitor(restoredSnapshot)
   const chart = useBinanceSymbolChart()
 
-  const handleEscape = (event: KeyboardEvent) => {
-    if (event.key === 'Escape' && chart.chartDialog.value.open) {
-      closeChart()
-      return
-    }
-  }
-
   const openChart = (
     item: Pick<BinanceBreakoutMonitorItemResponse, 'symbol'> & Partial<Pick<BinanceBreakoutMonitorItemResponse, 'market' | 'market_label'>>,
   ) => {
@@ -83,13 +76,11 @@ export function useBinanceMarketPage() {
   }
 
   onMounted(async () => {
-    window.addEventListener('keydown', handleEscape)
     await market.fetchData()
     market.startAutoRefresh()
   })
 
   onUnmounted(() => {
-    window.removeEventListener('keydown', handleEscape)
     market.stopAutoRefresh()
   })
 

@@ -1,10 +1,9 @@
 from __future__ import annotations
 
+import importlib
 import threading
 import time
 from typing import Optional, Tuple
-
-import ccxt
 
 from config import settings
 from utils.logger import logger
@@ -25,17 +24,16 @@ class ExchangeGateway:
             },
         }
 
-        if not hasattr(ccxt, exchange_id):
-            logger.error(f"不支持的交易所 ID: {exchange_id}")
-            raise ValueError(f"Unsupported exchange: {exchange_id}")
-
-        logger.info(f"已连接到交易所: {exchange_id}")
-
     @property
     def exchange(self):
         if not hasattr(self._local, "exchange"):
+            ccxt = importlib.import_module("ccxt")
+            if not hasattr(ccxt, self.exchange_id):
+                logger.error(f"不支持的交易所 ID: {self.exchange_id}")
+                raise ValueError(f"Unsupported exchange: {self.exchange_id}")
             exchange_class = getattr(ccxt, self.exchange_id)
             self._local.exchange = exchange_class(self._exchange_config.copy())
+            logger.info(f"已初始化交易所连接: {self.exchange_id}")
         return self._local.exchange
 
     def fetch_ohlcv(

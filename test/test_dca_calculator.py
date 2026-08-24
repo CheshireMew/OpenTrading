@@ -2,25 +2,22 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
-from app.contracts.dto.market import MarketIndexHistoryResponse
+from app.contracts.dto.market_catalog import MarketIndexHistoryResponse
 from app.contracts.market_history import build_ohlcv_points
 
-from app.services.market.kline_range_loader import OhlcvRangeResult
-from app.services.tools.dca_service import DCAService as DCACalculator
+from app.services.market.history_range_coordinator import OhlcvRangeResult
+from app.services.tools.dca_service import DCAService
 
 
 class TestValueAveraging(unittest.TestCase):
     def setUp(self):
-        self.calculator = DCACalculator(
+        self.calculator = DCAService(
             market_data_service=MagicMock(),
             sentiment_service=MagicMock(),
             index_data_service=MagicMock(),
         )
-        self.calculator.index_data_service.get_instrument.return_value = None
 
     def test_value_averaging_zero_invested(self):
-        print("\n--- Testing Value Averaging Zero Invested Scenario ---")
-
         d1 = datetime(2024, 1, 1, 23, 0, tzinfo=timezone.utc)
         d2 = datetime(2024, 1, 2, 23, 0, tzinfo=timezone.utc)
         d3 = datetime(2024, 1, 3, 23, 0, tzinfo=timezone.utc)
@@ -52,20 +49,7 @@ class TestValueAveraging(unittest.TestCase):
         )
 
         if 'error' in result:
-            print(f"Error returned: {result['error']}")
-            self.fail("Calculator returned error")
-
-        print("Result Summary:")
-        print(f"Total Invested: {result['total_invested']}")
-        print(f"Final Value: {result['final_value']}")
-        print(f"ROI: {result['roi']}%")
-        print(f"Profit/Loss: {result['profit_loss']}")
-
-        for item in result['history']:
-            print(
-                f"Date: {item['date']}, Price: {item['price']}, Invested: {item['invested']}, "
-                f"Value: {item['value']}, ROI: {item['roi']}%"
-            )
+            self.fail(f"Calculator returned error: {result['error']}")
 
         h1 = result['history'][1]
         self.assertEqual(h1['invested'], 0.0)
@@ -74,10 +58,31 @@ class TestValueAveraging(unittest.TestCase):
         h2 = result['history'][2]
         self.assertTrue(h2['invested'] < 0)
         self.assertEqual(h2['roi'], 0.0)
+        self.assertEqual(result['data_quality'], 'exchange')
+
+    def test_btc_early_history_is_labeled_synthetic(self):
+        early = datetime(2010, 7, 18, 23, 0, tzinfo=timezone.utc)
+        timestamp = int(early.timestamp() * 1000)
+        mock_data = [[timestamp, 0.08, 0.08, 0.08, 0.08, 1000]]
+        self.calculator.market_data_service.load_ohlcv_range.return_value = OhlcvRangeResult(mock_data, [])
+        self.calculator.market_data_service.get_recent_candles.return_value = mock_data
+
+        result = self.calculator.calculate_dca(
+            symbol='BTC/USDT',
+            start_date_str='2010-07-18',
+            end_date_str='2010-07-18',
+            daily_investment=100.0,
+            target_time_str='23:00',
+            timezone='UTC',
+            strategy='standard',
+            strategy_params={'fee_rate': 0},
+        )
+
+        self.assertNotIn('error', result)
+        self.assertEqual(result['data_quality'], 'synthetic_and_exchange_proxy')
 
     def test_index_standard_dca_uses_daily_history(self):
         index_service = MagicMock()
-        index_service.get_instrument.return_value = object()
         index_service.get_pricing_history.return_value = MarketIndexHistoryResponse(
             symbol="HK_HSI",
             name="Hang Seng Index",
@@ -98,7 +103,7 @@ class TestValueAveraging(unittest.TestCase):
                 [1704240000000, 120.0, 120.0, 120.0, 120.0, 0],
             ]),
         )
-        calculator = DCACalculator(
+        calculator = DCAService(
             market_data_service=MagicMock(),
             sentiment_service=MagicMock(),
             index_data_service=index_service,
@@ -122,7 +127,4 @@ class TestValueAveraging(unittest.TestCase):
         self.assertEqual(result['price_basis'], 'proxy_etf')
         self.assertEqual(result['pricing_symbol'], '02800')
         self.assertEqual(result['pricing_currency'], 'USD')
-
-
-if __name__ == '__main__':
-    unittest.main()
+        self.assertEqual(result['data_quality'], 'index_proxy')

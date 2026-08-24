@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+from dataclasses import asdict
+
 from fastapi import Depends, Query
 
 from app.contracts.frontend import FrontendContractRouter
 from app.dependencies import get_market_insight_service
-from app.contracts.dto.market import (
-    DliLiquidityResponse,
+from app.contracts.dto.market_insight import (
     MarketIndicatorResponse,
     TradeSetupResponse,
 )
@@ -24,15 +25,6 @@ async def get_market_indicators(
     return await service.get_indicators_async(category=category, days=days)
 
 
-@router.get("/indicators/dli", response_model=DliLiquidityResponse)
-async def get_dli_liquidity(
-    days: int = Query(settings.INDICATORS_DEFAULT_DAYS, ge=30, le=3650, description="展示历史数据天数"),
-    change_days: int = Query(30, ge=1, le=365, description="变化统计周期天数"),
-    service = Depends(get_market_insight_service),
-):
-    return await service.get_dli_liquidity_async(days=days, change_days=change_days)
-
-
 @router.get("/trade-setup", response_model=TradeSetupResponse)
 async def get_trade_setup(
     symbol: str = Query(..., description="交易对，如 BTC/USDT"),
@@ -44,7 +36,7 @@ async def get_trade_setup(
     mode: str = Query("rules", pattern="^(rules|ai)$"),
     service = Depends(get_market_insight_service),
 ):
-    return await service.get_trade_setup(
+    result = await service.get_trade_setup(
         symbol=symbol,
         timeframe=timeframe,
         limit=limit,
@@ -53,5 +45,6 @@ async def get_trade_setup(
         strategy=strategy,
         mode=mode,
     )
+    return TradeSetupResponse.model_validate(asdict(result))
 
 

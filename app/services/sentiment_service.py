@@ -3,9 +3,9 @@ from __future__ import annotations
 from datetime import datetime
 
 from app.services.sentiment_client import SentimentApiClient
-from app.services.persistence_ports import SentimentRepositoryPort
+from app.application.persistence_ports import SentimentRepositoryPort
 from utils.logger import logger
-from utils.time_manager import TimeManager
+from utils.time import now_in_timezone
 
 
 class SentimentService:
@@ -21,7 +21,7 @@ class SentimentService:
     def sync_data(self) -> None:
         try:
             latest_date = self.repository.get_latest_date()
-            today = TimeManager.get_now().date()
+            today = now_in_timezone().date()
             if latest_date and latest_date.date() >= today:
                 return
 

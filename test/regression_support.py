@@ -68,52 +68,6 @@ def make_market_indicator() -> dict:
     }
 
 
-def make_dli_liquidity_response() -> dict:
-    indicator = {
-        "indicator_id": "FED_BALANCE",
-        "name": "Fed Balance Sheet",
-        "category": "Macro",
-        "unit": "M USD",
-        "current_value": 7_200_000.0,
-        "last_updated": "2025-06-01T12:00:00",
-        "history": [{"date": "2025-05-31T12:00:00", "value": 7_100_000.0}],
-    }
-    return {
-        "score": 28,
-        "raw_score": -0.42,
-        "score_percentile": 25.0,
-        "state": "中性偏松",
-        "tone": "support",
-        "updated_at": "2025-06-01T12:00:00",
-        "coverage": 100.0,
-        "methodology": "pressure_z_composite_percentile_v3",
-        "thresholds": {"p20": 20.0, "p50": 50.0, "p80": 80.0, "source": "rolling_5y_percentile", "sample_size": 1},
-        "components": [
-            {
-                "indicator_id": "FED_BALANCE",
-                "name": "美联储资产负债表",
-                "short_label": "Fed Balance",
-                "group": "policy",
-                "group_label": "政策与准备金池",
-                "weight": 1.0,
-                "effective_weight": 28.3333,
-                "polarity": "lower_tightens",
-                "current_value": 7_200_000.0,
-                "score": 28.0,
-                "z_score": -0.8,
-                "percentile": 25.0,
-                "contribution": -6.2333,
-                "change_pct": 1.4,
-                "last_updated": "2025-06-01T12:00:00",
-                "missing_reason": None,
-            }
-        ],
-        "history": [{"date": "2025-05-31T12:00:00", "score": 28.0, "state": "中性偏松"}],
-        "indicators": [indicator],
-        "alerts": ["美联储资产负债表当前指向流动性缓和，DLI 压力贡献 -6.23，30 日变化 +1.40%。"],
-    }
-
-
 def make_binance_breakout_monitor_response() -> dict:
     return {
         "exchange": "binance",
@@ -211,6 +165,8 @@ def make_trade_setup_response() -> dict:
         },
         "reason": "做多：价格站上EMA，MACD 偏强，RSI 61.2",
         "source": "rules",
+        "status": "ready",
+        "error_code": None,
     }
 
 
@@ -282,9 +238,6 @@ class StubMarketInsightAppService:
     async def get_indicators_async(self, **kwargs):
         return [make_market_indicator()]
 
-    async def get_dli_liquidity_async(self, **kwargs):
-        return make_dli_liquidity_response()
-
     async def get_trade_setup(self, **kwargs):
         return make_trade_setup_response()
 
@@ -350,6 +303,7 @@ class StubToolsAppService:
             "average_cost": 60000.0,
             "profit_loss": 280.0,
             "current_price": 74000.0,
+            "data_quality": "exchange",
             "history": [],
             "profit_pct": 23.33,
         }

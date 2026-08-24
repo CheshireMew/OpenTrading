@@ -1,9 +1,16 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from collections.abc import Iterable
 from typing import Any
 
-from app.services.fred_api_config_service import get_fred_api_key
+
+def redact_exception_message(exc: Exception, secrets: Iterable[str | None] = ()) -> str:
+    message = str(exc)
+    for secret in secrets:
+        if secret:
+            message = message.replace(secret, "***")
+    return message
 
 
 class IndexHistoryParsing:
@@ -66,13 +73,6 @@ class IndexHistoryParsing:
                 return value.replace(tzinfo=timezone.utc)
             return value.astimezone(timezone.utc)
         return self.parse_date(str(value))
-
-    def safe_error(self, exc: Exception) -> str:
-        message = str(exc)
-        fred_api_key = get_fred_api_key()
-        if fred_api_key:
-            message = message.replace(fred_api_key, "***")
-        return message
 
     def date_to_ms(self, value: datetime) -> int:
         if value.tzinfo is None:

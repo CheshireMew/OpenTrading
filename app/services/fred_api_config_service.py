@@ -7,6 +7,19 @@ from app.services.config_file import mask_secret, read_json_object, write_json_o
 from config import settings
 
 
+def resolve_fred_api_key(config_path: Path | None = None) -> tuple[str, str]:
+    raw = read_json_object(config_path or settings.FRED_CONFIG_PATH)
+    if "apiKey" in raw:
+        api_key = str(raw.get("apiKey") or "").strip()
+        return api_key, "saved" if api_key else "unset"
+    api_key = str(settings.FRED_API_KEY or "").strip()
+    return api_key, "env" if api_key else "unset"
+
+
+def read_fred_api_key(config_path: Path | None = None) -> str:
+    return resolve_fred_api_key(config_path)[0]
+
+
 class FredApiConfigService:
     def __init__(self, config_path: Path | None = None) -> None:
         self.config_path = config_path or settings.FRED_CONFIG_PATH
@@ -34,20 +47,4 @@ class FredApiConfigService:
         return self.read_config()
 
     def _resolve_api_key(self) -> tuple[str, str]:
-        raw = read_json_object(self.config_path)
-        if "apiKey" in raw:
-            api_key = str(raw.get("apiKey") or "").strip()
-            return api_key, "saved" if api_key else "unset"
-
-        api_key = str(settings.FRED_API_KEY or "").strip()
-        return api_key, "env" if api_key else "unset"
-
-
-_default_service: FredApiConfigService | None = None
-
-
-def get_fred_api_key() -> str:
-    global _default_service
-    if _default_service is None:
-        _default_service = FredApiConfigService()
-    return _default_service.read_effective_api_key()
+        return resolve_fred_api_key(self.config_path)

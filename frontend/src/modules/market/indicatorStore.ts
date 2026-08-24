@@ -2,17 +2,15 @@ import { defineStore } from 'pinia'
 import { marketInsightApi } from './api'
 import { resolveSentimentBucket } from './sentiment'
 import type { MarketIndicatorResponse, SentimentCache, SentimentData } from './contracts'
-import { isCacheFresh, MARKET_CACHE_TTL_MS, type CacheEntry } from './cacheTypes'
-import { createResourceCache } from './resourceCache'
+import { isCacheFresh, MARKET_CACHE_TTL_MS } from './cacheTypes'
+import { createResourceLoader, createResourceState, isResourceLoading, readResource, readResourceError, type ResourceState } from './resourceCache'
 
 interface MarketIndicatorState {
   sentimentCache: SentimentCache
-  indicatorCache: Record<string, CacheEntry<MarketIndicatorResponse[]>>
-  indicatorLoading: Record<string, boolean>
-  indicatorErrors: Record<string, string>
+  resources: ResourceState<MarketIndicatorResponse[]>
 }
 
-const indicatorResource = createResourceCache()
+const indicatorResource = createResourceLoader<MarketIndicatorResponse[]>()
 const indicatorKey = (category: string | null | undefined, days: number) => `category:${category || 'all'}:days:${days}`
 
 export const useMarketIndicatorStore = defineStore('marketIndicators', {
@@ -21,9 +19,7 @@ export const useMarketIndicatorStore = defineStore('marketIndicators', {
       value: null,
       timestamp: 0,
     },
-    indicatorCache: {},
-    indicatorLoading: {},
-    indicatorErrors: {},
+    resources: createResourceState<MarketIndicatorResponse[]>(16),
   }),
 
   actions: {
@@ -32,15 +28,15 @@ export const useMarketIndicatorStore = defineStore('marketIndicators', {
     },
 
     readMarketIndicators(category: string | null | undefined, days: number): MarketIndicatorResponse[] | null {
-      return this.indicatorCache[this.getMarketIndicatorsCacheKey(category, days)]?.data || null
+      return readResource(this.resources, this.getMarketIndicatorsCacheKey(category, days))
     },
 
     isMarketIndicatorsLoading(category: string | null | undefined, days: number): boolean {
-      return Boolean(this.indicatorLoading[this.getMarketIndicatorsCacheKey(category, days)])
+      return isResourceLoading(this.resources, this.getMarketIndicatorsCacheKey(category, days))
     },
 
     getMarketIndicatorsError(category: string | null | undefined, days: number): string {
-      return this.indicatorErrors[this.getMarketIndicatorsCacheKey(category, days)] || ''
+      return readResourceError(this.resources, this.getMarketIndicatorsCacheKey(category, days))
     },
 
     async getMarketIndicators(
@@ -49,8 +45,7 @@ export const useMarketIndicatorStore = defineStore('marketIndicators', {
       options: { force?: boolean } = {},
     ): Promise<MarketIndicatorResponse[] | null> {
       const key = this.getMarketIndicatorsCacheKey(category, days)
-      return indicatorResource.load({
-        cache: this.indicatorCache,
+      return indicatorResource.load(this.resources, {
         key,
         ttlMs: MARKET_CACHE_TTL_MS.marketIndicators,
         force: options.force,
@@ -58,16 +53,9 @@ export const useMarketIndicatorStore = defineStore('marketIndicators', {
           const response = await marketInsightApi.getIndicators({ category: category || undefined, days })
           return Array.isArray(response) ? response : []
         },
-        onLoadStart: () => {
-          this.indicatorLoading[key] = true
-          this.indicatorErrors[key] = ''
-        },
-        onLoadEnd: () => {
-          this.indicatorLoading[key] = false
-        },
-        onLoadError: (error) => {
+        errorKey: 'common.marketIndicatorsLoadFailed',
+        onError: (error) => {
           console.error('Market indicators fetch failed', error)
-          this.indicatorErrors[key] = '市场指标数据加载失败'
         },
       })
     },

@@ -52,11 +52,11 @@ def verify_database_schema(database_runtime: DatabaseRuntime) -> None:
     if current != expected:
         raise RuntimeError(
             f"数据库迁移未就绪: current={current or 'none'}, head={expected}. "
-            "请先运行 python scripts/prepare_db.py"
+            "请先运行 python -m scripts.prepare_db"
         )
     if diffs:
         raise RuntimeError(
-            "数据库结构与当前模型不一致，请先运行 python scripts/prepare_db.py"
+            "数据库结构与当前模型不一致，请先运行 python -m scripts.prepare_db"
         )
     _assert_model_tables_present(database_runtime)
 
@@ -126,7 +126,7 @@ def _assert_model_tables_present(database_runtime: DatabaseRuntime) -> None:
     ]
     if missing:
         raise RuntimeError(
-            f"数据库表缺失: {', '.join(missing)}. 请先运行 python scripts/prepare_db.py"
+            f"数据库表缺失: {', '.join(missing)}. 请先运行 python -m scripts.prepare_db"
         )
 
 

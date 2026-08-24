@@ -5,50 +5,33 @@ import type { PortfolioBalancePortfolio } from './types'
 import { buildPortfolioSyntheticHistory } from './simulation'
 import { collectPortfolioMarketTargets, readPortfolioSyntheticPrice } from './assets'
 import { localIsoDateDaysAgo, toLocalIsoDate } from '@/utils/localDate'
+import { PortfolioDataError } from './errors'
+import { createPromiseLruCache } from './promiseCache'
 
 type PortfolioHistoryPoint = { date: string; close: number }
 type PortfolioHistoryMap = Record<string, PortfolioHistoryPoint[]>
 
 const HISTORY_CACHE_LIMIT = 80
-const portfolioHistoryCache = new Map<string, Promise<PortfolioHistoryPoint[]>>()
-const portfolioHistoryMapCache = new Map<string, Promise<PortfolioHistoryMap>>()
+const HISTORY_CACHE_TTL_MS = 5 * 60 * 1000
+const HISTORY_DATA_VERSION = 'v1'
 
 const cloneHistory = (history: PortfolioHistoryPoint[]) => history.map((point) => ({ ...point }))
 const cloneHistoryMap = (historyMap: PortfolioHistoryMap) => Object.fromEntries(
   Object.entries(historyMap).map(([symbol, history]) => [symbol, cloneHistory(history)]),
 )
 
-const rememberHistory = (key: string, loader: () => Promise<PortfolioHistoryPoint[]>) => {
-  let promise = portfolioHistoryCache.get(key)
-  if (!promise) {
-    promise = loader()
-    portfolioHistoryCache.set(key, promise)
-    promise.catch(() => {
-      if (portfolioHistoryCache.get(key) === promise) portfolioHistoryCache.delete(key)
-    })
-    if (portfolioHistoryCache.size > HISTORY_CACHE_LIMIT) {
-      const oldestKey = portfolioHistoryCache.keys().next().value
-      if (oldestKey) portfolioHistoryCache.delete(oldestKey)
-    }
-  }
-  return promise.then(cloneHistory)
-}
+const portfolioHistoryCache = createPromiseLruCache({
+  maxEntries: HISTORY_CACHE_LIMIT,
+  ttlMs: HISTORY_CACHE_TTL_MS,
+  clone: cloneHistory,
+})
+const portfolioHistoryMapCache = createPromiseLruCache({
+  maxEntries: HISTORY_CACHE_LIMIT,
+  ttlMs: HISTORY_CACHE_TTL_MS,
+  clone: cloneHistoryMap,
+})
 
-const rememberHistoryMap = (key: string, loader: () => Promise<PortfolioHistoryMap>) => {
-  let promise = portfolioHistoryMapCache.get(key)
-  if (!promise) {
-    promise = loader()
-    portfolioHistoryMapCache.set(key, promise)
-    promise.catch(() => {
-      if (portfolioHistoryMapCache.get(key) === promise) portfolioHistoryMapCache.delete(key)
-    })
-    if (portfolioHistoryMapCache.size > HISTORY_CACHE_LIMIT) {
-      const oldestKey = portfolioHistoryMapCache.keys().next().value
-      if (oldestKey) portfolioHistoryMapCache.delete(oldestKey)
-    }
-  }
-  return promise.then(cloneHistoryMap)
-}
+const currentHistoryDataWindow = () => `${HISTORY_DATA_VERSION}:${toLocalIsoDate(new Date())}`
 
 const rowsToHistory = (rows: OhlcvPointResponse[]): PortfolioHistoryPoint[] => rows
   .map((row) => {
@@ -62,8 +45,8 @@ const rowsToHistory = (rows: OhlcvPointResponse[]): PortfolioHistoryPoint[] => r
   .filter((point) => point.date && point.close > 0)
 
 const loadCryptoHistoryMap = async (symbols: string[], startText: string) => {
-  const cacheKey = `crypto:${symbols.slice().sort().join(',')}:1d:${startText}`
-  return rememberHistoryMap(cacheKey, async () => {
+  const cacheKey = `crypto:${symbols.slice().sort().join(',')}:1d:${startText}:${currentHistoryDataWindow()}`
+  return portfolioHistoryMapCache.load(cacheKey, async () => {
     const response = await marketHistoryApi.getBatchPriceHistory({
       symbols,
       timeframe: '1d',
@@ -80,8 +63,8 @@ const loadCryptoHistoryMap = async (symbols: string[], startText: string) => {
 }
 
 const loadIndexHistory = async (symbol: string, startText: string) => {
-  const cacheKey = `index-pricing:${symbol}:1d:${startText}`
-  return rememberHistory(cacheKey, async () => {
+  const cacheKey = `index-pricing:${symbol}:1d:${startText}:${currentHistoryDataWindow()}`
+  return portfolioHistoryCache.load(cacheKey, async () => {
     const response = await marketIndexApi.getIndexPricingHistory({
       symbol,
       timeframe: '1d',
@@ -102,7 +85,7 @@ export const fetchPortfolioPriceMap = async (portfolio: PortfolioBalancePortfoli
   })
 
   const targets = collectPortfolioMarketTargets(portfolio.assets)
-  if (!targets.length && !priceBySymbol.size) throw new Error('请先填写至少一个标的')
+  if (!targets.length && !priceBySymbol.size) throw new PortfolioDataError('portfolioBalance.feedback.addTargetFirst')
 
   const latestStartDate = localIsoDateDaysAgo(30)
   const cryptoTargets = targets.filter((item) => !isIndexSymbol(item.marketSymbol))
@@ -156,7 +139,7 @@ export const fetchPortfolioPriceMap = async (portfolio: PortfolioBalancePortfoli
     successCount += 1
   })
 
-  if (!successCount) throw new Error('没有任何标的成功获取到实时价格')
+  if (!successCount) throw new PortfolioDataError('portfolioBalance.feedback.noLivePrices')
   return { priceBySymbol, successCount, failedSymbols }
 }
 
@@ -175,7 +158,7 @@ export const loadPortfolioSimulationHistory = async (
   })
 
   const targets = collectPortfolioMarketTargets(portfolio.assets)
-  if (!targets.length && !Object.keys(historyBySymbol).length) throw new Error('请先填写至少一个标的')
+  if (!targets.length && !Object.keys(historyBySymbol).length) throw new PortfolioDataError('portfolioBalance.feedback.addTargetFirst')
 
   if (!targets.length) return historyBySymbol
 
@@ -204,7 +187,7 @@ export const loadPortfolioSimulationHistory = async (
     .map((item) => item.symbol)
 
   if (failedSymbols.length) {
-    throw new Error(`以下标的历史数据获取失败: ${failedSymbols.join(', ')}`)
+    throw new PortfolioDataError('portfolioBalance.feedback.historySymbolsFailed', { symbols: failedSymbols.join(', ') })
   }
 
   targets.forEach((item) => {

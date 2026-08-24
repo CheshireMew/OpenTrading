@@ -2,8 +2,18 @@ import { useDateTime } from '@/composables/useDateTime'
 import { useMoney } from '@/composables/useMoney'
 import { asNumber } from '@/utils/number'
 
-const money = useMoney()
-const dateTime = useDateTime()
+let moneyFormatter: ReturnType<typeof useMoney> | null = null
+let dateTimeFormatter: ReturnType<typeof useDateTime> | null = null
+
+const money = () => {
+  moneyFormatter ??= useMoney()
+  return moneyFormatter
+}
+
+const dateTime = () => {
+  dateTimeFormatter ??= useDateTime()
+  return dateTimeFormatter
+}
 
 type PercentOptions = {
   empty?: string
@@ -38,7 +48,7 @@ export const formatMoney = (
   empty = '-',
 ) => {
   const numeric = asNumber(value)
-  return numeric === null ? empty : money.formatMoney(numeric, sourceCurrency, options)
+  return numeric === null ? empty : money().formatMoney(numeric, sourceCurrency, options)
 }
 
 export const formatPrice = (
@@ -59,7 +69,7 @@ export const formatAdaptivePrice = (value: unknown, sourceCurrency = 'USDT', emp
 
 export const formatCompactCurrency = (value: unknown, sourceCurrency = 'USDT', empty = '--') => {
   const numeric = asNumber(value)
-  return numeric === null ? empty : money.formatCompactMoney(numeric, sourceCurrency)
+  return numeric === null ? empty : money().formatCompactMoney(numeric, sourceCurrency)
 }
 
 export const formatNumber = (value: unknown, empty = '-') => {
@@ -99,13 +109,13 @@ export const formatCompactNumber = (value: unknown, empty = '--') => {
 
 export const formatDate = (value: string | number | Date | null | undefined, empty = '-') => {
   if (!value) return empty
-  const formatted = dateTime.formatDate(value)
+  const formatted = dateTime().formatDate(value)
   return formatted === '--' ? empty : formatted
 }
 
 export const formatDateTime = (value: string | number | Date | null | undefined, empty = '-') => {
   if (!value) return empty
-  const formatted = dateTime.formatDateTime(value, { hour12: false })
+  const formatted = dateTime().formatDateTime(value, { hour12: false })
   return formatted === '--' ? empty : formatted
 }
 
@@ -119,7 +129,7 @@ export const formatDuration = (minutes: unknown) => {
 
 export const formatRange = (value: { start?: string; end?: string } | null | undefined) => {
   if (!value?.start || !value?.end) return '-'
-  const formatted = dateTime.formatDateRange(value)
+  const formatted = dateTime().formatDateRange(value)
   return formatted === '--' ? '-' : formatted
 }
 

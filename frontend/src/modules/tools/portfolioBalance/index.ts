@@ -14,5 +14,6 @@ export {
 } from './snapshot'
 export { computePortfolioBalancePlan } from './plan'
 export type * from './types'
+export { parsePortfolioImportFile } from './persistence'
 export { usePortfolioBalancePage } from './usePortfolioBalancePage'
 

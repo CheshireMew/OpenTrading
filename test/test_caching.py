@@ -1,17 +1,32 @@
 
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 from app.infra.db import build_database_runtime
 from app.infra.db.schema_runtime import prepare_db
-from app.services.market.exchange_gateway import ExchangeGateway
 from app.infra.persistence.market.kline_store import KlineStore
 from app.services.market.market_data_service import MarketDataService
 from app.infra.db.schema import Kline
 from config.settings import AppSettings
+
+
+class DeterministicExchangeGateway:
+    exchange_id = "binance"
+    max_task_seconds = 10
+
+    def fetch_ohlcv(self, symbol, timeframe, since=None, limit=None, max_retries=None):
+        start = int(since or 0)
+        rows = [
+            [start + index * 3_600_000, 100.0, 101.0, 99.0, 100.5, 1_000.0]
+            for index in range(min(limit or 1000, 24))
+        ]
+        return rows, 1
+
+    def sleep_for_rate_limit(self):
+        return None
 
 class CachingTestCase(unittest.TestCase):
     def setUp(self):
@@ -22,7 +37,7 @@ class CachingTestCase(unittest.TestCase):
         )
         prepare_db(self.database_runtime)
         self.provider = MarketDataService(
-            exchange_gateway=ExchangeGateway(),
+            exchange_gateway=DeterministicExchangeGateway(),
             kline_store=KlineStore(database_runtime=self.database_runtime),
         )
         self.symbol = 'BTC/USDT'
@@ -35,25 +50,22 @@ class CachingTestCase(unittest.TestCase):
         session.close()
 
     def test_caching_flow(self):
-        end_date = datetime.now()
+        end_date = datetime(2025, 1, 2, tzinfo=timezone.utc)
         start_date = end_date - timedelta(hours=10)
         
         # 1. First fetch: Should call exchange
-        print("\n[Test] First fetch (empty cache)...")
         data1 = self.provider.load_ohlcv_range(self.symbol, self.timeframe, start_date, end_date).rows
         self.assertTrue(len(data1) > 0)
         
         # Verify DB has data
         session = self.database_runtime.get_session()
         count = session.query(Kline).filter_by(symbol=self.symbol).count()
-        print(f"[Test] DB count after first fetch: {count}")
         self.assertTrue(count >= len(data1))
         session.close()
 
-        exact_start = datetime.fromtimestamp(data1[0][0] / 1000)
-        exact_end = datetime.fromtimestamp(data1[-1][0] / 1000)
+        exact_start = datetime.fromtimestamp(data1[0][0] / 1000, tz=timezone.utc)
+        exact_end = datetime.fromtimestamp(data1[-1][0] / 1000, tz=timezone.utc)
         
-        print("[Test] Second fetch (full cache hit)...")
         with patch.object(
             self.provider.exchange_gateway,
             'fetch_ohlcv',
@@ -64,11 +76,7 @@ class CachingTestCase(unittest.TestCase):
             self.assertEqual(len(data1), len(data2))
             self.assertEqual(data1[0][0], data2[0][0])
             self.assertEqual(mock_exchange_fetch.call_count, 0)
-            print("[Test] Success: No exchange calls made.")
                 
     def tearDown(self):
         self.database_runtime.dispose()
         self.temp_dir.cleanup()
-
-if __name__ == '__main__':
-    unittest.main()

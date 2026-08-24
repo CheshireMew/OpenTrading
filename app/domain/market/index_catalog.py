@@ -10,20 +10,10 @@ class IndexInstrument:
     market: str
     currency: str
     storage_symbol: str
-    eastmoney_secid: str | None = None
-    sohu_code: str | None = None
-    baostock_code: str | None = None
-    sina_hk_symbol: str | None = None
-    sina_cn_symbol: str | None = None
-    sina_us_symbol: str | None = None
     pricing_symbol: str | None = None
     pricing_name: str | None = None
     pricing_currency: str | None = None
     pricing_storage_symbol: str | None = None
-    pricing_provider: str | None = None
-    cboe_csv_url: str | None = None
-    fred_series_id: str | None = None
-    yfinance_symbol: str | None = None
     aliases: tuple[str, ...] = ()
 
 
@@ -38,11 +28,6 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
         pricing_name="SPDR S&P 500 ETF Trust",
         pricing_currency="USD",
         pricing_storage_symbol="proxy:US:SP500:SPY",
-        pricing_provider="sina_us_etf",
-        eastmoney_secid="100.SPX",
-        sina_us_symbol=".INX",
-        fred_series_id="SP500",
-        yfinance_symbol="^GSPC",
         aliases=("标普", "标普500", "SP500", "S&P", "S&P500", "SPX"),
     ),
     "US_NASDAQ_COMP": IndexInstrument(
@@ -55,11 +40,6 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
         pricing_name="Fidelity Nasdaq Composite Index ETF",
         pricing_currency="USD",
         pricing_storage_symbol="proxy:US:NASDAQ_COMP:ONEQ",
-        pricing_provider="sina_us_etf",
-        eastmoney_secid="100.NDX",
-        sina_us_symbol=".IXIC",
-        fred_series_id="NASDAQCOM",
-        yfinance_symbol="^IXIC",
         aliases=("纳斯达克", "纳斯达克综合", "纳指", "NASDAQ", "IXIC", "NDX"),
     ),
     "US_NASDAQ100": IndexInstrument(
@@ -72,10 +52,6 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
         pricing_name="Invesco QQQ Trust",
         pricing_currency="USD",
         pricing_storage_symbol="proxy:US:NASDAQ100:QQQ",
-        pricing_provider="sina_us_etf",
-        eastmoney_secid="100.NDX100",
-        sina_us_symbol=".NDX",
-        yfinance_symbol="^NDX",
         aliases=("纳斯达克100", "纳指100", "NASDAQ100", "NDX100", "NDX"),
     ),
     "US_DOW": IndexInstrument(
@@ -88,11 +64,6 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
         pricing_name="SPDR Dow Jones Industrial Average ETF Trust",
         pricing_currency="USD",
         pricing_storage_symbol="proxy:US:DOW:DIA",
-        pricing_provider="sina_us_etf",
-        eastmoney_secid="100.DJIA",
-        sina_us_symbol=".DJI",
-        fred_series_id="DJIA",
-        yfinance_symbol="^DJI",
         aliases=("道琼斯", "道指", "DOW", "DJIA", "DJI"),
     ),
     "US_RUSSELL2000": IndexInstrument(
@@ -105,9 +76,6 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
         pricing_name="iShares Russell 2000 ETF",
         pricing_currency="USD",
         pricing_storage_symbol="proxy:US:RUSSELL2000:IWM",
-        pricing_provider="sina_us_etf",
-        cboe_csv_url="https://cdn.cboe.com/api/global/us_indices/daily_prices/RUT_History.csv",
-        yfinance_symbol="^RUT",
         aliases=("罗素2000", "罗素", "RUSSELL2000", "RUT"),
     ),
     "US_VIX": IndexInstrument(
@@ -120,10 +88,6 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
         pricing_name="ProShares VIX Short-Term Futures ETF",
         pricing_currency="USD",
         pricing_storage_symbol="proxy:US:VIX:VIXY",
-        pricing_provider="sina_us_etf",
-        cboe_csv_url="https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv",
-        fred_series_id="VIXCLS",
-        yfinance_symbol="^VIX",
         aliases=("恐慌指数", "波动率指数", "VIX"),
     ),
     "CN_CSI300": IndexInstrument(
@@ -136,10 +100,6 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
         pricing_name="沪深300ETF",
         pricing_currency="CNY",
         pricing_storage_symbol="proxy:CN:CSI300:510300",
-        pricing_provider="sina_cn_etf",
-        eastmoney_secid="1.000300",
-        sohu_code="zs_000300",
-        baostock_code="sh.000300",
         aliases=("沪深300", "沪深", "CSI300", "000300"),
     ),
     "CN_CSI_A500": IndexInstrument(
@@ -152,10 +112,6 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
         pricing_name="A500指数ETF",
         pricing_currency="CNY",
         pricing_storage_symbol="proxy:CN:CSI_A500:560610",
-        pricing_provider="sina_cn_etf",
-        eastmoney_secid="1.000510",
-        baostock_code="sh.000510",
-        sina_cn_symbol="sh000510",
         aliases=("中证A500", "中证 A500", "A500", "CSI A500", "CSI_A500", "000510"),
     ),
     "CN_SSE50": IndexInstrument(
@@ -168,10 +124,6 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
         pricing_name="上证50ETF",
         pricing_currency="CNY",
         pricing_storage_symbol="proxy:CN:SSE50:510050",
-        pricing_provider="sina_cn_etf",
-        eastmoney_secid="1.000016",
-        sohu_code="zs_000016",
-        baostock_code="sh.000016",
         aliases=("上证50", "上证 50", "SSE50", "000016"),
     ),
     "CN_CSI500": IndexInstrument(
@@ -184,10 +136,6 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
         pricing_name="中证500ETF",
         pricing_currency="CNY",
         pricing_storage_symbol="proxy:CN:CSI500:510500",
-        pricing_provider="sina_cn_etf",
-        eastmoney_secid="1.000905",
-        sohu_code="zs_000905",
-        baostock_code="sh.000905",
         aliases=("中证500", "中证 500", "CSI500", "000905"),
     ),
     "CN_CSI1000": IndexInstrument(
@@ -200,10 +148,6 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
         pricing_name="中证1000ETF",
         pricing_currency="CNY",
         pricing_storage_symbol="proxy:CN:CSI1000:159845",
-        pricing_provider="sina_cn_etf",
-        eastmoney_secid="1.000852",
-        sohu_code="zs_000852",
-        baostock_code="sh.000852",
         aliases=("中证1000", "中证 1000", "CSI1000", "000852"),
     ),
     "CN_SSE_COMP": IndexInstrument(
@@ -216,10 +160,6 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
         pricing_name="上证综指ETF",
         pricing_currency="CNY",
         pricing_storage_symbol="proxy:CN:SSE_COMP:510210",
-        pricing_provider="sina_cn_etf",
-        eastmoney_secid="1.000001",
-        sohu_code="zs_000001",
-        baostock_code="sh.000001",
         aliases=("上证", "上证指数", "上证综指", "SSE Composite", "000001"),
     ),
     "CN_SZSE_COMPONENT": IndexInstrument(
@@ -232,10 +172,6 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
         pricing_name="深成ETF",
         pricing_currency="CNY",
         pricing_storage_symbol="proxy:CN:SZSE_COMPONENT:159903",
-        pricing_provider="sina_cn_etf",
-        eastmoney_secid="0.399001",
-        sohu_code="zs_399001",
-        baostock_code="sz.399001",
         aliases=("深证", "深证成指", "深成指", "SZSE", "399001"),
     ),
     "CN_CHINEXT": IndexInstrument(
@@ -248,10 +184,6 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
         pricing_name="创业板ETF",
         pricing_currency="CNY",
         pricing_storage_symbol="proxy:CN:CHINEXT:159915",
-        pricing_provider="sina_cn_etf",
-        eastmoney_secid="0.399006",
-        sohu_code="zs_399006",
-        baostock_code="sz.399006",
         aliases=("创业板", "创业板指", "CHINEXT", "399006"),
     ),
     "CN_STAR50": IndexInstrument(
@@ -264,10 +196,6 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
         pricing_name="科创50ETF",
         pricing_currency="CNY",
         pricing_storage_symbol="proxy:CN:STAR50:588000",
-        pricing_provider="sina_cn_etf",
-        eastmoney_secid="1.000688",
-        sohu_code="zs_000688",
-        baostock_code="sh.000688",
         aliases=("科创50", "科创 50", "STAR50", "000688"),
     ),
     "HK_HSI": IndexInstrument(
@@ -280,10 +208,6 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
         pricing_name="Tracker Fund of Hong Kong",
         pricing_currency="HKD",
         pricing_storage_symbol="proxy:HK:HSI:02800",
-        pricing_provider="sina_hk_etf",
-        eastmoney_secid="100.HSI",
-        sina_hk_symbol="HSI",
-        yfinance_symbol="^HSI",
         aliases=("恒生", "恒生指数", "HSI"),
     ),
     "HK_HSTECH": IndexInstrument(
@@ -296,10 +220,6 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
         pricing_name="CSOP Hang Seng TECH Index ETF",
         pricing_currency="HKD",
         pricing_storage_symbol="proxy:HK:HSTECH:03033",
-        pricing_provider="sina_hk_etf",
-        eastmoney_secid="124.HSTECH",
-        sina_hk_symbol="HSTECH",
-        yfinance_symbol="^HSTECH",
         aliases=("恒生科技", "恒生科技指数", "恒科", "HSTECH"),
     ),
     "HK_HSCEI": IndexInstrument(
@@ -312,10 +232,6 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
         pricing_name="Hang Seng China Enterprises Index ETF",
         pricing_currency="HKD",
         pricing_storage_symbol="proxy:HK:HSCEI:02828",
-        pricing_provider="sina_hk_etf",
-        eastmoney_secid="100.HSCEI",
-        sina_hk_symbol="HSCEI",
-        yfinance_symbol="^HSCE",
         aliases=("国企指数", "恒生中国企业", "恒生中国企业指数", "HSCEI", "HSCE"),
     ),
 }

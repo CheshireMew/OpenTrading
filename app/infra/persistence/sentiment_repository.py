@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from app.contracts.sentiment import SentimentRecord
+from app.domain.market.sentiment import SentimentRecord
 from app.infra.db.database import DatabaseRuntime
 from app.infra.db.schema import Sentiment
 

@@ -5,6 +5,8 @@ import { ensureSymbolCatalogLoaded, isIndexSymbol } from '@/modules/market'
 import type { CandlestickData } from '@/modules/market/contracts'
 import type { MarketSymbolSearchResponse } from '@/modules/market/contracts'
 import { useTheme } from '@/composables/useTheme'
+import { useI18n } from 'vue-i18n'
+import { apiErrorMessage } from '@/api/request'
 import { toolsApi } from './api'
 import { buildCompareSnapshot, createDefaultCompareSnapshot, createEmptyCompareSnapshot, normalizeCompareSnapshot } from './pageSnapshots'
 
@@ -27,9 +29,11 @@ interface ChartComponentRef {
 
 export function useComparePage() {
   const { theme } = useTheme()
+  const { t } = useI18n()
   const pageSnapshot = createPersistentPageSnapshot(PAGE_SNAPSHOT_KEYS.compare, normalizeCompareSnapshot, createEmptyCompareSnapshot())
   const restoredSnapshot = pageSnapshot.initial
   let snapshotStop: WatchStopHandle | null = null
+  let disposed = false
 
   const chartColors = computed(() => {
     const isDark = theme.value === 'dark'
@@ -45,6 +49,7 @@ export function useComparePage() {
   const config = reactive(createEmptyCompareSnapshot().config)
 
   const loading = ref(false)
+  const errorMessage = ref('')
   const dataA = ref<CandlestickData[]>([])
   const dataB = ref<CandlestickData[]>([])
   const dataRatio = ref<CompareLinePoint[]>([])
@@ -86,7 +91,12 @@ export function useComparePage() {
   }
 
   const fetchComparisonData = async () => {
+    if (!canCompare.value) {
+      errorMessage.value = t('compare.invalidConfig')
+      return
+    }
     loading.value = true
+    errorMessage.value = ''
     try {
       await ensureSymbolCatalogLoaded()
       if (isIndexSymbol(config.symbolA) || isIndexSymbol(config.symbolB)) {
@@ -109,6 +119,7 @@ export function useComparePage() {
       })
     } catch (error) {
       console.error('Comparison fetch failed', error)
+      errorMessage.value = apiErrorMessage(error, t('compare.loadFailed'))
     } finally {
       loading.value = false
     }
@@ -125,26 +136,46 @@ export function useComparePage() {
       toolsApi.getContract(),
       ensureSymbolCatalogLoaded(),
     ])
+    if (disposed) return
     const defaultSnapshot = createDefaultCompareSnapshot(response)
-    Object.assign(config, normalizeCompareSnapshot(restoredSnapshot, defaultSnapshot).config)
+    Object.assign(
+      config,
+      pageSnapshot.hasStoredData
+        ? normalizeCompareSnapshot(restoredSnapshot, defaultSnapshot).config
+        : defaultSnapshot.config,
+    )
     if (!snapshotStop) {
       snapshotStop = pageSnapshot.bind(
         config,
         () => buildCompareSnapshot(config, defaultSnapshot),
       )
     }
-    await fetchComparisonData()
+    if (canCompare.value) await fetchComparisonData()
   })
 
   onBeforeUnmount(() => {
+    disposed = true
+    snapshotStop?.()
+    snapshotStop = null
     syncUnsubscribers.value.forEach((fn) => fn())
     syncUnsubscribers.value = []
   })
+
+  const canCompare = computed(() => (
+    Boolean(config.symbolA)
+    && Boolean(config.symbolB)
+    && config.symbolA !== config.symbolB
+    && Number.isFinite(config.days)
+    && config.days >= 1
+    && config.days <= 90
+    && ['5m', '15m', '1h', '4h', '1d', '1w', '1M'].includes(config.timeframe)
+  ))
 
   return {
     chartColors,
     config,
     loading,
+    errorMessage,
     dataA,
     dataB,
     dataRatio,
@@ -154,6 +185,7 @@ export function useComparePage() {
     fetchComparisonData,
     handleSymbolSelect,
     symbolLabel,
+    canCompare,
   }
 }
 

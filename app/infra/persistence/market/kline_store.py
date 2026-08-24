@@ -18,7 +18,7 @@ def _load_early_btc_history() -> List[List]:
     if file_path.exists():
         with file_path.open("r", encoding="utf-8") as f:
             data = json.load(f)
-            logger.info(f"加载早期 BTC 历史数据: {len(data)} 条 (内存缓存)")
+            logger.info(f"加载早期 BTC 历史代理数据: {len(data)} 条 (含合成区间，内存缓存)")
             return data
     return []
 
@@ -79,7 +79,7 @@ class KlineStore:
                     early_history = _load_early_btc_history()
                     if early_history:
                         self._save_with_session(session, symbol, timeframe, early_history)
-                        logger.info(f"早期 BTC 历史数据已写入 DB: {len(early_history)} 条")
+                        logger.info(f"早期 BTC 历史代理数据已写入 DB: {len(early_history)} 条 (含合成区间)")
                         cached_klines = [
                             k.to_list()
                             for k in (
@@ -105,61 +105,71 @@ class KlineStore:
         if not klines:
             return
         try:
-            values = [
-                {
-                    "symbol": symbol,
-                    "timeframe": timeframe,
-                    "timestamp": k[0],
-                    "open": k[1],
-                    "high": k[2],
-                    "low": k[3],
-                    "close": k[4],
-                    "volume": k[5],
-                }
-                for k in klines
-            ]
-
             dialect_name = session.bind.dialect.name
+            batch_size = max(int(settings.KLINE_UPSERT_BATCH_SIZE), 1)
+
+            def values_for(batch):
+                return [
+                    {
+                        "symbol": symbol,
+                        "timeframe": timeframe,
+                        "timestamp": k[0],
+                        "open": k[1],
+                        "high": k[2],
+                        "low": k[3],
+                        "close": k[4],
+                        "volume": k[5],
+                    }
+                    for k in batch
+                ]
 
             if dialect_name == "postgresql":
                 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-                stmt = pg_insert(Kline).values(values)
-                stmt = stmt.on_conflict_do_update(
-                    index_elements=["symbol", "timeframe", "timestamp"],
-                    set_={
-                        "open": stmt.excluded.open,
-                        "high": stmt.excluded.high,
-                        "low": stmt.excluded.low,
-                        "close": stmt.excluded.close,
-                        "volume": stmt.excluded.volume,
-                    },
-                )
-                session.execute(stmt)
+                for start in range(0, len(klines), batch_size):
+                    stmt = pg_insert(Kline).values(
+                        values_for(klines[start:start + batch_size])
+                    )
+                    stmt = stmt.on_conflict_do_update(
+                        index_elements=["symbol", "timeframe", "timestamp"],
+                        set_={
+                            "open": stmt.excluded.open,
+                            "high": stmt.excluded.high,
+                            "low": stmt.excluded.low,
+                            "close": stmt.excluded.close,
+                            "volume": stmt.excluded.volume,
+                        },
+                    )
+                    session.execute(stmt)
             elif dialect_name == "sqlite":
                 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
-                stmt = sqlite_insert(Kline).values(values)
-                stmt = stmt.on_conflict_do_update(
-                    index_elements=["symbol", "timeframe", "timestamp"],
-                    set_={
-                        "open": stmt.excluded.open,
-                        "high": stmt.excluded.high,
-                        "low": stmt.excluded.low,
-                        "close": stmt.excluded.close,
-                        "volume": stmt.excluded.volume,
-                    },
-                )
-                session.execute(stmt)
+                for start in range(0, len(klines), batch_size):
+                    stmt = sqlite_insert(Kline).values(
+                        values_for(klines[start:start + batch_size])
+                    )
+                    stmt = stmt.on_conflict_do_update(
+                        index_elements=["symbol", "timeframe", "timestamp"],
+                        set_={
+                            "open": stmt.excluded.open,
+                            "high": stmt.excluded.high,
+                            "low": stmt.excluded.low,
+                            "close": stmt.excluded.close,
+                            "volume": stmt.excluded.volume,
+                        },
+                    )
+                    session.execute(stmt)
             else:
                 from sqlalchemy.exc import IntegrityError as SAIntegrityError
 
-                for value in values:
-                    try:
-                        session.execute(Kline.__table__.insert().values(**value))
-                        session.flush()
-                    except SAIntegrityError:
-                        session.rollback()
+                for start in range(0, len(klines), batch_size):
+                    values = values_for(klines[start:start + batch_size])
+                    for value in values:
+                        try:
+                            session.execute(Kline.__table__.insert().values(**value))
+                            session.flush()
+                        except SAIntegrityError:
+                            session.rollback()
         except SQLAlchemyError as exc:
             session.rollback()
             logger.error(

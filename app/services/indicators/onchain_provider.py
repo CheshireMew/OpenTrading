@@ -1,7 +1,7 @@
 import httpx
 import asyncio
 from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from .base_provider import BaseIndicatorProvider, logger
 from config import settings
 

@@ -7,7 +7,6 @@ import type {
   BinanceBreakoutMonitorItemResponse,
   BinanceContractResearchDetailResponse,
 } from './contracts'
-import { toSlashMarketSymbol } from './symbolCatalog'
 import { displaySymbol, type ChartDialogState } from './binanceMarketShared'
 import { useKlineSeries } from './useKlineSeries'
 
@@ -26,9 +25,7 @@ export function useBinanceSymbolChart() {
   const contractDetailError = ref('')
   let contractDetailRequestId = 0
 
-  const chartSymbol = computed(() => (
-    toSlashMarketSymbol(chartDialog.value.rawSymbol, 'USDT')
-  ))
+  const chartSymbol = computed(() => chartDialog.value.rawSymbol)
   const chartTitle = computed(() => displaySymbol(chartDialog.value.rawSymbol))
   const chartMarketLabel = computed(() => {
     if (chartDialog.value.market === 'spot') return t('binanceMarket.market.spot')
@@ -51,8 +48,34 @@ export function useBinanceSymbolChart() {
     chartData,
     volumeData,
     loadingMore: chartLoadingMore,
+    loadError: chartLoadError,
     loadMore: loadMoreChartHistory,
-  } = useKlineSeries(chartSymbol, chartTimeframe, { enabled: chartEnabled })
+    retry: retryChart,
+  } = useKlineSeries(chartSymbol, chartTimeframe, {
+    enabled: chartEnabled,
+    source: {
+      key: computed(() => `binance:${chartDialog.value.market}:${chartSymbol.value}:${chartTimeframe.value}`),
+      latest: async (limit) => (await binanceMarketApi.getBinanceMarketKlines({
+        symbol: chartSymbol.value,
+        market: chartDialog.value.market || 'spot',
+        interval: chartTimeframe.value,
+        limit,
+      })).items || [],
+      tail: async (limit) => (await binanceMarketApi.getBinanceMarketKlines({
+        symbol: chartSymbol.value,
+        market: chartDialog.value.market || 'spot',
+        interval: chartTimeframe.value,
+        limit,
+      })).items || [],
+      before: async (endTime, limit) => (await binanceMarketApi.getBinanceMarketKlines({
+        symbol: chartSymbol.value,
+        market: chartDialog.value.market || 'spot',
+        interval: chartTimeframe.value,
+        limit,
+        end_time: endTime,
+      })).items || [],
+    },
+  })
 
   const openChart = (
     item: Pick<BinanceBreakoutMonitorItemResponse, 'symbol'> & Partial<Pick<BinanceBreakoutMonitorItemResponse, 'market' | 'market_label'>>,
@@ -112,12 +135,14 @@ export function useBinanceSymbolChart() {
     chartData,
     volumeData,
     chartLoadingMore,
+    chartError: computed(() => chartLoadError.value ? t('binanceMarket.chartLoadFailed') : ''),
     contractDetail,
     contractDetailLoading,
     contractDetailError,
     openChart,
     closeChart,
     loadMoreChartHistory,
+    retryChart,
   }
 }
 

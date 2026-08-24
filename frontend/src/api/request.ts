@@ -5,13 +5,14 @@ import axios, {
     type InternalAxiosRequestConfig,
 } from 'axios'
 import {
+    API_BASE_PATH,
     apiEndpoint,
     serializeEndpointQuery,
     type ApiRouteBody,
     type ApiRouteName,
+    type ApiRoutePath,
     type ApiRouteQuery,
     type ApiRouteResponse,
-    type RouteParams,
 } from './routes'
 import type { ApiErrorResponse } from './errors'
 
@@ -51,7 +52,9 @@ export const normalizeApiError = (error: unknown, fallback = 'Request failed'): 
 }
 
 export const apiErrorMessage = (error: unknown, fallback: string): string => {
-    const message = normalizeApiError(error, fallback).detail.trim()
+    const normalized = normalizeApiError(error, fallback)
+    if (normalized.status === 422) return fallback
+    const message = normalized.detail.trim()
     return message || fallback
 }
 
@@ -83,7 +86,7 @@ const attachInterceptors = (client: AxiosInstance) => {
 
 const createClient = (timeout: number): AxiosInstance => attachInterceptors(
     axios.create({
-        baseURL: '/api/v1',
+        baseURL: API_BASE_PATH,
         timeout,
         headers: {
             'Content-Type': 'application/json'
@@ -97,15 +100,25 @@ const apiClients = {
 } as const
 
 type ApiClientName = keyof typeof apiClients
-type ApiOptions<TRoute extends ApiRouteName> = Omit<AxiosRequestConfig, 'params' | 'url' | 'method'> & {
+type ApiOptionsBase<TRoute extends ApiRouteName> = Omit<AxiosRequestConfig, 'params' | 'url' | 'method'> & {
     client?: ApiClientName
-    path?: RouteParams
     query?: ApiRouteQuery<TRoute>
 }
+type ApiOptions<TRoute extends ApiRouteName> = ApiOptionsBase<TRoute> & (
+    [ApiRoutePath<TRoute>] extends [never]
+        ? { path?: never }
+        : { path: ApiRoutePath<TRoute> }
+)
+type ApiOptionsArgs<TRoute extends ApiRouteName> = [ApiRoutePath<TRoute>] extends [never]
+    ? [options?: ApiOptions<TRoute>]
+    : [options: ApiOptions<TRoute>]
+type ApiMutationArgs<TRoute extends ApiRouteName> = [ApiRoutePath<TRoute>] extends [never]
+    ? [body: ApiRouteBody<TRoute>, options?: ApiOptions<TRoute>]
+    : [body: ApiRouteBody<TRoute>, options: ApiOptions<TRoute>]
 
 const querySerializerKey = ['params', 'Serializer'].join('')
 
-const buildRequestConfig = <TRoute extends ApiRouteName>(name: TRoute, options: ApiOptions<TRoute> = {}): AxiosRequestConfig => {
+const buildRequestConfig = <TRoute extends ApiRouteName>(name: TRoute, options: ApiOptions<TRoute>): AxiosRequestConfig => {
     const { client: _client, path: _path, query, ...config } = options
     if (!query) return config
     return {
@@ -116,7 +129,7 @@ const buildRequestConfig = <TRoute extends ApiRouteName>(name: TRoute, options: 
     } as AxiosRequestConfig
 }
 
-const resolveClient = <TRoute extends ApiRouteName>(options: ApiOptions<TRoute> = {}) => apiClients[options.client || 'default']
+const resolveClient = <TRoute extends ApiRouteName>(options: ApiOptions<TRoute>) => apiClients[options.client || 'default']
 
 export const isRequestCanceled = (error: unknown): boolean => (
     axios.isCancel(error)
@@ -132,8 +145,9 @@ export const isRequestCanceled = (error: unknown): boolean => (
 
 export const apiGet = <TRoute extends ApiRouteName>(
     name: TRoute,
-    options: ApiOptions<TRoute> = {},
+    ...args: ApiOptionsArgs<TRoute>
 ): Promise<ApiRouteResponse<TRoute>> => {
+    const options = (args[0] || {}) as ApiOptions<TRoute>
     const endpoint = apiEndpoint(name, options.path)
     return resolveClient(options).get<ApiRouteResponse<TRoute>>(endpoint.url, buildRequestConfig(name, options))
         .then((response) => response.data)
@@ -141,9 +155,10 @@ export const apiGet = <TRoute extends ApiRouteName>(
 
 export const apiPost = <TRoute extends ApiRouteName>(
     name: TRoute,
-    body?: ApiRouteBody<TRoute>,
-    options: ApiOptions<TRoute> = {},
+    ...args: ApiMutationArgs<TRoute>
 ): Promise<ApiRouteResponse<TRoute>> => {
+    const [body, rawOptions] = args
+    const options = (rawOptions || {}) as ApiOptions<TRoute>
     const endpoint = apiEndpoint(name, options.path)
     return resolveClient(options).post<ApiRouteResponse<TRoute>>(endpoint.url, body, buildRequestConfig(name, options))
         .then((response) => response.data)
@@ -151,18 +166,31 @@ export const apiPost = <TRoute extends ApiRouteName>(
 
 export const apiPut = <TRoute extends ApiRouteName>(
     name: TRoute,
-    body?: ApiRouteBody<TRoute>,
-    options: ApiOptions<TRoute> = {},
+    ...args: ApiMutationArgs<TRoute>
 ): Promise<ApiRouteResponse<TRoute>> => {
+    const [body, rawOptions] = args
+    const options = (rawOptions || {}) as ApiOptions<TRoute>
     const endpoint = apiEndpoint(name, options.path)
     return resolveClient(options).put<ApiRouteResponse<TRoute>>(endpoint.url, body, buildRequestConfig(name, options))
         .then((response) => response.data)
 }
 
+export const apiPatch = <TRoute extends ApiRouteName>(
+    name: TRoute,
+    ...args: ApiMutationArgs<TRoute>
+): Promise<ApiRouteResponse<TRoute>> => {
+    const [body, rawOptions] = args
+    const options = (rawOptions || {}) as ApiOptions<TRoute>
+    const endpoint = apiEndpoint(name, options.path)
+    return resolveClient(options).patch<ApiRouteResponse<TRoute>>(endpoint.url, body, buildRequestConfig(name, options))
+        .then((response) => response.data)
+}
+
 export const apiDelete = <TRoute extends ApiRouteName>(
     name: TRoute,
-    options: ApiOptions<TRoute> = {},
+    ...args: ApiOptionsArgs<TRoute>
 ): Promise<ApiRouteResponse<TRoute>> => {
+    const options = (args[0] || {}) as ApiOptions<TRoute>
     const endpoint = apiEndpoint(name, options.path)
     return resolveClient(options).delete<ApiRouteResponse<TRoute>>(endpoint.url, buildRequestConfig(name, options))
         .then((response) => response.data)

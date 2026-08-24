@@ -1,5 +1,7 @@
 import { watch, type WatchSource, type WatchStopHandle } from 'vue'
 import { getLocalStorage } from '@/utils/storage'
+import { readVersionedStorage, writeVersionedStorage } from '@/utils/versionedStorage'
+export { isRecord } from '@/utils/typeGuards'
 
 const PAGE_SNAPSHOT_PREFIX = 'heimdall_page_snapshot:'
 const PAGE_SNAPSHOT_VERSION = 2
@@ -12,8 +14,6 @@ export const PAGE_SNAPSHOT_KEYS = {
   halving: 'tools:halving',
   binanceMarket: 'indicators:binance-market',
 } as const
-
-export const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null
 
 export const readString = (value: unknown, fallback: string) => (typeof value === 'string' && value ? value : fallback)
 
@@ -35,16 +35,18 @@ export const readEnum = <TValue extends string>(
   typeof value === 'string' && (allowed as readonly string[]).includes(value) ? value as TValue : fallback
 )
 
-const readSnapshotEnvelopeData = (value: unknown): unknown | null => {
-  if (!isRecord(value)) return null
-  if (value.version !== PAGE_SNAPSHOT_VERSION) return null
-  if (typeof value.savedAt !== 'number' || Date.now() - value.savedAt > PAGE_SNAPSHOT_TTL_MS) return null
-  if (!('data' in value)) return null
-  return value.data
+export const readPersistentPageSnapshotData = (key: string, ignoreExpiration = false): unknown | null => {
+  return readVersionedStorage<unknown>({
+    key: `${PAGE_SNAPSHOT_PREFIX}${key}`,
+    label: 'page snapshot',
+    version: PAGE_SNAPSHOT_VERSION,
+    ttlMs: ignoreExpiration ? Number.POSITIVE_INFINITY : PAGE_SNAPSHOT_TTL_MS,
+  })
 }
 
 export interface PersistentPageSnapshot<TSnapshot> {
   initial: TSnapshot
+  hasStoredData: boolean
   bind: (sources: WatchSource | WatchSource[] | object, buildSnapshot: () => TSnapshot) => WatchStopHandle
   clear: () => void
 }
@@ -55,37 +57,25 @@ export const createPersistentPageSnapshot = <TSnapshot>(
   fallback: TSnapshot,
 ): PersistentPageSnapshot<TSnapshot> => {
   const storageKey = `${PAGE_SNAPSHOT_PREFIX}${key}`
+  const storedData = readPersistentPageSnapshotData(key)
   const load = (): TSnapshot => {
-    const storage = getLocalStorage()
-    if (storage === null) return fallback
-    try {
-      const stored = storage.getItem(storageKey)
-      if (!stored) return fallback
-      const data = readSnapshotEnvelopeData(JSON.parse(stored))
-      return data === null ? fallback : normalize(data, fallback)
-    } catch (error) {
-      console.warn(`Failed to load page snapshot: ${storageKey}`, error)
-      return fallback
-    }
+    const data = storedData
+    return data === null ? fallback : normalize(data, fallback)
   }
 
   const save = (snapshot: TSnapshot) => {
-    const storage = getLocalStorage()
-    if (storage === null) return
-    try {
-      // 本地快照跟随页面结构变化；版本不匹配时直接丢弃，避免旧字段重新灌回新页面。
-      storage.setItem(storageKey, JSON.stringify({
-        version: PAGE_SNAPSHOT_VERSION,
-        savedAt: Date.now(),
-        data: normalize(snapshot, fallback),
-      }))
-    } catch (error) {
-      console.warn(`Failed to save page snapshot: ${storageKey}`, error)
-    }
+    // 本地快照跟随页面结构变化；版本不匹配时直接丢弃，避免旧字段重新灌回新页面。
+    writeVersionedStorage({
+      key: storageKey,
+      label: 'page snapshot',
+      version: PAGE_SNAPSHOT_VERSION,
+      ttlMs: PAGE_SNAPSHOT_TTL_MS,
+    }, normalize(snapshot, fallback))
   }
 
   return {
     initial: load(),
+    hasStoredData: storedData !== null,
     bind(sources: WatchSource | WatchSource[] | object, buildSnapshot: () => TSnapshot) {
       return watch(sources, () => save(buildSnapshot()), { deep: true, immediate: true })
     },

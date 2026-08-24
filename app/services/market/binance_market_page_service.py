@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import asyncio
-import time
 from typing import TYPE_CHECKING, Any
 
 from app.contracts.dto.binance.page import (
     BinanceBreakoutMonitorResponse,
-    BinanceMarketPageRefreshStatusResponse,
     BinanceMarketPageResponse,
 )
+from app.contracts.dto.market_history import MarketHistoryResponse
 from app.infra.executor import run_compute
 from config import settings
 from utils.logger import logger
@@ -16,15 +15,12 @@ from utils.logger import logger
 from .binance_breakout_monitor import BinanceBreakoutMonitor
 from .binance_contract_oi_enricher import BinanceContractOpenInterestEnricher
 from .binance_market_board_builder import BinanceMarketBoardBuilder
+from .binance_market_page_state import BinanceMarketPageState, PageKey
 from .binance_spot_market import BinanceSpotMarketService
 from .binance_usdm_market import BinanceUsdmMarketService
 
 if TYPE_CHECKING:
     from .binance_market_snapshot_service import BinanceMarketSnapshotService
-
-
-DEFAULT_PAGE_CONFIGS = ((5.0, 24, "USDT"),)
-PageKey = tuple[float, int, str]
 
 
 class BinanceMarketPageService:
@@ -41,19 +37,10 @@ class BinanceMarketPageService:
         self.breakout_monitor = BinanceBreakoutMonitor(self._get_market_klines)
         self.board_builder = BinanceMarketBoardBuilder()
         self.oi_enricher = BinanceContractOpenInterestEnricher(usdm)
-        self._page_responses: dict[PageKey, BinanceMarketPageResponse] = {}
-        self._requested_page_configs: set[PageKey] = {
-            self._page_key(min_rise_pct=min_rise_pct, limit=limit, quote_asset=quote_asset)
-            for min_rise_pct, limit, quote_asset in DEFAULT_PAGE_CONFIGS
-        }
-        self._lock = asyncio.Lock()
+        self.state = BinanceMarketPageState()
         self._refresh_event: asyncio.Event | None = None
         self._refresh_task: asyncio.Task[None] | None = None
         self._running = False
-        self._refreshing = 0
-        self._last_refresh_started_at: int | None = None
-        self._last_refresh_completed_at: int | None = None
-        self._last_refresh_error: str | None = None
 
     def start(self) -> None:
         if self._running:
@@ -79,34 +66,81 @@ class BinanceMarketPageService:
         limit: int = 24,
         quote_asset: str = "USDT",
     ) -> BinanceMarketPageResponse:
-        key = self._page_key(min_rise_pct=min_rise_pct, limit=limit, quote_asset=quote_asset)
-        should_notify_refresh = False
-        async with self._lock:
-            if key not in self._requested_page_configs:
-                self._requested_page_configs.add(key)
-                should_notify_refresh = True
-            cached_response = self._page_responses.get(key)
-            if cached_response is not None:
-                return self._with_live_refresh_status(cached_response)
+        key = self.state.key(min_rise_pct=min_rise_pct, limit=limit, quote_asset=quote_asset)
+        cached_response, should_notify_refresh = await self.state.register_request(key)
+        if cached_response is not None:
+            return cached_response
 
         if should_notify_refresh:
             self._request_refresh()
         return await self._build_pending_page(key)
 
     async def refresh_requested_payloads(self) -> None:
-        async with self._lock:
-            keys = sorted(self._requested_page_configs)
-        for key in keys:
-            try:
-                await self.refresh_page(key)
-            except Exception as exc:
-                async with self._lock:
-                    self._last_refresh_error = str(exc)
-                logger.warning("Binance market page refresh failed: %s", exc)
+        keys = await self.state.requested_keys()
+        if not keys:
+            return
+
+        await self.state.mark_started()
+        try:
+            market_snapshot = await self._load_market_page_snapshot_for_refresh()
+            ticker_rows = [item for item in market_snapshot["usdm_ticker"].get("items", [])]
+            oi_changes = await self.oi_enricher.load_changes(ticker_rows)
+            grouped: dict[str, list[PageKey]] = {}
+            for key in keys:
+                grouped.setdefault(key[2], []).append(key)
+
+            for quote_asset, quote_keys in grouped.items():
+                try:
+                    board_fields = await run_compute(
+                        lambda quote_asset=quote_asset: self.board_builder.build_response_fields(
+                            market_snapshot,
+                            quote_asset=quote_asset,
+                            oi_changes=oi_changes,
+                        )
+                    )
+                    base_monitor = await self.breakout_monitor.build(
+                        market_snapshot=market_snapshot,
+                        min_rise_pct=min(key[0] for key in quote_keys),
+                        limit=max(key[1] for key in quote_keys),
+                        quote_asset=quote_asset,
+                    )
+                    for key in quote_keys:
+                        min_rise_pct, limit, _ = key
+                        monitor = self.breakout_monitor.derive(
+                            base_monitor,
+                            min_rise_pct=min_rise_pct,
+                            limit=limit,
+                        )
+                        response = BinanceMarketPageResponse.model_validate({
+                            "exchange": "binance",
+                            "quote_asset": quote_asset,
+                            "updated_at": max(
+                                int(monitor.get("updated_at") or 0),
+                                int(market_snapshot["updated_at"] or 0),
+                            ),
+                            "monitor": monitor,
+                            **board_fields,
+                            "refresh_status": self.state.build_status(
+                                snapshot_ready=not board_fields["load_errors"],
+                                boards_ready=True,
+                                monitor_ready=True,
+                                oi_ready_count=sum(1 for summary in oi_changes.values() if summary),
+                                oi_requested_count=len(self.oi_enricher.candidate_symbols(ticker_rows)),
+                            ),
+                        })
+                        await self.state.store(key, response)
+                except Exception as exc:
+                    await self.state.mark_failed(exc)
+                    logger.warning("Binance market page refresh failed for %s: %s", quote_asset, exc)
+        except Exception as exc:
+            await self.state.mark_failed(exc)
+            logger.warning("Binance market page refresh failed: %s", exc)
+        finally:
+            await self.state.mark_completed()
 
     async def refresh_page(self, key: PageKey) -> BinanceMarketPageResponse:
         min_rise_pct, limit, quote_asset = key
-        await self._mark_refresh_started()
+        await self.state.mark_started()
         try:
             market_snapshot = await self._load_market_page_snapshot_for_refresh()
             ticker_rows = [item for item in market_snapshot["usdm_ticker"].get("items", [])]
@@ -130,7 +164,7 @@ class BinanceMarketPageService:
                 "updated_at": max(int(monitor.get("updated_at") or 0), int(market_snapshot["updated_at"] or 0)),
                 "monitor": monitor,
                 **board_fields,
-                "refresh_status": self._build_refresh_status(
+                "refresh_status": self.state.build_status(
                     snapshot_ready=not board_fields["load_errors"],
                     boards_ready=True,
                     monitor_ready=True,
@@ -138,11 +172,10 @@ class BinanceMarketPageService:
                     oi_requested_count=len(self.oi_enricher.candidate_symbols(ticker_rows)),
                 ),
             })
-            async with self._lock:
-                self._page_responses[key] = response
+            await self.state.store(key, response)
             return response
         finally:
-            await self._mark_refresh_completed()
+            await self.state.mark_completed()
 
     async def _run_refresh_loop(self) -> None:
         while self._running:
@@ -172,6 +205,41 @@ class BinanceMarketPageService:
             response = await self.usdm.get_klines(symbol=symbol, interval=interval, limit=limit)
         return response.model_dump() if hasattr(response, "model_dump") else response
 
+    async def get_chart_klines(
+        self,
+        *,
+        market: str,
+        symbol: str,
+        interval: str,
+        limit: int,
+        start_time: int | None = None,
+        end_time: int | None = None,
+    ) -> MarketHistoryResponse:
+        loader = self.spot if market == "spot" else self.usdm
+        response = await loader.get_klines(
+            symbol=symbol,
+            interval=interval,
+            limit=limit,
+            start_time=start_time,
+            end_time=end_time,
+        )
+        raw = response.model_dump() if hasattr(response, "model_dump") else response
+        return MarketHistoryResponse.model_validate({
+            "symbol": str(raw.get("symbol") or symbol).upper(),
+            "timeframe": interval,
+            "items": [
+                {
+                    "timestamp": item.get("open_time"),
+                    "open": item.get("open"),
+                    "high": item.get("high"),
+                    "low": item.get("low"),
+                    "close": item.get("close"),
+                    "volume": item.get("volume"),
+                }
+                for item in raw.get("items", [])
+            ],
+        })
+
     async def _build_pending_page(self, key: PageKey) -> BinanceMarketPageResponse:
         min_rise_pct, limit, quote_asset = key
         market_snapshot = await self.snapshot_service.get_market_page_snapshot_data()
@@ -193,7 +261,7 @@ class BinanceMarketPageService:
                 updated_at=int(market_snapshot["updated_at"] or 0),
             ),
             **board_fields,
-            "refresh_status": self._build_refresh_status(
+            "refresh_status": self.state.build_status(
                 snapshot_ready=not board_fields["load_errors"],
                 boards_ready=True,
                 monitor_ready=False,
@@ -211,50 +279,6 @@ class BinanceMarketPageService:
             items=[],
         )
 
-    def _page_key(self, *, min_rise_pct: float, limit: int, quote_asset: str) -> PageKey:
-        return (float(min_rise_pct), int(limit), self.breakout_monitor.normalize_quote_asset(quote_asset))
-
     def _request_refresh(self) -> None:
         if self._refresh_event is not None:
             self._refresh_event.set()
-
-    async def _mark_refresh_started(self) -> None:
-        async with self._lock:
-            self._refreshing += 1
-            self._last_refresh_started_at = int(time.time() * 1000)
-            self._last_refresh_error = None
-
-    async def _mark_refresh_completed(self) -> None:
-        async with self._lock:
-            self._refreshing = max(0, self._refreshing - 1)
-            self._last_refresh_completed_at = int(time.time() * 1000)
-
-    def _build_refresh_status(
-        self,
-        *,
-        snapshot_ready: bool,
-        boards_ready: bool,
-        monitor_ready: bool,
-        oi_ready_count: int,
-        oi_requested_count: int,
-    ) -> BinanceMarketPageRefreshStatusResponse:
-        return BinanceMarketPageRefreshStatusResponse(
-            snapshot_ready=snapshot_ready,
-            boards_ready=boards_ready,
-            monitor_ready=monitor_ready,
-            refreshing=self._refreshing > 0,
-            oi_ready_count=oi_ready_count,
-            oi_requested_count=oi_requested_count,
-            last_refresh_started_at=self._last_refresh_started_at,
-            last_refresh_completed_at=self._last_refresh_completed_at,
-            last_refresh_error=self._last_refresh_error,
-        )
-
-    def _with_live_refresh_status(self, response: BinanceMarketPageResponse) -> BinanceMarketPageResponse:
-        status = response.refresh_status.model_copy(update={
-            "refreshing": self._refreshing > 0,
-            "last_refresh_started_at": self._last_refresh_started_at,
-            "last_refresh_completed_at": self._last_refresh_completed_at,
-            "last_refresh_error": self._last_refresh_error,
-        })
-        return response.model_copy(update={"refresh_status": status})

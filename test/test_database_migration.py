@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import json
+from datetime import datetime
+
 import pytest
 from alembic import command
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine, inspect, text
 
 from app.infra.db.database import build_database_runtime, resolve_database_url
 import app.infra.db.schema_runtime as schema_runtime
@@ -87,6 +90,71 @@ def test_prepare_db_drops_archived_research_tables_from_previous_head(isolated_d
     assert "backtest_runs" not in table_names
     assert "factor_datasets" not in table_names
     schema_runtime.verify_database_schema(runtime)
+
+
+def test_portfolio_simulation_migration_is_lossless_and_reversible(isolated_db):
+    _, engine, runtime = isolated_db("portfolio_simulation.db")
+    alembic_config = schema_runtime._alembic_config(runtime.database_url)
+    command.upgrade(alembic_config, "011_seed_portfolio_state")
+    now = datetime(2026, 8, 24)
+    simulation = {
+        "startDate": "2026-01-01",
+        "endDate": "2026-01-02",
+        "initialValue": 100,
+        "finalValue": 101,
+        "totalReturnPct": 1,
+        "annualizedReturnPct": 10,
+        "maxDrawdownPct": 0,
+        "reviewCount": 1,
+        "outOfBandReviewCount": 0,
+        "rebalanceCount": 0,
+        "equityCurve": [],
+    }
+    payload = {
+        "id": "core",
+        "name": "Core",
+        "assets": [{"symbol": "BTC", "targetWeight": 100}],
+        "strategy": {"reviewFrequency": "monthly"},
+        "simulation": {"initialCapital": 100, "simulationStartDate": "2026-01-01"},
+        "lastSimulationResult": simulation,
+    }
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO portfolio_records "
+                "(id, payload, version, position, deleted_at, created_at, updated_at) "
+                "VALUES (:id, :payload, 1, 0, NULL, :created_at, :updated_at)"
+            ),
+            {
+                "id": "core",
+                "payload": json.dumps(payload),
+                "created_at": now,
+                "updated_at": now,
+            },
+        )
+
+    command.upgrade(alembic_config, "head")
+    with engine.connect() as connection:
+        migrated_payload = json.loads(
+            connection.scalar(text("SELECT payload FROM portfolio_records WHERE id = 'core'"))
+        )
+        simulation_payload = json.loads(
+            connection.scalar(
+                text("SELECT payload FROM portfolio_simulation_results WHERE portfolio_id = 'core'")
+            )
+        )
+    assert "lastSimulationResult" not in migrated_payload
+    assert simulation_payload == simulation
+    assert "ix_klines_timeframe_timestamp" in {
+        item["name"] for item in inspect(engine).get_indexes("klines")
+    }
+
+    command.downgrade(alembic_config, "011_seed_portfolio_state")
+    with engine.connect() as connection:
+        restored_payload = json.loads(
+            connection.scalar(text("SELECT payload FROM portfolio_records WHERE id = 'core'"))
+        )
+    assert restored_payload["lastSimulationResult"] == simulation
 
 
 def test_prepare_db_rejects_unmanaged_nonempty_schema(isolated_db):

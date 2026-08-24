@@ -65,6 +65,20 @@ def test_llm_config_blank_api_key_update_preserves_existing_key(tmp_path):
     assert effective["apiKey"] == "sk-existing"
 
 
+def test_llm_config_explicit_blank_key_overrides_environment_fallback(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "DEEPSEEK_API_KEY", "environment-key")
+    service = LlmConfigService(tmp_path / "llm.json")
+
+    saved = service.save_config({
+        "provider": "deepseek",
+        "apiKey": "",
+        "reasoningEnabled": False,
+    })
+
+    assert saved["apiKeySet"] is False
+    assert service.read_effective_config()["apiKey"] == ""
+
+
 def test_llm_config_presets_include_glm_and_minimax():
     service = LlmConfigService()
     presets = service.list_presets()

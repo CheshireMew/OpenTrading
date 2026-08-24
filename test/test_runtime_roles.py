@@ -1,4 +1,11 @@
-from app.runtime import BACKGROUND_REQUIRED_SERVICES, AppRuntimeServices, missing_required_services
+import pytest
+
+from app.runtime import (
+    AppRuntimeServices,
+    BackgroundRuntimeServices,
+    IndicatorRuntimeServices,
+    InfraRuntimeServices,
+)
 from config import settings
 
 
@@ -8,23 +15,12 @@ def test_default_runtime_role_is_api():
 
 def test_background_runtime_role_excludes_api_market_io_services():
     services = AppRuntimeServices(
-        database_runtime=object(),
-        cache_service=object(),
-        market_indicator_repository=object(),
-        dli_cache=object(),
-        market_scheduler_runtime=object(),
+        infra=InfraRuntimeServices(object(), object()),
+        indicators=IndicatorRuntimeServices(object(), object()),
+        background=BackgroundRuntimeServices(object()),
     )
 
-    assert tuple(BACKGROUND_REQUIRED_SERVICES) == (
-        "database_runtime",
-        "cache_service",
-        "market_indicator_repository",
-        "dli_cache",
-        "market_scheduler_runtime",
-    )
-    assert missing_required_services(services, "background") == []
-    assert services.exchange_gateway is None
-    assert services.kline_store is None
-    assert services.market_data_service is None
-    assert services.binance_market_intel is None
-    assert services.binance_market_snapshot is None
+    assert services.require_background().market_scheduler is not None
+    assert services.api is None
+    with pytest.raises(RuntimeError, match="API runtime services"):
+        services.require_api()

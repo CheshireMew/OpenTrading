@@ -29,10 +29,14 @@ class BlockingExecutorRuntime:
         max_workers=max(int(settings.BLOCKING_BACKGROUND_MAX_WORKERS), 1),
         thread_name_prefix="heimdall-background",
     ))
+    tools: ThreadPoolExecutor = field(default_factory=lambda: ThreadPoolExecutor(
+        max_workers=max(int(settings.BLOCKING_TOOL_MAX_WORKERS), 1),
+        thread_name_prefix="heimdall-tools",
+    ))
 
     def shutdown(self) -> None:
-        for executor in (self.database, self.compute, self.external_io, self.background):
-            executor.shutdown(wait=False, cancel_futures=True)
+        for executor in (self.database, self.compute, self.external_io, self.background, self.tools):
+            executor.shutdown(wait=True, cancel_futures=True)
 
 
 _executor_runtime: BlockingExecutorRuntime | None = None
@@ -72,3 +76,7 @@ async def run_external_io(action: Callable[[], T]) -> T:
 
 async def run_background(action: Callable[[], T]) -> T:
     return await _run(_get_executor_runtime().background, action)
+
+
+async def run_tool(action: Callable[[], T]) -> T:
+    return await _run(_get_executor_runtime().tools, action)

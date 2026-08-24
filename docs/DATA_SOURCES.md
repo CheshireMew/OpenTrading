@@ -22,8 +22,8 @@ Heimdall uses a small set of public data sources. Runtime configuration lives in
 ## Diagnostics
 
 ```powershell
-.\venv\Scripts\python.exe scripts\diagnose_runtime.py
-.\venv\Scripts\python.exe scripts\diagnose_runtime.py --external
+.\venv\Scripts\python.exe -m scripts.diagnose_runtime
+.\venv\Scripts\python.exe -m scripts.diagnose_runtime --external
 ```
 
 The default command verifies local runtime construction. `--external` also calls public data APIs and may be slower or rate-limited.

@@ -4,14 +4,16 @@ import hashlib
 import time
 import uuid
 
+from app.application.errors import InvalidRequestError
 from app.contracts.dto.binance.web3 import (
     BinanceWeb3TokenAuditResponse,
     BinanceWeb3TokenDynamicResponse,
     BinanceWeb3TokenKlineResponse,
 )
-from app.domain.market.constants import KLINE_SYMBOL_MAX_LENGTH
-from app.services.market.history_ranges import collect_missing_ranges, is_recent_cache_usable, timeframe_to_ms
-from app.services.persistence_ports import KlineStorePort
+from app.domain.market.constants import KLINE_SYMBOL_MAX_LENGTH, timeframe_to_milliseconds
+from app.services.market.history_range_coordinator import HistoryRangeCoordinator, merge_ohlcv_rows
+from app.services.market.history_ranges import is_recent_cache_usable
+from app.application.persistence_ports import KlineStorePort
 
 from .binance_api_support import BinanceApiSupport, compact_query
 from .binance_numbers import to_float, to_int
@@ -23,10 +25,11 @@ class BinanceWeb3TokenService:
         self.web3_client = web3_client
         self.kline_client = kline_client
         self.kline_store = kline_store
+        self.history_ranges = HistoryRangeCoordinator(kline_store)
 
     async def get_dynamic(self, *, chain_id: str | None = None, contract_address: str | None = None) -> BinanceWeb3TokenDynamicResponse:
         if not chain_id or not contract_address:
-            raise ValueError("chain_id and contract_address are required")
+            raise InvalidRequestError("chain_id and contract_address are required")
         payload = await self.web3_client.get_json(
             "/bapi/defi/v4/public/wallet-direct/buw/wallet/market/token/dynamic/info/ai",
             params={"chainId": chain_id, "contractAddress": contract_address},
@@ -51,7 +54,7 @@ class BinanceWeb3TokenService:
         pm: str | None = None,
     ) -> BinanceWeb3TokenKlineResponse:
         if not address or not platform or not interval:
-            raise ValueError("address, platform and interval are required")
+            raise InvalidRequestError("address, platform and interval are required")
 
         address_key = address.strip().lower()
         platform_key = platform.strip().lower()
@@ -59,7 +62,7 @@ class BinanceWeb3TokenService:
         limit_value = int(limit or 240)
         storage_symbol = self._storage_symbol(address=address_key, platform=platform_key)
         end_ts = to_time or int(time.time() * 1000)
-        interval_ms = timeframe_to_ms(interval_key)
+        interval_ms = timeframe_to_milliseconds(interval_key)
 
         if interval_ms <= 0:
             rows = await self._fetch_kline_rows(
@@ -75,7 +78,14 @@ class BinanceWeb3TokenService:
             return self._build_kline_response(address=address_key, platform=platform_key, interval=interval_key, rows=rows[-limit_value:])
 
         start_ts = from_time if from_time is not None else end_ts - (interval_ms * max(limit_value, 1))
-        cached_rows = self.kline_store.get_range(storage_symbol, interval_key, start_ts, end_ts)
+        end_ts_exclusive = end_ts + 1
+        cached_result = self.history_ranges.read_cached(
+            storage_symbol=storage_symbol,
+            timeframe=interval_key,
+            start_ts=start_ts,
+            end_ts_exclusive=end_ts_exclusive,
+        )
+        cached_rows = cached_result.rows
         if from_time is None and to_time is None and is_recent_cache_usable(
             cached=cached_rows,
             timeframe=interval_key,
@@ -89,40 +99,35 @@ class BinanceWeb3TokenService:
                 rows=cached_rows[-limit_value:],
             )
 
-        new_rows: list[list[float]] = []
-        for gap_start, gap_end in collect_missing_ranges(
-            cached_klines=cached_rows,
-            timeframe=interval_key,
-            start_ts=start_ts,
-            end_ts_exclusive=end_ts,
-        ):
-            new_rows.extend(
-                await self._fetch_kline_rows(
-                    address=address_key,
-                    platform=platform_key,
-                    interval=interval_key,
-                    limit=limit_value,
-                    from_time=gap_start,
-                    to_time=gap_end,
-                    pm=pm,
-                )
+        async def fetch_gap(gap_start: int, gap_end: int) -> list[list[float]]:
+            return await self._fetch_kline_rows(
+                address=address_key,
+                platform=platform_key,
+                interval=interval_key,
+                limit=limit_value,
+                from_time=gap_start,
+                to_time=max(gap_start, gap_end - 1),
+                pm=pm,
             )
 
-        if new_rows:
-            self.kline_store.save(storage_symbol, interval_key, new_rows)
-
-        merged_rows = self._merge_rows(cached_rows, new_rows)
-        window_rows = [row for row in merged_rows if start_ts <= int(row[0]) <= end_ts]
+        range_result = await self.history_ranges.load_async(
+            storage_symbol=storage_symbol,
+            timeframe=interval_key,
+            start_ts=start_ts,
+            end_ts_exclusive=end_ts_exclusive,
+            fetch_gap=fetch_gap,
+            cached_rows=cached_rows,
+        )
         return self._build_kline_response(
             address=address_key,
             platform=platform_key,
             interval=interval_key,
-            rows=window_rows[-limit_value:],
+            rows=range_result.rows[-limit_value:],
         )
 
     async def get_audit(self, *, binance_chain_id: str | None = None, contract_address: str | None = None) -> BinanceWeb3TokenAuditResponse:
         if not binance_chain_id or not contract_address:
-            raise ValueError("binance_chain_id and contract_address are required")
+            raise InvalidRequestError("binance_chain_id and contract_address are required")
         payload = await self.web3_client.post_json(
             "/bapi/defi/v1/public/wallet-direct/security/token/audit",
             body={
@@ -218,16 +223,7 @@ class BinanceWeb3TokenService:
             if None in (open_time, open_price, high, low, close, volume):
                 continue
             normalized.append([open_time, open_price, high, low, close, volume])
-        return self._merge_rows(normalized)
-
-    @staticmethod
-    def _merge_rows(*batches: list[list[float]]) -> list[list[float]]:
-        merged: dict[int, list[float]] = {}
-        for batch in batches:
-            for row in batch:
-                if row:
-                    merged[int(row[0])] = row
-        return sorted(merged.values(), key=lambda item: item[0])
+        return merge_ohlcv_rows(normalized)
 
     @staticmethod
     def _storage_symbol(*, address: str, platform: str) -> str:

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime
-from app.contracts.dto.market import CurrentPriceBatchItemResponse, CurrentPriceBatchResponse, CurrentPriceResponse
+from app.application.errors import InvalidRequestError
+from app.contracts.dto.market_history import CurrentPriceBatchItemResponse, CurrentPriceBatchResponse, CurrentPriceResponse
 from app.contracts.market_history import (
     build_current_price_batch_item_response,
     build_current_price_batch_response,
@@ -11,6 +12,7 @@ from app.contracts.market_history import (
 from app.infra.executor import run_database
 from app.services.market.app_service_support import validate_market_request
 from app.services.market.market_data_service import MarketDataService
+from config import settings
 
 
 class MarketPriceQueryService:
@@ -58,11 +60,22 @@ class MarketPriceQueryService:
             seen_symbols.add(symbol)
             normalized_symbols.append(symbol)
 
+        if len(normalized_symbols) > settings.PRICE_BATCH_MAX_SYMBOLS:
+            raise InvalidRequestError(
+                f"批量价格一次最多查询 {settings.PRICE_BATCH_MAX_SYMBOLS} 个标的"
+            )
+
+        semaphore = asyncio.Semaphore(max(int(settings.PRICE_BATCH_CONCURRENCY), 1))
+
+        async def load_one(symbol: str):
+            async with semaphore:
+                return await self._build_current_price_batch_item(
+                    symbol=symbol,
+                    timeframe=timeframe,
+                )
+
         items = await asyncio.gather(
-            *[
-                self._build_current_price_batch_item(symbol=symbol, timeframe=timeframe)
-                for symbol in normalized_symbols
-            ],
+            *(load_one(symbol) for symbol in normalized_symbols),
         )
         return build_current_price_batch_response(timeframe=timeframe, items=items)
 

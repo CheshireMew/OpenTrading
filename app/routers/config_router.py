@@ -12,17 +12,20 @@ from app.dependencies import (
     get_database_runtime,
     get_fred_api_config_service,
     get_llm_config_service,
+    get_runtime_services,
 )
 from app.exceptions import AppError
-from app.domain.market.symbol_catalog import get_supported_market_symbols
+from app.infra.executor import run_external_io
+from app.services.market.symbol_catalog import get_supported_market_symbols
 from app.contracts.dto.config import (
     FredApiConfigResponse,
     FredApiConfigUpdateRequest,
     LlmProviderConfigResponse,
     LlmProviderConfigUpdateRequest,
     SystemConfigResponse,
+    CurrencyRatesResponse,
 )
-from app.contracts.dto.market import CurrencyRatesResponse
+from app.product import APP_VERSION
 from config import settings
 
 router = FrontendContractRouter(frontend_contract_target="config")
@@ -37,21 +40,27 @@ def _require_local_settings_request(request: Request) -> None:
     raise AppError("配置接口仅允许本机访问", status_code=403)
 
 
-def _optional_runtime_service(request: Request, name: str) -> Any | None:
-    runtime_services = getattr(request.app.state, "runtime_services", None)
-    if runtime_services is None:
-        return None
-    return getattr(runtime_services, name, None)
+def _read_local_config(request: Request, service) -> dict[str, Any]:
+    _require_local_settings_request(request)
+    return service.read_config()
+
+
+def _save_local_config(request: Request, service, payload) -> dict[str, Any]:
+    _require_local_settings_request(request)
+    return service.save_config(payload.model_dump())
 
 
 @router.get("/config", response_model=SystemConfigResponse)
 async def get_config(
-    request: Request,
     database_runtime = Depends(get_database_runtime),
+    runtime_services = Depends(get_runtime_services),
 ):
     """获取系统配置"""
-    cache_service = _optional_runtime_service(request, "cache_service")
+    cache_service = runtime_services.infra.cache_service
+    if cache_service is not None:
+        await cache_service.connect_async()
     return SystemConfigResponse.model_validate({
+        'version': APP_VERSION,
         'exchange': settings.EXCHANGE_ID,
         'symbols': get_supported_market_symbols(),
         'timeframe': settings.TIMEFRAME,
@@ -66,7 +75,7 @@ async def get_config(
             'app_role': settings.APP_RUNTIME_ROLE,
             'database_engine': database_runtime.engine.dialect.name,
             'database_source': database_runtime.source,
-            'cache_backend': type(cache_service).__name__ if cache_service is not None else 'unavailable',
+            'cache_backend': cache_service.runtime_backend if cache_service is not None else 'unavailable',
         },
     })
 
@@ -83,8 +92,7 @@ async def get_llm_config(
     request: Request,
     service = Depends(get_llm_config_service),
 ):
-    _require_local_settings_request(request)
-    return service.read_config()
+    return await run_external_io(lambda: _read_local_config(request, service))
 
 
 @router.put("/llm-config", response_model=LlmProviderConfigResponse)
@@ -93,8 +101,7 @@ async def update_llm_config(
     payload: LlmProviderConfigUpdateRequest,
     service = Depends(get_llm_config_service),
 ):
-    _require_local_settings_request(request)
-    return service.save_config(payload.model_dump())
+    return await run_external_io(lambda: _save_local_config(request, service, payload))
 
 
 @router.get("/fred-api-config", response_model=FredApiConfigResponse)
@@ -102,8 +109,7 @@ async def get_fred_api_config(
     request: Request,
     service = Depends(get_fred_api_config_service),
 ):
-    _require_local_settings_request(request)
-    return service.read_config()
+    return await run_external_io(lambda: _read_local_config(request, service))
 
 
 @router.put("/fred-api-config", response_model=FredApiConfigResponse)
@@ -112,5 +118,4 @@ async def update_fred_api_config(
     payload: FredApiConfigUpdateRequest,
     service = Depends(get_fred_api_config_service),
 ):
-    _require_local_settings_request(request)
-    return service.save_config(payload.model_dump())
+    return await run_external_io(lambda: _save_local_config(request, service, payload))

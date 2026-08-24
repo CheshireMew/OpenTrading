@@ -1,4 +1,5 @@
 import { computed, onMounted, reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import type {
   FredApiConfigResponse,
@@ -24,6 +25,7 @@ interface FredApiConfigForm {
 }
 
 export const useSystemSettingsPage = () => {
+  const { t } = useI18n()
   const systemConfig = ref<SystemConfigResponse | null>(null)
   const presets = ref<LlmProviderPresetResponse[]>([])
   const apiKeyDraft = ref('')
@@ -110,7 +112,7 @@ export const useSystemSettingsPage = () => {
       applyFredConfig(fredResponse)
     } catch (err) {
       console.error('Load system config failed', err)
-      error.value = '加载配置失败'
+      error.value = t('settings.loadFailed')
     }
   }
 
@@ -128,10 +130,10 @@ export const useSystemSettingsPage = () => {
         reasoningEnabled: form.reasoningEnabled,
       })
       applyConfig(response)
-      message.value = '配置已保存'
+      message.value = t('settings.saved')
     } catch (err) {
       console.error('Save LLM config failed', err)
-      error.value = '保存配置失败'
+      error.value = t('settings.saveFailed')
     } finally {
       saving.value = false
     }
@@ -147,10 +149,48 @@ export const useSystemSettingsPage = () => {
         apiKey: fredApiKeyDraft.value,
       })
       applyFredConfig(response)
-      fredMessage.value = 'FRED API Key 已保存'
+      fredMessage.value = t('settings.fredSaved')
     } catch (err) {
       console.error('Save FRED API config failed', err)
-      fredError.value = '保存 FRED API Key 失败'
+      fredError.value = t('settings.fredSaveFailed')
+    } finally {
+      fredSaving.value = false
+    }
+  }
+
+  const clearLlmApiKey = async () => {
+    if (!form.apiKeySet || !window.confirm(t('settings.clearLlmConfirm'))) return
+    saving.value = true
+    message.value = ''
+    error.value = ''
+    try {
+      applyConfig(await systemApi.updateLlmConfig({
+        provider: form.provider,
+        apiKey: '',
+        baseUrl: form.baseUrl,
+        modelId: form.modelId,
+        reasoningEnabled: form.reasoningEnabled,
+      }))
+      message.value = t('settings.keyCleared')
+    } catch (err) {
+      console.error('Clear LLM API key failed', err)
+      error.value = t('settings.clearFailed')
+    } finally {
+      saving.value = false
+    }
+  }
+
+  const clearFredApiKey = async () => {
+    if (!fredForm.apiKeySet || !window.confirm(t('settings.clearFredConfirm'))) return
+    fredSaving.value = true
+    fredMessage.value = ''
+    fredError.value = ''
+    try {
+      applyFredConfig(await systemApi.updateFredApiConfig({ apiKey: '' }))
+      fredMessage.value = t('settings.keyCleared')
+    } catch (err) {
+      console.error('Clear FRED API key failed', err)
+      fredError.value = t('settings.clearFailed')
     } finally {
       fredSaving.value = false
     }
@@ -179,6 +219,8 @@ export const useSystemSettingsPage = () => {
     handleProviderChange,
     saveConfig,
     saveFredConfig,
+    clearLlmApiKey,
+    clearFredApiKey,
   }
 }
 

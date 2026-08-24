@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, Callable
 
 from app.contracts.dto.binance.usdm import BinanceContractResearchDetailResponse
@@ -15,7 +16,43 @@ from .binance_market_normalizers import (
     normalize_taker_volume,
 )
 from .binance_research_series import BinanceResearchSeriesLoader
-from app.services.persistence_ports import BinanceMarketResearchStorePort
+from app.application.persistence_ports import BinanceMarketResearchStorePort
+
+
+@dataclass(frozen=True)
+class UsdmPeriodSeriesSpec:
+    endpoint: str
+    series: str
+    normalizer: Callable[[str, Any], dict[str, Any]]
+
+
+PERIOD_SERIES_SPECS = {
+    "open_interest": UsdmPeriodSeriesSpec(
+        endpoint="/futures/data/openInterestHist",
+        series="open_interest_stats",
+        normalizer=normalize_open_interest_stats,
+    ),
+    "global_long_short": UsdmPeriodSeriesSpec(
+        endpoint="/futures/data/globalLongShortAccountRatio",
+        series="global_long_short_account_ratio",
+        normalizer=normalize_ratio_series,
+    ),
+    "top_trader_accounts": UsdmPeriodSeriesSpec(
+        endpoint="/futures/data/topLongShortAccountRatio",
+        series="top_trader_account_ratio",
+        normalizer=normalize_ratio_series,
+    ),
+    "top_trader_positions": UsdmPeriodSeriesSpec(
+        endpoint="/futures/data/topLongShortPositionRatio",
+        series="top_trader_position_ratio",
+        normalizer=normalize_ratio_series,
+    ),
+    "taker_volume": UsdmPeriodSeriesSpec(
+        endpoint="/futures/data/takerlongshortRatio",
+        series="taker_long_short_ratio",
+        normalizer=normalize_taker_volume,
+    ),
+}
 
 
 class BinanceUsdmMarketService:
@@ -88,15 +125,7 @@ class BinanceUsdmMarketService:
         period: str,
         limit: int = 30,
     ) -> dict[str, object]:
-        return await self.research_series.load(
-            endpoint="/futures/data/openInterestHist",
-            params={"symbol": symbol.upper(), "period": period, "limit": limit},
-            normalizer=normalize_open_interest_stats,
-            series="open_interest_stats",
-            symbol=symbol,
-            period=period,
-            limit=limit,
-        )
+        return await self._load_period_series("open_interest", symbol=symbol, period=period, limit=limit)
 
     def get_cached_open_interest_stats(
         self,
@@ -118,44 +147,31 @@ class BinanceUsdmMarketService:
         }
 
     async def get_long_short_ratio(self, *, symbol: str, period: str, limit: int = 30) -> dict[str, object]:
-        return await self.research_series.load(
-            endpoint="/futures/data/globalLongShortAccountRatio",
-            params={"symbol": symbol.upper(), "period": period, "limit": limit},
-            normalizer=normalize_ratio_series,
-            series="global_long_short_account_ratio",
-            symbol=symbol,
-            period=period,
-            limit=limit,
-        )
+        return await self._load_period_series("global_long_short", symbol=symbol, period=period, limit=limit)
 
     async def get_top_trader_accounts(self, *, symbol: str, period: str, limit: int = 30) -> dict[str, object]:
-        return await self.research_series.load(
-            endpoint="/futures/data/topLongShortAccountRatio",
-            params={"symbol": symbol.upper(), "period": period, "limit": limit},
-            normalizer=normalize_ratio_series,
-            series="top_trader_account_ratio",
-            symbol=symbol,
-            period=period,
-            limit=limit,
-        )
+        return await self._load_period_series("top_trader_accounts", symbol=symbol, period=period, limit=limit)
 
     async def get_top_trader_positions(self, *, symbol: str, period: str, limit: int = 30) -> dict[str, object]:
-        return await self.research_series.load(
-            endpoint="/futures/data/topLongShortPositionRatio",
-            params={"symbol": symbol.upper(), "period": period, "limit": limit},
-            normalizer=normalize_ratio_series,
-            series="top_trader_position_ratio",
-            symbol=symbol,
-            period=period,
-            limit=limit,
-        )
+        return await self._load_period_series("top_trader_positions", symbol=symbol, period=period, limit=limit)
 
     async def get_taker_volume(self, *, symbol: str, period: str, limit: int = 30) -> dict[str, object]:
+        return await self._load_period_series("taker_volume", symbol=symbol, period=period, limit=limit)
+
+    async def _load_period_series(
+        self,
+        name: str,
+        *,
+        symbol: str,
+        period: str,
+        limit: int,
+    ) -> dict[str, object]:
+        spec = PERIOD_SERIES_SPECS[name]
         return await self.research_series.load(
-            endpoint="/futures/data/takerlongshortRatio",
+            endpoint=spec.endpoint,
             params={"symbol": symbol.upper(), "period": period, "limit": limit},
-            normalizer=normalize_taker_volume,
-            series="taker_long_short_ratio",
+            normalizer=spec.normalizer,
+            series=spec.series,
             symbol=symbol,
             period=period,
             limit=limit,

@@ -5,7 +5,7 @@ from fastapi import Depends, Query, WebSocket, WebSocketDisconnect
 
 from app.contracts.frontend import FrontendContractRouter
 from app.dependencies import get_market_query_service, get_market_websocket_service
-from app.contracts.dto.market import RealtimeResponse
+from app.contracts.dto.market_history import RealtimeResponse
 from config import settings
 from utils.logger import logger
 

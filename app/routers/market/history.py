@@ -7,7 +7,7 @@ from fastapi import Depends, Query, Request
 from app.contracts.frontend import FrontendContractRouter
 from app.dependencies import get_market_query_service
 from app.rate_limit import limiter
-from app.contracts.dto.market import (
+from app.contracts.dto.market_history import (
     CurrentPriceBatchResponse,
     CurrentPriceResponse,
     KlineTailResponse,
@@ -78,7 +78,12 @@ async def get_current_price(
 
 @router.get("/price/current/batch", response_model=CurrentPriceBatchResponse)
 async def get_current_price_batch(
-    symbols: list[str] = Query(..., description="Symbols eg BTC/USDT"),
+    symbols: list[str] = Query(
+        ...,
+        description="Symbols eg BTC/USDT",
+        min_length=1,
+        max_length=settings.PRICE_BATCH_MAX_SYMBOLS,
+    ),
     timeframe: str = Query("1d", description="Timeframe eg 1d"),
     service = Depends(get_market_query_service),
 ):
@@ -110,7 +115,12 @@ async def get_market_full_history(
 @limiter.limit(settings.RATE_LIMIT_HISTORY)
 async def get_market_full_history_batch(
     request: Request,
-    symbols: list[str] = Query(..., description="交易对列表，如 BTC/USDT"),
+    symbols: list[str] = Query(
+        ...,
+        description="交易对列表，如 BTC/USDT",
+        min_length=1,
+        max_length=settings.HISTORY_BATCH_MAX_SYMBOLS,
+    ),
     timeframe: str = Query("1d", description="Timeframe eg 1d"),
     start_date: str = Query("2010-01-01", description="Start Date YYYY-MM-DD"),
     fetch_policy: Literal["cache_only", "hydrate"] = Query("hydrate", description="History source policy"),

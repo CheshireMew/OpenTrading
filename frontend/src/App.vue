@@ -1,15 +1,44 @@
 <template>
-  <div class="app-shell flex min-h-screen transition-colors duration-300">
-    <!-- Sidebar -->
-    <aside class="app-sidebar w-60 flex-shrink-0 overflow-y-auto transition-colors duration-300">
-      <div class="app-sidebar-header p-5">
-        <h1 class="app-brand text-xl font-semibold tracking-tight">
-          Heimdall
-        </h1>
-        <p class="app-sidebar-subtitle mt-1 text-xs">{{ $t('app.subtitle') }}</p>
+  <div class="app-shell flex h-screen flex-col overflow-hidden transition-colors duration-300 md:flex-row">
+    <a href="#main-content" class="app-skip-link">{{ t('app.skipToContent') }}</a>
+
+    <header class="app-mobile-header flex h-14 flex-shrink-0 items-center justify-between border-b px-4 md:hidden">
+      <span class="app-brand text-lg font-semibold tracking-tight">Heimdall</span>
+      <button type="button" class="app-icon-button inline-flex" :aria-label="t('app.openMenu')" :aria-expanded="sidebarOpen" @click="sidebarOpen = true">
+        <Bars3Icon class="h-6 w-6" />
+      </button>
+    </header>
+
+    <button
+      v-if="sidebarOpen"
+      type="button"
+      class="fixed inset-0 z-40 bg-slate-950/45 md:hidden"
+      :aria-label="t('app.closeMenu')"
+      @click="closeSidebar"
+    />
+
+    <aside
+      ref="sidebarRef"
+      class="app-sidebar fixed inset-y-0 left-0 z-50 w-72 flex-shrink-0 overflow-y-auto transition-transform duration-200 md:static md:z-auto md:w-60 md:translate-x-0"
+      :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+      :inert="!desktopNavigation && !sidebarOpen"
+      :aria-hidden="!desktopNavigation && !sidebarOpen ? 'true' : undefined"
+      :role="navigationModalOpen ? 'dialog' : undefined"
+      :aria-modal="navigationModalOpen ? 'true' : undefined"
+      :aria-label="navigationModalOpen ? t('app.primaryNavigation') : undefined"
+      tabindex="-1"
+    >
+      <div class="app-sidebar-header flex items-start justify-between p-5">
+        <div>
+          <h1 class="app-brand text-xl font-semibold tracking-tight">Heimdall</h1>
+          <p class="app-sidebar-subtitle mt-1 text-xs">{{ t('app.subtitle') }}</p>
+        </div>
+        <button type="button" class="app-icon-button inline-flex md:hidden" :aria-label="t('app.closeMenu')" @click="closeSidebar">
+          <XMarkIcon class="h-5 w-5" />
+        </button>
       </div>
 
-      <nav class="mt-4 space-y-1 px-3">
+      <nav class="mt-4 space-y-1 px-3" :aria-label="t('app.primaryNavigation')">
         <template v-for="section in navSections" :key="section.key">
           <div v-if="section.titleKey" class="app-nav-section mt-4 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em]">
             {{ $t(section.titleKey) }}
@@ -21,6 +50,7 @@
             :to="item.path"
             class="app-nav-link flex items-center px-3 py-2 text-sm transition"
             active-class="app-nav-link--active"
+            @click="closeSidebar"
           >
             <component :is="iconMap[item.nav.icon]" class="mr-2.5 h-5 w-5" />
             {{ $t(item.nav.labelKey) }}
@@ -49,8 +79,13 @@
       </nav>
     </aside>
 
-    <!-- Main Content -->
-    <main class="app-main flex-1 overflow-auto transition-colors duration-300">
+    <main id="main-content" class="app-main min-h-0 min-w-0 flex-1 overflow-auto transition-colors duration-300" tabindex="-1">
+      <div v-if="bootstrapError" role="alert" class="m-4 flex items-center justify-between gap-4 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-950/30 dark:text-rose-200">
+        <span>{{ t('app.bootstrapLoadFailed') }}</span>
+        <button type="button" class="font-semibold underline disabled:opacity-60" :disabled="bootstrapLoading" @click="loadBootstrapResources">
+          {{ t('app.retry') }}
+        </button>
+      </div>
       <router-view v-slot="{ Component }">
         <keep-alive :include="keepAliveRoutes">
           <component :is="Component" />
@@ -61,8 +96,9 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, type Component } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import {
   ChartBarSquareIcon,
   ScaleIcon,
@@ -76,6 +112,8 @@ import {
   CubeTransparentIcon,
   LanguageIcon,
   CircleStackIcon,
+  Bars3Icon,
+  XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import {
   APP_KEEP_ALIVE_ROUTE_NAMES,
@@ -87,8 +125,15 @@ import { useTheme } from '@/composables/useTheme'
 import { useMoney } from '@/composables/useMoney'
 import { useSymbolCatalog } from '@/modules/market'
 import { setAppLocale, toggleAppLocale } from '@/i18n/config'
+import { useModalDialog } from '@/composables/useModalDialog'
 
-const { locale } = useI18n()
+const { locale, t } = useI18n()
+const route = useRoute()
+const sidebarOpen = ref(false)
+const bootstrapError = ref(false)
+const bootstrapLoading = ref(false)
+const desktopNavigation = ref(false)
+const navigationModalOpen = computed(() => sidebarOpen.value && !desktopNavigation.value)
 const { theme, toggleTheme } = useTheme()
 const { loadCurrencyRates } = useMoney()
 const { loadSymbols } = useSymbolCatalog()
@@ -109,13 +154,58 @@ const navSections = APP_NAV_SECTIONS.map((section) => ({
   items: APP_NAV_ITEMS.filter((item) => item.nav.section === section.key),
 })).filter((section) => section.items.length > 0)
 
+const closeSidebar = () => {
+  sidebarOpen.value = false
+}
+const { dialogRef: sidebarRef } = useModalDialog(navigationModalOpen, closeSidebar)
+let desktopMediaQuery: MediaQueryList | null = null
+const syncDesktopNavigation = (event: MediaQueryList | MediaQueryListEvent) => {
+  desktopNavigation.value = event.matches
+  if (event.matches) closeSidebar()
+}
+
 const toggleLocale = () => {
   setAppLocale(locale, toggleAppLocale(locale.value))
 }
 
+const loadBootstrapResources = async () => {
+  if (bootstrapLoading.value) return
+  bootstrapLoading.value = true
+  bootstrapError.value = false
+  try {
+    const [symbolsResult, ratesResult] = await Promise.allSettled([
+      loadSymbols(),
+      loadCurrencyRates(),
+    ])
+    bootstrapError.value = (
+      symbolsResult.status === 'rejected'
+      || (ratesResult.status === 'fulfilled' && ratesResult.value === false)
+      || ratesResult.status === 'rejected'
+    )
+  } finally {
+    bootstrapLoading.value = false
+  }
+}
+
+watch(() => route.fullPath, closeSidebar)
+
+watchEffect(() => {
+  document.documentElement.lang = locale.value
+  const titleKey = typeof route.meta.titleKey === 'string' ? route.meta.titleKey : 'app.title'
+  const pageTitle = t(titleKey)
+  const appTitle = t('app.title')
+  document.title = pageTitle === appTitle ? appTitle : `${pageTitle} · ${appTitle}`
+})
+
 onMounted(() => {
-    loadSymbols()
-    loadCurrencyRates()
+  desktopMediaQuery = window.matchMedia('(min-width: 768px)')
+  syncDesktopNavigation(desktopMediaQuery)
+  desktopMediaQuery.addEventListener('change', syncDesktopNavigation)
+  void loadBootstrapResources()
+})
+
+onBeforeUnmount(() => {
+  desktopMediaQuery?.removeEventListener('change', syncDesktopNavigation)
 })
 </script>
 
@@ -167,6 +257,40 @@ html.dark .app-shell {
 .app-sidebar {
   border-right: 1px solid var(--app-sidebar-border);
   background: var(--app-sidebar-bg);
+}
+
+.app-mobile-header {
+  border-color: var(--app-sidebar-border);
+  background: var(--app-sidebar-bg);
+}
+
+.app-icon-button {
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  color: var(--app-nav);
+}
+
+.app-icon-button:hover {
+  background: var(--app-nav-hover-bg);
+  color: var(--app-nav-hover);
+}
+
+.app-skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 100;
+  transform: translateY(-150%);
+  background: var(--app-nav-active-border);
+  color: white;
+  padding: 0.625rem 1rem;
+  font-weight: 600;
+  transition: transform 150ms ease;
+}
+
+.app-skip-link:focus {
+  transform: translateY(0);
 }
 
 .app-sidebar-header {

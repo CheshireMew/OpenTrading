@@ -4,7 +4,7 @@ from typing import Any
 
 from app.infra.db.database import DatabaseRuntime
 from app.infra.db.schema import BinanceMarketResearchSeries
-from utils.time_utils import utc_now_naive
+from utils.time import utc_now_naive
 
 
 class BinanceMarketResearchStore:

@@ -2,6 +2,7 @@
 // Do not edit manually.
 
 export interface SystemConfigResponse {
+  version: string
   exchange: string
   symbols: Array<string>
   timeframe: string

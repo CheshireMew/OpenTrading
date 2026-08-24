@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 import json
-import sys
+import re
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -12,11 +12,12 @@ from fastapi.routing import APIRoute
 from pydantic import BaseModel, TypeAdapter
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT))
 
-from app.contracts.frontend import frontend_contract_filename, frontend_contract_target
-from app.contracts.dto.errors import ApiErrorResponse
-from app.main import create_app
+from app.contracts.frontend import frontend_contract_filename, frontend_contract_target  # noqa: E402
+from app.contracts.dto.errors import ApiErrorResponse  # noqa: E402
+from app.main import create_app  # noqa: E402
+from app.product import API_PREFIX  # noqa: E402
+from app.domain.market.web3_chains import WEB3_ALL_CHAIN_ID, WEB3_CHAIN_CATALOG  # noqa: E402
 
 FRONTEND_API_DIR = REPO_ROOT / "frontend" / "src" / "api"
 TARGET_FILES = ("market.ts", "tools.ts", "config.ts")
@@ -25,7 +26,6 @@ TARGET_PATHS = {
     "tools.ts": REPO_ROOT / "frontend" / "src" / "modules" / "tools" / "generatedContracts.ts",
     "config.ts": REPO_ROOT / "frontend" / "src" / "modules" / "system" / "generatedContracts.ts",
 }
-API_PREFIX = "/api/v1"
 CONTRACT_APP = create_app("api")
 TYPE_NAMESPACE_BY_FILE = {
     "market.ts": "MarketTypes",
@@ -72,13 +72,30 @@ def main() -> None:
         TARGET_PATHS[filename].write_text(content, encoding="utf-8")
     (FRONTEND_API_DIR / "routes.ts").write_text(render_api_routes(), encoding="utf-8")
     (FRONTEND_API_DIR / "errors.ts").write_text(render_file([ApiErrorResponse], []), encoding="utf-8")
+    (TARGET_PATHS["market.ts"].parent / "generatedWeb3Chains.ts").write_text(
+        render_web3_chain_catalog(),
+        encoding="utf-8",
+    )
+
+
+def render_web3_chain_catalog() -> str:
+    chains = [
+        {"label": chain.label, "value": chain.chain_id}
+        for chain in WEB3_CHAIN_CATALOG
+    ]
+    return "\n".join([
+        "// This file is generated from app.domain.market.web3_chains.",
+        "// Do not edit manually.",
+        "",
+        f"export const WEB3_ALL_CHAIN_ID = {json.dumps(WEB3_ALL_CHAIN_ID)}",
+        f"export const WEB3_SUPPORTED_CHAIN_OPTIONS = {json.dumps(chains, ensure_ascii=False)} as const",
+        "",
+    ])
 
 
 def collect_route_contract_models() -> tuple[RouteContractModel, ...]:
     models: dict[tuple[str, str], RouteContractModel] = {}
-    for route in CONTRACT_APP.routes:
-        if not isinstance(route, APIRoute):
-            continue
+    for route in contract_routes():
         if not route.path.startswith(API_PREFIX):
             continue
         target_file = resolve_route_target_file(route)
@@ -95,9 +112,7 @@ def collect_route_contract_models() -> tuple[RouteContractModel, ...]:
 
 def collect_route_query_param_contracts() -> tuple[QueryParamContract, ...]:
     contracts: dict[str, QueryParamContract] = {}
-    for route in CONTRACT_APP.routes:
-        if not isinstance(route, APIRoute):
-            continue
+    for route in contract_routes():
         if not route.path.startswith(API_PREFIX):
             continue
         if not route.dependant.query_params:
@@ -162,7 +177,7 @@ def extract_pydantic_models(annotation: Any) -> tuple[type[BaseModel], ...]:
     return tuple(models)
 
 
-def resolve_route_target_file(route: APIRoute) -> str:
+def resolve_route_target_file(route: Any) -> str:
     return frontend_contract_filename(frontend_contract_target(route))
 
 
@@ -178,6 +193,7 @@ def render_api_routes() -> str:
         "export type RouteParams = Record<string, string | number>",
         "export type ApiQueryShape = object",
         "export type EndpointQueryContract = { aliases?: Record<string, string>; repeatedKeys?: readonly string[] }",
+        f"export const API_BASE_PATH = {json.dumps(API_PREFIX)}",
         "",
         "const fillRoute = (template: string, params: RouteParams = {}) => template.replace(/\\{([^}]+)\\}/g, (_, key: string) => {",
         "  const value = params[key]",
@@ -196,6 +212,7 @@ def render_api_routes() -> str:
     response_map_lines = ["export type ApiRouteResponseMap = {"]
     body_map_lines = ["export type ApiRouteBodyMap = {"]
     query_map_lines = ["export type ApiRouteQueryMap = {"]
+    path_map_lines = ["export type ApiRoutePathMap = {"]
     for route in sorted(api_v1_routes(), key=lambda item: item.name):
         route_lines.append(f"  {route.name}: {json.dumps(strip_api_prefix(route.path))},")
         route_query_lines.append(
@@ -213,6 +230,13 @@ def render_api_routes() -> str:
         query_map_lines.append(
             f"  {route.name}: {query_types.get(route.name, 'never')}"
         )
+        path_names = re.findall(r"\{([^}:]+)(?::[^}]+)?\}", route.path)
+        path_type = (
+            "{ " + "; ".join(f"{name}: string | number" for name in path_names) + " }"
+            if path_names
+            else "never"
+        )
+        path_map_lines.append(f"  {route.name}: {path_type}")
     route_lines.extend([
         "} as const",
         "",
@@ -252,22 +276,47 @@ def render_api_routes() -> str:
     route_query_lines.extend(["} as const", ""])
     response_map_lines.extend(["}", ""])
     body_map_lines.extend(["}", ""])
+    path_map_lines.extend(["}", ""])
     query_map_lines.extend([
         "}",
         "",
         "export type ApiRouteResponse<N extends ApiRouteName> = ApiRouteResponseMap[N]",
         "export type ApiRouteBody<N extends ApiRouteName> = ApiRouteBodyMap[N]",
         "export type ApiRouteQuery<N extends ApiRouteName> = ApiRouteQueryMap[N]",
+        "export type ApiRoutePath<N extends ApiRouteName> = ApiRoutePathMap[N]",
         "",
     ])
-    return "\n".join(route_lines + route_query_lines + response_map_lines + body_map_lines + query_map_lines)
+    return "\n".join(
+        route_lines
+        + route_query_lines
+        + response_map_lines
+        + body_map_lines
+        + path_map_lines
+        + query_map_lines
+    )
 
 
-def api_v1_routes() -> tuple[APIRoute, ...]:
+def contract_routes() -> tuple[Any, ...]:
+    """Return resolved HTTP routes across eager and deferred FastAPI routers."""
+    routes: list[Any] = []
+    for route in CONTRACT_APP.routes:
+        if isinstance(route, APIRoute):
+            routes.append(route)
+            continue
+        effective_contexts = getattr(route, "effective_route_contexts", None)
+        if not callable(effective_contexts):
+            continue
+        for context in effective_contexts():
+            if isinstance(getattr(context, "original_route", None), APIRoute):
+                routes.append(context)
+    return tuple(routes)
+
+
+def api_v1_routes() -> tuple[Any, ...]:
     return tuple(
         route
-        for route in CONTRACT_APP.routes
-        if isinstance(route, APIRoute) and route.path.startswith(API_PREFIX)
+        for route in contract_routes()
+        if route.path.startswith(API_PREFIX)
     )
 
 

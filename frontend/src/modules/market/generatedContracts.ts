@@ -110,22 +110,6 @@ export interface MarketIndicatorResponse {
   history: Array<IndicatorHistoryPoint>
 }
 
-export interface DliLiquidityResponse {
-  score: number | null
-  raw_score: number | null
-  score_percentile: number | null
-  state: string
-  tone: string
-  updated_at: string | null
-  coverage: number
-  methodology: string
-  thresholds: DliThresholdsResponse
-  components: Array<DliComponentResponse>
-  history?: Array<DliHistoryPointResponse>
-  indicators?: Array<MarketIndicatorResponse>
-  alerts?: Array<string>
-}
-
 export interface TradeSetupResponse {
   symbol: string
   timeframe: string
@@ -134,6 +118,8 @@ export interface TradeSetupResponse {
   setup: TradeSetupResponseItem | null
   reason: string
   source: string
+  status: "ready" | "waiting" | "unavailable" | "rejected"
+  error_code: string | null
 }
 
 export interface BinanceMarketPageResponse {
@@ -489,41 +475,6 @@ export interface CurrentPriceBatchItemResponse {
   source: string
 }
 
-export interface DliComponentResponse {
-  indicator_id: string
-  name: string
-  short_label: string
-  group: string
-  group_label: string
-  group_description?: string | null
-  weight: number
-  effective_weight: number
-  polarity: string
-  current_value: number | null
-  score: number | null
-  z_score: number | null
-  percentile: number | null
-  contribution: number | null
-  change_pct: number | null
-  last_updated: string | null
-  data_lag_days?: number | null
-  missing_reason?: string | null
-}
-
-export interface DliHistoryPointResponse {
-  date: string
-  score: number
-  state: string
-}
-
-export interface DliThresholdsResponse {
-  p20: number
-  p50: number
-  p80: number
-  source: string
-  sample_size: number
-}
-
 export interface IndicatorHistoryPoint {
   date: string
   value: number
@@ -590,6 +541,15 @@ export interface GetBinanceMarketContractDetailQueryParams {
   limit?: number
 }
 
+export interface GetBinanceMarketKlinesQueryParams {
+  symbol: string
+  market?: string
+  interval?: string
+  limit?: number
+  start_time?: number | null
+  end_time?: number | null
+}
+
 export interface GetBinanceMarketPageQueryParams {
   min_rise_pct?: number
   limit?: number
@@ -637,11 +597,6 @@ export interface GetCurrentPriceBatchQueryParams {
 export interface GetCurrentPriceQueryParams {
   symbol: string
   timeframe?: string
-}
-
-export interface GetDliLiquidityQueryParams {
-  days?: number
-  change_days?: number
 }
 
 export interface GetIndexHistoryQueryParams {

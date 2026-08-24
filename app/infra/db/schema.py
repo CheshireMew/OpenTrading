@@ -6,7 +6,7 @@ from sqlalchemy import Column, Integer, String, Float, DateTime, Text, ForeignKe
 from sqlalchemy.orm import declarative_base, relationship
 
 from app.domain.market.constants import KLINE_SYMBOL_MAX_LENGTH
-from utils.time_utils import utc_now_naive
+from utils.time import utc_now_naive
 
 Base = declarative_base()
 
@@ -71,7 +71,7 @@ class Kline(Base):
     volume = Column(Float, nullable=False)
 
     __table_args__ = (
-        Index('ix_kline_sym_tf_ts', 'symbol', 'timeframe', 'timestamp'),
+        Index("ix_klines_timeframe_timestamp", "timeframe", "timestamp"),
     )
 
     def to_list(self):
@@ -125,10 +125,73 @@ class MarketIndicatorData(Base):
     meta_info = relationship("MarketIndicatorMeta", back_populates="data_points")
 
     __table_args__ = (
-        Index('ix_indicator_data_id_ts', 'indicator_id', 'timestamp'),
+        Index('ix_indicator_data_id_ts', 'indicator_id', 'timestamp', unique=True),
     )
 
     def __repr__(self):
         return f"<MarketIndicatorData(indicator={self.indicator_id}, ts={self.timestamp}, val={self.value})>"
+
+
+class PortfolioCollectionState(Base):
+    """Singleton revision and active selection for the portfolio aggregate."""
+
+    __tablename__ = "portfolio_collection_state"
+
+    id = Column(String(32), primary_key=True)
+    revision = Column(Integer, nullable=False, default=0)
+    active_portfolio_id = Column(String(120), nullable=True)
+    updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
+
+
+class PortfolioRecord(Base):
+    """Versioned portfolio document. Deleted records remain restorable."""
+
+    __tablename__ = "portfolio_records"
+
+    id = Column(String(120), primary_key=True)
+    payload = Column(JSON, nullable=False)
+    version = Column(Integer, nullable=False, default=1)
+    position = Column(Integer, nullable=False, default=0)
+    deleted_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=utc_now_naive, nullable=False)
+    updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
+
+    __table_args__ = (
+        Index("ix_portfolio_records_deleted_position", "deleted_at", "position"),
+    )
+
+
+class PortfolioSimulationResultRecord(Base):
+    """Large derived simulation artifact stored outside editable portfolio documents."""
+
+    __tablename__ = "portfolio_simulation_results"
+
+    portfolio_id = Column(
+        String(120),
+        ForeignKey("portfolio_records.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    source_fingerprint = Column(String(64), nullable=False)
+    payload = Column(JSON, nullable=False)
+    created_at = Column(DateTime, default=utc_now_naive, nullable=False)
+    updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
+
+
+class RuntimeComponentStatus(Base):
+    """Cross-process heartbeat and last job outcome for product readiness."""
+
+    __tablename__ = "runtime_component_status"
+
+    component = Column(String(80), primary_key=True)
+    owner_id = Column(String(160), nullable=False)
+    status = Column(String(32), nullable=False)
+    started_at = Column(DateTime, nullable=False)
+    heartbeat_at = Column(DateTime, nullable=False)
+    last_success_at = Column(DateTime, nullable=True)
+    last_failure_at = Column(DateTime, nullable=True)
+    next_run_at = Column(DateTime, nullable=True)
+    error_code = Column(String(80), nullable=True)
+    error_detail = Column(Text, nullable=True)
+    updated_at = Column(DateTime, nullable=False)
 
 

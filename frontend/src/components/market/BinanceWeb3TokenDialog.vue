@@ -1,24 +1,31 @@
 <template>
   <div
     v-if="open && token"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-2 backdrop-blur-sm sm:p-4"
     @click.self="$emit('close')"
   >
-    <section class="flex h-[min(90vh,860px)] w-full max-w-7xl flex-col overflow-hidden border border-[#d8d1c5] bg-[#fbfaf7] shadow-2xl dark:border-slate-700 dark:bg-slate-800">
-      <header class="flex flex-wrap items-center justify-between gap-4 border-b border-[#e4ded3] px-6 py-5 dark:border-slate-700">
-        <div class="flex items-center gap-4">
+    <section
+      ref="dialogRef"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="web3-token-dialog-title"
+      tabindex="-1"
+      class="flex h-[min(90vh,860px)] w-full max-w-7xl flex-col overflow-hidden border border-[#d8d1c5] bg-[#fbfaf7] shadow-2xl outline-none dark:border-slate-700 dark:bg-slate-800"
+    >
+      <header class="flex flex-wrap items-center justify-between gap-3 border-b border-[#e4ded3] px-4 py-4 dark:border-slate-700 sm:px-6 sm:py-5">
+        <div class="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
           <Web3TokenIcon :src="token.icon_url" :symbol="token.symbol" size="lg" />
-          <div>
+          <div class="min-w-0">
             <div class="flex items-center gap-3">
-              <h3 class="text-2xl font-semibold text-slate-900 dark:text-white">{{ token.symbol || '--' }}</h3>
+              <h3 id="web3-token-dialog-title" class="text-2xl font-semibold text-slate-900 dark:text-white">{{ token.symbol || '--' }}</h3>
               <span class="border border-[#b8d2c4] bg-[#edf3ee] px-3 py-1 text-xs font-semibold text-[#0f6b4f] dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">{{ t('web3Rank.dialog.score') }} {{ formatScore(token.heat_score) }}</span>
             </div>
-            <p class="mt-2 max-w-[680px] truncate text-sm text-slate-500 dark:text-slate-400">{{ token.contract_address }}</p>
+            <p class="mt-2 break-all text-xs text-slate-500 dark:text-slate-400 sm:max-w-[680px] sm:truncate sm:text-sm">{{ token.contract_address }}</p>
           </div>
         </div>
 
-        <div class="flex items-center gap-3">
-          <div class="flex flex-wrap gap-2 border border-[#e4ded3] bg-white p-1 dark:border-slate-700 dark:bg-slate-900">
+        <div class="flex w-full min-w-0 items-center gap-2 sm:w-auto">
+          <div class="flex min-w-0 flex-1 gap-2 overflow-x-auto border border-[#e4ded3] bg-white p-1 dark:border-slate-700 dark:bg-slate-900 sm:flex-none">
             <button
               v-for="item in intervals"
               :key="item"
@@ -32,18 +39,20 @@
           </div>
           <button
             type="button"
-            class="border border-[#e4ded3] bg-white px-4 py-2 text-sm font-medium text-stone-600 transition hover:bg-[#f1ece3] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+            class="inline-flex h-10 w-10 flex-none items-center justify-center border border-[#e4ded3] bg-white text-stone-600 transition hover:bg-[#f1ece3] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+            :aria-label="t('web3Rank.dialog.close')"
+            :title="t('web3Rank.dialog.close')"
             @click="$emit('close')"
           >
-            {{ t('web3Rank.dialog.close') }}
+            <XMarkIcon class="h-5 w-5" />
           </button>
         </div>
       </header>
 
       <div v-if="detailError" class="border-b border-rose-100 bg-rose-50 px-6 py-3 text-sm text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">{{ detailError }}</div>
 
-      <div class="grid min-h-0 flex-1 gap-0 lg:grid-cols-[360px_minmax(0,1fr)]">
-        <aside class="overflow-y-auto border-r border-slate-200 p-5 dark:border-slate-700">
+      <div class="grid min-h-0 flex-1 gap-0 overflow-y-auto lg:grid-cols-[360px_minmax(0,1fr)] lg:overflow-hidden">
+        <aside class="border-b border-slate-200 p-5 dark:border-slate-700 lg:overflow-y-auto lg:border-b-0 lg:border-r">
           <div v-if="detailLoading" class="border border-[#e4ded3] bg-[#fbfaf7] px-4 py-3 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">{{ t('web3Rank.dialog.loading') }}</div>
 
           <div class="grid grid-cols-2 gap-3">
@@ -152,7 +161,7 @@
           </div>
         </aside>
 
-        <main class="min-h-0 bg-slate-950 p-4">
+        <main class="min-h-[320px] bg-slate-950 p-4 lg:min-h-0">
           <TradingViewChart
             :data="chartData"
             :volume-data="volumeData"
@@ -165,8 +174,11 @@
 </template>
 
 <script setup lang="ts">
+import { XMarkIcon } from '@heroicons/vue/24/outline'
 import TradingViewChart from '@/components/TradingViewChart.vue'
 import Web3TokenIcon from '@/components/market/Web3TokenIcon.vue'
+import { useModalDialog } from '@/composables/useModalDialog'
+import { toRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type {
   BinanceWeb3HeatRankItem,
@@ -178,7 +190,7 @@ import type {
 
 const { t } = useI18n()
 
-defineProps<{
+const props = defineProps<{
   open: boolean
   token: BinanceWeb3HeatRankItem | null
   interval: string
@@ -197,8 +209,10 @@ defineProps<{
   valueTone: (value: number | null | undefined, positiveIsGood?: boolean) => string
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   close: []
   'update:interval': [interval: string]
 }>()
+
+const { dialogRef } = useModalDialog(toRef(props, 'open'), () => emit('close'))
 </script>

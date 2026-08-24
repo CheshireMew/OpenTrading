@@ -4,6 +4,9 @@
       type="button"
       class="symbol-trigger"
       :class="triggerClass"
+      aria-haspopup="dialog"
+      :aria-expanded="open"
+      :aria-label="ariaLabel || placeholderText"
       @click="openSearch"
     >
       <span class="truncate" :class="displayText ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'">
@@ -14,10 +17,17 @@
 
     <Teleport to="body">
       <div v-if="open" class="fixed inset-0 z-50 bg-black/30 p-3 backdrop-blur-sm sm:p-6" @click.self="closeSearch">
-        <section class="mx-auto flex max-h-[88vh] w-full max-w-5xl flex-col overflow-hidden border border-[#d8d1c5] bg-[#fbfaf7] shadow-2xl dark:border-gray-700 dark:bg-gray-900">
+        <section
+          ref="dialogRef"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="symbol-search-title"
+          tabindex="-1"
+          class="mx-auto flex max-h-[88vh] w-full max-w-5xl flex-col overflow-hidden border border-[#d8d1c5] bg-[#fbfaf7] shadow-2xl outline-none dark:border-gray-700 dark:bg-gray-900"
+        >
           <div class="flex items-center justify-between border-b border-[#e4ded3] px-5 py-4 dark:border-gray-700">
-            <h2 class="text-lg font-semibold text-stone-950 dark:text-white">{{ t('symbolSearch.title') }}</h2>
-            <button type="button" class="p-2 text-stone-500 transition hover:bg-[#f1ece3] dark:text-gray-300 dark:hover:bg-gray-800" @click="closeSearch">
+            <h2 id="symbol-search-title" class="text-lg font-semibold text-stone-950 dark:text-white">{{ t('symbolSearch.title') }}</h2>
+            <button type="button" :aria-label="t('common.close')" class="p-2 text-stone-500 transition hover:bg-[#f1ece3] dark:text-gray-300 dark:hover:bg-gray-800" @click="closeSearch">
               <XMarkIcon class="h-5 w-5" />
             </button>
           </div>
@@ -32,7 +42,6 @@
                 class="h-12 min-w-0 flex-1 bg-transparent px-3 text-base text-stone-950 outline-none dark:text-white"
                 :placeholder="placeholderText"
                 @keydown.enter.prevent="selectFirst"
-                @keydown.esc.prevent="closeSearch"
               />
               <button
                 v-if="query"
@@ -92,6 +101,7 @@
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { useModalDialog } from '@/composables/useModalDialog'
 import { toBaseSymbol, useSymbolCatalog } from '@/modules/market'
 import type { MarketSymbolSearchItem } from '@/modules/market/contracts'
 
@@ -103,6 +113,7 @@ const props = withDefaults(defineProps<{
   placeholder?: string
   triggerClass?: string
   disabledLabel?: string
+  ariaLabel?: string
 }>(), {
   multiple: false,
   allowedClasses: () => ['crypto', 'index'],
@@ -110,6 +121,7 @@ const props = withDefaults(defineProps<{
   placeholder: '',
   triggerClass: '',
   disabledLabel: '',
+  ariaLabel: '',
 })
 
 const emit = defineEmits<{
@@ -123,6 +135,7 @@ const open = ref(false)
 const query = ref('')
 const searchInput = ref<HTMLInputElement | null>(null)
 const activeClass = ref('all')
+const { dialogRef } = useModalDialog(open, closeSearch)
 
 const placeholderText = computed(() => props.placeholder || t('symbolSearch.placeholder'))
 const disabledText = computed(() => props.disabledLabel || t('symbolSearch.disabled'))
@@ -145,7 +158,10 @@ const displayText = computed(() => {
   return String(props.modelValue || '')
 })
 
-const candidates = computed(() => symbols.value)
+const candidates = computed(() => symbols.value
+  .map((item, index) => ({ item, index, allowed: props.allowedClasses.includes(item.asset_class) }))
+  .sort((left, right) => Number(right.allowed) - Number(left.allowed) || left.index - right.index)
+  .map(({ item }) => item))
 
 const filteredSymbols = computed(() => {
   const needle = query.value.toUpperCase()
@@ -167,7 +183,7 @@ const openSearch = async () => {
   searchInput.value?.focus()
 }
 
-const closeSearch = () => {
+function closeSearch() {
   open.value = false
   query.value = ''
 }
@@ -188,7 +204,7 @@ const choose = (item: MarketSymbolSearchItem) => {
 }
 
 const selectFirst = () => {
-  const first = filteredSymbols.value[0]
+  const first = filteredSymbols.value.find((item) => !isDisabled(item))
   if (first) choose(first)
 }
 

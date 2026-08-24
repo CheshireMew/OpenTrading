@@ -6,11 +6,16 @@ from typing import Callable
 
 from app.infra.cache import RedisService
 from app.domain.market.constants import KEY_PREFIX_KLINE
-from app.services.persistence_ports import KlineStorePort
-from app.services.market import kline_range_loader
+from app.application.persistence_ports import KlineStorePort
+from app.services.market.exchange_kline_fetcher import ExchangeKlineFetcher
 from app.services.market.exchange_gateway import ExchangeGateway
-from app.services.market.history_ranges import is_recent_cache_usable, timeframe_to_ms
-from app.services.market.kline_range_loader import KlineRangeLoader
+from app.domain.market.constants import timeframe_to_milliseconds
+from app.services.market.history_ranges import is_recent_cache_usable
+from app.services.market.history_range_coordinator import (
+    HistoryRangeCoordinator,
+    OhlcvRangeResult,
+    merge_ohlcv_rows,
+)
 from app.services.market.symbol_routing import MarketSymbolRouting
 from config import settings
 from utils.logger import logger
@@ -29,7 +34,8 @@ class MarketDataService:
         self.kline_store = kline_store
         self.cache_service = cache_service
         self.symbol_routing = MarketSymbolRouting(exchange_gateway)
-        self.range_loader = KlineRangeLoader(kline_store=kline_store, symbol_routing=self.symbol_routing)
+        self.history_ranges = HistoryRangeCoordinator(kline_store)
+        self.exchange_history = ExchangeKlineFetcher(self.symbol_routing)
 
     def get_kline_data(
         self,
@@ -117,7 +123,7 @@ class MarketDataService:
         live_max_retries: int | None = None,
     ) -> list[list[float]]:
         end_ts = int(time.time() * 1000)
-        timeframe_ms = timeframe_to_ms(timeframe)
+        timeframe_ms = timeframe_to_milliseconds(timeframe)
         storage_symbol = self.symbol_routing.storage_symbol(symbol)
         start_time = time.time()
         try:
@@ -141,7 +147,7 @@ class MarketDataService:
         retry_limit = live_max_retries if live_max_retries is not None else settings.EXCHANGE_TAIL_MAX_RETRIES
         live_rows = self.get_live_kline_data(symbol, timeframe, limit=limit, max_retries=retry_limit)
         if live_rows:
-            merged = self._merge_klines(cached, live_rows)
+            merged = merge_ohlcv_rows(cached, live_rows)
             try:
                 self.kline_store.save(storage_symbol, timeframe, live_rows)
             except Exception as exc:
@@ -164,13 +170,24 @@ class MarketDataService:
         start_date: datetime,
         end_date: datetime,
         persist_klines: Callable[[str, str, list[list[float]]], None] | None = None,
-    ) -> kline_range_loader.OhlcvRangeResult:
-        return self.range_loader.load_ohlcv_range(
-            symbol,
-            timeframe,
-            start_date,
-            end_date,
-            persist_klines=persist_klines,
+    ) -> OhlcvRangeResult:
+        start_ts = int(start_date.timestamp() * 1000)
+        end_ts_exclusive = int(end_date.timestamp() * 1000) + 1
+
+        def persist(storage_symbol: str, current_timeframe: str, rows: list[list[float]]) -> None:
+            try:
+                (persist_klines or self.kline_store.save)(storage_symbol, current_timeframe, rows)
+            except Exception as exc:
+                logger.warning(f"历史 K 线回写缓存失败: {exc}")
+
+        return self.history_ranges.load(
+            storage_symbol=self.symbol_routing.storage_symbol(symbol),
+            timeframe=timeframe,
+            start_ts=start_ts,
+            end_ts_exclusive=end_ts_exclusive,
+            fetch_gap=lambda since, until: self.exchange_history.fetch_gap(symbol, timeframe, since, until),
+            persist=persist,
+            fallback_on_cache_error=True,
         )
 
     def load_cached_ohlcv_range(
@@ -179,8 +196,15 @@ class MarketDataService:
         timeframe: str,
         start_date: datetime,
         end_date: datetime,
-    ) -> kline_range_loader.OhlcvRangeResult:
-        return self.range_loader.load_cached_ohlcv_range(symbol, timeframe, start_date, end_date)
+    ) -> OhlcvRangeResult:
+        start_ts = int(start_date.timestamp() * 1000)
+        end_ts_exclusive = int(end_date.timestamp() * 1000) + 1
+        return self.history_ranges.read_cached(
+            storage_symbol=self.symbol_routing.storage_symbol(symbol),
+            timeframe=timeframe,
+            start_ts=start_ts,
+            end_ts_exclusive=end_ts_exclusive,
+        )
 
     def load_live_ohlcv_range(
         self,
@@ -188,8 +212,16 @@ class MarketDataService:
         timeframe: str,
         start_date: datetime,
         end_date: datetime,
-    ) -> kline_range_loader.OhlcvRangeResult:
-        return self.range_loader.load_live_ohlcv_range(symbol, timeframe, start_date, end_date)
+    ) -> OhlcvRangeResult:
+        start_ts = int(start_date.timestamp() * 1000)
+        end_ts_exclusive = int(end_date.timestamp() * 1000) + 1
+        rows = self.exchange_history.fetch_gap(symbol, timeframe, start_ts, end_ts_exclusive)
+        return self.history_ranges.from_live_rows(
+            rows=rows,
+            timeframe=timeframe,
+            start_ts=start_ts,
+            end_ts_exclusive=end_ts_exclusive,
+        )
 
     def save_klines_background(self, symbol: str, timeframe: str, klines: list[list[float]]) -> None:
         try:
@@ -197,11 +229,3 @@ class MarketDataService:
             logger.info(f"[Background] Saved {len(klines)} klines for {symbol}")
         except Exception as e:
             logger.error(f"[Background] Save failed: {e}")
-
-    def _merge_klines(self, *batches: list[list[float]]) -> list[list[float]]:
-        merged: dict[float, list[float]] = {}
-        for batch in batches:
-            for row in batch:
-                if row:
-                    merged[row[0]] = row
-        return sorted(merged.values(), key=lambda item: item[0])

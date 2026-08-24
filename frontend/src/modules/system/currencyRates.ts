@@ -12,7 +12,7 @@ export const ratesUpdatedAt = ref('')
 export const ratesAreFallback = ref(false)
 export const loadingRates = ref(false)
 
-let ratesPromise: Promise<void> | null = null
+let ratesPromise: Promise<boolean> | null = null
 
 export const currencyMetaByCode = computed(() => {
   const map = new Map<string, DisplayCurrencyResponse>()
@@ -26,9 +26,11 @@ export const loadCurrencyRates = async () => {
   ratesPromise = systemApi.getCurrencyRates()
     .then((response) => {
       applyCurrencyRates(response)
+      return true
     })
     .catch((error) => {
       console.warn('Failed to load currency rates:', error)
+      return false
     })
     .finally(() => {
       loadingRates.value = false

@@ -5,6 +5,7 @@ export interface ToolsPageContractResponse {
   dca_defaults: SimulateDcaCommand
   dca_strategies: Array<"standard" | "ema_deviation" | "rsi_dynamic" | "ahr999" | "fear_greed" | "value_averaging">
   dca_multiplier_default: number
+  dca_max_days: number
   compare_defaults: ComparePairsCommand
 }
 
@@ -15,6 +16,7 @@ export interface DCAResponse {
   pricing_symbol?: string | null
   pricing_name?: string | null
   pricing_currency?: string | null
+  data_quality: "exchange" | "synthetic_and_exchange_proxy" | "index_proxy"
   start_date: string
   end_date: string
   target_time: string
@@ -59,6 +61,59 @@ export interface ComparePairsCommand {
   timeframe?: string
 }
 
+export interface PortfolioCollectionResponse {
+  revision: number
+  snapshot: PortfolioBalanceSnapshot
+}
+
+export interface PortfolioCollectionSaveCommand {
+  expectedRevision: number
+  snapshot: PortfolioBalanceSnapshot
+}
+
+export interface PortfolioCollectionChangeCommand {
+  expectedRevision: number
+  activePortfolioId: string
+  changedPortfolios?: Array<PortfolioBalancePortfolio>
+  portfolioOrder: Array<string>
+}
+
+export interface PortfolioDeletedPage {
+  items?: Array<PortfolioDeletedSummary>
+  offset: number
+  limit: number
+  total: number
+}
+
+export interface PortfolioExportDocument {
+  schemaVersion: 2
+  exportedAt: string
+  snapshot: PortfolioBalanceSnapshot
+  deletedPortfolios?: Array<PortfolioBalancePortfolio>
+  simulationResults?: Array<PortfolioSimulationArtifact>
+}
+
+export interface PortfolioCollectionImportCommand {
+  expectedRevision: number
+  mode?: "merge" | "replace"
+  document: PortfolioExportDocument | LegacyPortfolioExportDocument
+}
+
+export interface PortfolioSimulationResultResponse {
+  portfolioId: string
+  result?: PortfolioSimulationSummary | null
+  updatedAt?: string | null
+}
+
+export interface PortfolioSimulationResultCommand {
+  expectedRevision: number
+  result: PortfolioSimulationSummary
+}
+
+export interface PortfolioRestoreCommand {
+  expectedRevision: number
+}
+
 export interface DCAHistoryPointResponse {
   date: string
   price: number
@@ -69,10 +124,121 @@ export interface DCAHistoryPointResponse {
   avg_cost: number
 }
 
+export interface LegacyPortfolioBalancePortfolio {
+  id: string
+  name: string
+  assets: Array<PortfolioBalanceAsset>
+  strategy: PortfolioBalanceStrategy
+  tracking: PortfolioBalanceTracking
+  simulation: PortfolioBalanceSimulation
+  holdingsInitializedAt?: string | null
+  lastPriceUpdatedAt?: string | null
+  seedCapital?: number | null
+  holdingsSource?: "virtual" | null
+  createdAt: string
+  updatedAt: string
+  lastSimulationResult?: PortfolioSimulationSummary | null
+}
+
+export interface LegacyPortfolioBalanceSnapshot {
+  activePortfolioId?: string
+  portfolios?: Array<LegacyPortfolioBalancePortfolio>
+}
+
+export interface LegacyPortfolioExportDocument {
+  schemaVersion: 1
+  exportedAt: string
+  snapshot: LegacyPortfolioBalanceSnapshot
+  deletedPortfolios?: Array<LegacyPortfolioBalancePortfolio>
+}
+
+export interface PortfolioBalanceAsset {
+  id: string
+  symbol?: string
+  targetWeight?: number
+  units?: number
+  currentPrice?: number
+  seedValue?: number
+}
+
+export interface PortfolioBalancePortfolio {
+  id: string
+  name: string
+  assets: Array<PortfolioBalanceAsset>
+  strategy: PortfolioBalanceStrategy
+  tracking: PortfolioBalanceTracking
+  simulation: PortfolioBalanceSimulation
+  holdingsInitializedAt?: string | null
+  lastPriceUpdatedAt?: string | null
+  seedCapital?: number | null
+  holdingsSource?: "virtual" | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PortfolioBalanceSimulation {
+  initialCapital?: number
+  simulationStartDate: string
+}
+
+export interface PortfolioBalanceSnapshot {
+  activePortfolioId?: string
+  portfolios?: Array<PortfolioBalancePortfolio>
+}
+
+export interface PortfolioBalanceStrategy {
+  rebalanceBand?: number
+  minTradeAmount?: number
+  reviewFrequency?: "daily" | "weekly" | "monthly" | "quarterly"
+}
+
+export interface PortfolioBalanceTracking {
+  virtualCapital?: number
+  inceptionDate: string
+}
+
+export interface PortfolioDeletedSummary {
+  id: string
+  name: string
+  deletedAt: string
+}
+
+export interface PortfolioSimulationArtifact {
+  portfolioId: string
+  result: PortfolioSimulationSummary
+}
+
+export interface PortfolioSimulationEquityPoint {
+  id: number
+  timestamp: string
+  equity: number
+  pnl_abs: number
+  drawdown_pct: number
+}
+
+export interface PortfolioSimulationSummary {
+  startDate: string
+  endDate: string
+  initialValue: number
+  finalValue: number
+  totalReturnPct: number
+  annualizedReturnPct?: number | null
+  maxDrawdownPct: number
+  reviewCount: number
+  outOfBandReviewCount: number
+  rebalanceCount: number
+  equityCurve?: Array<PortfolioSimulationEquityPoint>
+}
+
 export interface ToolCandlestickPointResponse {
   time: number
   open: number
   high: number
   low: number
   close: number
+}
+
+export interface ListDeletedPortfoliosQueryParams {
+  offset?: number
+  limit?: number
 }

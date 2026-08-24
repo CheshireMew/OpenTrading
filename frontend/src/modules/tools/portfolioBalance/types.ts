@@ -35,7 +35,6 @@ export interface PortfolioBalancePortfolio {
   strategy: PortfolioBalanceStrategyConfig
   tracking: PortfolioBalanceTrackingConfig
   simulation: PortfolioBalanceSimulationConfig
-  lastSimulationResult?: PortfolioSimulationSummary | null
   holdingsInitializedAt?: string | null
   lastPriceUpdatedAt?: string | null
   seedCapital?: number | null

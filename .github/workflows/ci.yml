@@ -1,5 +1,8 @@
 name: CI
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]
@@ -9,43 +12,53 @@ on:
 jobs:
   backend:
     name: Backend Checks
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-          python-version: '3.12'
+          python-version: '3.12.10'
           cache: 'pip'
+          cache-dependency-path: requirements.lock
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: python -m pip install --require-hashes -r requirements.lock
 
-      - name: Syntax check (all .py files)
-        run: python -m py_compile $(git ls-files '*.py')
+      - name: Syntax check
+        run: python -m compileall -q app config scripts test utils
+
+      - name: Static lint
+        uses: astral-sh/ruff-action@v4.1.0
+        with:
+          version: "0.15.21"
+          args: "check --output-format=github"
+          src: >-
+            app config scripts test utils
 
       - name: Run tests
-        run: pytest --tb=short -q
-        continue-on-error: true
+        run: python -m pytest --tb=short -q
 
   frontend:
-    name: Frontend Build
-    runs-on: ubuntu-latest
+    name: Frontend Contracts and Build
+    runs-on: windows-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-          python-version: '3.12'
+          python-version: '3.12.10'
           cache: 'pip'
-          cache-dependency-path: requirements.txt
+          cache-dependency-path: requirements.lock
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '22.23.0'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
@@ -54,10 +67,22 @@ jobs:
         working-directory: frontend
 
       - name: Install Python dependencies
-        run: pip install -r ../requirements.txt
-        working-directory: frontend
+        run: python -m pip install --require-hashes -r requirements.lock
 
       - name: Build
         run: npm run build:frontend
         env:
           HEIMDALL_PYTHON: python
+
+      - name: Run frontend tests
+        run: npm test
+        working-directory: frontend
+
+      - name: Verify generated contracts are committed
+        run: >-
+          git diff --exit-code --
+          frontend/src/api/errors.ts
+          frontend/src/api/routes.ts
+          frontend/src/modules/market/generatedContracts.ts
+          frontend/src/modules/system/generatedContracts.ts
+          frontend/src/modules/tools/generatedContracts.ts

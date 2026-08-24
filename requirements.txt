@@ -3,7 +3,7 @@
 
 # 核心依赖
 ccxt>=4.0.0              # 加密货币交易所数据接口
-requests>=2.31.0         # HTTP 请求库（用于 LLM API）
+requests>=2.31.0         # 同步外部数据源 HTTP 请求
 httpx>=0.24.0            # 异步 HTTP 请求库
 pytrends>=4.9.2          # Google Trends indicator data
 
@@ -32,10 +32,6 @@ yfinance>=0.2.0          # 公开市场指数历史数据兜底源
 baostock>=0.8.9          # A 股指数日线历史数据兜底源
 akshare>=1.18.0          # 港股指数历史日线数据源
 TA-Lib==0.6.8
-
-# Legacy（可选，Flask已废弃）
-# flask>=3.0.0
-# flask-cors>=4.0.0
 
 # 开发依赖
 pytest>=7.4.0            # 单元测试框架

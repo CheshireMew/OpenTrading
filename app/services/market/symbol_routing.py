@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.domain.market.symbol_catalog import get_market_symbol_source
+from app.services.market.symbol_catalog import get_market_symbol_source
 from app.services.market.exchange_gateway import ExchangeGateway
 
 

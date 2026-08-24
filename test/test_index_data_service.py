@@ -9,7 +9,7 @@ import pandas as pd
 from app.domain.market.constants import KLINE_SYMBOL_MAX_LENGTH
 from app.domain.market.index_catalog import INDEX_CATALOG, get_index_instrument, get_supported_index_symbols
 from app.services.market.index_data_service import IndexDataService
-from config import settings
+from app.services.market.index_source_catalog import get_index_source_binding
 
 
 def ohlcv_row(point) -> list[float]:
@@ -59,6 +59,9 @@ class FakeIndexHistorySources:
     def fetch_usd_fx_rates(self, currency, start_dt, end_dt):
         return {}
 
+    def has_pricing_source(self, instrument):
+        return True
+
 
 class FakeResponse:
     def __init__(self, payload=None, text: str = "") -> None:
@@ -94,19 +97,19 @@ def test_index_catalog_contains_core_us_cn_hk_indexes():
         "HK_HSCEI",
     ]
 
-    assert get_index_instrument("CN_CSI300").eastmoney_secid == "1.000300"
-    assert get_index_instrument("CN_CSI300").sohu_code == "zs_000300"
-    assert get_index_instrument("CN_CSI300").baostock_code == "sh.000300"
-    assert get_index_instrument("CN_CSI_A500").sina_cn_symbol == "sh000510"
+    assert get_index_source_binding("CN_CSI300").eastmoney_secid == "1.000300"
+    assert get_index_source_binding("CN_CSI300").sohu_code == "zs_000300"
+    assert get_index_source_binding("CN_CSI300").baostock_code == "sh.000300"
+    assert get_index_source_binding("CN_CSI_A500").sina_cn_symbol == "sh000510"
     assert get_index_instrument("CN_CSI_A500").pricing_symbol == "sh560610"
     assert "恒生" in get_index_instrument("HK_HSI").aliases
-    assert get_index_instrument("HK_HSI").sina_hk_symbol == "HSI"
+    assert get_index_source_binding("HK_HSI").sina_hk_symbol == "HSI"
     assert get_index_instrument("HK_HSI").pricing_symbol == "02800"
     assert "标普500" in get_index_instrument("US_SP500").aliases
-    assert get_index_instrument("US_SP500").eastmoney_secid == "100.SPX"
-    assert get_index_instrument("US_NASDAQ100").sina_us_symbol == ".NDX"
+    assert get_index_source_binding("US_SP500").eastmoney_secid == "100.SPX"
+    assert get_index_source_binding("US_NASDAQ100").sina_us_symbol == ".NDX"
     assert get_index_instrument("US_NASDAQ100").pricing_symbol == "QQQ"
-    assert get_index_instrument("HK_HSTECH").eastmoney_secid == "124.HSTECH"
+    assert get_index_source_binding("HK_HSTECH").eastmoney_secid == "124.HSTECH"
 
 
 def test_index_storage_symbols_fit_kline_cache_contract():
@@ -263,7 +266,7 @@ def test_pricing_history_uses_proxy_etf_source(monkeypatch):
         ])
     )
     monkeypatch.setitem(sys.modules, "akshare", fake_akshare)
-    monkeypatch.setattr(service, "_fetch_usd_fx_rates", lambda *args, **kwargs: {
+    monkeypatch.setattr(service.history_sources, "fetch_usd_fx_rates", lambda *args, **kwargs: {
         "2024-01-02": 0.128,
         "2024-01-03": 0.129,
     })
@@ -379,7 +382,7 @@ def test_cached_history_is_used_before_upstream_fetch(monkeypatch):
     def fail_fetch(*args, **kwargs):
         raise AssertionError("should not fetch upstream when cache already covers the range")
 
-    monkeypatch.setattr(service, "_fetch_history", fail_fetch)
+    monkeypatch.setattr(service.history_sources, "fetch_history", fail_fetch)
 
     result = service.get_history(
         symbol="CN_CSI300",

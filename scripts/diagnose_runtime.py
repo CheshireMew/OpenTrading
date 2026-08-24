@@ -2,12 +2,6 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import sys
-from pathlib import Path
-
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 
 from app.runtime import build_app_runtime_services
 from config import settings
@@ -50,10 +44,11 @@ async def main() -> None:
     services = build_app_runtime_services("api")
     try:
         print("Runtime")
-        print(f"  database: {services.database_runtime.engine.dialect.name} ({services.database_runtime.source})")
-        print(f"  cache: {type(services.cache_service).__name__}")
-        print(f"  market query: {type(services.market_query_service).__name__}")
-        print(f"  tools: {type(services.tools_app_service).__name__}")
+        api = services.require_api()
+        print(f"  database: {services.infra.database_runtime.engine.dialect.name} ({services.infra.database_runtime.source})")
+        print(f"  cache: {type(services.infra.cache_service).__name__}")
+        print(f"  market query: {type(api.market.query).__name__}")
+        print(f"  tools: {type(api.tools.app).__name__}")
         if args.external:
             await check_external_sources()
     finally:

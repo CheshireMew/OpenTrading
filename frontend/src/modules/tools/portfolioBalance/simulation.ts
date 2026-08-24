@@ -1,5 +1,6 @@
 import type {
   PortfolioBalanceAssetInput,
+  PortfolioBalancePortfolio,
   PortfolioSimulationSummary,
   PortfolioSimulationEquityPoint,
   PortfolioBalanceSimulationConfig,
@@ -27,6 +28,15 @@ export interface PortfolioHistoryPoint {
   date: string
   close: number
 }
+
+export const portfolioSimulationInputKey = (portfolio: PortfolioBalancePortfolio) => JSON.stringify({
+  assets: portfolio.assets.map((asset) => ({
+    symbol: asset.symbol,
+    targetWeight: asset.targetWeight,
+  })),
+  strategy: portfolio.strategy,
+  simulation: portfolio.simulation,
+})
 
 export const buildPortfolioSyntheticHistory = (
   symbol: string,

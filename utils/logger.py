@@ -21,9 +21,9 @@ def setup_logger(name="AI-Guide"):
     logger.setLevel(level)
 
     # 时区转换器
-    from utils.time_manager import TimeManager
+    from utils.time import now_in_timezone
     def time_converter(seconds):
-        return TimeManager.get_now().timetuple()
+        return now_in_timezone().timetuple()
 
     # 日志格式
     formatter = logging.Formatter(

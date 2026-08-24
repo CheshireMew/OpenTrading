@@ -1,21 +1,25 @@
 import { defineStore } from 'pinia'
 import { marketHistoryApi } from './api'
 import type { OhlcvPointResponse } from './contracts'
-import { isCacheFresh, MARKET_CACHE_TTL_MS, writeCacheEntry, type CacheEntry } from './cacheTypes'
-import { createResourceCache } from './resourceCache'
+import { isCacheFresh, MARKET_CACHE_TTL_MS, touchCacheEntry, writeCacheEntry } from './cacheTypes'
+import { createResourceLoader, createResourceState, type ResourceState } from './resourceCache'
 
 interface KlineState {
-  klineCache: Record<string, CacheEntry<OhlcvPointResponse[]>>
+  resources: ResourceState<OhlcvPointResponse[]>
 }
 
-const klineResource = createResourceCache()
+const klineResource = createResourceLoader<OhlcvPointResponse[]>()
 
 export const useKlineStore = defineStore('marketKline', {
   state: (): KlineState => ({
-    klineCache: {},
+    resources: createResourceState<OhlcvPointResponse[]>(24),
   }),
 
   actions: {
+    readKlineCache(key: string): OhlcvPointResponse[] {
+      return touchCacheEntry(this.resources.cache, key)?.data || []
+    },
+
     readKlineSlice(data: OhlcvPointResponse[] | null | undefined, limit: number): OhlcvPointResponse[] | null {
       if (!Array.isArray(data) || data.length === 0) return null
       if (limit <= 0 || data.length <= limit) return data
@@ -23,7 +27,7 @@ export const useKlineStore = defineStore('marketKline', {
     },
 
     setKlineCache(key: string, data: OhlcvPointResponse[]) {
-      writeCacheEntry(this.klineCache, key, data)
+      writeCacheEntry(this.resources.cache, key, data, this.resources.maxEntries)
     },
 
     mergeKlines(...batches: Array<OhlcvPointResponse[] | null | undefined>): OhlcvPointResponse[] {
@@ -58,18 +62,19 @@ export const useKlineStore = defineStore('marketKline', {
       const key = `${symbol}:${timeframe}`
       const now = Date.now()
       const forceRefresh = Boolean(options.force)
-      const cachedParams = this.klineCache[key]
+      const cachedParams = this.resources.cache[key]
       let cachedData: OhlcvPointResponse[] | null = null
 
       if (cachedParams) {
+        touchCacheEntry(this.resources.cache, key)
         cachedData = cachedParams.data
         if (!forceRefresh && isCacheFresh(cachedParams, MARKET_CACHE_TTL_MS.klineLive, now) && cachedData.length >= limit) {
           return this.readKlineSlice(cachedData, limit)
         }
       }
 
-      const fetchPromise = klineResource.load({
-        cache: this.klineCache,
+      let fetchError: unknown = null
+      const fetchPromise = klineResource.load(this.resources, {
         key,
         pendingKey: `${key}:limit:${limit}`,
         ttlMs: MARKET_CACHE_TTL_MS.klineLive,
@@ -79,7 +84,8 @@ export const useKlineStore = defineStore('marketKline', {
           const items = res.items || []
           return items.length ? items : null
         },
-        onLoadError: (error) => {
+        onError: (error) => {
+          fetchError = error
           console.error('Kline fetch failed', error)
         },
       }).then((data) => this.readKlineSlice(data, limit))
@@ -89,6 +95,7 @@ export const useKlineStore = defineStore('marketKline', {
         return this.readKlineSlice(cachedData, limit)
       }
       const freshData = await fetchPromise
+      if (!freshData && !cachedData && fetchError) throw fetchError
       return freshData || this.readKlineSlice(cachedData, limit)
     },
 
@@ -99,10 +106,37 @@ export const useKlineStore = defineStore('marketKline', {
       maxLength: number = 1000,
     ): OhlcvPointResponse[] {
       const key = `${symbol}:${timeframe}`
-      const current = this.klineCache[key]?.data || []
+      const current = this.resources.cache[key]?.data || []
+      if (tail.length === 0) return current
+
+      const unchanged = tail.every((row) => {
+        let low = 0
+        let high = current.length - 1
+        while (low <= high) {
+          const middle = (low + high) >> 1
+          const candidate = current[middle]
+          if (candidate.timestamp === row.timestamp) {
+            return this.sameKline(candidate, row)
+          }
+          if (candidate.timestamp < row.timestamp) low = middle + 1
+          else high = middle - 1
+        }
+        return false
+      })
+      if (unchanged) return current
+
       const trimmed = this.mergeKlines(current, tail).slice(-maxLength)
       this.setKlineCache(key, trimmed)
       return trimmed
+    },
+
+    sameKline(left: OhlcvPointResponse, right: OhlcvPointResponse): boolean {
+      return left.timestamp === right.timestamp
+        && left.open === right.open
+        && left.high === right.high
+        && left.low === right.low
+        && left.close === right.close
+        && left.volume === right.volume
     },
 
     prependKlineHistory(
@@ -112,7 +146,7 @@ export const useKlineStore = defineStore('marketKline', {
       maxLength: number = 5000,
     ): OhlcvPointResponse[] {
       const key = `${symbol}:${timeframe}`
-      const current = this.klineCache[key]?.data || []
+      const current = this.resources.cache[key]?.data || []
       const trimmed = this.mergeKlines(history, current).slice(-maxLength)
       this.setKlineCache(key, trimmed)
       return trimmed

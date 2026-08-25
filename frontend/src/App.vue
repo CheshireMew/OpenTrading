@@ -79,7 +79,7 @@
       </nav>
     </aside>
 
-    <main id="main-content" class="app-main min-h-0 min-w-0 flex-1 overflow-auto transition-colors duration-300" tabindex="-1">
+    <main ref="mainContentRef" id="main-content" class="app-main min-h-0 min-w-0 flex-1 overflow-auto transition-colors duration-300" tabindex="-1">
       <div v-if="bootstrapError" role="alert" class="m-4 flex items-center justify-between gap-4 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-950/30 dark:text-rose-200">
         <span>{{ t('app.bootstrapLoadFailed') }}</span>
         <button type="button" class="font-semibold underline disabled:opacity-60" :disabled="bootstrapLoading" @click="loadBootstrapResources">
@@ -96,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect, type Component } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import {
@@ -108,12 +108,15 @@ import {
   ClockIcon,
   MoonIcon,
   SunIcon,
-  BuildingLibraryIcon,
   CubeTransparentIcon,
   LanguageIcon,
-  CircleStackIcon,
   Bars3Icon,
   XMarkIcon,
+  BookmarkSquareIcon,
+  PresentationChartLineIcon,
+  FunnelIcon,
+  DocumentTextIcon,
+  CircleStackIcon,
 } from '@heroicons/vue/24/outline'
 import {
   APP_KEEP_ALIVE_ROUTE_NAMES,
@@ -126,10 +129,12 @@ import { useMoney } from '@/composables/useMoney'
 import { useSymbolCatalog } from '@/modules/market'
 import { setAppLocale, toggleAppLocale } from '@/i18n/config'
 import { useModalDialog } from '@/composables/useModalDialog'
+import { useDesktopAlertNotifications } from '@/modules/research/useDesktopAlertNotifications'
 
 const { locale, t } = useI18n()
 const route = useRoute()
 const sidebarOpen = ref(false)
+const mainContentRef = ref<HTMLElement | null>(null)
 const bootstrapError = ref(false)
 const bootstrapLoading = ref(false)
 const desktopNavigation = ref(false)
@@ -137,6 +142,7 @@ const navigationModalOpen = computed(() => sidebarOpen.value && !desktopNavigati
 const { theme, toggleTheme } = useTheme()
 const { loadCurrencyRates } = useMoney()
 const { loadSymbols } = useSymbolCatalog()
+useDesktopAlertNotifications()
 const keepAliveRoutes = APP_KEEP_ALIVE_ROUTE_NAMES
 const iconMap: Record<AppNavIconName, Component> = {
   ChartBarSquareIcon,
@@ -145,8 +151,11 @@ const iconMap: Record<AppNavIconName, Component> = {
   ArrowsRightLeftIcon,
   CogIcon,
   ClockIcon,
-  BuildingLibraryIcon,
   CubeTransparentIcon,
+  BookmarkSquareIcon,
+  PresentationChartLineIcon,
+  FunnelIcon,
+  DocumentTextIcon,
   CircleStackIcon,
 }
 const navSections = APP_NAV_SECTIONS.map((section) => ({
@@ -188,6 +197,12 @@ const loadBootstrapResources = async () => {
 }
 
 watch(() => route.fullPath, closeSidebar)
+watch(() => route.path, async (_next, previous) => {
+  if (!previous) return
+  await nextTick()
+  mainContentRef.value?.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  mainContentRef.value?.focus({ preventScroll: true })
+})
 
 watchEffect(() => {
   document.documentElement.lang = locale.value
@@ -267,6 +282,8 @@ html.dark .app-shell {
 .app-icon-button {
   align-items: center;
   justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   padding: 0.5rem;
   color: var(--app-nav);
 }
@@ -345,5 +362,7 @@ html.dark .app-shell {
 
 .app-main {
   background: var(--app-main-bg);
+  container-name: app-content;
+  container-type: inline-size;
 }
 </style>

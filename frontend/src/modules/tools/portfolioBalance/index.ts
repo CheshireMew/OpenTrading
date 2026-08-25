@@ -1,5 +1,5 @@
 export { buildPortfolioSimulationSummary, buildPortfolioSyntheticHistory } from './simulation'
-export { applyLatestMarketPrices, clearPortfolioHoldings, seedPortfolioHoldingsFromMarket } from './holdings'
+export { applyLatestMarketPrices, applyPortfolioLedgerHoldings } from './holdings'
 export {
   collectPortfolioMarketTargets,
   computePortfolioAssetHoldingValue,

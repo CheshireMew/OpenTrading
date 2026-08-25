@@ -20,8 +20,10 @@ from app.infra.db.schema import (
     PortfolioCollectionState,
     PortfolioRecord,
     PortfolioSimulationResultRecord as PortfolioSimulationResultRow,
+    PortfolioTransactionRecord,
 )
 from utils.time import utc_now_naive
+from uuid import uuid4
 
 
 COLLECTION_ID = "default"
@@ -52,6 +54,226 @@ class PortfolioRepository:
                 active_portfolio_id=active_portfolio_id,
                 records=records,
             )
+
+    def get_ledger_record(self, portfolio_id: str) -> dict:
+        with self._database_runtime.session_scope() as session:
+            portfolio = self._require_active_portfolio(session, portfolio_id)
+            rows = list(
+                session.scalars(
+                    select(PortfolioTransactionRecord)
+                    .where(PortfolioTransactionRecord.portfolio_id == portfolio_id)
+                    .order_by(
+                        PortfolioTransactionRecord.archived_at.is_not(None),
+                        PortfolioTransactionRecord.occurred_at.desc(),
+                        PortfolioTransactionRecord.created_at.desc(),
+                    )
+                )
+            )
+            return {
+                "portfolio_payload": dict(portfolio.payload),
+                "transactions": [
+                    self._transaction_payload(row)
+                    for row in rows
+                    if row.archived_at is None
+                ],
+                "archived_transactions": [
+                    self._transaction_payload(row)
+                    for row in rows
+                    if row.archived_at is not None
+                ],
+            }
+
+    def create_transaction(self, portfolio_id: str, payload: dict) -> dict:
+        with self._database_runtime.session_scope() as session:
+            self._require_active_portfolio(session, portfolio_id)
+            self._assert_external_id_available(
+                session,
+                portfolio_id,
+                payload.get("external_id"),
+            )
+            now = utc_now_naive()
+            row = PortfolioTransactionRecord(
+                id=uuid4().hex,
+                portfolio_id=portfolio_id,
+                version=1,
+                created_at=now,
+                updated_at=now,
+                **payload,
+            )
+            session.add(row)
+            session.flush()
+            return self._transaction_payload(row)
+
+    def update_transaction(
+        self,
+        portfolio_id: str,
+        transaction_id: str,
+        expected_version: int,
+        payload: dict,
+    ) -> dict:
+        with self._database_runtime.session_scope() as session:
+            self._require_active_portfolio(session, portfolio_id)
+            row = self._require_transaction(
+                session,
+                portfolio_id,
+                transaction_id,
+                expected_version,
+            )
+            self._assert_external_id_available(
+                session,
+                portfolio_id,
+                payload.get("external_id"),
+                excluding_id=row.id,
+            )
+            for key, value in payload.items():
+                setattr(row, key, value)
+            row.version += 1
+            row.updated_at = utc_now_naive()
+            session.flush()
+            return self._transaction_payload(row)
+
+    def set_transaction_archived(
+        self,
+        portfolio_id: str,
+        transaction_id: str,
+        expected_version: int,
+        archived: bool,
+    ) -> dict:
+        with self._database_runtime.session_scope() as session:
+            self._require_active_portfolio(session, portfolio_id)
+            row = self._require_transaction(
+                session,
+                portfolio_id,
+                transaction_id,
+                expected_version,
+            )
+            if not archived:
+                self._assert_external_id_available(
+                    session,
+                    portfolio_id,
+                    row.external_id,
+                    excluding_id=row.id,
+                )
+            row.archived_at = utc_now_naive() if archived else None
+            row.version += 1
+            row.updated_at = utc_now_naive()
+            session.flush()
+            return self._transaction_payload(row)
+
+    def import_transactions(
+        self,
+        portfolio_id: str,
+        payloads: list[dict],
+        *,
+        replace: bool,
+    ) -> tuple[int, int]:
+        with self._database_runtime.session_scope() as session:
+            self._require_active_portfolio(session, portfolio_id)
+            now = utc_now_naive()
+            archived_count = 0
+            if replace:
+                active_rows = list(
+                    session.scalars(
+                        select(PortfolioTransactionRecord).where(
+                            PortfolioTransactionRecord.portfolio_id == portfolio_id,
+                            PortfolioTransactionRecord.archived_at.is_(None),
+                        )
+                    )
+                )
+                for row in active_rows:
+                    row.archived_at = now
+                    row.version += 1
+                    row.updated_at = now
+                archived_count = len(active_rows)
+
+            batch_external_ids = [
+                str(payload["external_id"])
+                for payload in payloads
+                if payload.get("external_id")
+            ]
+            if len(batch_external_ids) != len(set(batch_external_ids)):
+                raise PortfolioCollectionMismatchError("导入文件中的外部流水编号不能重复")
+            if not replace:
+                for external_id in batch_external_ids:
+                    self._assert_external_id_available(session, portfolio_id, external_id)
+
+            for payload in payloads:
+                session.add(
+                    PortfolioTransactionRecord(
+                        id=uuid4().hex,
+                        portfolio_id=portfolio_id,
+                        version=1,
+                        created_at=now,
+                        updated_at=now,
+                        **payload,
+                    )
+                )
+            session.flush()
+            return len(payloads), archived_count
+
+    @staticmethod
+    def _require_active_portfolio(session, portfolio_id: str) -> PortfolioRecord:
+        row = session.get(PortfolioRecord, portfolio_id)
+        if row is None or row.deleted_at is not None:
+            raise PortfolioNotFoundError("没有这个活动组合")
+        return row
+
+    @staticmethod
+    def _require_transaction(
+        session,
+        portfolio_id: str,
+        transaction_id: str,
+        expected_version: int,
+    ) -> PortfolioTransactionRecord:
+        row = session.get(PortfolioTransactionRecord, transaction_id)
+        if row is None or row.portfolio_id != portfolio_id:
+            raise PortfolioNotFoundError("组合流水不存在")
+        if row.version != expected_version:
+            raise PortfolioRevisionConflictError("组合流水已在其它窗口更新，请重新载入后再试")
+        return row
+
+    @staticmethod
+    def _assert_external_id_available(
+        session,
+        portfolio_id: str,
+        external_id: str | None,
+        *,
+        excluding_id: str | None = None,
+    ) -> None:
+        if not external_id:
+            return
+        statement = select(PortfolioTransactionRecord.id).where(
+            PortfolioTransactionRecord.portfolio_id == portfolio_id,
+            PortfolioTransactionRecord.external_id == external_id,
+            PortfolioTransactionRecord.archived_at.is_(None),
+        )
+        if excluding_id:
+            statement = statement.where(PortfolioTransactionRecord.id != excluding_id)
+        if session.scalar(statement) is not None:
+            raise PortfolioCollectionMismatchError(f"外部流水编号 {external_id} 已存在")
+
+    @staticmethod
+    def _transaction_payload(row: PortfolioTransactionRecord) -> dict:
+        return {
+            "id": row.id,
+            "portfolioId": row.portfolio_id,
+            "transactionType": row.transaction_type,
+            "symbol": row.symbol,
+            "quantity": row.quantity,
+            "unitPrice": row.unit_price,
+            "cashAmount": row.cash_amount,
+            "fee": row.fee,
+            "currency": row.currency,
+            "feeCurrency": row.fee_currency,
+            "externalId": row.external_id,
+            "note": row.note,
+            "metadata": dict(row.metadata_payload or {}),
+            "version": row.version,
+            "occurredAt": row.occurred_at,
+            "archivedAt": row.archived_at,
+            "createdAt": row.created_at,
+            "updatedAt": row.updated_at,
+        }
 
     def list_deleted(self, *, offset: int, limit: int) -> PortfolioDeletedPageRecord:
         with self._database_runtime.session_scope() as session:

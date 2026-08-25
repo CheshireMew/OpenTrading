@@ -4,6 +4,33 @@ from pydantic import BaseModel, Field
 
 from app.contracts.json_types import JsonObject
 
+
+class BinanceWeb3HeatRankMetricsResponse(BaseModel):
+    price: float | None = None
+    market_cap: float | None = None
+    liquidity: float | None = None
+    holders: int | None = None
+    launch_time: int | None = None
+    percent_change_1h: float | None = None
+    percent_change_24h: float | None = None
+    volume_1h: float | None = None
+    volume_4h: float | None = None
+    volume_24h: float | None = None
+    count_1h: int | None = None
+    count_24h: int | None = None
+    unique_trader_1h: int | None = None
+    unique_trader_24h: int | None = None
+    kyc_holders: int | None = None
+    social_hype: float | None = None
+    social_hype_normalized: float | None = None
+    smart_money_inflow: float | None = None
+    smart_money_traders: int | None = None
+    smart_money_inflow_normalized: float | None = None
+    smart_money_risk_level: int | None = None
+    meme_score: float | None = None
+    meme_score_normalized: float | None = None
+
+
 class BinanceWeb3AddressPnlItemResponse(BaseModel):
     address: str | None = None
     address_label: str | None = None
@@ -38,7 +65,7 @@ class BinanceWeb3HeatRankItemResponse(BaseModel):
     ranks: dict[str, int] = Field(default_factory=dict)
     components: dict[str, float] = Field(default_factory=dict)
     penalties: dict[str, float] = Field(default_factory=dict)
-    metrics: JsonObject = Field(default_factory=dict)
+    metrics: BinanceWeb3HeatRankMetricsResponse = Field(default_factory=BinanceWeb3HeatRankMetricsResponse)
     audit_info: JsonObject = Field(default_factory=dict)
     sentiment: str | None = None
     summary: str | None = None

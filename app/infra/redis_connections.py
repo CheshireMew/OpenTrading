@@ -3,10 +3,16 @@ from __future__ import annotations
 import time
 from typing import Any
 
-import redis
-import redis.asyncio as async_redis
-from redis.backoff import NoBackoff
-from redis.retry import Retry
+try:
+    import redis
+    import redis.asyncio as async_redis
+    from redis.backoff import NoBackoff
+    from redis.retry import Retry
+except ModuleNotFoundError:
+    redis = None
+    async_redis = None
+    NoBackoff = None
+    Retry = None
 
 from utils.logger import logger
 
@@ -18,12 +24,13 @@ class RedisConnections:
         self.async_client = None
         self._last_connection_attempt = 0.0
         self._last_async_connection_attempt = 0.0
+        self.available = redis is not None
 
     def _connection_kwargs(self) -> dict[str, Any]:
         host = str(self.settings.REDIS_HOST).strip()
         if host.lower() == "localhost":
             host = "127.0.0.1"
-        return {
+        options = {
             "host": host,
             "port": self.settings.REDIS_PORT,
             "db": self.settings.REDIS_DB,
@@ -31,10 +38,12 @@ class RedisConnections:
             "decode_responses": True,
             "socket_connect_timeout": max(float(self.settings.REDIS_CONNECT_TIMEOUT), 0.05),
             "socket_timeout": max(float(self.settings.REDIS_SOCKET_TIMEOUT), 0.05),
-            "retry": Retry(NoBackoff(), 0),
             "retry_on_error": [],
             "health_check_interval": 30,
         }
+        if Retry is not None and NoBackoff is not None:
+            options["retry"] = Retry(NoBackoff(), 0)
+        return options
 
     def _may_retry(self, last_attempt: float, *, force: bool) -> bool:
         return force or last_attempt <= 0 or (
@@ -42,6 +51,8 @@ class RedisConnections:
         )
 
     def connect(self, *, force: bool = False) -> None:
+        if redis is None:
+            return
         if self.client is not None or not self._may_retry(self._last_connection_attempt, force=force):
             return
         self._last_connection_attempt = time.monotonic()
@@ -58,6 +69,8 @@ class RedisConnections:
                 client.connection_pool.disconnect()
 
     async def connect_async(self, *, force: bool = False) -> None:
+        if async_redis is None:
+            return
         if self.async_client is not None or not self._may_retry(self._last_async_connection_attempt, force=force):
             return
         self._last_async_connection_attempt = time.monotonic()

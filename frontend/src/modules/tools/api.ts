@@ -14,9 +14,21 @@ import type {
   PortfolioSimulationResultCommand,
   PortfolioSimulationResultResponse,
   PortfolioRestoreCommand,
+  PortfolioLedgerResponse,
+  PortfolioTransactionArchiveCommand,
+  PortfolioTransactionCreateCommand,
+  PortfolioTransactionImportCommand,
+  PortfolioTransactionImportResponse,
+  PortfolioTransactionResponse,
+  PortfolioTransactionUpdateCommand,
+  PortfolioAnalyticsCommand,
+  PortfolioAnalyticsResponse,
 } from './contracts'
 
 export const toolsApi = {
+  analyzePortfolio(portfolioId: string, command: PortfolioAnalyticsCommand): Promise<PortfolioAnalyticsResponse> {
+    return apiPost('analyze_portfolio', command, { path: { portfolio_id: portfolioId } })
+  },
   getContract(): Promise<ToolsPageContractResponse> {
     return apiGet('get_tools_contract')
   },
@@ -66,6 +78,45 @@ export const toolsApi = {
     command: PortfolioSimulationResultCommand,
   ): Promise<PortfolioSimulationResultResponse> {
     return apiPut('save_portfolio_simulation', command, { path: { portfolio_id: portfolioId } })
+  },
+
+  getPortfolioLedger(portfolioId: string): Promise<PortfolioLedgerResponse> {
+    return apiGet('get_portfolio_ledger', { path: { portfolio_id: portfolioId } })
+  },
+
+  createPortfolioTransaction(
+    portfolioId: string,
+    command: PortfolioTransactionCreateCommand,
+  ): Promise<PortfolioTransactionResponse> {
+    return apiPost('create_portfolio_transaction', command, { path: { portfolio_id: portfolioId } })
+  },
+
+  updatePortfolioTransaction(
+    portfolioId: string,
+    transactionId: string,
+    command: PortfolioTransactionUpdateCommand,
+  ): Promise<PortfolioTransactionResponse> {
+    return apiPut('update_portfolio_transaction', command, { path: { portfolio_id: portfolioId, transaction_id: transactionId } })
+  },
+
+  setPortfolioTransactionArchived(
+    portfolioId: string,
+    transactionId: string,
+    command: PortfolioTransactionArchiveCommand,
+    archived: boolean,
+  ): Promise<PortfolioTransactionResponse> {
+    return apiPost(
+      archived ? 'archive_portfolio_transaction' : 'restore_portfolio_transaction',
+      command,
+      { path: { portfolio_id: portfolioId, transaction_id: transactionId } },
+    )
+  },
+
+  importPortfolioTransactions(
+    portfolioId: string,
+    command: PortfolioTransactionImportCommand,
+  ): Promise<PortfolioTransactionImportResponse> {
+    return apiPost('import_portfolio_transactions', command, { path: { portfolio_id: portfolioId } })
   },
 }
 

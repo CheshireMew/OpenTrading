@@ -109,6 +109,7 @@ export function useHalvingPage() {
     retry: marketData.retry,
     chartCanvas,
     currentPrice: marketData.currentPrice,
+    currentPriceUpdatedAt: marketData.currentPriceUpdatedAt,
     showPhases,
     scaleType,
     nextHalvingDate,

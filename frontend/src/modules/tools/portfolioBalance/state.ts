@@ -28,6 +28,7 @@ export const createPortfolioBalancePageState = (defaultPortfolioName: string) =>
   const storageLoading = ref(true)
   const storageSaving = ref(false)
   const storageReady = ref(false)
+  const portfolioTransitioning = ref(false)
   const storageError = ref('')
   const marketLoading = ref(false)
   const simulationLoading = ref(false)
@@ -126,6 +127,7 @@ export const createPortfolioBalancePageState = (defaultPortfolioName: string) =>
     storageLoading,
     storageSaving,
     storageReady,
+    portfolioTransitioning,
     storageError,
     marketLoading,
     simulationLoading,

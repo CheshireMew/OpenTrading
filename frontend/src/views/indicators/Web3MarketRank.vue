@@ -7,12 +7,13 @@
             <p class="app-eyebrow">{{ t('web3Rank.eyebrow') }}</p>
             <h2 class="app-title mt-2">{{ t('web3Rank.title') }}</h2>
             <p class="app-subtitle mt-3">{{ t('web3Rank.subtitle') }}</p>
+            <p v-if="updatedAt" class="app-muted mt-2 text-xs">{{ t('web3Rank.updatedAt', { time: new Date(updatedAt).toLocaleString() }) }}</p>
           </div>
 
           <div class="flex flex-wrap items-end gap-4">
             <div class="w-40">
-              <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400">{{ t('web3Rank.chain') }}</label>
-              <select v-model="chainId" class="app-control w-full">
+              <label for="web3-chain" class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400">{{ t('web3Rank.chain') }}</label>
+              <select id="web3-chain" v-model="chainId" class="app-control w-full">
                 <option v-for="item in chainOptions" :key="item.value" :value="item.value">{{ item.label }}</option>
               </select>
             </div>
@@ -20,7 +21,7 @@
         </div>
       </section>
 
-      <section v-if="error" class="border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+      <section v-if="error" role="alert" class="border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
         {{ error }}
       </section>
 
@@ -32,7 +33,7 @@
           </div>
           <button
             type="button"
-            class="app-button-primary px-4 py-2"
+            class="app-button-primary app-touch-target px-4 py-2"
             :disabled="web3Loading"
             @click="fetchWeb3HeatRank"
           >
@@ -53,7 +54,7 @@
                   <button
                     type="button"
                     @click="toggleWeb3Sort('percent_change_24h')"
-                    class="inline-flex items-center gap-2 transition"
+                    class="app-touch-target inline-flex items-center gap-2 transition"
                     :class="web3Sort.field === 'percent_change_24h' ? 'text-slate-900 dark:text-white' : 'hover:text-slate-700 dark:hover:text-slate-200'"
                   >
                     <span>{{ t('web3Rank.columns.change24h') }}</span>
@@ -64,7 +65,7 @@
                   <button
                     type="button"
                     @click="toggleWeb3Sort('market_cap')"
-                    class="inline-flex items-center gap-2 transition"
+                    class="app-touch-target inline-flex items-center gap-2 transition"
                     :class="web3Sort.field === 'market_cap' ? 'text-slate-900 dark:text-white' : 'hover:text-slate-700 dark:hover:text-slate-200'"
                   >
                     <span>{{ t('web3Rank.columns.marketCap') }}</span>
@@ -75,7 +76,7 @@
                   <button
                     type="button"
                     @click="toggleWeb3Sort('liquidity')"
-                    class="inline-flex items-center gap-2 transition"
+                    class="app-touch-target inline-flex items-center gap-2 transition"
                     :class="web3Sort.field === 'liquidity' ? 'text-slate-900 dark:text-white' : 'hover:text-slate-700 dark:hover:text-slate-200'"
                   >
                     <span>{{ t('web3Rank.columns.liquidity') }}</span>
@@ -89,15 +90,14 @@
               <tr
                 v-for="item in web3HeatRank"
                 :key="`${item.chain_id}-${item.contract_address}`"
-                class="app-table-row cursor-pointer hover:bg-[#edf3ee] dark:hover:bg-emerald-500/10"
-                @click="openWeb3Token(item)"
+                class="app-table-row"
               >
                 <td class="px-5 py-4 text-slate-500 dark:text-slate-400">{{ item.rank ?? '--' }}</td>
                 <td class="px-5 py-4">
                   <div class="flex items-center gap-3">
                     <Web3TokenIcon :src="item.icon_url" :symbol="item.symbol" />
                     <div>
-                      <button type="button" class="font-semibold text-stone-950 transition hover:text-[#0f6b4f] dark:text-white dark:hover:text-emerald-300">
+                      <button type="button" class="app-touch-target font-semibold text-stone-950 transition hover:text-[#0f6b4f] dark:text-white dark:hover:text-emerald-300" @click="openWeb3Token(item)">
                         {{ item.symbol || '--' }}
                       </button>
                       <div class="max-w-[160px] truncate text-xs text-slate-400 dark:text-slate-500">{{ item.contract_address }}</div>
@@ -144,7 +144,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="item in addressPnl" :key="item.address" class="app-table-row">
+              <tr v-for="(item, index) in addressPnl" :key="item.address || `address-${index}`" class="app-table-row">
                 <td class="px-5 py-4 font-medium text-stone-950 dark:text-white">{{ item.address_label || item.address }}</td>
                 <td class="px-5 py-4" :class="changeClass(item.realized_pnl)">{{ formatCompact(item.realized_pnl) }}</td>
                 <td class="px-5 py-4 text-stone-600 dark:text-slate-300">{{ formatPercent(item.win_rate) }}</td>
@@ -195,6 +195,7 @@ const {
   chainId,
   chainOptions,
   addressPnl,
+  updatedAt,
   web3HeatRank,
   web3Loading,
   web3Error,

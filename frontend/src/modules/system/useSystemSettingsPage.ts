@@ -36,6 +36,12 @@ export const useSystemSettingsPage = () => {
   const error = ref('')
   const fredMessage = ref('')
   const fredError = ref('')
+  const systemLoading = ref(true)
+  const llmLoading = ref(true)
+  const fredLoading = ref(true)
+  const systemLoadError = ref('')
+  const llmLoadError = ref('')
+  const fredLoadError = ref('')
   const form = reactive<LlmConfigForm>({
     provider: 'deepseek',
     apiKeySet: false,
@@ -92,27 +98,45 @@ export const useSystemSettingsPage = () => {
   }
 
   const handleProviderChange = () => {
-    form.apiKeySet = false
-    form.apiKeyPreview = ''
-    apiKeyDraft.value = ''
     applyProviderPreset()
   }
 
-  const loadConfig = async () => {
-    error.value = ''
-    fredError.value = ''
+  const loadSystemConfig = async () => {
+    systemLoading.value = true
+    systemLoadError.value = ''
     try {
-      const [systemResponse, llmResponse, fredResponse] = await Promise.all([
-        systemApi.getConfig(),
-        systemApi.getLlmConfig(),
-        systemApi.getFredApiConfig(),
-      ])
-      systemConfig.value = systemResponse
-      applyConfig(llmResponse)
-      applyFredConfig(fredResponse)
+      systemConfig.value = await systemApi.getConfig()
     } catch (err) {
       console.error('Load system config failed', err)
-      error.value = t('settings.loadFailed')
+      systemLoadError.value = t('settings.loadFailed')
+    } finally {
+      systemLoading.value = false
+    }
+  }
+
+  const loadLlmConfig = async () => {
+    llmLoading.value = true
+    llmLoadError.value = ''
+    try {
+      applyConfig(await systemApi.getLlmConfig())
+    } catch (err) {
+      console.error('Load LLM config failed', err)
+      llmLoadError.value = t('settings.loadFailed')
+    } finally {
+      llmLoading.value = false
+    }
+  }
+
+  const loadFredConfig = async () => {
+    fredLoading.value = true
+    fredLoadError.value = ''
+    try {
+      applyFredConfig(await systemApi.getFredApiConfig())
+    } catch (err) {
+      console.error('Load FRED config failed', err)
+      fredLoadError.value = t('settings.loadFailed')
+    } finally {
+      fredLoading.value = false
     }
   }
 
@@ -196,7 +220,9 @@ export const useSystemSettingsPage = () => {
     }
   }
 
-  onMounted(loadConfig)
+  onMounted(() => {
+    void Promise.all([loadSystemConfig(), loadLlmConfig(), loadFredConfig()])
+  })
 
   return {
     systemConfig,
@@ -209,6 +235,12 @@ export const useSystemSettingsPage = () => {
     error,
     fredMessage,
     fredError,
+    systemLoading,
+    llmLoading,
+    fredLoading,
+    systemLoadError,
+    llmLoadError,
+    fredLoadError,
     form,
     fredForm,
     selectedPreset,
@@ -221,6 +253,9 @@ export const useSystemSettingsPage = () => {
     saveFredConfig,
     clearLlmApiKey,
     clearFredApiKey,
+    loadSystemConfig,
+    loadLlmConfig,
+    loadFredConfig,
   }
 }
 

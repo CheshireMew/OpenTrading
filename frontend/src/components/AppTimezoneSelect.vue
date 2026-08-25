@@ -1,6 +1,8 @@
 <template>
   <select
+    :id="id"
     :value="selectedValue"
+    :aria-label="ariaLabel"
     class="app-control w-full px-3 py-2"
     @change="handleChange"
   >
@@ -16,6 +18,8 @@ import { useUserPreferences } from '@/composables/useUserPreferences'
 
 const props = defineProps<{
   modelValue?: string
+  id?: string
+  ariaLabel?: string
 }>()
 const emit = defineEmits<{
   'update:modelValue': [value: string]

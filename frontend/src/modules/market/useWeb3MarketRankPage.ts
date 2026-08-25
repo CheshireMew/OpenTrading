@@ -30,6 +30,7 @@ export function useWeb3MarketRankPage() {
   const chainId = ref(WEB3_ALL_CHAIN_ID)
   const heatRank = useWeb3HeatRankPanel(chainId)
   const addressPnl = ref<BinanceWeb3AddressPnlItemResponse[]>([])
+  const addressPnlUpdatedAt = ref<string | null>(null)
   let addressPnlFetchState: { key: string; task: Promise<void> } | null = null
 
   const chainOptions = computed(() => (
@@ -65,6 +66,7 @@ export function useWeb3MarketRankPage() {
         const pnlRes = await binanceWeb3Api.getBinanceWeb3AddressPnlRank({ chain_id: selectedChainId || '56', page_size: 10 })
         if (requestKey !== addressPnlRequestKey()) return
         addressPnl.value = pnlRes?.items || []
+        addressPnlUpdatedAt.value = new Date().toISOString()
       } catch (err) {
         if (requestKey !== addressPnlRequestKey()) return
         console.error('Failed to load Binance Web3 rank page', err)
@@ -92,12 +94,20 @@ export function useWeb3MarketRankPage() {
     void heatRank.fetchWeb3HeatRank()
   })
 
+  const updatedAt = computed(() => {
+    const timestamps = [addressPnlUpdatedAt.value, heatRank.web3UpdatedAt.value]
+      .filter((value): value is string => Boolean(value))
+      .sort()
+    return timestamps.length ? timestamps[timestamps.length - 1] : null
+  })
+
   return {
     loading,
     error,
     chainId,
     chainOptions,
     addressPnl,
+    updatedAt,
     web3HeatRank: heatRank.web3HeatRank,
     web3Loading: heatRank.web3Loading,
     web3Error: heatRank.web3Error,

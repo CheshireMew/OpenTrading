@@ -23,8 +23,8 @@
       </div>
     </div>
     <div v-if="sourceMessage || sourceError" class="mt-4 space-y-2 text-sm">
-      <div v-if="sourceMessage" class="border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800 dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-200">{{ sourceMessage }}</div>
-      <div v-if="sourceError" class="border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-200">{{ sourceError }}</div>
+      <div v-if="sourceMessage" role="status" aria-live="polite" class="border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800 dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-200">{{ sourceMessage }}</div>
+      <div v-if="sourceError" role="alert" class="border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-200">{{ sourceError }}</div>
     </div>
     <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <label class="block"><span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.reviewFrequency') }}</span><select :value="strategy.reviewFrequency" class="app-control w-full px-4 py-3" @change="$emit('update-review-frequency', $event.target.value)"><option value="daily">{{ $t('portfolioBalance.frequencies.daily') }}</option><option value="weekly">{{ $t('portfolioBalance.frequencies.weekly') }}</option><option value="monthly">{{ $t('portfolioBalance.frequencies.monthly') }}</option><option value="quarterly">{{ $t('portfolioBalance.frequencies.quarterly') }}</option></select></label>

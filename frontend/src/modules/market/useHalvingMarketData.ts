@@ -14,6 +14,7 @@ export const useHalvingMarketData = (translate: (key: string) => string) => {
   const store = usePriceHistoryStore()
   const currentPrice = ref(0)
   const currentPriceError = ref('')
+  const currentPriceUpdatedAt = ref<string | null>(null)
   let refreshTimer: number | null = null
   let refreshPending = false
 
@@ -49,6 +50,7 @@ export const useHalvingMarketData = (translate: (key: string) => string) => {
       if (Number.isFinite(price) && price > 0) {
         currentPrice.value = price
         currentPriceError.value = ''
+        currentPriceUpdatedAt.value = response.timestamp || new Date().toISOString()
       }
     } catch (requestError) {
       console.error('Refresh halving current price failed', requestError)
@@ -67,6 +69,7 @@ export const useHalvingMarketData = (translate: (key: string) => string) => {
       const history = (response?.items || []).filter((row) => row.close > 0)
       if (currentPrice.value <= 0 && history.length) {
         currentPrice.value = Number(history[history.length - 1]?.close || 0)
+        currentPriceUpdatedAt.value = new Date(history[history.length - 1].timestamp).toISOString()
       }
     } catch (requestError) {
       console.error('Fetch halving history failed', requestError)
@@ -90,5 +93,5 @@ export const useHalvingMarketData = (translate: (key: string) => string) => {
 
   const retry = () => Promise.all([fetchHistory(true), refreshCurrentPrice()])
 
-  return { currentPrice, historyData, loading, error, retry }
+  return { currentPrice, currentPriceUpdatedAt, historyData, loading, error, retry }
 }

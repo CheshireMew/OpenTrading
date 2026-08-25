@@ -21,6 +21,8 @@ def test_ci_is_blocking_and_matches_the_supported_windows_runtime():
     assert "node-version: '22.23.0'" in workflow
     assert "python-version: '3.12.10'" in workflow
     assert workflow.count("--require-hashes -r requirements.lock") == 2
+    assert "astral-sh/ruff-action@v4.1.0" in workflow
+    assert "Run frontend tests" in workflow
     assert "git diff --exit-code" in workflow
 
 
@@ -37,6 +39,8 @@ def test_declared_runtime_versions_and_lockfiles_remain_in_sync():
     assert frontend_package["version"] == APP_VERSION
     assert root_package["engines"]["node"] == ">=22.12.0"
     assert frontend_package["engines"]["node"] == ">=22.12.0"
+    assert frontend_package["scripts"]["typecheck"] == "vue-tsc --noEmit"
+    assert frontend_package["devDependencies"]["vue-tsc"] == "3.3.11"
     assert python_version == "3.12.10"
     assert 'platform = "windows_amd64"' in lock_text
     assert 'requires_python = "==3.12.*"' in lock_text

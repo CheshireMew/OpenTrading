@@ -442,10 +442,36 @@ export interface BinanceWeb3HeatRankItemResponse {
   ranks?: { [key: string]: number }
   components?: { [key: string]: number }
   penalties?: { [key: string]: number }
-  metrics?: { [key: string]: string | number | boolean | Array<string | number | boolean | null> | { [key: string]: string | number | boolean | null } | Array<{ [key: string]: string | number | boolean | null }> | { [key: string]: Array<string | number | boolean | null> } | null }
+  metrics?: BinanceWeb3HeatRankMetricsResponse
   audit_info?: { [key: string]: string | number | boolean | Array<string | number | boolean | null> | { [key: string]: string | number | boolean | null } | Array<{ [key: string]: string | number | boolean | null }> | { [key: string]: Array<string | number | boolean | null> } | null }
   sentiment?: string | null
   summary?: string | null
+}
+
+export interface BinanceWeb3HeatRankMetricsResponse {
+  price?: number | null
+  market_cap?: number | null
+  liquidity?: number | null
+  holders?: number | null
+  launch_time?: number | null
+  percent_change_1h?: number | null
+  percent_change_24h?: number | null
+  volume_1h?: number | null
+  volume_4h?: number | null
+  volume_24h?: number | null
+  count_1h?: number | null
+  count_24h?: number | null
+  unique_trader_1h?: number | null
+  unique_trader_24h?: number | null
+  kyc_holders?: number | null
+  social_hype?: number | null
+  social_hype_normalized?: number | null
+  smart_money_inflow?: number | null
+  smart_money_traders?: number | null
+  smart_money_inflow_normalized?: number | null
+  smart_money_risk_level?: number | null
+  meme_score?: number | null
+  meme_score_normalized?: number | null
 }
 
 export interface BinanceWeb3HeatRankResponse {

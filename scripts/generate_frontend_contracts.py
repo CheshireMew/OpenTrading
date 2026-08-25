@@ -20,17 +20,19 @@ from app.product import API_PREFIX  # noqa: E402
 from app.domain.market.web3_chains import WEB3_ALL_CHAIN_ID, WEB3_CHAIN_CATALOG  # noqa: E402
 
 FRONTEND_API_DIR = REPO_ROOT / "frontend" / "src" / "api"
-TARGET_FILES = ("market.ts", "tools.ts", "config.ts")
+TARGET_FILES = ("market.ts", "tools.ts", "config.ts", "research.ts")
 TARGET_PATHS = {
     "market.ts": REPO_ROOT / "frontend" / "src" / "modules" / "market" / "generatedContracts.ts",
     "tools.ts": REPO_ROOT / "frontend" / "src" / "modules" / "tools" / "generatedContracts.ts",
     "config.ts": REPO_ROOT / "frontend" / "src" / "modules" / "system" / "generatedContracts.ts",
+    "research.ts": REPO_ROOT / "frontend" / "src" / "modules" / "research" / "generatedContracts.ts",
 }
 CONTRACT_APP = create_app("api")
 TYPE_NAMESPACE_BY_FILE = {
     "market.ts": "MarketTypes",
     "tools.ts": "ToolsTypes",
     "config.ts": "ConfigTypes",
+    "research.ts": "ResearchTypes",
 }
 
 
@@ -189,6 +191,7 @@ def render_api_routes() -> str:
         "import type * as MarketTypes from '../modules/market/contracts'",
         "import type * as ToolsTypes from '../modules/tools/contracts'",
         "import type * as ConfigTypes from '../modules/system/contracts'",
+        "import type * as ResearchTypes from '../modules/research/contracts'",
         "",
         "export type RouteParams = Record<string, string | number>",
         "export type ApiQueryShape = object",
@@ -214,7 +217,8 @@ def render_api_routes() -> str:
     query_map_lines = ["export type ApiRouteQueryMap = {"]
     path_map_lines = ["export type ApiRoutePathMap = {"]
     for route in sorted(api_v1_routes(), key=lambda item: item.name):
-        route_lines.append(f"  {route.name}: {json.dumps(strip_api_prefix(route.path))},")
+        browser_path = re.sub(r"\{([^}:]+):[^}]+\}", r"{\1}", strip_api_prefix(route.path))
+        route_lines.append(f"  {route.name}: {json.dumps(browser_path)},")
         route_query_lines.append(
             f"  {route.name}: {json.dumps(query_meta.get(route.name, empty_query_meta()), ensure_ascii=False)} as EndpointQueryContract,"
         )

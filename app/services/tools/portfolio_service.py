@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from app.application.persistence_ports import PortfolioRepositoryPort
+from app.domain.portfolio_accounting import calculate_portfolio_ledger
 from app.contracts.portfolios import (
     LegacyPortfolioExportDocument,
     PortfolioBalancePortfolio,
@@ -17,6 +18,13 @@ from app.contracts.portfolios import (
     PortfolioSimulationArtifact,
     PortfolioSimulationResultCommand,
     PortfolioSimulationResultResponse,
+    PortfolioLedgerResponse,
+    PortfolioTransactionArchiveCommand,
+    PortfolioTransactionCreateCommand,
+    PortfolioTransactionImportCommand,
+    PortfolioTransactionImportResponse,
+    PortfolioTransactionResponse,
+    PortfolioTransactionUpdateCommand,
 )
 
 
@@ -26,6 +34,70 @@ class PortfolioService:
 
     def get_collection(self) -> PortfolioCollectionResponse:
         return self._to_response(self._repository.get_collection())
+
+    def get_ledger(self, portfolio_id: str) -> PortfolioLedgerResponse:
+        record = self._repository.get_ledger_record(portfolio_id)
+        return self._ledger_response(portfolio_id, record)
+
+    def create_transaction(
+        self,
+        portfolio_id: str,
+        command: PortfolioTransactionCreateCommand,
+    ) -> PortfolioTransactionResponse:
+        return PortfolioTransactionResponse.model_validate(
+            self._repository.create_transaction(
+                portfolio_id,
+                self._transaction_payload(command),
+            )
+        )
+
+    def update_transaction(
+        self,
+        portfolio_id: str,
+        transaction_id: str,
+        command: PortfolioTransactionUpdateCommand,
+    ) -> PortfolioTransactionResponse:
+        return PortfolioTransactionResponse.model_validate(
+            self._repository.update_transaction(
+                portfolio_id,
+                transaction_id,
+                command.expectedVersion,
+                self._transaction_payload(command),
+            )
+        )
+
+    def archive_transaction(
+        self,
+        portfolio_id: str,
+        transaction_id: str,
+        command: PortfolioTransactionArchiveCommand,
+        *,
+        archived: bool,
+    ) -> PortfolioTransactionResponse:
+        return PortfolioTransactionResponse.model_validate(
+            self._repository.set_transaction_archived(
+                portfolio_id,
+                transaction_id,
+                command.expectedVersion,
+                archived,
+            )
+        )
+
+    def import_transactions(
+        self,
+        portfolio_id: str,
+        command: PortfolioTransactionImportCommand,
+    ) -> PortfolioTransactionImportResponse:
+        imported_count, archived_count = self._repository.import_transactions(
+            portfolio_id,
+            [self._transaction_payload(item) for item in command.transactions],
+            replace=command.mode == "replace",
+        )
+        return PortfolioTransactionImportResponse(
+            importedCount=imported_count,
+            archivedCount=archived_count,
+            ledger=self.get_ledger(portfolio_id),
+        )
 
     def save_collection(self, command: PortfolioCollectionSaveCommand) -> PortfolioCollectionResponse:
         return self._to_response(
@@ -191,4 +263,56 @@ class PortfolioService:
             portfolioId=record.portfolio_id,
             result=record.result_payload,
             updatedAt=record.updated_at,
+        )
+
+    @staticmethod
+    def _transaction_payload(command: PortfolioTransactionCreateCommand) -> dict:
+        return {
+            "transaction_type": command.transactionType,
+            "symbol": command.symbol.strip().upper(),
+            "quantity": command.quantity,
+            "unit_price": command.unitPrice,
+            "cash_amount": command.cashAmount,
+            "fee": command.fee,
+            "currency": command.currency.strip().upper(),
+            "fee_currency": command.feeCurrency.strip().upper(),
+            "external_id": command.externalId.strip() if command.externalId else None,
+            "note": command.note.strip(),
+            "metadata_payload": command.metadata,
+            "occurred_at": command.occurredAt.astimezone(timezone.utc).replace(tzinfo=None)
+            if command.occurredAt.tzinfo is not None
+            else command.occurredAt,
+        }
+
+    @staticmethod
+    def _ledger_response(portfolio_id: str, record: dict) -> PortfolioLedgerResponse:
+        portfolio_payload = record["portfolio_payload"]
+        market_prices = {
+            str(asset.get("symbol") or "").upper(): float(asset.get("currentPrice") or 0)
+            for asset in portfolio_payload.get("assets", [])
+            if asset.get("symbol")
+        }
+        active_transactions = record["transactions"]
+        domain_transactions = [
+            {
+                "id": item["id"],
+                "transaction_type": item["transactionType"],
+                "symbol": item["symbol"],
+                "quantity": item["quantity"],
+                "unit_price": item["unitPrice"],
+                "cash_amount": item["cashAmount"],
+                "fee": item["fee"],
+                "occurred_at": item["occurredAt"],
+            }
+            for item in active_transactions
+        ]
+        summary = calculate_portfolio_ledger(
+            domain_transactions,
+            market_prices=market_prices,
+        )
+        return PortfolioLedgerResponse(
+            portfolioId=portfolio_id,
+            transactions=active_transactions,
+            archivedTransactions=record["archived_transactions"],
+            summary=summary,
         )

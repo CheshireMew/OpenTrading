@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vite",
     "test": "node --test",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "vue-tsc --noEmit",
     "build": "npm run typecheck && vite build",
     "preview": "vite preview"
   },
@@ -34,6 +34,7 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.1",
     "typescript": "^5.9.3",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "vue-tsc": "3.3.11"
   }
 }

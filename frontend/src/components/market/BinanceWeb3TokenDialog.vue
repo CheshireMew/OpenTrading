@@ -25,6 +25,19 @@
         </div>
 
         <div class="flex w-full min-w-0 items-center gap-2 sm:w-auto">
+          <AddToResearchButton
+            :symbol="token.contract_address || token.symbol || ''"
+            asset-class="web3"
+            :display-name="token.symbol || ''"
+            :source-context="{
+              route: '/indicators/web3-rank',
+              chainId: token.chain_id || '',
+              platform: token.platform || '',
+              contractAddress: token.contract_address || '',
+              rank: token.rank || null,
+              heatScore: token.heat_score || 0,
+            }"
+          />
           <div class="flex min-w-0 flex-1 gap-2 overflow-x-auto border border-[#e4ded3] bg-white p-1 dark:border-slate-700 dark:bg-slate-900 sm:flex-none">
             <button
               v-for="item in intervals"
@@ -175,7 +188,9 @@
 
 <script setup lang="ts">
 import { XMarkIcon } from '@heroicons/vue/24/outline'
+import AddToResearchButton from '@/components/research/AddToResearchButton.vue'
 import TradingViewChart from '@/components/TradingViewChart.vue'
+import type { TradingViewChartColors } from '@/components/useTradingViewChart'
 import Web3TokenIcon from '@/components/market/Web3TokenIcon.vue'
 import { useModalDialog } from '@/composables/useModalDialog'
 import { toRef } from 'vue'
@@ -201,7 +216,7 @@ const props = defineProps<{
   audit: BinanceWeb3TokenAudit | null
   chartData: CandlestickData[]
   volumeData: VolumeData[]
-  chartColors: Record<string, string>
+  chartColors: TradingViewChartColors
   formatScore: (value: number | null | undefined) => string
   formatPrice: (value: number | null | undefined) => string
   formatSigned: (value: number | null | undefined, digits?: number, suffix?: string, withSign?: boolean) => string

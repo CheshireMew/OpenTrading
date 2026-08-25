@@ -6,6 +6,7 @@ import type { CandlestickData } from '@/modules/market/contracts'
 import type { MarketSymbolSearchResponse } from '@/modules/market/contracts'
 import { useTheme } from '@/composables/useTheme'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import { apiErrorMessage } from '@/api/request'
 import { toolsApi } from './api'
 import { buildCompareSnapshot, createDefaultCompareSnapshot, createEmptyCompareSnapshot, normalizeCompareSnapshot } from './pageSnapshots'
@@ -30,6 +31,7 @@ interface ChartComponentRef {
 export function useComparePage() {
   const { theme } = useTheme()
   const { t } = useI18n()
+  const route = useRoute()
   const pageSnapshot = createPersistentPageSnapshot(PAGE_SNAPSHOT_KEYS.compare, normalizeCompareSnapshot, createEmptyCompareSnapshot())
   const restoredSnapshot = pageSnapshot.initial
   let snapshotStop: WatchStopHandle | null = null
@@ -49,6 +51,7 @@ export function useComparePage() {
   const config = reactive(createEmptyCompareSnapshot().config)
 
   const loading = ref(false)
+  const initialized = ref(false)
   const errorMessage = ref('')
   const dataA = ref<CandlestickData[]>([])
   const dataB = ref<CandlestickData[]>([])
@@ -57,6 +60,9 @@ export function useComparePage() {
   const chartBRef = ref<ChartComponentRef | null>(null)
   const chartRatioRef = ref<ChartComponentRef | null>(null)
   const syncUnsubscribers = ref<Array<() => void>>([])
+  const resultSymbols = reactive({ symbolA: '', symbolB: '' })
+  const statistics = ref<Awaited<ReturnType<typeof toolsApi.comparePairs>>['statistics'] | null>(null)
+  const hasData = computed(() => dataA.value.length > 0 && dataB.value.length > 0 && dataRatio.value.length > 0)
 
   const syncCharts = () => {
     syncUnsubscribers.value.forEach((fn) => fn())
@@ -97,6 +103,10 @@ export function useComparePage() {
     }
     loading.value = true
     errorMessage.value = ''
+    dataA.value = []
+    dataB.value = []
+    dataRatio.value = []
+    statistics.value = null
     try {
       await ensureSymbolCatalogLoaded()
       if (isIndexSymbol(config.symbolA) || isIndexSymbol(config.symbolB)) {
@@ -114,6 +124,9 @@ export function useComparePage() {
         time: item.time,
         value: item.close,
       }))
+      resultSymbols.symbolA = config.symbolA
+      resultSymbols.symbolB = config.symbolB
+      statistics.value = response.statistics
       nextTick(() => {
         syncCharts()
       })
@@ -132,25 +145,36 @@ export function useComparePage() {
   const symbolLabel = (symbol: string) => isIndexSymbol(symbol) ? symbol : `${symbol}/USDT`
 
   onMounted(async () => {
-    const [response] = await Promise.all([
-      toolsApi.getContract(),
-      ensureSymbolCatalogLoaded(),
-    ])
-    if (disposed) return
-    const defaultSnapshot = createDefaultCompareSnapshot(response)
-    Object.assign(
-      config,
-      pageSnapshot.hasStoredData
-        ? normalizeCompareSnapshot(restoredSnapshot, defaultSnapshot).config
-        : defaultSnapshot.config,
-    )
-    if (!snapshotStop) {
-      snapshotStop = pageSnapshot.bind(
+    try {
+      const [response] = await Promise.all([
+        toolsApi.getContract(),
+        ensureSymbolCatalogLoaded(),
+      ])
+      if (disposed) return
+      const defaultSnapshot = createDefaultCompareSnapshot(response)
+      Object.assign(
         config,
-        () => buildCompareSnapshot(config, defaultSnapshot),
+        pageSnapshot.hasStoredData
+          ? normalizeCompareSnapshot(restoredSnapshot, defaultSnapshot).config
+          : defaultSnapshot.config,
       )
+      const queryDays = Number(route.query.days)
+      if (typeof route.query.symbol_a === 'string' && route.query.symbol_a) config.symbolA = route.query.symbol_a
+      if (typeof route.query.symbol_b === 'string' && route.query.symbol_b) config.symbolB = route.query.symbol_b
+      if (Number.isFinite(queryDays) && queryDays >= 1 && queryDays <= 90) config.days = queryDays
+      if (typeof route.query.timeframe === 'string' && ['5m', '15m', '1h', '4h', '1d', '1w', '1M'].includes(route.query.timeframe)) config.timeframe = route.query.timeframe
+      if (!snapshotStop) {
+        snapshotStop = pageSnapshot.bind(
+          config,
+          () => buildCompareSnapshot(config, defaultSnapshot),
+        )
+      }
+      if (canCompare.value) await fetchComparisonData()
+    } catch (error) {
+      errorMessage.value = apiErrorMessage(error, t('compare.initializeFailed'))
+    } finally {
+      initialized.value = true
     }
-    if (canCompare.value) await fetchComparisonData()
   })
 
   onBeforeUnmount(() => {
@@ -175,10 +199,14 @@ export function useComparePage() {
     chartColors,
     config,
     loading,
+    initialized,
     errorMessage,
+    hasData,
+    resultSymbols,
     dataA,
     dataB,
     dataRatio,
+    statistics,
     chartARef,
     chartBRef,
     chartRatioRef,

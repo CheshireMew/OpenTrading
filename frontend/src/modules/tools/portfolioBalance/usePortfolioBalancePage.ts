@@ -6,8 +6,7 @@ import { toBaseSymbol } from '@/modules/market'
 import { createPortfolioBalancePageCommands } from './commands'
 import { createPortfolioBalancePageState } from './state'
 import { createPortfolioPersistence } from './persistence'
-import { clearPortfolioHoldings } from './holdings'
-import { hasActiveAssets, hasMarketGap } from './snapshot'
+import { hasMarketGap } from './snapshot'
 import { portfolioSimulationInputKey } from './simulation'
 
 export function usePortfolioBalancePage() {
@@ -28,16 +27,6 @@ export function usePortfolioBalancePage() {
   watch([state.portfolios, state.activePortfolioId], () => {
     persistence.queueSave()
   }, { deep: true })
-
-  watch(() => state.tracking.value.virtualCapital, () => {
-    const portfolio = state.activePortfolio.value
-    if (!portfolio || !hasActiveAssets(portfolio)) return
-
-    state.updateActivePortfolio((currentPortfolio) => {
-      clearPortfolioHoldings(currentPortfolio, 'virtual')
-    })
-    commands.scheduleMarketRefresh()
-  })
 
   watch([state.activePortfolioId, state.storageReady], async () => {
     if (!state.storageReady.value) return
@@ -73,6 +62,7 @@ export function usePortfolioBalancePage() {
     sourceMessage: state.sourceMessage,
     sourceError: state.sourceError,
     storageReady: state.storageReady,
+    portfolioTransitioning: state.portfolioTransitioning,
     storageLoading: state.storageLoading,
     storageSaving: state.storageSaving,
     storageError: state.storageError,
@@ -87,6 +77,7 @@ export function usePortfolioBalancePage() {
     removeAsset: commands.removeAsset,
     updateAssetSymbol: commands.updateAssetSymbol,
     updateAssetTargetWeight: commands.updateAssetTargetWeight,
+    applyPortfolioLedger: commands.applyPortfolioLedger,
     refreshMarketPrices: commands.refreshMarketPrices,
     runSimulation: commands.runSimulation,
     importPortfolioDocument: persistence.importDocument,

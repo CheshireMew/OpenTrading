@@ -26,6 +26,9 @@
       </section>
 
       <section class="app-panel p-6">
+        <div v-if="llmLoading" role="status" aria-live="polite" class="py-12 text-center app-muted">{{ $t('settings.loading') }}</div>
+        <div v-else-if="llmLoadError" role="alert" class="flex flex-wrap items-center justify-between gap-3 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200"><span>{{ llmLoadError }}</span><button type="button" class="app-button-secondary app-touch-target" @click="loadLlmConfig">{{ $t('common.retry') }}</button></div>
+        <template v-else>
         <div class="mb-6 flex items-center justify-between gap-4">
           <div>
             <h3 class="app-section-title">{{ $t('settings.llmProvider') }}</h3>
@@ -93,21 +96,26 @@
 
         <div class="mt-6 flex items-center gap-3">
           <button
-            class="app-button-primary px-4 py-2"
+            type="button"
+            class="app-button-primary app-touch-target px-4 py-2"
             :disabled="saving || !canSave"
             @click="saveConfig"
           >
             {{ saving ? $t('settings.saving') : $t('settings.saveConfig') }}
           </button>
-          <button v-if="form.apiKeySet" type="button" class="app-button-secondary px-4 py-2 text-rose-600 dark:text-rose-300" :disabled="saving" @click="clearLlmApiKey">
+          <button v-if="form.apiKeySet" type="button" class="app-button-secondary app-touch-target px-4 py-2 text-rose-600 dark:text-rose-300" :disabled="saving" @click="clearLlmApiKey">
             {{ $t('settings.clearKey') }}
           </button>
-          <span v-if="message" class="text-sm text-emerald-600 dark:text-emerald-300">{{ message }}</span>
-          <span v-if="error" class="text-sm text-rose-600 dark:text-rose-300">{{ error }}</span>
+          <span v-if="message" role="status" aria-live="polite" class="text-sm text-emerald-600 dark:text-emerald-300">{{ message }}</span>
+          <span v-if="error" role="alert" class="text-sm text-rose-600 dark:text-rose-300">{{ error }}</span>
         </div>
+        </template>
       </section>
 
       <section class="app-panel p-6">
+        <div v-if="fredLoading" role="status" aria-live="polite" class="py-12 text-center app-muted">{{ $t('settings.loading') }}</div>
+        <div v-else-if="fredLoadError" role="alert" class="flex flex-wrap items-center justify-between gap-3 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200"><span>{{ fredLoadError }}</span><button type="button" class="app-button-secondary app-touch-target" @click="loadFredConfig">{{ $t('common.retry') }}</button></div>
+        <template v-else>
         <div class="mb-6 flex items-center justify-between gap-4">
           <div>
             <h3 class="app-section-title">{{ $t('settings.fredSource') }}</h3>
@@ -134,26 +142,30 @@
           </label>
 
           <button
-            class="app-button-primary px-4 py-2"
+            type="button"
+            class="app-button-primary app-touch-target px-4 py-2"
             :disabled="fredSaving || !canSaveFred"
             @click="saveFredConfig"
           >
             {{ fredSaving ? $t('settings.saving') : $t('settings.save') }}
           </button>
-          <button v-if="fredForm.apiKeySet" type="button" class="app-button-secondary px-4 py-2 text-rose-600 dark:text-rose-300" :disabled="fredSaving" @click="clearFredApiKey">
+          <button v-if="fredForm.apiKeySet" type="button" class="app-button-secondary app-touch-target px-4 py-2 text-rose-600 dark:text-rose-300" :disabled="fredSaving" @click="clearFredApiKey">
             {{ $t('settings.clearKey') }}
           </button>
         </div>
 
         <div class="mt-3 flex items-center gap-3 text-sm">
           <span class="text-gray-500 dark:text-gray-400">{{ $t('settings.source') }}: {{ fredForm.source }}</span>
-          <span v-if="fredMessage" class="text-emerald-600 dark:text-emerald-300">{{ fredMessage }}</span>
-          <span v-if="fredError" class="text-rose-600 dark:text-rose-300">{{ fredError }}</span>
+          <span v-if="fredMessage" role="status" aria-live="polite" class="text-emerald-600 dark:text-emerald-300">{{ fredMessage }}</span>
+          <span v-if="fredError" role="alert" class="text-rose-600 dark:text-rose-300">{{ fredError }}</span>
         </div>
+        </template>
       </section>
 
       <section class="app-panel p-6">
-        <div class="grid gap-3 text-sm text-stone-600 dark:text-gray-400 md:grid-cols-2">
+        <div v-if="systemLoading" role="status" aria-live="polite" class="py-8 text-center app-muted">{{ $t('settings.loading') }}</div>
+        <div v-else-if="systemLoadError" role="alert" class="flex flex-wrap items-center justify-between gap-3 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200"><span>{{ systemLoadError }}</span><button type="button" class="app-button-secondary app-touch-target" @click="loadSystemConfig">{{ $t('common.retry') }}</button></div>
+        <div v-else class="grid gap-3 text-sm text-stone-600 dark:text-gray-400 md:grid-cols-2">
           <div>{{ $t('settings.env') }}: {{ $t('settings.production') }}</div>
           <div>{{ $t('settings.version') }}: {{ systemConfig?.version || '-' }} (Vue + FastAPI)</div>
           <div>{{ $t('settings.db') }}: {{ systemConfig?.runtime?.database_engine || '-' }}</div>
@@ -187,6 +199,12 @@ const {
   error,
   fredMessage,
   fredError,
+  systemLoading,
+  llmLoading,
+  fredLoading,
+  systemLoadError,
+  llmLoadError,
+  fredLoadError,
   form,
   fredForm,
   isCustomProvider,
@@ -198,6 +216,9 @@ const {
   saveFredConfig,
   clearLlmApiKey,
   clearFredApiKey,
+  loadSystemConfig,
+  loadLlmConfig,
+  loadFredConfig,
 } = useSystemSettingsPage()
 </script>
 

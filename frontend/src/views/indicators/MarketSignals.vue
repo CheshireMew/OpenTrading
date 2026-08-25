@@ -13,8 +13,9 @@
         </p>
       </div>
 
-      <div v-if="error" class="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/40 dark:bg-red-950/40 dark:text-red-200">
-        {{ error }}
+      <div v-if="error" role="alert" class="flex flex-wrap items-center justify-between gap-3 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/40 dark:bg-red-950/40 dark:text-red-200">
+        <span>{{ error }}</span>
+        <button type="button" class="app-button-secondary app-touch-target" :disabled="loading" @click="refresh">{{ t('common.retry') }}</button>
       </div>
 
       <div class="signal-panel p-5">
@@ -23,7 +24,7 @@
             <div class="panel-kicker">{{ t('marketSignals.coverage') }}</div>
             <h2 class="mt-2 text-lg font-semibold text-slate-950 dark:text-white">{{ t('marketSignals.overview') }}</h2>
           </div>
-          <button class="signal-primary-button self-start" :disabled="loading" @click="refresh">
+          <button type="button" class="signal-primary-button app-touch-target self-start" :disabled="loading" @click="refresh">
             {{ loading ? t('marketSignals.refreshing') : t('marketSignals.refresh') }}
           </button>
         </div>
@@ -46,7 +47,7 @@
         <div v-for="item in 6" :key="item" class="h-72 animate-pulse border border-slate-200 bg-white/70 dark:border-slate-800 dark:bg-slate-900/50"></div>
       </div>
 
-      <template v-else>
+      <template v-else-if="totalCount > 0">
         <section v-for="group in groups" :key="group.definition.id" class="space-y-3">
           <div :class="['category-heading', `category-heading--${group.definition.accent}`]">
             <div>
@@ -90,10 +91,17 @@
           </div>
 
           <div v-else class="empty-row">
-            {{ $t('common.waitingData') }}
+            {{ $t('marketSignals.groupEmpty') }}
           </div>
         </section>
       </template>
+      <div v-else class="signal-panel flex min-h-[20rem] items-center justify-center p-8 text-center">
+        <div class="max-w-lg">
+          <h2 class="text-lg font-semibold text-slate-950 dark:text-white">{{ t('marketSignals.emptyTitle') }}</h2>
+          <p class="mt-3 text-sm leading-6 text-stone-600 dark:text-slate-400">{{ t('marketSignals.emptyDescription') }}</p>
+          <button type="button" class="signal-primary-button app-touch-target mt-5" @click="refresh">{{ t('marketSignals.refresh') }}</button>
+        </div>
+      </div>
     </section>
   </div>
 </template>

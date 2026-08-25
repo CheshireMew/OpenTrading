@@ -2,15 +2,16 @@
   <div class="app-page">
     <div class="app-page-inner-wide space-y-6">
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div class="halving-summary-grid grid gap-6">
       <!-- Card 1: Countdown -->
       <div class="app-card relative overflow-hidden transition-all">
-        <h3 class="text-sm font-medium text-stone-500 dark:text-slate-400">{{ $t('halving.nextHalving') }}</h3>
-        <p class="mt-2 text-3xl font-semibold text-stone-950 dark:text-white">{{ nextHalvingDate }}</p>
+        <h3 class="text-sm font-medium text-stone-500 dark:text-slate-400">{{ $t('halving.nextHalvingEstimate') }}</h3>
+        <p class="mt-2 text-3xl font-semibold text-stone-950 dark:text-white">{{ $t('halving.estimatedDate', { date: nextHalvingDate }) }}</p>
         <div class="mt-2 flex items-center text-sm font-medium text-[#0f6b4f] dark:text-emerald-300">
           <ClockIcon class="w-4 h-4 mr-1" />
           <span>{{ daysToHalving }} {{ $t('halving.daysLeft') }}</span>
         </div>
+        <p class="mt-3 text-xs leading-5 text-stone-500 dark:text-slate-400">{{ $t('halving.estimateNotice') }}</p>
       </div>
 
       <!-- Card 2: Price -->
@@ -20,10 +21,11 @@
           {{ formatPrice(currentPrice) }}
         </p>
         <p class="mt-1 text-xs text-stone-500">BTC/USDT</p>
+        <p v-if="currentPriceUpdatedAt" class="mt-1 text-xs text-stone-500 dark:text-slate-400">{{ $t('halving.updatedAt', { time: new Date(currentPriceUpdatedAt).toLocaleString() }) }}</p>
       </div>
 
       <!-- Card 3: Cycle Progress -->
-      <div class="app-card relative overflow-hidden md:col-span-2">
+      <div class="halving-progress-card app-card relative overflow-hidden">
         <h3 class="mb-4 text-sm font-medium text-stone-500 dark:text-slate-400">{{ $t('halving.cycleProgress') }}</h3>
         <div class="relative pt-1">
           <div class="flex mb-2 items-center justify-between">
@@ -49,7 +51,7 @@
 
     <div v-if="error" role="alert" class="flex flex-col gap-3 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200 sm:flex-row sm:items-center sm:justify-between">
       <span>{{ error }}</span>
-      <button type="button" class="app-button-secondary flex-shrink-0" @click="retry">{{ $t('halving.retry') }}</button>
+      <button type="button" class="app-button-secondary app-touch-target flex-shrink-0" @click="retry">{{ $t('halving.retry') }}</button>
     </div>
 
     <!-- Main Chart -->
@@ -75,15 +77,17 @@
            <!-- Scale Toggle -->
            <div class="flex border border-stone-200 bg-white p-1 dark:border-slate-700 dark:bg-gray-700">
                <button 
+                  type="button"
                   @click="scaleType = 'logarithmic'" 
-                  class="px-3 py-1 text-xs font-medium transition-all"
+                  class="app-touch-target px-3 py-1 text-xs font-medium transition-all"
                   :class="scaleType === 'logarithmic' ? 'bg-[#edf3ee] text-[#0f6b4f] dark:bg-emerald-950/40 dark:text-emerald-300' : 'text-stone-500 hover:text-stone-700 dark:text-gray-400 dark:hover:text-gray-200'"
                >
                   {{ $t('halving.log') }}
                </button>
                <button 
+                  type="button"
                   @click="scaleType = 'linear'" 
-                  class="px-3 py-1 text-xs font-medium transition-all"
+                  class="app-touch-target px-3 py-1 text-xs font-medium transition-all"
                   :class="scaleType === 'linear' ? 'bg-[#edf3ee] text-[#0f6b4f] dark:bg-emerald-950/40 dark:text-emerald-300' : 'text-stone-500 hover:text-stone-700 dark:text-gray-400 dark:hover:text-gray-200'"
                >
                   {{ $t('halving.linear') }}
@@ -100,7 +104,7 @@
       </div>
       
       <div class="app-chart-frame relative h-[420px] w-full sm:h-[520px] lg:h-[600px]">
-        <canvas ref="chartCanvas"></canvas>
+        <canvas ref="chartCanvas" role="img" :aria-label="$t('halving.chartTitle')"></canvas>
         <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-[#f7f4ed]/80 backdrop-blur-sm dark:bg-gray-900/80">
           <div class="flex flex-col items-center">
              <div class="h-12 w-12 animate-spin rounded-full border-4 border-[#0f6b4f] border-t-transparent"></div>
@@ -123,6 +127,7 @@ const {
   retry,
   chartCanvas,
   currentPrice,
+  currentPriceUpdatedAt,
   showPhases,
   scaleType,
   nextHalvingDate,

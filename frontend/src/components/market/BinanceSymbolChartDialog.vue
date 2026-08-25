@@ -22,6 +22,13 @@
         </div>
 
         <div class="flex w-full min-w-0 items-center gap-2 sm:w-auto">
+          <AddToResearchButton
+            v-if="symbol"
+            :symbol="symbol"
+            asset-class="crypto"
+            :display-name="title"
+            :source-context="{ route: '/indicators/binance-market', marketLabel, timeframe }"
+          />
           <div class="flex min-w-0 flex-1 gap-2 overflow-x-auto border border-[#e4ded3] bg-white p-1 dark:border-slate-700 dark:bg-slate-900 sm:flex-none">
             <button
               v-for="item in timeframes"
@@ -199,7 +206,9 @@
 
 <script setup lang="ts">
 import { XMarkIcon } from '@heroicons/vue/24/outline'
+import AddToResearchButton from '@/components/research/AddToResearchButton.vue'
 import TradingViewChart from '@/components/TradingViewChart.vue'
+import type { TradingViewChartColors } from '@/components/useTradingViewChart'
 import { useModalDialog } from '@/composables/useModalDialog'
 import type { BinanceBreakoutMonitorItem, BinanceContractResearchDetail, CandlestickData, VolumeData } from '@/modules/market/contracts'
 import { computed, defineComponent, h, toRef } from 'vue'
@@ -215,7 +224,7 @@ const props = defineProps<{
   symbol: string
   timeframe: string
   timeframes: string[]
-  chartColors: Record<string, string>
+  chartColors: TradingViewChartColors
   chartData: CandlestickData[]
   volumeData: VolumeData[]
   loadingMore: boolean
@@ -263,12 +272,15 @@ const openInterestRows = computed(() => props.contractDetail?.open_interest.item
 const takerVolumeRows = computed(() => props.contractDetail?.taker_volume.items?.slice(-6).reverse() || [])
 const basisRows = computed(() => props.contractDetail?.basis.items?.slice(-6).reverse() || [])
 const forceOrderRows = computed(() => props.contractDetail?.force_orders.items?.slice(-6).reverse() || [])
-const latestOpenInterest = computed(() => props.contractDetail?.open_interest.items?.at(-1) || null)
-const latestTakerVolume = computed(() => props.contractDetail?.taker_volume.items?.at(-1) || null)
-const latestBasis = computed(() => props.contractDetail?.basis.items?.at(-1) || null)
-const latestLongShort = computed(() => props.contractDetail?.long_short_ratio.items?.at(-1) || null)
-const latestTopAccounts = computed(() => props.contractDetail?.top_trader_accounts.items?.at(-1) || null)
-const latestTopPositions = computed(() => props.contractDetail?.top_trader_positions.items?.at(-1) || null)
+const lastItem = <T>(items: T[] | null | undefined): T | null => (
+  items?.length ? items[items.length - 1] : null
+)
+const latestOpenInterest = computed(() => lastItem(props.contractDetail?.open_interest.items))
+const latestTakerVolume = computed(() => lastItem(props.contractDetail?.taker_volume.items))
+const latestBasis = computed(() => lastItem(props.contractDetail?.basis.items))
+const latestLongShort = computed(() => lastItem(props.contractDetail?.long_short_ratio.items))
+const latestTopAccounts = computed(() => lastItem(props.contractDetail?.top_trader_accounts.items))
+const latestTopPositions = computed(() => lastItem(props.contractDetail?.top_trader_positions.items))
 const latestBasisRatePct = computed(() => (
   latestBasis.value?.basis_rate === null || latestBasis.value?.basis_rate === undefined
     ? null
@@ -277,8 +289,8 @@ const latestBasisRatePct = computed(() => (
 const openInterestChange24h = computed(() => {
   const items = props.contractDetail?.open_interest.items || []
   if (items.length <= 24) return null
-  const current = Number(items.at(-1)?.sum_open_interest)
-  const previous = Number(items.at(-25)?.sum_open_interest)
+  const current = Number(items[items.length - 1]?.sum_open_interest)
+  const previous = Number(items[items.length - 25]?.sum_open_interest)
   if (!Number.isFinite(current) || !Number.isFinite(previous) || previous === 0) return null
   return percentChange(current, previous)
 })

@@ -1,6 +1,37 @@
 // This file is generated from backend FastAPI route contracts.
 // Do not edit manually.
 
+export interface PortfolioAnalyticsResponse {
+  portfolioId: string
+  startDate: string
+  endDate: string
+  periodDays: number
+  totalEquity: number
+  timeWeightedReturnPct?: number | null
+  moneyWeightedReturnPct?: number | null
+  benchmarkSymbol: string
+  benchmarkReturnPct?: number | null
+  excessReturnPct?: number | null
+  annualizedVolatilityPct?: number | null
+  valueAtRisk95?: number | null
+  maxDrawdownPct?: number | null
+  concentrationHhi: number
+  effectivePositionCount?: number | null
+  topPositionWeightPct: number
+  symbols?: Array<string>
+  correlation?: Array<PortfolioCorrelationRowResponse>
+  assets?: Array<PortfolioAssetRiskResponse>
+  performance?: Array<PortfolioPerformancePointResponse>
+  scenarios?: Array<PortfolioScenarioResponse>
+  issues?: Array<string>
+}
+
+export interface PortfolioAnalyticsCommand {
+  periodDays?: number
+  benchmarkSymbol?: string
+  customShocks?: { [key: string]: number }
+}
+
 export interface ToolsPageContractResponse {
   dca_defaults: SimulateDcaCommand
   dca_strategies: Array<"standard" | "ema_deviation" | "rsi_dynamic" | "ahr999" | "fear_greed" | "value_averaging">
@@ -52,6 +83,7 @@ export interface PairCompareToolResponse {
   ratio_symbol: string
   timeframe?: string | null
   relative_strength?: number | null
+  statistics: PairCompareStatisticsResponse
 }
 
 export interface ComparePairsCommand {
@@ -64,6 +96,80 @@ export interface ComparePairsCommand {
 export interface PortfolioCollectionResponse {
   revision: number
   snapshot: PortfolioBalanceSnapshot
+}
+
+export interface PortfolioLedgerResponse {
+  portfolioId: string
+  transactions?: Array<PortfolioTransactionResponse>
+  archivedTransactions?: Array<PortfolioTransactionResponse>
+  summary: PortfolioLedgerSummaryResponse
+}
+
+export interface PortfolioTransactionResponse {
+  id: string
+  portfolioId: string
+  transactionType: "buy" | "sell" | "deposit" | "withdrawal" | "fee" | "transfer_in" | "transfer_out"
+  symbol: string
+  quantity: number
+  unitPrice: number
+  cashAmount: number
+  fee: number
+  currency: string
+  feeCurrency: string
+  externalId?: string | null
+  note: string
+  metadata?: { [key: string]: string | number | boolean | null }
+  version: number
+  occurredAt: string
+  archivedAt?: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PortfolioTransactionCreateCommand {
+  transactionType: "buy" | "sell" | "deposit" | "withdrawal" | "fee" | "transfer_in" | "transfer_out"
+  symbol?: string
+  quantity?: number
+  unitPrice?: number
+  cashAmount?: number
+  fee?: number
+  currency?: string
+  feeCurrency?: string
+  externalId?: string | null
+  note?: string
+  metadata?: { [key: string]: string | number | boolean | null }
+  occurredAt: string
+}
+
+export interface PortfolioTransactionUpdateCommand {
+  transactionType: "buy" | "sell" | "deposit" | "withdrawal" | "fee" | "transfer_in" | "transfer_out"
+  symbol?: string
+  quantity?: number
+  unitPrice?: number
+  cashAmount?: number
+  fee?: number
+  currency?: string
+  feeCurrency?: string
+  externalId?: string | null
+  note?: string
+  metadata?: { [key: string]: string | number | boolean | null }
+  occurredAt: string
+  expectedVersion: number
+}
+
+export interface PortfolioTransactionArchiveCommand {
+  expectedVersion: number
+}
+
+export interface PortfolioTransactionImportResponse {
+  importedCount: number
+  archivedCount: number
+  ledger: PortfolioLedgerResponse
+}
+
+export interface PortfolioTransactionImportCommand {
+  mode?: "append" | "replace"
+  transactions: Array<PortfolioTransactionCreateCommand>
 }
 
 export interface PortfolioCollectionSaveCommand {
@@ -134,7 +240,7 @@ export interface LegacyPortfolioBalancePortfolio {
   holdingsInitializedAt?: string | null
   lastPriceUpdatedAt?: string | null
   seedCapital?: number | null
-  holdingsSource?: "virtual" | null
+  holdingsSource?: "virtual" | "ledger" | null
   createdAt: string
   updatedAt: string
   lastSimulationResult?: PortfolioSimulationSummary | null
@@ -150,6 +256,24 @@ export interface LegacyPortfolioExportDocument {
   exportedAt: string
   snapshot: LegacyPortfolioBalanceSnapshot
   deletedPortfolios?: Array<LegacyPortfolioBalancePortfolio>
+}
+
+export interface PairCompareStatisticsResponse {
+  aligned_points: number
+  symbol_a_return_pct?: number | null
+  symbol_b_return_pct?: number | null
+  excess_return_pct?: number | null
+  return_correlation?: number | null
+  ratio_change_pct?: number | null
+}
+
+export interface PortfolioAssetRiskResponse {
+  symbol: string
+  weightPct: number
+  annualizedVolatilityPct?: number | null
+  riskContributionPct?: number | null
+  periodReturnPct?: number | null
+  returnContributionPct?: number | null
 }
 
 export interface PortfolioBalanceAsset {
@@ -171,7 +295,7 @@ export interface PortfolioBalancePortfolio {
   holdingsInitializedAt?: string | null
   lastPriceUpdatedAt?: string | null
   seedCapital?: number | null
-  holdingsSource?: "virtual" | null
+  holdingsSource?: "virtual" | "ledger" | null
   createdAt: string
   updatedAt: string
 }
@@ -197,10 +321,64 @@ export interface PortfolioBalanceTracking {
   inceptionDate: string
 }
 
+export interface PortfolioCorrelationRowResponse {
+  symbol: string
+  values?: Array<number | null>
+}
+
 export interface PortfolioDeletedSummary {
   id: string
   name: string
   deletedAt: string
+}
+
+export interface PortfolioLedgerPositionResponse {
+  symbol: string
+  units: number
+  averageCost: number
+  costBasis: number
+  marketPrice?: number | null
+  marketValue: number
+  realizedPnl: number
+  unrealizedPnl: number
+  fees: number
+}
+
+export interface PortfolioLedgerSummaryResponse {
+  cashBalance: number
+  contributions: number
+  withdrawals: number
+  netContributions: number
+  totalFees: number
+  costBasis: number
+  marketValue: number
+  totalEquity: number
+  realizedPnl: number
+  unrealizedPnl: number
+  totalPnl: number
+  simpleReturnPct?: number | null
+  moneyWeightedReturnPct?: number | null
+  timeWeightedReturnPct?: number | null
+  positions?: Array<PortfolioLedgerPositionResponse>
+  issues?: Array<string>
+  reliability: "complete" | "incomplete"
+}
+
+export interface PortfolioPerformancePointResponse {
+  date: string
+  equity: number
+  externalCashFlow: number
+  dailyReturnPct?: number | null
+  drawdownPct: number
+}
+
+export interface PortfolioScenarioResponse {
+  id: string
+  name: string
+  shocks?: { [key: string]: number }
+  projectedPnl: number
+  projectedReturnPct?: number | null
+  projectedEquity: number
 }
 
 export interface PortfolioSimulationArtifact {

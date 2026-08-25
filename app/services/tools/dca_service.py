@@ -44,9 +44,11 @@ class DCAService:
             now_local = now_in_timezone(timezone)
 
             start_dt_local = datetime.strptime(start_date_str, "%Y-%m-%d")
+            current_end = not end_date_str
             if end_date_str:
                 end_dt_local = datetime.strptime(end_date_str, "%Y-%m-%d")
                 if end_dt_local.date() == now_local.date():
+                    current_end = True
                     end_dt_local = now_local.replace(tzinfo=None)
                 else:
                     end_dt_local = end_dt_local.replace(hour=23, minute=59, second=59)
@@ -59,7 +61,10 @@ class DCAService:
 
             buffer_days = settings.DCA_INDICATOR_BUFFER_DAYS
             fetch_start_utc = to_utc(start_dt_local - timedelta(days=buffer_days + 1), timezone)
-            fetch_end_utc = to_utc(end_dt_local + timedelta(days=1), timezone)
+            fetch_end_local = end_dt_local if current_end else end_dt_local + timedelta(days=1)
+            fetch_end_utc = to_utc(fetch_end_local, timezone)
+            if current_end:
+                fetch_end_utc = fetch_end_utc.replace(minute=0, second=0, microsecond=0)
             resolved_asset = resolve_market_asset(symbol)
             if not resolved_asset or resolved_asset["asset_class"] == "cash":
                 return {"error": "无效标的"}
@@ -161,4 +166,4 @@ class DCAService:
             }
         except Exception as exc:
             logger.error(f"DCA Error: {exc}", exc_info=True)
-            return {"error": str(exc)}
+            return {"error": "定投所需行情暂时不完整，请稍后重试"}

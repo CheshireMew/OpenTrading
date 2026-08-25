@@ -2,11 +2,7 @@ import { toBaseSymbol } from '@/modules/market'
 
 import { buildPortfolioSimulationSummary, portfolioSimulationInputKey } from './simulation'
 import { fetchPortfolioPriceMap, loadPortfolioSimulationHistory } from './data'
-import {
-  applyLatestMarketPrices,
-  clearPortfolioHoldings,
-  seedPortfolioHoldingsFromMarket,
-} from './holdings'
+import { applyLatestMarketPrices, applyPortfolioLedgerHoldings } from './holdings'
 import {
   createPortfolioBalanceAsset,
   readPortfolioSyntheticPrice,
@@ -15,6 +11,8 @@ import { PortfolioDataError, toPortfolioUserError, type PortfolioTranslate } fro
 import { copyPortfolioInCollection, createPortfolioInCollection, deletePortfolioFromCollection } from './portfolioCrud'
 import type { PortfolioBalancePageState } from './state'
 import type { PortfolioPersistence } from './persistence'
+import type { PortfolioLedgerResponse } from '../contracts'
+import { touchPortfolio } from './snapshot'
 
 export const createPortfolioBalancePageCommands = (
   state: PortfolioBalancePageState,
@@ -37,22 +35,10 @@ export const createPortfolioBalancePageCommands = (
     state.resetFeedback()
     try {
       const { priceBySymbol, successCount, failedSymbols } = await fetchPortfolioPriceMap(portfolio)
-      const needsSeed = (
-        !portfolio.holdingsInitializedAt
-        || portfolio.seedCapital !== portfolio.tracking.virtualCapital
-        || portfolio.assets.some((asset) => toBaseSymbol(asset.symbol) && asset.units <= 0)
-      )
-      if (needsSeed) {
-        seedPortfolioHoldingsFromMarket(portfolio, priceBySymbol)
-        state.sourceMessage.value = failedSymbols.length
-          ? t('portfolioBalance.feedback.initializedWithFailures', { count: successCount, symbols: failedSymbols.join(', ') })
-          : t('portfolioBalance.feedback.initialized', { count: successCount })
-      } else {
-        applyLatestMarketPrices(portfolio, priceBySymbol)
-        state.sourceMessage.value = failedSymbols.length
-          ? t('portfolioBalance.feedback.refreshedWithFailures', { count: successCount, symbols: failedSymbols.join(', ') })
-          : t('portfolioBalance.feedback.refreshed', { count: successCount })
-      }
+      applyLatestMarketPrices(portfolio, priceBySymbol)
+      state.sourceMessage.value = failedSymbols.length
+        ? t('portfolioBalance.feedback.refreshedWithFailures', { count: successCount, symbols: failedSymbols.join(', ') })
+        : t('portfolioBalance.feedback.refreshed', { count: successCount })
     } catch (error: unknown) {
       state.sourceError.value = toPortfolioUserError(error, 'portfolioBalance.feedback.refreshFailed', t)
     } finally {
@@ -79,36 +65,54 @@ export const createPortfolioBalancePageCommands = (
   }
 
   const createPortfolioFromTemplate = async (sample: boolean) => {
-    state.clearSimulationResult()
-    state.activePortfolioId.value = createPortfolioInCollection(
-      state.portfolios,
-      sample
-        ? t('portfolioBalance.samplePortfolioName')
-        : t('portfolioBalance.defaultPortfolioNumbered', { count: state.portfolios.length + 1 }),
-      sample,
-    )
-    state.sourceMessage.value = t('portfolioBalance.feedback.created')
-    state.sourceError.value = ''
-    await persistence.saveNow(true)
-    await persistence.loadSimulation(state.activePortfolioId.value)
+    const previousSnapshot = state.buildSnapshot()
+    state.portfolioTransitioning.value = true
+    try {
+      state.clearSimulationResult()
+      state.activePortfolioId.value = createPortfolioInCollection(
+        state.portfolios,
+        sample
+          ? t('portfolioBalance.samplePortfolioName')
+          : t('portfolioBalance.defaultPortfolioNumbered', { count: state.portfolios.length + 1 }),
+        sample,
+      )
+      state.sourceMessage.value = t('portfolioBalance.feedback.created')
+      state.sourceError.value = ''
+      await persistence.saveNow(true)
+      await persistence.loadSimulation(state.activePortfolioId.value)
+    } catch (error) {
+      state.replaceSnapshot(previousSnapshot)
+      throw error
+    } finally {
+      state.portfolioTransitioning.value = false
+    }
   }
   const createPortfolio = () => createPortfolioFromTemplate(false)
   const createSamplePortfolio = () => createPortfolioFromTemplate(true)
 
   const copyPortfolio = async (portfolioId: string) => {
+    const previousSnapshot = state.buildSnapshot()
     const sourceName = state.portfolios.find((portfolio) => portfolio.id === portfolioId)?.name || t('portfolioBalance.defaultPortfolioName')
-    const nextPortfolioId = copyPortfolioInCollection(
-      state.portfolios,
-      portfolioId,
-      t('portfolioBalance.copyName', { name: sourceName }),
-    )
-    if (!nextPortfolioId) return
-    state.clearSimulationResult()
-    state.activePortfolioId.value = nextPortfolioId
-    state.sourceMessage.value = t('portfolioBalance.feedback.copied')
-    state.sourceError.value = ''
-    await persistence.saveNow(true)
-    await persistence.loadSimulation(state.activePortfolioId.value)
+    state.portfolioTransitioning.value = true
+    try {
+      const nextPortfolioId = copyPortfolioInCollection(
+        state.portfolios,
+        portfolioId,
+        t('portfolioBalance.copyName', { name: sourceName }),
+      )
+      if (!nextPortfolioId) return
+      state.clearSimulationResult()
+      state.activePortfolioId.value = nextPortfolioId
+      state.sourceMessage.value = t('portfolioBalance.feedback.copied')
+      state.sourceError.value = ''
+      await persistence.saveNow(true)
+      await persistence.loadSimulation(state.activePortfolioId.value)
+    } catch (error) {
+      state.replaceSnapshot(previousSnapshot)
+      throw error
+    } finally {
+      state.portfolioTransitioning.value = false
+    }
   }
 
   const deletePortfolio = async (portfolioId: string) => {
@@ -141,9 +145,11 @@ export const createPortfolioBalancePageCommands = (
     const index = portfolio.assets.findIndex((asset) => asset.id === assetId)
     if (index < 0) return
 
+    if (portfolio.assets[index].units > 0) {
+      state.sourceError.value = t('portfolioBalance.feedback.archiveHoldingFirst')
+      return
+    }
     portfolio.assets.splice(index, 1)
-    clearPortfolioHoldings(portfolio, 'virtual')
-    scheduleMarketRefresh()
   })
 
   const updateAssetSymbol = (assetId: string, rawValue: string) => {
@@ -155,6 +161,10 @@ export const createPortfolioBalancePageCommands = (
       const previousSymbol = toBaseSymbol(asset.symbol)
       const nextSymbol = toBaseSymbol(rawValue)
       if (previousSymbol === nextSymbol) return
+      if (asset.units > 0) {
+        state.sourceError.value = t('portfolioBalance.feedback.archiveHoldingFirst')
+        return
+      }
 
       asset.symbol = nextSymbol
       asset.currentPrice = readPortfolioSyntheticPrice(nextSymbol) ?? 0
@@ -163,7 +173,6 @@ export const createPortfolioBalancePageCommands = (
         asset.targetWeight = 0
       }
 
-      clearPortfolioHoldings(portfolio, 'virtual')
       shouldRefresh = true
     })
 
@@ -178,9 +187,17 @@ export const createPortfolioBalancePageCommands = (
 
     const nextWeight = Number(rawValue)
     asset.targetWeight = Number.isFinite(nextWeight) && nextWeight > 0 ? nextWeight : 0
-    clearPortfolioHoldings(portfolio, 'virtual')
-    scheduleMarketRefresh()
   })
+
+  const applyPortfolioLedger = (ledger: PortfolioLedgerResponse) => {
+    const portfolio = state.activePortfolio.value
+    if (!portfolio || ledger.portfolioId !== portfolio.id) return
+    if (!applyPortfolioLedgerHoldings(portfolio, ledger)) return
+    touchPortfolio(portfolio)
+    if (portfolio.assets.some((asset) => toBaseSymbol(asset.symbol) && asset.currentPrice <= 0)) {
+      scheduleMarketRefresh(0)
+    }
+  }
 
   const runSimulation = async () => {
     const portfolio = state.activePortfolio.value
@@ -236,6 +253,7 @@ export const createPortfolioBalancePageCommands = (
     removeAsset,
     updateAssetSymbol,
     updateAssetTargetWeight,
+    applyPortfolioLedger,
     runSimulation,
   }
 }

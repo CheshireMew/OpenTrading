@@ -33,6 +33,40 @@ export const APP_ROUTE_DEFINITIONS = [
     nav: { section: 'indicators', labelKey: 'nav.web3Rank', icon: 'CubeTransparentIcon' },
   },
   {
+    path: '/research',
+    name: 'ResearchWorkbench',
+    component: () => import('@/views/research/ResearchWorkbench.vue'),
+    meta: { titleKey: 'nav.research' },
+    nav: { section: 'research', labelKey: 'nav.research', icon: 'BookmarkSquareIcon' },
+  },
+  {
+    path: '/research/signals',
+    name: 'TradeSignalReview',
+    component: () => import('@/views/research/TradeSignalReview.vue'),
+    meta: { titleKey: 'nav.signalReview' },
+    nav: { section: 'research', labelKey: 'nav.signalReview', icon: 'PresentationChartLineIcon' },
+  },
+  {
+    path: '/research/screeners',
+    name: 'MarketScreeners',
+    component: () => import('@/views/research/MarketScreeners.vue'),
+    meta: { titleKey: 'nav.screeners' },
+    nav: { section: 'research', labelKey: 'nav.screeners', icon: 'FunnelIcon' },
+  },
+  {
+    path: '/research/reports',
+    name: 'ResearchReports',
+    component: () => import('@/views/research/ResearchReports.vue'),
+    meta: { titleKey: 'nav.reports' },
+    nav: { section: 'research', labelKey: 'nav.reports', icon: 'DocumentTextIcon' },
+  },
+  {
+    path: '/research/assets/:symbol(.*)',
+    name: 'AssetResearch',
+    component: () => import('@/views/research/AssetResearch.vue'),
+    meta: { titleKey: 'nav.tokenResearch' },
+  },
+  {
     path: '/tools/compare',
     name: 'Compare',
     component: () => import('@/views/tools/Compare.vue'),
@@ -72,6 +106,13 @@ export const APP_ROUTE_DEFINITIONS = [
     nav: { section: 'system', labelKey: 'nav.settings', icon: 'CogIcon' },
   },
   {
+    path: '/system/data-health',
+    name: 'DataHealth',
+    component: () => import('@/views/system/DataHealth.vue'),
+    meta: { titleKey: 'nav.dataHealth' },
+    nav: { section: 'system', labelKey: 'nav.dataHealth', icon: 'CircleStackIcon' },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/NotFound.vue'),
@@ -82,6 +123,7 @@ export const APP_ROUTE_DEFINITIONS = [
 export const APP_NAV_SECTIONS = [
   { key: 'primary', titleKey: null },
   { key: 'indicators', titleKey: 'nav.indicators' },
+  { key: 'research', titleKey: 'nav.researchSection' },
   { key: 'tools', titleKey: 'nav.tools' },
   { key: 'system', titleKey: 'nav.system' },
 ] as const

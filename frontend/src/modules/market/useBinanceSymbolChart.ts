@@ -4,7 +4,6 @@ import { useI18n } from 'vue-i18n'
 import { useTheme } from '@/composables/useTheme'
 import { binanceMarketApi } from './api'
 import type {
-  BinanceBreakoutMonitorItemResponse,
   BinanceContractResearchDetailResponse,
 } from './contracts'
 import { displaySymbol, type ChartDialogState } from './binanceMarketShared'
@@ -78,7 +77,7 @@ export function useBinanceSymbolChart() {
   })
 
   const openChart = (
-    item: Pick<BinanceBreakoutMonitorItemResponse, 'symbol'> & Partial<Pick<BinanceBreakoutMonitorItemResponse, 'market' | 'market_label'>>,
+    item: { symbol?: string | null; market?: string | null; market_label?: string | null },
   ) => {
     const rawSymbol = String(item.symbol || '').trim().toUpperCase()
     if (!rawSymbol) return

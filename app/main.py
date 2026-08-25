@@ -13,11 +13,17 @@ from app.domain.portfolios import (
     PortfolioNotFoundError,
     PortfolioRevisionConflictError,
 )
+from app.domain.research import (
+    ResearchDuplicateError,
+    ResearchNotFoundError,
+    ResearchRevisionConflictError,
+)
 from app.exceptions import (
     AppError,
     app_error_handler,
     invalid_request_handler,
     portfolio_domain_error_handler,
+    research_domain_error_handler,
     unhandled_exception_handler,
     request_validation_error_handler,
 )
@@ -46,6 +52,9 @@ def create_app(role: RuntimeRole | None = None) -> FastAPI:
     app.add_exception_handler(PortfolioRevisionConflictError, portfolio_domain_error_handler)
     app.add_exception_handler(PortfolioNotFoundError, portfolio_domain_error_handler)
     app.add_exception_handler(PortfolioCollectionMismatchError, portfolio_domain_error_handler)
+    app.add_exception_handler(ResearchNotFoundError, research_domain_error_handler)
+    app.add_exception_handler(ResearchRevisionConflictError, research_domain_error_handler)
+    app.add_exception_handler(ResearchDuplicateError, research_domain_error_handler)
     app.add_exception_handler(InvalidRequestError, invalid_request_handler)
     app.add_exception_handler(RequestValidationError, request_validation_error_handler)
     app.add_exception_handler(Exception, unhandled_exception_handler)
@@ -64,6 +73,7 @@ def create_app(role: RuntimeRole | None = None) -> FastAPI:
             ("PUT", api_path("/tools/portfolios")): settings.PORTFOLIO_CHANGE_MAX_BYTES,
             ("PUT", api_path("/tools/portfolios/{portfolio_id}/simulation")): settings.PORTFOLIO_SIMULATION_MAX_BYTES,
             ("POST", api_path("/tools/portfolios/import")): settings.PORTFOLIO_IMPORT_MAX_BYTES,
+            ("POST", api_path("/tools/portfolios/{portfolio_id}/transactions/import")): settings.PORTFOLIO_TRANSACTION_IMPORT_MAX_BYTES,
         },
     )
     app.state.runtime_role = resolved_role

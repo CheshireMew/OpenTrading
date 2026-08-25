@@ -6,6 +6,7 @@ import type {
   PortfolioCollectionResponse,
 } from '../contracts'
 import { buildPortfolioChangeCommand, clonePortfolioSnapshot } from './changeSet'
+import { createPortfolioSaveState } from './saveState'
 
 import {
   createEmptyPortfolioBalanceSnapshot,
@@ -35,8 +36,7 @@ export const createPortfolioPersistence = (
   defaultPortfolioName: string,
 ) => {
   let saveTimer: ReturnType<typeof setTimeout> | null = null
-  let dirty = false
-  let changeVersion = 0
+  const saveState = createPortfolioSaveState()
   let simulationLoadVersion = 0
   let acknowledgedSnapshot: PortfolioBalanceSnapshot | null = null
   let operationChain: Promise<void> = Promise.resolve()
@@ -55,12 +55,12 @@ export const createPortfolioPersistence = (
   }
 
   const saveCurrent = async () => {
-    const saveVersion = changeVersion
+    const saveVersion = saveState.captureVersion()
     const snapshot = state.buildSnapshot()
     const baseline = acknowledgedSnapshot || { activePortfolioId: '', portfolios: [] }
     const command = buildPortfolioChangeCommand(snapshot, baseline, state.revision.value)
     if (!command) {
-      if (changeVersion === saveVersion) dirty = false
+      saveState.acknowledge(saveVersion)
       return null
     }
     state.storageSaving.value = true
@@ -69,7 +69,7 @@ export const createPortfolioPersistence = (
       const response = await toolsApi.changePortfolioCollection(command)
       state.applySaveMetadata(response)
       acknowledgeResponse(response)
-      if (changeVersion === saveVersion) dirty = false
+      saveState.acknowledge(saveVersion)
       return response
     } catch (error: unknown) {
       state.storageError.value = apiErrorMessage(error, 'Failed to save portfolio changes')
@@ -80,14 +80,13 @@ export const createPortfolioPersistence = (
   }
 
   const saveNow = (force = false) => serializeOperation(async () => {
-    if (!force && !dirty) return null
+    if (!force && !saveState.isDirty()) return null
     return saveCurrent()
   })
 
   const queueSave = () => {
     if (!state.storageReady.value) return
-    dirty = true
-    changeVersion += 1
+    saveState.markDirty()
     if (saveTimer) clearTimeout(saveTimer)
     saveTimer = setTimeout(() => {
       saveTimer = null
@@ -144,8 +143,7 @@ export const createPortfolioPersistence = (
   const initialize = async () => {
     if (saveTimer) clearTimeout(saveTimer)
     saveTimer = null
-    dirty = false
-    changeVersion = 0
+    saveState.clear()
     acknowledgedSnapshot = null
     state.storageReady.value = false
     state.storageLoading.value = true
@@ -187,7 +185,7 @@ export const createPortfolioPersistence = (
   }
 
   const restore = (portfolioId: string) => serializeOperation(async () => {
-    if (dirty) await saveCurrent()
+    if (saveState.isDirty()) await saveCurrent()
     state.storageSaving.value = true
     try {
       const response = await toolsApi.restorePortfolio(portfolioId, {
@@ -199,7 +197,7 @@ export const createPortfolioPersistence = (
         loadDeleted(true),
         loadSimulation(response.snapshot.activePortfolioId || ''),
       ])
-      dirty = false
+      saveState.clear()
       state.storageError.value = ''
       return response
     } catch (error: unknown) {
@@ -214,7 +212,7 @@ export const createPortfolioPersistence = (
     document: PortfolioCollectionImportCommand['document'],
     mode: PortfolioCollectionImportCommand['mode'] = 'merge',
   ) => serializeOperation(async () => {
-    if (dirty) await saveCurrent()
+    if (saveState.isDirty()) await saveCurrent()
     state.storageSaving.value = true
     try {
       const response = await toolsApi.importPortfolioCollection({
@@ -228,7 +226,7 @@ export const createPortfolioPersistence = (
         loadDeleted(true),
         loadSimulation(response.snapshot.activePortfolioId || ''),
       ])
-      dirty = false
+      saveState.clear()
       state.storageError.value = ''
       return response
     } catch (error: unknown) {
@@ -240,7 +238,7 @@ export const createPortfolioPersistence = (
   })
 
   const exportDocument = () => serializeOperation(async () => {
-    if (dirty) await saveCurrent()
+    if (saveState.isDirty()) await saveCurrent()
     return toolsApi.exportPortfolioCollection()
   })
 
@@ -251,7 +249,7 @@ export const createPortfolioPersistence = (
   }
 
   const reload = () => serializeOperation(async () => {
-    if (dirty) await saveCurrent()
+    if (saveState.isDirty()) await saveCurrent()
     await initialize()
   })
 

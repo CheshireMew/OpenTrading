@@ -317,6 +317,14 @@ class StubToolsAppService:
             "ratio_ohlc": [],
             "ratio_symbol": f"{command.symbol_a}/{command.symbol_b}",
             "relative_strength": 1.12,
+            "statistics": {
+                "aligned_points": 0,
+                "symbol_a_return_pct": None,
+                "symbol_b_return_pct": None,
+                "excess_return_pct": None,
+                "return_correlation": None,
+                "ratio_change_pct": None,
+            },
         }
 
 

@@ -28,6 +28,7 @@ export function useWeb3HeatRankPanel(chainId: Ref<string>) {
   const web3Loading = ref(false)
   const web3ErrorKey = ref('')
   const web3Error = computed(() => (web3ErrorKey.value ? t(web3ErrorKey.value) : ''))
+  const web3UpdatedAt = ref<string | null>(null)
   const web3Dialog = ref<Web3TokenDialogState>({ open: false, token: null })
   const web3DetailLoading = ref(false)
   const web3DetailErrorKey = ref('')
@@ -95,6 +96,7 @@ export function useWeb3HeatRankPanel(chainId: Ref<string>) {
         })
         if (requestKey !== heatRankRequestKey()) return
         applyHeatRankPayload(response)
+        web3UpdatedAt.value = new Date().toISOString()
         web3HeatRankWarmSnapshot.write(response, requestChainId, WEB3_HEAT_RANK_SIZE)
       } catch (requestError) {
         if (requestKey !== heatRankRequestKey()) return
@@ -195,6 +197,7 @@ export function useWeb3HeatRankPanel(chainId: Ref<string>) {
     web3Sort,
     web3Loading,
     web3Error,
+    web3UpdatedAt,
     web3Dialog,
     web3Dynamic,
     web3Audit,

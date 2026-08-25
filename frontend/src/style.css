@@ -26,15 +26,16 @@
   .app-section-title { @apply text-lg font-semibold text-stone-950 dark:text-white; }
   .app-subtitle { @apply text-sm leading-6 text-stone-600 dark:text-slate-300; }
   .app-muted { @apply text-stone-500 dark:text-slate-400; }
-  .app-button-primary { @apply px-5 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400; background: #0f6b4f; }
+  .app-button-primary { @apply px-5 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400; min-height: 44px; background: #0f6b4f; }
   .app-button-primary:hover { background: #0b5a41; }
-  .app-button-secondary { @apply border bg-white px-4 py-2 text-sm font-semibold transition dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800; border-color: #e4ded3; color: #0f6b4f; }
+  .app-button-secondary { @apply border bg-white px-4 py-2 text-sm font-semibold transition dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800; min-height: 44px; border-color: #e4ded3; color: #0f6b4f; }
   .app-button-secondary:hover { background: #f4f1ea; }
   .app-control { @apply border bg-white px-3 py-2 text-sm text-stone-700 outline-none transition focus:border-emerald-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100; border-color: #e4ded3; }
   .app-table-head { @apply text-stone-500 dark:bg-slate-900/60 dark:text-slate-400; background: #fbfaf7; }
   .app-table-row { @apply border-t text-stone-700 transition hover:bg-stone-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700/50; border-color: #eee7dc; }
   .app-table-scroll { @apply overflow-x-auto; overscroll-behavior-inline: contain; }
   .app-table-scroll-hint { @apply border-b px-5 py-2 text-xs text-stone-500 dark:border-slate-700 dark:text-slate-400 sm:hidden; border-color: #eee7dc; background: linear-gradient(90deg, rgba(15, 107, 79, 0.08), transparent); }
+  .app-touch-target { min-height: 44px; min-width: 44px; }
   .app-chip { @apply px-3 py-1 text-xs font-semibold dark:bg-slate-900 dark:text-slate-300; background: #edf3ee; color: #0f4f3c; }
 }
 
@@ -83,4 +84,77 @@ html.dark :focus-visible {
 
 html.dark .app-page {
   background: #0f172a;
+}
+
+.dashboard-workspace { min-height: 500px; }
+.dca-config-grid { grid-template-columns: minmax(0, 1fr); }
+.dca-market-grid { grid-template-columns: minmax(0, 1fr); }
+.dca-result-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.dca-chart-grid { grid-template-columns: minmax(0, 1fr); }
+.halving-summary-grid { grid-template-columns: minmax(0, 1fr); }
+.binance-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.app-responsive-table { container-type: inline-size; }
+
+@container app-content (min-width: 34rem) {
+  .dca-config-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dca-market-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .dca-result-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .halving-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .halving-progress-card { grid-column: span 2 / span 2; }
+}
+
+@container app-content (min-width: 56rem) {
+  .dashboard-workspace { flex-direction: row; }
+  .dashboard-sidebar { width: 20rem; border-right-width: 1px; border-bottom-width: 0; }
+  .dashboard-chart { height: auto; flex: 1 1 0%; }
+  .dca-config-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .dca-config-submit { grid-column: span 2 / span 2; }
+  .dca-result-metrics { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .dca-chart-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .halving-summary-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .binance-summary { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@container app-content (min-width: 100rem) {
+  .binance-layout { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 2rem; }
+}
+
+.app-responsive-table .app-table-scroll-hint { display: none; }
+
+@container (max-width: 60rem) {
+  .app-responsive-table .app-table-scroll { overflow: visible; }
+  .app-responsive-table table { display: block; min-width: 0 !important; width: 100%; }
+  .app-responsive-table thead { display: none; }
+  .app-responsive-table tbody { display: grid; gap: 0.75rem; padding: 0.75rem; }
+  .app-responsive-table tr.app-table-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: hidden;
+    border: 1px solid #eee7dc;
+    background: #fff;
+  }
+  .app-responsive-table tr.app-table-row:hover { background: #fff; }
+  .app-responsive-table tr.app-table-row td {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    padding: 0.75rem !important;
+    text-align: left;
+  }
+  .app-responsive-table tr.app-table-row td::before {
+    content: attr(data-label);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #78716c;
+  }
+  .app-responsive-table tr.app-table-row td.app-table-primary { grid-column: 1 / -1; }
+  .app-responsive-table tr.app-table-empty-row { display: block; }
+  .app-responsive-table tr.app-table-empty-row td { display: block; width: 100%; }
+  html.dark .app-responsive-table tr.app-table-row { border-color: #334155; background: #1e293b; }
+  html.dark .app-responsive-table tr.app-table-row:hover { background: #1e293b; }
+  html.dark .app-responsive-table tr.app-table-row td::before { color: #94a3b8; }
 }

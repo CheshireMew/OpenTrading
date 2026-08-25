@@ -1,7 +1,7 @@
 export type PortfolioReviewFrequency = 'daily' | 'weekly' | 'monthly' | 'quarterly'
 export type PortfolioSuggestedAction = 'wait' | 'cashflow' | 'full'
 export type PortfolioSuggestedReason = 'on_track' | 'scheduled_review' | 'band_breach' | 'cashflow_first' | 'full_rebalance' | 'below_threshold'
-export type PortfolioHoldingsSource = 'virtual'
+export type PortfolioHoldingsSource = 'virtual' | 'ledger'
 
 export interface PortfolioBalanceAssetInput {
   id: string

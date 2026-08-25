@@ -2,7 +2,7 @@
 数据库 Schema 定义
 仅定义表结构数据模型，与业务逻辑分离
 """
-from sqlalchemy import Column, Integer, String, Float, DateTime, Text, ForeignKey, JSON, BigInteger, Index
+from sqlalchemy import Column, Integer, String, Float, DateTime, Text, ForeignKey, JSON, BigInteger, Index, UniqueConstraint
 from sqlalchemy.orm import declarative_base, relationship
 
 from app.domain.market.constants import KLINE_SYMBOL_MAX_LENGTH
@@ -193,5 +193,280 @@ class RuntimeComponentStatus(Base):
     error_code = Column(String(80), nullable=True)
     error_detail = Column(Text, nullable=True)
     updated_at = Column(DateTime, nullable=False)
+
+
+class ResearchWatchlist(Base):
+    """Named research collection; archived lists remain recoverable."""
+
+    __tablename__ = "research_watchlists"
+
+    id = Column(String(120), primary_key=True)
+    name = Column(String(160), nullable=False)
+    description = Column(Text, nullable=False, default="")
+    position = Column(Integer, nullable=False, default=0)
+    version = Column(Integer, nullable=False, default=1)
+    archived_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=utc_now_naive, nullable=False)
+    updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
+
+    __table_args__ = (
+        Index("ix_research_watchlists_active_position", "archived_at", "position"),
+    )
+
+
+class ResearchWatchItem(Base):
+    """A durable symbol-level research thesis inside a watchlist."""
+
+    __tablename__ = "research_watch_items"
+
+    id = Column(String(120), primary_key=True)
+    watchlist_id = Column(
+        String(120),
+        ForeignKey("research_watchlists.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    symbol = Column(String(160), nullable=False)
+    asset_class = Column(String(32), nullable=False, default="crypto")
+    display_name = Column(String(200), nullable=False, default="")
+    thesis = Column(Text, nullable=False, default="")
+    target_price = Column(Float, nullable=True)
+    invalidation_price = Column(Float, nullable=True)
+    tags = Column(JSON, nullable=False, default=list)
+    source_context = Column(JSON, nullable=False, default=dict)
+    position = Column(Integer, nullable=False, default=0)
+    version = Column(Integer, nullable=False, default=1)
+    archived_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=utc_now_naive, nullable=False)
+    updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("watchlist_id", "symbol", name="uq_research_watch_item_symbol"),
+        Index("ix_research_watch_items_symbol_active", "symbol", "archived_at"),
+        Index("ix_research_watch_items_list_position", "watchlist_id", "archived_at", "position"),
+    )
+
+
+class ResearchNote(Base):
+    """Versioned research journal entry attached to a symbol."""
+
+    __tablename__ = "research_notes"
+
+    id = Column(String(120), primary_key=True)
+    watch_item_id = Column(
+        String(120),
+        ForeignKey("research_watch_items.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    symbol = Column(String(160), nullable=False)
+    kind = Column(String(32), nullable=False, default="update")
+    title = Column(String(240), nullable=False)
+    content = Column(Text, nullable=False, default="")
+    snapshot = Column(JSON, nullable=False, default=dict)
+    version = Column(Integer, nullable=False, default=1)
+    occurred_at = Column(DateTime, nullable=False)
+    archived_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=utc_now_naive, nullable=False)
+    updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
+
+    __table_args__ = (
+        Index("ix_research_notes_symbol_occurred", "symbol", "archived_at", "occurred_at"),
+    )
+
+
+class ResearchAlertRule(Base):
+    """Persisted threshold or crossing rule evaluated by the research runtime."""
+
+    __tablename__ = "research_alert_rules"
+
+    id = Column(String(120), primary_key=True)
+    watch_item_id = Column(
+        String(120),
+        ForeignKey("research_watch_items.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    symbol = Column(String(160), nullable=False)
+    name = Column(String(200), nullable=False)
+    metric = Column(String(80), nullable=False)
+    operator = Column(String(24), nullable=False)
+    threshold = Column(Float, nullable=False)
+    secondary_threshold = Column(Float, nullable=True)
+    enabled = Column(Integer, nullable=False, default=1)
+    cooldown_minutes = Column(Integer, nullable=False, default=60)
+    notification_channels = Column(JSON, nullable=False, default=list)
+    configuration = Column(JSON, nullable=False, default=dict)
+    last_value = Column(Float, nullable=True)
+    last_evaluated_at = Column(DateTime, nullable=True)
+    last_triggered_at = Column(DateTime, nullable=True)
+    version = Column(Integer, nullable=False, default=1)
+    archived_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=utc_now_naive, nullable=False)
+    updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
+
+    __table_args__ = (
+        Index("ix_research_alerts_enabled_symbol", "archived_at", "enabled", "symbol"),
+    )
+
+
+class ResearchEvent(Base):
+    """Immutable timeline event emitted by research, alerts, signals, and reports."""
+
+    __tablename__ = "research_events"
+
+    id = Column(String(120), primary_key=True)
+    entity_type = Column(String(40), nullable=False)
+    entity_id = Column(String(120), nullable=True)
+    symbol = Column(String(160), nullable=True)
+    kind = Column(String(60), nullable=False)
+    title = Column(String(240), nullable=False)
+    body = Column(Text, nullable=False, default="")
+    payload = Column(JSON, nullable=False, default=dict)
+    occurred_at = Column(DateTime, nullable=False)
+    acknowledged_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=utc_now_naive, nullable=False)
+
+    __table_args__ = (
+        Index("ix_research_events_timeline", "occurred_at", "kind"),
+        Index("ix_research_events_entity", "entity_type", "entity_id", "occurred_at"),
+    )
+
+
+class PortfolioTransactionRecord(Base):
+    """Recoverable transaction ledger used to derive holdings and performance."""
+
+    __tablename__ = "portfolio_transactions"
+
+    id = Column(String(120), primary_key=True)
+    portfolio_id = Column(
+        String(120),
+        ForeignKey("portfolio_records.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    transaction_type = Column(String(32), nullable=False)
+    symbol = Column(String(160), nullable=False, default="")
+    quantity = Column(Float, nullable=False, default=0)
+    unit_price = Column(Float, nullable=False, default=0)
+    cash_amount = Column(Float, nullable=False, default=0)
+    fee = Column(Float, nullable=False, default=0)
+    currency = Column(String(16), nullable=False, default="USD")
+    fee_currency = Column(String(16), nullable=False, default="USD")
+    external_id = Column(String(200), nullable=True)
+    note = Column(Text, nullable=False, default="")
+    metadata_payload = Column("metadata", JSON, nullable=False, default=dict)
+    version = Column(Integer, nullable=False, default=1)
+    occurred_at = Column(DateTime, nullable=False)
+    archived_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=utc_now_naive, nullable=False)
+    updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
+
+    __table_args__ = (
+        Index("ix_portfolio_transactions_timeline", "portfolio_id", "archived_at", "occurred_at"),
+        Index("ix_portfolio_transactions_symbol", "portfolio_id", "symbol", "occurred_at"),
+    )
+
+
+class TradeSignalRecord(Base):
+    """Generated trade setup plus its independently evaluated market outcome."""
+
+    __tablename__ = "trade_signal_records"
+
+    id = Column(String(120), primary_key=True)
+    symbol = Column(String(160), nullable=False)
+    timeframe = Column(String(16), nullable=False)
+    source = Column(String(32), nullable=False)
+    mode = Column(String(32), nullable=False)
+    signal_status = Column(String(32), nullable=False)
+    side = Column(String(16), nullable=True)
+    entry = Column(Float, nullable=True)
+    target = Column(Float, nullable=True)
+    stop = Column(Float, nullable=True)
+    risk_reward = Column(Float, nullable=True)
+    confidence = Column(Integer, nullable=True)
+    risk_amount = Column(Float, nullable=True)
+    style = Column(String(40), nullable=True)
+    strategy = Column(String(80), nullable=True)
+    reason = Column(Text, nullable=False, default="")
+    error_code = Column(String(80), nullable=True)
+    current_price = Column(Float, nullable=True)
+    entry_time = Column(BigInteger, nullable=True)
+    market_snapshot = Column(JSON, nullable=False, default=dict)
+    outcome_status = Column(String(32), nullable=False, default="pending")
+    outcome_price = Column(Float, nullable=True)
+    target_hit_at = Column(DateTime, nullable=True)
+    stop_hit_at = Column(DateTime, nullable=True)
+    mfe_pct = Column(Float, nullable=True)
+    mae_pct = Column(Float, nullable=True)
+    forward_returns = Column(JSON, nullable=False, default=dict)
+    evaluated_at = Column(DateTime, nullable=True)
+    expires_at = Column(DateTime, nullable=True)
+    version = Column(Integer, nullable=False, default=1)
+    archived_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=utc_now_naive, nullable=False)
+    updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
+
+    __table_args__ = (
+        Index("ix_trade_signals_pending", "archived_at", "outcome_status", "created_at"),
+        Index("ix_trade_signals_symbol_time", "symbol", "timeframe", "created_at"),
+        Index("ix_trade_signals_source_outcome", "source", "outcome_status", "created_at"),
+    )
+
+
+class SavedMarketScreener(Base):
+    """Versioned market filter definition with recoverable archives."""
+
+    __tablename__ = "saved_market_screeners"
+
+    id = Column(String(120), primary_key=True)
+    name = Column(String(200), nullable=False)
+    description = Column(Text, nullable=False, default="")
+    filters = Column(JSON, nullable=False, default=dict)
+    version = Column(Integer, nullable=False, default=1)
+    archived_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=utc_now_naive, nullable=False)
+    updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
+
+    __table_args__ = (Index("ix_saved_screeners_active_updated", "archived_at", "updated_at"),)
+
+
+class MarketScreenerRun(Base):
+    """Immutable screener result snapshot used for historical replay."""
+
+    __tablename__ = "market_screener_runs"
+
+    id = Column(String(120), primary_key=True)
+    screener_id = Column(String(120), ForeignKey("saved_market_screeners.id", ondelete="CASCADE"), nullable=False)
+    filters_snapshot = Column(JSON, nullable=False, default=dict)
+    result_items = Column(JSON, nullable=False, default=list)
+    result_count = Column(Integer, nullable=False, default=0)
+    snapshot_as_of = Column(DateTime, nullable=False)
+    evaluated_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=utc_now_naive, nullable=False)
+
+    __table_args__ = (
+        Index("ix_screener_runs_history", "screener_id", "snapshot_as_of"),
+        Index("ix_screener_runs_evaluated", "evaluated_at"),
+    )
+
+
+class ResearchReportRecord(Base):
+    """Generated, reproducible research report with the structured source snapshot."""
+
+    __tablename__ = "research_reports"
+
+    id = Column(String(120), primary_key=True)
+    title = Column(String(240), nullable=False)
+    report_type = Column(String(40), nullable=False)
+    symbol = Column(String(160), nullable=True)
+    portfolio_id = Column(String(120), ForeignKey("portfolio_records.id", ondelete="SET NULL"), nullable=True)
+    content_markdown = Column(Text, nullable=False)
+    data_snapshot = Column(JSON, nullable=False, default=dict)
+    version = Column(Integer, nullable=False, default=1)
+    archived_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=utc_now_naive, nullable=False)
+    updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
+
+    __table_args__ = (
+        Index("ix_research_reports_type_created", "report_type", "archived_at", "created_at"),
+        Index("ix_research_reports_symbol_created", "symbol", "created_at"),
+    )
 
 

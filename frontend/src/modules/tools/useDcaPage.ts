@@ -31,6 +31,7 @@ export function useDcaPage() {
   const strategyKeys = ref<string[]>([])
   const multiplierDefault = ref(0)
   const dcaMaxDays = ref(3650)
+  const marketReady = ref(false)
 
   const loading = ref(false)
   const errorMessage = ref('')
@@ -58,6 +59,7 @@ export function useDcaPage() {
     }
     loading.value = true
     errorMessage.value = ''
+    result.value = null
     try {
       await ensureSymbolCatalogLoaded()
       const payload: SimulateDcaCommand = {
@@ -117,7 +119,12 @@ export function useDcaPage() {
     if (isIndexSymbol(config.symbol) && ['ahr999', 'fear_greed'].includes(config.strategy)) {
       config.strategy = 'standard'
     }
+    if (marketReady.value) void fetchMarketIndicators()
   })
+
+  watch(config, () => {
+    if (result.value) result.value = null
+  }, { deep: true })
 
   watch(theme, () => {
     if (result.value) {
@@ -152,6 +159,7 @@ export function useDcaPage() {
         () => buildDcaSnapshot(config, defaultConfig, strategyKeys.value),
       )
     }
+    marketReady.value = true
     await fetchMarketIndicators()
     if (result.value) {
       renderCharts()
@@ -189,6 +197,7 @@ export function useDcaPage() {
     errorMessage,
     result,
     marketData,
+    fetchMarketIndicators,
     roiChartCanvas,
     priceChartCanvas,
     investmentChartCanvas,

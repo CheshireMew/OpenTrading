@@ -1,8 +1,8 @@
 <template>
   <div class="app-page">
     <div class="app-page-inner-wide flex min-h-full flex-col">
-    <div class="app-panel flex flex-1 flex-col overflow-hidden transition-colors md:min-h-[500px] md:flex-row">
-      <aside class="w-full border-b border-stone-200 bg-white transition-colors dark:border-gray-700 dark:bg-gray-900 md:w-80 md:border-b-0 md:border-r">
+    <div class="dashboard-workspace app-panel flex flex-1 flex-col overflow-hidden transition-colors">
+      <aside class="dashboard-sidebar w-full border-b border-stone-200 bg-white transition-colors dark:border-gray-700 dark:bg-gray-900">
         <div class="border-b border-stone-200 p-4 dark:border-gray-700">
           <div class="app-section-title">{{ $t('dashboard.tradeSetup') }}</div>
         </div>
@@ -55,7 +55,8 @@
           </label>
 
           <button
-            class="app-button-primary w-full px-4 py-3"
+            type="button"
+            class="app-button-primary app-touch-target w-full px-4 py-3"
             :disabled="page.tradeSetupLoading || !page.canAskTradeSetup"
             @click="page.askTradeSetup"
           >
@@ -89,7 +90,7 @@
             </div>
           </div>
 
-          <div v-if="page.tradeSetupError" class="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200">
+          <div v-if="page.tradeSetupError" role="alert" class="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200">
             {{ page.tradeSetupError }}
           </div>
         </div>
@@ -103,17 +104,23 @@
               class="w-full sm:w-72"
               @select="page.handleSymbolSelect"
             />
+            <AddToResearchButton
+              :symbol="page.currentSymbol"
+              asset-class="crypto"
+              :display-name="page.currentSymbol"
+              :source-context="{ route: '/', timeframe: page.currentTimeframe }"
+            />
             <div class="flex max-w-full space-x-1 overflow-x-auto border border-stone-200 bg-white p-1 transition-colors dark:border-gray-700 dark:bg-gray-900">
-                <button v-for="tf in page.visibleTimeframes" :key="tf"
+                <button v-for="tf in page.visibleTimeframes" :key="tf" type="button"
                     @click="page.currentTimeframe = tf"
-                    :class="['px-3 py-1 text-xs transition-all', page.currentTimeframe === tf ? 'bg-[#edf3ee] text-[#0f6b4f] dark:bg-emerald-500 dark:text-slate-950' : 'text-stone-500 hover:bg-stone-100 hover:text-stone-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200']">
+                    :class="['app-touch-target px-3 py-1 text-xs transition-all', page.currentTimeframe === tf ? 'bg-[#edf3ee] text-[#0f6b4f] dark:bg-emerald-500 dark:text-slate-950' : 'text-stone-500 hover:bg-stone-100 hover:text-stone-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200']">
                     {{ tf }}
                 </button>
             </div>
          </div>
       </div>
 
-      <div class="relative h-[420px] flex-none md:h-auto md:flex-1">
+      <div class="dashboard-chart relative h-[420px] flex-none">
          <div v-if="page.klineLoadError" role="alert" class="absolute left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-3 border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700 shadow-lg dark:border-rose-500/30 dark:bg-rose-950/90 dark:text-rose-200">
             <span>{{ $t('dashboard.historyLoadFailed') }}</span>
             <button type="button" class="font-semibold underline" @click="page.retryKline">{{ $t('app.retry') }}</button>
@@ -140,6 +147,7 @@ defineOptions({ name: 'Dashboard' })
 
 import TradingViewChart from '@/components/TradingViewChart.vue'
 import SymbolSearchBox from '@/components/SymbolSearchBox.vue'
+import AddToResearchButton from '@/components/research/AddToResearchButton.vue'
 import { useDashboardPage } from '@/modules/market'
 
 const page = useDashboardPage()

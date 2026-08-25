@@ -48,6 +48,15 @@ class ToolCandlestickPointResponse(BaseModel):
     close: float
 
 
+class PairCompareStatisticsResponse(BaseModel):
+    aligned_points: int
+    symbol_a_return_pct: float | None = None
+    symbol_b_return_pct: float | None = None
+    excess_return_pct: float | None = None
+    return_correlation: float | None = None
+    ratio_change_pct: float | None = None
+
+
 class PairCompareToolResponse(BaseModel):
     symbol_a: str
     symbol_b: str
@@ -57,6 +66,7 @@ class PairCompareToolResponse(BaseModel):
     ratio_symbol: str
     timeframe: str | None = None
     relative_strength: float | None = None
+    statistics: PairCompareStatisticsResponse
 
 
 class ToolsPageContractResponse(BaseModel):

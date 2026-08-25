@@ -1,49 +1,62 @@
-import type { PortfolioBalancePortfolio, PortfolioHoldingsSource } from './types'
+import type { PortfolioBalancePortfolio } from './types'
 
-import {
-  buildNormalizedPortfolioWeights,
-} from './assets'
-import {
-  round,
-  sanitizeNumber,
-} from './number'
+import { createPortfolioBalanceAsset } from './assets'
+import { round, sanitizeNumber } from './number'
 import { toBaseSymbol } from '@/modules/market'
 
-export const clearPortfolioHoldings = (
-  portfolio: PortfolioBalancePortfolio,
-  nextSource: PortfolioHoldingsSource | null = null,
-) => {
-  portfolio.assets.forEach((asset) => {
-    if (!toBaseSymbol(asset.symbol)) return
-    asset.units = 0
-    asset.seedValue = 0
-  })
-  portfolio.holdingsInitializedAt = null
-  portfolio.lastPriceUpdatedAt = null
-  portfolio.seedCapital = null
-  portfolio.holdingsSource = nextSource
+interface LedgerPositionInput {
+  symbol: string
+  units: number
+  costBasis: number
+  marketPrice?: number | null
 }
 
-export const seedPortfolioHoldingsFromMarket = (
+interface LedgerInput {
+  transactions?: unknown[]
+  summary: { positions?: LedgerPositionInput[] }
+}
+
+export const applyPortfolioLedgerHoldings = (
   portfolio: PortfolioBalancePortfolio,
-  priceBySymbol: Map<string, number>,
+  ledger: LedgerInput,
 ) => {
-  const { normalizedWeights } = buildNormalizedPortfolioWeights(portfolio.assets)
-  portfolio.assets.forEach((asset, index) => {
-    const symbol = toBaseSymbol(asset.symbol)
-    const normalizedTargetWeight = normalizedWeights[index] || 0
-    const currentPrice = sanitizeNumber(priceBySymbol.get(symbol), asset.currentPrice)
-    const seedValue = round(portfolio.tracking.virtualCapital * normalizedTargetWeight, 2)
-    asset.currentPrice = currentPrice
-    asset.seedValue = seedValue
-    asset.units = currentPrice > 0 ? round(seedValue / currentPrice, 8) : 0
+  const ledgerIsAuthoritative = Boolean(ledger.transactions?.length) || portfolio.holdingsSource === 'ledger'
+  if (!ledgerIsAuthoritative) return false
+
+  const positions = new Map(
+    (ledger.summary.positions || [])
+      .map((position) => [toBaseSymbol(position.symbol), position] as const)
+      .filter(([symbol, position]) => Boolean(symbol) && Math.abs(position.units) > 1e-12),
+  )
+  let changed = portfolio.holdingsSource !== 'ledger' || portfolio.seedCapital !== null || !portfolio.holdingsInitializedAt
+
+  portfolio.assets.forEach((asset) => {
+    const position = positions.get(toBaseSymbol(asset.symbol))
+    const nextUnits = round(position?.units || 0, 8)
+    const nextSeedValue = round(position?.costBasis || 0, 2)
+    const nextPrice = sanitizeNumber(position?.marketPrice, asset.currentPrice)
+    if (asset.units !== nextUnits || asset.seedValue !== nextSeedValue || asset.currentPrice !== nextPrice) changed = true
+    asset.units = nextUnits
+    asset.seedValue = nextSeedValue
+    asset.currentPrice = nextPrice
+    if (position) positions.delete(toBaseSymbol(asset.symbol))
   })
 
-  const timestamp = new Date().toISOString()
-  portfolio.holdingsInitializedAt = timestamp
-  portfolio.lastPriceUpdatedAt = timestamp
-  portfolio.seedCapital = portfolio.tracking.virtualCapital
-  portfolio.holdingsSource = 'virtual'
+  positions.forEach((position, symbol) => {
+    portfolio.assets.push(createPortfolioBalanceAsset({
+      symbol,
+      targetWeight: 0,
+      units: round(position.units, 8),
+      seedValue: round(position.costBasis, 2),
+      currentPrice: sanitizeNumber(position.marketPrice),
+    }))
+    changed = true
+  })
+
+  portfolio.holdingsInitializedAt ||= new Date().toISOString()
+  portfolio.seedCapital = null
+  portfolio.holdingsSource = 'ledger'
+  return changed
 }
 
 export const applyLatestMarketPrices = (

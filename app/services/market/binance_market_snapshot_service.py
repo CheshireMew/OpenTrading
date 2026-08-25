@@ -96,13 +96,14 @@ class BinanceMarketSnapshotService:
         spot_ticker_loader: TickerLoader | None = None,
         usdm_ticker_loader: TickerLoader | None = None,
         usdm_mark_loader: MarkPriceLoader | None = None,
+        force: bool = False,
     ) -> None:
         async with self._seed_lock:
             self._seed_completed = False
             self._seed_success_count = 0
             self._seed_error = None
             try:
-                if await self._store.has_market_page_snapshot():
+                if not force and await self._store.has_market_page_snapshot():
                     self._seed_success_count = 1
                     return
                 loaders = (

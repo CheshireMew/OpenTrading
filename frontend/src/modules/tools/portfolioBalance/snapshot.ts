@@ -134,7 +134,7 @@ export const createPortfolioBalancePortfolio = (
 ): PortfolioBalancePortfolio => {
   const timestamp = todayIso()
   const holdingsSource: PortfolioHoldingsSource | null =
-    overrides.holdingsSource === 'virtual'
+    overrides.holdingsSource === 'virtual' || overrides.holdingsSource === 'ledger'
       ? overrides.holdingsSource
       : null
 
@@ -190,7 +190,7 @@ export const normalizePortfolioBalancePortfolio = (value: unknown): PortfolioBal
 
   const rawHoldingsSource = readString(value.holdingsSource, '')
   const holdingsSource: PortfolioHoldingsSource | null =
-    rawHoldingsSource === 'virtual'
+    rawHoldingsSource === 'virtual' || rawHoldingsSource === 'ledger'
       ? rawHoldingsSource
       : null
 

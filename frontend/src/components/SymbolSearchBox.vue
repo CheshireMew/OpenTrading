@@ -3,10 +3,11 @@
     <button
       type="button"
       class="symbol-trigger"
-      :class="triggerClass"
       aria-haspopup="dialog"
       :aria-expanded="open"
       :aria-label="ariaLabel || placeholderText"
+      :disabled="disabled"
+      :class="[triggerClass, disabled ? 'cursor-not-allowed opacity-60' : '']"
       @click="openSearch"
     >
       <span class="truncate" :class="displayText ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'">
@@ -68,7 +69,15 @@
           </div>
 
           <div class="min-h-0 flex-1 overflow-y-auto">
+            <div v-if="catalogLoading" role="status" aria-live="polite" class="px-5 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
+              {{ t('symbolSearch.loading') }}
+            </div>
+            <div v-else-if="catalogError" role="alert" class="px-5 py-10 text-center text-sm text-rose-700 dark:text-rose-300">
+              <p>{{ catalogError }}</p>
+              <button type="button" class="app-button-secondary app-touch-target mt-4" @click="loadCatalog">{{ t('common.retry') }}</button>
+            </div>
             <button
+              v-else
               v-for="item in filteredSymbols"
               :key="item.symbol"
               type="button"
@@ -87,7 +96,7 @@
               </span>
             </button>
 
-            <div v-if="!filteredSymbols.length" class="px-5 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
+            <div v-if="!catalogLoading && !catalogError && !filteredSymbols.length" class="px-5 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
               {{ t('symbolSearch.noMatches') }}
             </div>
           </div>
@@ -112,6 +121,7 @@ const props = withDefaults(defineProps<{
   outputMode?: 'symbol' | 'base'
   placeholder?: string
   triggerClass?: string
+  disabled?: boolean
   disabledLabel?: string
   ariaLabel?: string
 }>(), {
@@ -120,6 +130,7 @@ const props = withDefaults(defineProps<{
   outputMode: 'symbol',
   placeholder: '',
   triggerClass: '',
+  disabled: false,
   disabledLabel: '',
   ariaLabel: '',
 })
@@ -132,6 +143,8 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const { symbols, loadSymbols } = useSymbolCatalog()
 const open = ref(false)
+const catalogLoading = ref(false)
+const catalogError = ref('')
 const query = ref('')
 const searchInput = ref<HTMLInputElement | null>(null)
 const activeClass = ref('all')
@@ -177,10 +190,24 @@ const filteredSymbols = computed(() => {
 const outputValue = (item: MarketSymbolSearchItem) => props.outputMode === 'base' ? toBaseSymbol(item.symbol) : item.symbol
 
 const openSearch = async () => {
+  if (props.disabled) return
   open.value = true
-  await loadSymbols()
   await nextTick()
   searchInput.value?.focus()
+  await loadCatalog()
+}
+
+const loadCatalog = async () => {
+  if (symbols.value.length) return
+  catalogLoading.value = true
+  catalogError.value = ''
+  try {
+    await loadSymbols()
+  } catch {
+    catalogError.value = t('symbolSearch.loadFailed')
+  } finally {
+    catalogLoading.value = false
+  }
 }
 
 function closeSearch() {
@@ -219,7 +246,7 @@ const classLabel = (value: string) => {
 const marketLabel = (item: MarketSymbolSearchItem) => item.exchange || item.market
 
 onMounted(() => {
-  loadSymbols()
+  void loadCatalog()
 })
 </script>
 

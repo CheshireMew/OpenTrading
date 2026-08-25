@@ -13,6 +13,7 @@ from app.dependencies import (
     get_fred_api_config_service,
     get_llm_config_service,
     get_runtime_services,
+    get_data_health_service,
 )
 from app.exceptions import AppError
 from app.infra.executor import run_external_io
@@ -25,10 +26,21 @@ from app.contracts.dto.config import (
     SystemConfigResponse,
     CurrencyRatesResponse,
 )
+from app.contracts.data_health import DataHealthResponse, DataRepairCommand, DataRepairResponse
 from app.product import APP_VERSION
 from config import settings
 
 router = FrontendContractRouter(frontend_contract_target="config")
+
+
+@router.get("/data-health", response_model=DataHealthResponse)
+async def get_data_health(service=Depends(get_data_health_service)):
+    return await service.get_health()
+
+
+@router.post("/data-health/repair", response_model=DataRepairResponse)
+async def repair_data_source(body: DataRepairCommand, service=Depends(get_data_health_service)):
+    return await service.repair(body)
 
 
 def _require_local_settings_request(request: Request) -> None:

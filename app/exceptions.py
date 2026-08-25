@@ -13,6 +13,11 @@ from app.domain.portfolios import (
     PortfolioNotFoundError,
     PortfolioRevisionConflictError,
 )
+from app.domain.research import (
+    ResearchDuplicateError,
+    ResearchNotFoundError,
+    ResearchRevisionConflictError,
+)
 from utils.logger import logger
 
 
@@ -71,6 +76,19 @@ async def portfolio_domain_error_handler(_request: Request, exc: Exception):
     if isinstance(exc, PortfolioNotFoundError):
         status_code = 404
     elif isinstance(exc, (PortfolioRevisionConflictError, PortfolioCollectionMismatchError)):
+        status_code = 409
+    else:
+        status_code = 500
+    return JSONResponse(
+        status_code=status_code,
+        content=ApiErrorResponse(detail=str(exc)).model_dump(),
+    )
+
+
+async def research_domain_error_handler(_request: Request, exc: Exception):
+    if isinstance(exc, ResearchNotFoundError):
+        status_code = 404
+    elif isinstance(exc, (ResearchRevisionConflictError, ResearchDuplicateError)):
         status_code = 409
     else:
         status_code = 500

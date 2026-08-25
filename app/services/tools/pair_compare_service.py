@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from math import sqrt
 
 from app.domain.market.constants import timeframe_to_milliseconds
 from app.services.market.symbol_catalog import resolve_market_asset
@@ -28,9 +29,8 @@ class PairCompareService:
             resolved_timeframe = "1d" if resolved_a["asset_class"] == "index" or resolved_b["asset_class"] == "index" else timeframe
             logger.info(f"开始对比: {resolved_a['symbol']} vs {resolved_b['symbol']}, {days}天, 显示周期{resolved_timeframe}")
 
-            end_date = datetime.now()
-            start_date = end_date - timedelta(days=days)
             base_timeframe = settings.PAIR_COMPARE_BASE_TIMEFRAME
+            start_date, end_date = self._closed_history_window(days, base_timeframe)
             klines_a = self._fetch_history(resolved_a, start_date, end_date, base_timeframe)
             klines_b = self._fetch_history(resolved_b, start_date, end_date, base_timeframe)
             if not klines_a or not klines_b:
@@ -44,6 +44,8 @@ class PairCompareService:
             if not aligned["timestamps"]:
                 return {"error": "数据时间戳无法对齐"}
 
+            statistics = self._calculate_statistics(aligned["data_a"], aligned["data_b"])
+
             return {
                 "symbol_a": resolved_a["symbol"],
                 "symbol_b": resolved_b["symbol"],
@@ -52,10 +54,32 @@ class PairCompareService:
                 "ratio_ohlc": self._calculate_ratio_ohlc(aligned["data_a"], aligned["data_b"]),
                 "ratio_symbol": f"{resolved_a['symbol']}/{resolved_b['symbol']}",
                 "timeframe": resolved_timeframe,
+                "relative_strength": statistics["excess_return_pct"],
+                "statistics": statistics,
             }
-        except Exception as exc:
-            logger.error(f"币种对比失败: {exc}")
+        except ValueError as exc:
+            logger.warning(f"币种对比参数无效: {exc}")
             return {"error": str(exc)}
+        except Exception as exc:
+            logger.exception(f"币种对比失败: {exc}")
+            return {"error": "对比所需行情暂时不完整，请稍后重试"}
+
+    @staticmethod
+    def _closed_history_window(
+        days: int,
+        base_timeframe: str,
+        *,
+        now: datetime | None = None,
+    ) -> tuple[datetime, datetime]:
+        """Return an aligned range whose right edge excludes the open candle."""
+        interval_ms = timeframe_to_milliseconds(base_timeframe)
+        if interval_ms <= 0:
+            raise ValueError("对比基础周期配置无效")
+        current = now or datetime.now()
+        current_ms = int(current.timestamp() * 1000)
+        end_ms = (current_ms // interval_ms) * interval_ms
+        end_date = datetime.fromtimestamp(end_ms / 1000)
+        return end_date - timedelta(days=days), end_date
 
     def _resolve_symbol(self, symbol: str) -> dict[str, str]:
         resolved = resolve_market_asset(symbol)
@@ -148,3 +172,51 @@ class PairCompareService:
                 }
             )
         return ratio_klines
+
+    @staticmethod
+    def _calculate_statistics(klines_a: list[list[float]], klines_b: list[list[float]]) -> dict[str, float | int | None]:
+        closes_a = [float(row[4]) for row in klines_a]
+        closes_b = [float(row[4]) for row in klines_b]
+        aligned_points = min(len(closes_a), len(closes_b))
+        if aligned_points < 2 or not closes_a[0] or not closes_b[0]:
+            return {
+                "aligned_points": aligned_points,
+                "symbol_a_return_pct": None,
+                "symbol_b_return_pct": None,
+                "excess_return_pct": None,
+                "return_correlation": None,
+                "ratio_change_pct": None,
+            }
+
+        return_a = (closes_a[-1] / closes_a[0] - 1) * 100
+        return_b = (closes_b[-1] / closes_b[0] - 1) * 100
+        ratio_start = closes_a[0] / closes_b[0] if closes_b[0] else None
+        ratio_end = closes_a[-1] / closes_b[-1] if closes_b[-1] else None
+        periodic_a = [current / previous - 1 for previous, current in zip(closes_a, closes_a[1:]) if previous]
+        periodic_b = [current / previous - 1 for previous, current in zip(closes_b, closes_b[1:]) if previous]
+        correlation = PairCompareService._correlation(periodic_a, periodic_b)
+        return {
+            "aligned_points": aligned_points,
+            "symbol_a_return_pct": round(return_a, 4),
+            "symbol_b_return_pct": round(return_b, 4),
+            "excess_return_pct": round(return_a - return_b, 4),
+            "return_correlation": round(correlation, 4) if correlation is not None else None,
+            "ratio_change_pct": round((ratio_end / ratio_start - 1) * 100, 4)
+            if ratio_start and ratio_end is not None
+            else None,
+        }
+
+    @staticmethod
+    def _correlation(left: list[float], right: list[float]) -> float | None:
+        count = min(len(left), len(right))
+        if count < 2:
+            return None
+        left = left[:count]
+        right = right[:count]
+        left_mean = sum(left) / count
+        right_mean = sum(right) / count
+        numerator = sum((a - left_mean) * (b - right_mean) for a, b in zip(left, right))
+        left_variance = sum((value - left_mean) ** 2 for value in left)
+        right_variance = sum((value - right_mean) ** 2 for value in right)
+        denominator = sqrt(left_variance * right_variance)
+        return numerator / denominator if denominator else None

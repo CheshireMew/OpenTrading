@@ -9,7 +9,11 @@ Heimdall 是一个本地运行的加密货币市场研究与组合分析应用�
 - 实时行情、EMA、MACD、RSI、ATR 和结构化模型分析
 - 市场信号、Binance 合约市场与 Web3 排行
 - 币种对比、DCA 模拟、减半周期观察
-- 多组合配置、服务端持久化、软删除恢复、JSON 导入与导出
+- 研究清单、投资判断、研究笔记、价格与指标提醒，以及统一资产研究页
+- 自动保存的交易信号、结果评估、MFE/MAE 和分来源、分策略复盘
+- 可保存、运行和按历史快照回看的市场筛选器
+- 多组合交易流水、成本与费用核算、TWR/MWR、基准对比、相关性和压力测试
+- 可复现的 Markdown 研究报告，以及数据覆盖、时效和运行状态诊断
 - 独立的 API 与后台运行进程，数据库心跳、即时首次采集和运行健康检查
 - 设置页中的模型提供商、FRED 和显示货币配置
 
@@ -65,6 +69,8 @@ DATABASE_URL=postgresql://user:password@localhost:5432/heimdall
 ```powershell
 .\venv\Scripts\python.exe -m scripts.prepare_db
 ```
+
+现有数据库会依次升级到研究追踪、组合流水、信号复盘、筛选器和报告所需的表结构。新增研究功能的操作口径、CLI 示例和历史结果限制见 `docs/RESEARCH_WORKFLOWS.md`。
 
 ## 启动
 
@@ -137,6 +143,20 @@ CI 在 `windows-latest` 上使用 Python 3.12.10 和 Node.js 22.23.0，依赖安
 `data/btc_history_early.json` 含早期合成数据和后续交易所代理数据。精确日期边界、生成过程、文件哈希和适用限制见 `data/README.md`。DCA 页面会在结果涉及合成区间时显示数据质量警告。
 
 外部数据源、可选降级路径和诊断命令见 `docs/DATA_SOURCES.md`。
+
+## 研究 CLI
+
+外部 Agent 或脚本可以直接调用稳定的命令行入口，不需要把 Agent 运行时嵌入应用。命令只向标准输出写一行结构化 JSON；成功时 `ok` 为 `true`，失败时以非零状态退出并把同一结构写到标准错误。
+
+```powershell
+.\venv\Scripts\python.exe -m scripts.research_cli health
+.\venv\Scripts\python.exe -m scripts.research_cli asset BTC/USDT --timeframe 1h
+.\venv\Scripts\python.exe -m scripts.research_cli signals evaluate
+.\venv\Scripts\python.exe -m scripts.research_cli portfolio <组合ID> --benchmark BTC/USDT --shock BTC/USDT=-30
+.\venv\Scripts\python.exe -m scripts.research_cli report generate --type daily_brief --title "每日研究简报"
+```
+
+完整命令和参数使用 `-h` 查看，工作流说明见 `docs/RESEARCH_WORKFLOWS.md`。
 
 ## 项目结构
 

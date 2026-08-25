@@ -24,7 +24,7 @@
           @load-more-deleted="handleLoadMoreDeletedPortfolios"
         />
 
-        <main v-if="storageReady && !storageLoading && activePortfolio" class="min-w-0 space-y-6">
+        <main v-if="storageReady && !storageLoading && !portfolioTransitioning && activePortfolio" class="min-w-0 space-y-6">
           <PortfolioBalanceSetup
             :active-portfolio="activePortfolio"
             :tracking="tracking"
@@ -42,9 +42,15 @@
             @update-rebalance-band="strategy.rebalanceBand = $event"
             @update-min-trade-amount="strategy.minTradeAmount = $event"
           />
+          <PortfolioLedgerPanel
+            :portfolio-id="activePortfolio.id"
+            :price-refresh-key="activePortfolio.lastPriceUpdatedAt"
+            @ledger-updated="applyPortfolioLedger"
+          />
           <PortfolioAssetsTable
             :assets="assets"
             :plan="plan"
+            :holdings-source="activePortfolio.holdingsSource"
             :can-remove-asset="canRemoveAsset"
             @update-symbol="updateAssetSymbol"
             @update-weight="updateAssetTargetWeight"
@@ -59,7 +65,17 @@
             @update-start-date="simulation.simulationStartDate = $event"
             @update-initial-capital="simulation.initialCapital = $event"
           />
+          <PortfolioRiskPanel
+            :portfolio-id="activePortfolio.id"
+            :refresh-key="activePortfolio.lastPriceUpdatedAt"
+          />
         </main>
+        <section v-else-if="storageReady && !storageLoading && portfolioTransitioning" role="status" aria-live="polite" class="app-panel flex min-h-[24rem] min-w-0 items-center justify-center p-8 text-center">
+          <div class="max-w-lg">
+            <h2 class="app-section-title text-xl">{{ $t('portfolioBalance.preparingTitle') }}</h2>
+            <p class="app-muted mt-3 text-sm leading-6">{{ $t('portfolioBalance.preparingDescription') }}</p>
+          </div>
+        </section>
         <section v-else-if="storageReady && !storageLoading" class="app-panel flex min-h-[24rem] min-w-0 items-center justify-center p-8 text-center">
           <div class="max-w-lg">
             <h2 class="app-section-title text-xl">{{ $t('portfolioBalance.emptyTitle') }}</h2>
@@ -82,6 +98,8 @@ import PortfolioAssetsTable from '@/components/portfolio/PortfolioAssetsTable.vu
 import PortfolioBalanceSetup from '@/components/portfolio/PortfolioBalanceSetup.vue'
 import PortfolioBalanceSidebar from '@/components/portfolio/PortfolioBalanceSidebar.vue'
 import PortfolioSimulationPanel from '@/components/portfolio/PortfolioSimulationPanel.vue'
+import PortfolioLedgerPanel from '@/components/portfolio/PortfolioLedgerPanel.vue'
+import PortfolioRiskPanel from '@/components/portfolio/PortfolioRiskPanel.vue'
 import { usePortfolioBalancePage } from '@/modules/tools'
 import { parsePortfolioImportFile } from '@/modules/tools/portfolioBalance'
 import { useSymbolCatalog } from '@/modules/market'
@@ -105,6 +123,7 @@ const {
   sourceMessage,
   sourceError,
   storageReady,
+  portfolioTransitioning,
   storageLoading,
   storageSaving,
   storageError,
@@ -119,6 +138,7 @@ const {
   removeAsset,
   updateAssetSymbol,
   updateAssetTargetWeight,
+  applyPortfolioLedger,
   refreshMarketPrices,
   runSimulation,
   importPortfolioDocument,

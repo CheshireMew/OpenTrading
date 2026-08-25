@@ -27,7 +27,7 @@ export function useBinanceMarketPage() {
   const chart = useBinanceSymbolChart()
 
   const openChart = (
-    item: Pick<BinanceBreakoutMonitorItemResponse, 'symbol'> & Partial<Pick<BinanceBreakoutMonitorItemResponse, 'market' | 'market_label'>>,
+    item: { symbol?: string | null; market?: string | null; market_label?: string | null },
   ) => {
     market.clearMonitorDetail()
     chart.openChart(item)
@@ -136,12 +136,14 @@ export function useBinanceMarketPage() {
     chartData: chart.chartData,
     volumeData: chart.volumeData,
     chartLoadingMore: chart.chartLoadingMore,
+    chartError: chart.chartError,
     contractDetail: chart.contractDetail,
     contractDetailLoading: chart.contractDetailLoading,
     contractDetailError: chart.contractDetailError,
     openChart,
     closeChart,
     loadMoreChartHistory: chart.loadMoreChartHistory,
+    retryChart: chart.retryChart,
     formatSigned: formatSignedMetric,
     formatScore,
     formatTime: (value: number | null | undefined) => formatTime(value, locale.value),

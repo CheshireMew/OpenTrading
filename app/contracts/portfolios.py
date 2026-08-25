@@ -77,7 +77,7 @@ class PortfolioBalancePortfolio(BaseModel):
     holdingsInitializedAt: str | None = Field(default=None, max_length=64)
     lastPriceUpdatedAt: str | None = Field(default=None, max_length=64)
     seedCapital: float | None = Field(default=None, ge=0)
-    holdingsSource: Literal["virtual"] | None = None
+    holdingsSource: Literal["virtual", "ledger"] | None = None
     createdAt: str = Field(max_length=64)
     updatedAt: str = Field(max_length=64)
 
@@ -228,3 +228,204 @@ class PortfolioCollectionImportCommand(BaseModel):
         PortfolioExportDocument | LegacyPortfolioExportDocument,
         Field(discriminator="schemaVersion"),
     ]
+
+
+PortfolioTransactionType = Literal[
+    "buy",
+    "sell",
+    "deposit",
+    "withdrawal",
+    "fee",
+    "transfer_in",
+    "transfer_out",
+]
+
+
+class PortfolioTransactionCreateCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    transactionType: PortfolioTransactionType
+    symbol: str = Field(default="", max_length=160)
+    quantity: float = Field(default=0, ge=0)
+    unitPrice: float = Field(default=0, ge=0)
+    cashAmount: float = Field(default=0, ge=0)
+    fee: float = Field(default=0, ge=0)
+    currency: str = Field(default="USD", min_length=1, max_length=16)
+    feeCurrency: str = Field(default="USD", min_length=1, max_length=16)
+    externalId: str | None = Field(default=None, max_length=200)
+    note: str = Field(default="", max_length=10_000)
+    metadata: dict[str, str | int | float | bool | None] = Field(default_factory=dict)
+    occurredAt: datetime
+
+    @model_validator(mode="after")
+    def validate_transaction_shape(self):
+        if self.transactionType in {"buy", "sell", "transfer_in", "transfer_out"}:
+            if not self.symbol.strip():
+                raise ValueError("资产流水必须填写标的")
+            if self.quantity <= 0:
+                raise ValueError("资产流水数量必须大于 0")
+        if self.transactionType in {"buy", "sell"} and self.unitPrice <= 0:
+            raise ValueError("买卖流水单价必须大于 0")
+        if self.transactionType in {"deposit", "withdrawal", "fee"} and self.cashAmount <= 0:
+            raise ValueError("现金流水金额必须大于 0")
+        return self
+
+
+class PortfolioTransactionUpdateCommand(PortfolioTransactionCreateCommand):
+    expectedVersion: int = Field(ge=1)
+
+
+class PortfolioTransactionArchiveCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    expectedVersion: int = Field(ge=1)
+
+
+class PortfolioTransactionResponse(BaseModel):
+    id: str
+    portfolioId: str
+    transactionType: PortfolioTransactionType
+    symbol: str
+    quantity: float
+    unitPrice: float
+    cashAmount: float
+    fee: float
+    currency: str
+    feeCurrency: str
+    externalId: str | None = None
+    note: str
+    metadata: dict[str, str | int | float | bool | None] = Field(default_factory=dict)
+    version: int
+    occurredAt: datetime
+    archivedAt: datetime | None = None
+    createdAt: datetime
+    updatedAt: datetime
+
+
+class PortfolioLedgerPositionResponse(BaseModel):
+    symbol: str
+    units: float
+    averageCost: float
+    costBasis: float
+    marketPrice: float | None = None
+    marketValue: float
+    realizedPnl: float
+    unrealizedPnl: float
+    fees: float
+
+
+class PortfolioLedgerSummaryResponse(BaseModel):
+    cashBalance: float
+    contributions: float
+    withdrawals: float
+    netContributions: float
+    totalFees: float
+    costBasis: float
+    marketValue: float
+    totalEquity: float
+    realizedPnl: float
+    unrealizedPnl: float
+    totalPnl: float
+    simpleReturnPct: float | None = None
+    moneyWeightedReturnPct: float | None = None
+    timeWeightedReturnPct: float | None = None
+    positions: list[PortfolioLedgerPositionResponse] = Field(default_factory=list)
+    issues: list[str] = Field(default_factory=list)
+    reliability: Literal["complete", "incomplete"]
+
+
+class PortfolioLedgerResponse(BaseModel):
+    portfolioId: str
+    transactions: list[PortfolioTransactionResponse] = Field(default_factory=list)
+    archivedTransactions: list[PortfolioTransactionResponse] = Field(default_factory=list)
+    summary: PortfolioLedgerSummaryResponse
+
+
+class PortfolioTransactionImportCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["append", "replace"] = "append"
+    transactions: list[PortfolioTransactionCreateCommand] = Field(min_length=1, max_length=5_000)
+
+
+class PortfolioTransactionImportResponse(BaseModel):
+    importedCount: int = Field(ge=0)
+    archivedCount: int = Field(ge=0)
+    ledger: PortfolioLedgerResponse
+
+
+class PortfolioAnalyticsCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    periodDays: int = Field(default=365, ge=30, le=3_650)
+    benchmarkSymbol: str = Field(default="BTC/USDT", min_length=1, max_length=160)
+    customShocks: dict[str, float] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def validate_shocks(self):
+        normalized: dict[str, float] = {}
+        for symbol, value in self.customShocks.items():
+            key = symbol.strip().upper()
+            if not key:
+                continue
+            if not -100 <= value <= 1_000:
+                raise ValueError("情景冲击必须在 -100% 到 1000% 之间")
+            normalized[key] = value
+        self.customShocks = normalized
+        return self
+
+
+class PortfolioPerformancePointResponse(BaseModel):
+    date: str
+    equity: float
+    externalCashFlow: float
+    dailyReturnPct: float | None = None
+    drawdownPct: float
+
+
+class PortfolioAssetRiskResponse(BaseModel):
+    symbol: str
+    weightPct: float
+    annualizedVolatilityPct: float | None = None
+    riskContributionPct: float | None = None
+    periodReturnPct: float | None = None
+    returnContributionPct: float | None = None
+
+
+class PortfolioCorrelationRowResponse(BaseModel):
+    symbol: str
+    values: list[float | None] = Field(default_factory=list)
+
+
+class PortfolioScenarioResponse(BaseModel):
+    id: str
+    name: str
+    shocks: dict[str, float] = Field(default_factory=dict)
+    projectedPnl: float
+    projectedReturnPct: float | None = None
+    projectedEquity: float
+
+
+class PortfolioAnalyticsResponse(BaseModel):
+    portfolioId: str
+    startDate: str
+    endDate: str
+    periodDays: int
+    totalEquity: float
+    timeWeightedReturnPct: float | None = None
+    moneyWeightedReturnPct: float | None = None
+    benchmarkSymbol: str
+    benchmarkReturnPct: float | None = None
+    excessReturnPct: float | None = None
+    annualizedVolatilityPct: float | None = None
+    valueAtRisk95: float | None = None
+    maxDrawdownPct: float | None = None
+    concentrationHhi: float
+    effectivePositionCount: float | None = None
+    topPositionWeightPct: float
+    symbols: list[str] = Field(default_factory=list)
+    correlation: list[PortfolioCorrelationRowResponse] = Field(default_factory=list)
+    assets: list[PortfolioAssetRiskResponse] = Field(default_factory=list)
+    performance: list[PortfolioPerformancePointResponse] = Field(default_factory=list)
+    scenarios: list[PortfolioScenarioResponse] = Field(default_factory=list)
+    issues: list[str] = Field(default_factory=list)

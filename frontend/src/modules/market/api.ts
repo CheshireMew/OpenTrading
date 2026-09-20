@@ -11,7 +11,6 @@ import type {
   CurrentPriceResponse,
   RealtimeResponse,
   KlineTailResponse,
-  TradeSetupResponse,
   MarketHistoryResponse,
   MarketHistoryBatchResponse,
   MarketIndicatorResponse,
@@ -36,7 +35,6 @@ import type {
   GetMarketHistoryQueryParams,
   GetMarketIndicatorsQueryParams,
   GetRealtimeAnalysisQueryParams,
-  GetTradeSetupQueryParams,
 } from './contracts'
 
 const MARKET_API_TIMEOUT_MS = {
@@ -44,7 +42,6 @@ const MARKET_API_TIMEOUT_MS = {
   liveMarket: 30000,
   history: 30000,
   externalMarket: 30000,
-  aiTradeSetup: 180000,
 } as const
 
 export const marketCatalogApi = {
@@ -60,19 +57,6 @@ export const marketLiveApi = {
 }
 
 export const marketInsightApi = {
-  getTradeSetup(params: GetTradeSetupQueryParams & {
-    signal?: AbortSignal
-  }): Promise<TradeSetupResponse> {
-    const client = params.mode === 'ai' ? 'longTask' : undefined
-    const { signal, ...query } = params
-    return apiGet('get_trade_setup', {
-      client,
-      query,
-      signal,
-      timeout: params.mode === 'ai' ? MARKET_API_TIMEOUT_MS.aiTradeSetup : MARKET_API_TIMEOUT_MS.standard,
-    })
-  },
-
   getIndicators(params: GetMarketIndicatorsQueryParams): Promise<MarketIndicatorResponse[]> {
     return apiGet('get_market_indicators', { query: params })
   },

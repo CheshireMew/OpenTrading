@@ -144,30 +144,6 @@ def make_binance_breakout_monitor_response() -> dict:
     }
 
 
-def make_trade_setup_response() -> dict:
-    return {
-        "symbol": "BTC/USDT",
-        "timeframe": "1h",
-        "timestamp": "2025-06-01T12:00:00",
-        "current_price": 116.0,
-        "setup": {
-            "side": "long",
-            "entry": 116.0,
-            "target": 126.6,
-            "stop": 110.7,
-            "risk_reward": 2.0,
-            "confidence": 85,
-            "risk_amount": 10.0,
-            "entry_time": 1710007200000,
-            "style": "Scalping",
-            "strategy": "最大收益",
-            "source": "rules",
-        },
-        "reason": "做多：价格站上EMA，MACD 偏强，RSI 61.2",
-        "source": "rules",
-        "status": "ready",
-        "error_code": None,
-    }
 
 
 class StubMarketQueryAppService:
@@ -238,8 +214,6 @@ class StubMarketInsightAppService:
     async def get_indicators_async(self, **kwargs):
         return [make_market_indicator()]
 
-    async def get_trade_setup(self, **kwargs):
-        return make_trade_setup_response()
 
 
 class StubBinanceMarketPageService:

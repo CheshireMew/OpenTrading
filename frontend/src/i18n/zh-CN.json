@@ -13,7 +13,9 @@
     "notFound": "页面未找到"
   },
   "nav": {
-    "realtime": "实时分析",
+    "localBacktests": "策略回测",
+    "parameterSweeps": "批量参数比较",
+    "realtime": "图表工作台",
     "indicators": "市场指标",
     "marketSignals": "市场信号",
     "binanceMarket": "币安市场",
@@ -31,7 +33,8 @@
     "halving": "减半周期",
     "system": "系统",
     "settings": "配置中心",
-    "dataHealth": "数据健康"
+    "dataHealth": "数据健康",
+    "researchResults": "研究结果目录"
   },
   "theme": {
     "dark": "深色模式",
@@ -100,8 +103,17 @@
     "thesis": "当前判断与证据",
     "saving": "保存中…",
     "saveThesis": "保存当前判断",
-    "tabs": { "journal": "研究日志", "alerts": "提醒", "timeline": "时间线" },
-    "noteKinds": { "thesis": "核心判断", "update": "进展更新", "review": "阶段复盘", "decision": "决策记录" },
+    "tabs": {
+      "journal": "研究日志",
+      "alerts": "提醒",
+      "timeline": "时间线"
+    },
+    "noteKinds": {
+      "thesis": "核心判断",
+      "update": "进展更新",
+      "review": "阶段复盘",
+      "decision": "决策记录"
+    },
     "noteTitle": "笔记标题",
     "noteContent": "记录新证据、判断变化和下一次检查条件",
     "addNote": "写入研究日志",
@@ -166,7 +178,7 @@
     "includeArchived": "包含已归档记录",
     "records": "信号记录",
     "loading": "正在加载信号…",
-    "empty": "还没有信号。首次在实时分析页生成开单判断后会自动留档。",
+    "empty": "暂无历史信号记录。智能开单已下线，已有信号仍可查看和复盘。",
     "total": "总信号",
     "resolved": "已明确结果",
     "winRate": "目标命中率",
@@ -277,7 +289,13 @@
     "archive": "归档",
     "restore": "恢复",
     "choose": "请选择或生成一份报告。",
-    "types": { "daily_brief": "每日研究简报", "weekly_brief": "每周研究简报", "asset_review": "资产复盘", "portfolio_review": "组合复盘", "decision_review": "决策复盘" }
+    "types": {
+      "daily_brief": "每日研究简报",
+      "weekly_brief": "每周研究简报",
+      "asset_review": "资产复盘",
+      "portfolio_review": "组合复盘",
+      "decision_review": "决策复盘"
+    }
   },
   "dataHealth": {
     "title": "数据健康与修复中心",
@@ -303,48 +321,22 @@
     "refreshBinance": "重新拉取币安快照",
     "checkAlerts": "立即检查提醒",
     "checkSignals": "立即评估信号",
-    "status": { "healthy": "健康", "degraded": "部分异常", "empty": "尚无数据", "ready": "正常", "stale": "已过期", "failed": "失败", "stopped": "已停止", "starting": "启动中" },
-    "actions": { "verify_database": "校验数据库", "refresh_binance_snapshot": "刷新币安快照", "hydrate_symbol_history": "补齐历史", "evaluate_research_alerts": "检查提醒", "evaluate_trade_signals": "评估信号" }
-  },
-  "dashboard": {
-    "loadingHistory": "加载历史数据中...",
-    "historyLoadFailed": "行情历史加载失败。",
-    "tradeSetup": "智能开单",
-    "initialMargin": "初始保证金",
-    "style": "风格",
-    "decisionMode": "判断方式",
-    "builtInRules": "内置规则",
-    "aiDecision": "AI 判断",
-    "strategy": "策略",
-    "strategies": {
-      "maxReturn": "最大收益",
-      "steadyBreakout": "稳健突破",
-      "pullbackReversal": "回撤反转"
+    "status": {
+      "healthy": "健康",
+      "degraded": "部分异常",
+      "empty": "尚无数据",
+      "ready": "正常",
+      "stale": "已过期",
+      "failed": "失败",
+      "stopped": "已停止",
+      "starting": "启动中"
     },
-    "analyzing": "分析中...",
-    "askDirection": "询问多 / 空",
-    "unsupported": "当前标的不支持",
-    "long": "做多",
-    "short": "做空",
-    "rules": "规则",
-    "entry": "开仓",
-    "target": "目标",
-    "stop": "止损",
-    "riskReward": "盈亏比",
-    "aiTimeout": "AI 请求超时，请重试",
-    "rulesTimeout": "规则分析超时，请重试",
-    "setupFailed": "暂时无法生成多空方案",
-    "tradeSetupUnavailable": "当前没有可用的开单方案。",
-    "openSettings": "打开模型设置",
-    "tradeSetupErrors": {
-      "kline_insufficient": "历史 K 线还不够，暂时无法生成方案。",
-      "indicators_incomplete": "指标仍在计算，请等下一次更新后再试。",
-      "no_clear_signal": "当前多空条件都不清晰，先等待下一根 K 线。",
-      "model_not_configured": "AI 分析尚未配置，请先在设置中填写模型 API Key。",
-      "model_output_unavailable": "AI 服务没有返回可用结果，请重试。",
-      "model_hold": "模型建议继续等待，暂时不要开仓。",
-      "model_plan_incomplete": "模型没有给出完整的开仓价、目标和止损。",
-      "model_price_structure_invalid": "模型返回的价格结构不成立，结果已停止显示。"
+    "actions": {
+      "verify_database": "校验数据库",
+      "refresh_binance_snapshot": "刷新币安快照",
+      "hydrate_symbol_history": "补齐历史",
+      "evaluate_research_alerts": "检查提醒",
+      "evaluate_trade_signals": "评估信号"
     }
   },
   "marketSignals": {
@@ -940,7 +932,7 @@
     "cache": "缓存",
     "production": "生产环境",
     "llmProvider": "大模型提供商",
-    "llmDescription": "用于 AI 分析和 AI 多空判断。",
+    "llmDescription": "用于市场分析和研究报告。",
     "apiKeySet": "API Key 已设置",
     "apiKeyUnset": "API Key 未设置",
     "provider": "平台",

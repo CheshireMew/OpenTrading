@@ -1,0 +1,41 @@
+{
+  "loadingHistory": "加载历史数据中...",
+  "historyLoadFailed": "行情历史加载失败。",
+  "tradeSetup": "智能开单",
+  "initialMargin": "初始保证金",
+  "style": "风格",
+  "decisionMode": "判断方式",
+  "builtInRules": "内置规则",
+  "aiDecision": "AI 判断",
+  "strategy": "策略",
+  "strategies": {
+    "maxReturn": "最大收益",
+    "steadyBreakout": "稳健突破",
+    "pullbackReversal": "回撤反转"
+  },
+  "analyzing": "分析中...",
+  "askDirection": "询问多 / 空",
+  "unsupported": "当前标的不支持",
+  "long": "做多",
+  "short": "做空",
+  "rules": "规则",
+  "entry": "开仓",
+  "target": "目标",
+  "stop": "止损",
+  "riskReward": "盈亏比",
+  "aiTimeout": "AI 请求超时，请重试",
+  "rulesTimeout": "规则分析超时，请重试",
+  "setupFailed": "暂时无法生成多空方案",
+  "tradeSetupUnavailable": "当前没有可用的开单方案。",
+  "openSettings": "打开模型设置",
+  "tradeSetupErrors": {
+    "kline_insufficient": "历史 K 线还不够，暂时无法生成方案。",
+    "indicators_incomplete": "指标仍在计算，请等下一次更新后再试。",
+    "no_clear_signal": "当前多空条件都不清晰，先等待下一根 K 线。",
+    "model_not_configured": "AI 分析尚未配置，请先在设置中填写模型 API Key。",
+    "model_output_unavailable": "AI 服务没有返回可用结果，请重试。",
+    "model_hold": "模型建议继续等待，暂时不要开仓。",
+    "model_plan_incomplete": "模型没有给出完整的开仓价、目标和止损。",
+    "model_price_structure_invalid": "模型返回的价格结构不成立，结果已停止显示。"
+  }
+}

@@ -1,0 +1,39 @@
+[
+  {
+    "package": "@luxalgo/vela",
+    "version": "0.7.6",
+    "license": "Apache-2.0",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/luxalgo/vela.git"
+    },
+    "notices": "docs\\licenses\\chart-workspace\\luxalgo-vela"
+  },
+  {
+    "package": "@luxalgo/vela-pinets",
+    "version": "0.2.12",
+    "license": "AGPL-3.0-only",
+    "repository": "https://github.com/LuxAlgo/Vela-pinets",
+    "notices": "docs\\licenses\\chart-workspace\\luxalgo-vela-pinets"
+  },
+  {
+    "package": "pinets",
+    "version": "0.9.34",
+    "license": "AGPL-3.0-only",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/LuxAlgo/PineTS.git"
+    },
+    "notices": "docs\\licenses\\chart-workspace\\pinets"
+  },
+  {
+    "package": "monaco-editor",
+    "version": "0.56.0",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/microsoft/monaco-editor"
+    },
+    "notices": "docs\\licenses\\chart-workspace\\monaco-editor"
+  }
+]

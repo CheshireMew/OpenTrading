@@ -1,1 +1,7 @@
 /archived/frontend_typescript_shadow_sources/frontend/src/components/*.js -text
+
+# Preserve byte identity for the frozen Pine verification contract.
+/strategies/pine/eth_ema55_manual_chart_v7_2.pine -text
+/docs/verification/eth-intrabar-short-window-20260913/policies/fixed.json -text
+/docs/PINE_CODE_STANDARD.md -text
+/docs/verification/pine-v7-2-contract/event-fixtures.json -text

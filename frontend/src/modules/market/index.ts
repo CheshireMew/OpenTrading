@@ -10,7 +10,6 @@ export {
 export { useKlineStore } from './klineStore'
 export { useMarketIndicatorStore } from './indicatorStore'
 export { usePriceHistoryStore } from './priceHistoryStore'
-export { useDashboardPage } from './useDashboardPage'
 export { useKlineSeries } from './useKlineSeries'
 export { useMarketSignalIndicators } from './useMarketSignalIndicators'
 export type * from './useMarketSignalIndicators'

@@ -24,6 +24,7 @@ export default defineConfig({
       '/api': {
         target: DEV_API_TARGET,
         changeOrigin: true,
+        ws: true,
         // rewrite: (path) => path.replace(/^\/api/, ''), // FastAPI有/api前缀，不需要rewrite
       }
     }

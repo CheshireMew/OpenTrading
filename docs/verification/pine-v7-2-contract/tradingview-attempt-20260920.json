@@ -1,0 +1,260 @@
+{
+  "attempt_date": "2026-09-20",
+  "recorded_at_utc": "2026-09-19T17:52:32.695421+00:00",
+  "source": "strategies/pine/eth_ema55_manual_chart_v7_2.pine",
+  "sha256": "df212d1411acd55bfcefe996399720df6aaceb3ac2341cfcaa67efa7c1c0f2ed",
+  "surface": "Codex in-app browser / TradingView Pine Editor",
+  "url": "https://www.tradingview.com/chart/?symbol=BINANCE%3AETHUSDT",
+  "observed_chart": "BINANCE:ETHUSDT, 1 day",
+  "actions": [
+    "Opened Pine Editor",
+    "Pasted original v7.2 source into Untitled script",
+    "Clicked Add to chart"
+  ],
+  "observed_result": "Sign in dialog with Google and Email options",
+  "status": "verified_with_bounded_historical_runtime_parity",
+  "tradingview_compile": "passed",
+  "pine_runtime_event_parity": "passed_synthetic_240_bars_38_events",
+  "note": "Initial IAB and disconnected Edge attempts retained below; successful Edge recovery and bounded runtime validation are recorded in edge_recovery.",
+  "edge_attempt": {
+    "recorded_at_utc": "2026-09-19T19:04:02.769244+00:00",
+    "url": "https://www.tradingview.com/chart/wjQ0BQVU/?symbol=BINANCE%3AETHUSDT",
+    "observations": [
+      "Authenticated TradingView session in Microsoft Edge",
+      "Existing indicator named Heimdall ETH · EMA55 · 当前周期 v7.2 on BINANCE:ETHUSDT 15m",
+      "Make a copy requested; account layout limit dialog appeared; dismissed without upgrade",
+      "Pine Editor opened with default Untitled script"
+    ],
+    "status": "browser_connection_unavailable",
+    "source_identity_of_existing_indicator": "not_verified",
+    "new_compilation": "not_attempted_in_edge",
+    "note": "On continuation the Edge browser was unavailable. Browser inventory returned only the in-app browser. No compiler success or error was observed; user asked to restore the Edge extension connection."
+  },
+  "initial_attempt_status": "login_required",
+  "edge_recovery": {
+    "recorded_at_utc": "2026-09-20T02:36:50.456317+00:00",
+    "browser": "Microsoft Edge",
+    "chart": "BINANCE:ETHUSDT 15m",
+    "url": "https://www.tradingview.com/chart/wjQ0BQVU/?symbol=BINANCE%3AETHUSDT",
+    "original_source_compilation": {
+      "status": "passed",
+      "normalized_characters": 7530,
+      "normalized_fnv1a_utf16": "6059c03e",
+      "editor_source_matches_local_ignoring_crlf": true,
+      "evidence": "Original source added successfully; second indicator appeared and Add to chart became disabled Update on chart. No compilation or runtime error observed."
+    },
+    "runtime": {
+      "status": "passed",
+      "scope": "Deterministic synthetic historical OHLC; complete EMA signal and fill logic, not injected intents. Excludes real-time ticks and full market history.",
+      "warmup_bars": 650,
+      "checked_bars": 240,
+      "expected_events": 38,
+      "observed_events": 38,
+      "mismatches": 0,
+      "price_tolerance": 1e-07,
+      "pine_log_summary": "PASS | bars=240 | events=38/38 | mismatches=0",
+      "pine_log_events": "653:1:100.41;664:3:99.7929;664:2:99.79;667:3:100.7879;676:1:100.21;684:3:99.2079;688:2:99.79;692:3:99.2273;700:1:100.21;701:3:99.2079;712:2:98.96;718:3:97.42;723:1:100.01;732:3:101.0284;736:2:98.96;744:3:97.42;747:1:100.01;755:3:102.755;759:2:99.99;761:3:99.8;771:1:100.01;773:3:98.8;785:2:99.39;786:3:100.3839;795:1:100.01;799:3:101.0392;808:2:99.68;815:3:98.9608;820:1:100.32;820:3:99.3168;843:1:100.01;852:3:103.065;856:2:98.19;864:3:96.035;867:1:100.01;876:3:103.8628;879:2:99.99;888:3:96.935",
+      "observed_fills": [
+        [
+          653,
+          1,
+          100.41
+        ],
+        [
+          664,
+          3,
+          99.7929
+        ],
+        [
+          664,
+          2,
+          99.79
+        ],
+        [
+          667,
+          3,
+          100.7879
+        ],
+        [
+          676,
+          1,
+          100.21
+        ],
+        [
+          684,
+          3,
+          99.2079
+        ],
+        [
+          688,
+          2,
+          99.79
+        ],
+        [
+          692,
+          3,
+          99.2273
+        ],
+        [
+          700,
+          1,
+          100.21
+        ],
+        [
+          701,
+          3,
+          99.2079
+        ],
+        [
+          712,
+          2,
+          98.96
+        ],
+        [
+          718,
+          3,
+          97.42
+        ],
+        [
+          723,
+          1,
+          100.01
+        ],
+        [
+          732,
+          3,
+          101.0284
+        ],
+        [
+          736,
+          2,
+          98.96
+        ],
+        [
+          744,
+          3,
+          97.42
+        ],
+        [
+          747,
+          1,
+          100.01
+        ],
+        [
+          755,
+          3,
+          102.755
+        ],
+        [
+          759,
+          2,
+          99.99
+        ],
+        [
+          761,
+          3,
+          99.8
+        ],
+        [
+          771,
+          1,
+          100.01
+        ],
+        [
+          773,
+          3,
+          98.8
+        ],
+        [
+          785,
+          2,
+          99.39
+        ],
+        [
+          786,
+          3,
+          100.3839
+        ],
+        [
+          795,
+          1,
+          100.01
+        ],
+        [
+          799,
+          3,
+          101.0392
+        ],
+        [
+          808,
+          2,
+          99.68
+        ],
+        [
+          815,
+          3,
+          98.9608
+        ],
+        [
+          820,
+          1,
+          100.32
+        ],
+        [
+          820,
+          3,
+          99.3168
+        ],
+        [
+          843,
+          1,
+          100.01
+        ],
+        [
+          852,
+          3,
+          103.065
+        ],
+        [
+          856,
+          2,
+          98.19
+        ],
+        [
+          864,
+          3,
+          96.035
+        ],
+        [
+          867,
+          1,
+          100.01
+        ],
+        [
+          876,
+          3,
+          103.8628
+        ],
+        [
+          879,
+          2,
+          99.99
+        ],
+        [
+          888,
+          3,
+          96.935
+        ]
+      ],
+      "chart_log_timestamp": "2026-07-10T14:15:00.000+08:00",
+      "timestamp_note": "Chart host bar time, not synthetic market-data time or validation execution time.",
+      "harness_changes": "Substitutes OHLC series, adds four read-only event observers and validation log/table; original local Pine unchanged.",
+      "files": {
+        "runtime-fixture-20260920.json": "3e67cb04c2132b8e15f1cdef76313cd0d0c1a6d694d5aa9bd0c8a426f545e76b",
+        "runtime-harness-20260920.pine": "b7967b2340fc1fb9fa7ae0385f3cd477a6da9f12f2583122ee69f6b3e6529e7d"
+      },
+      "harness_normalized_fnv1a_utf16": "60ea33b0"
+    },
+    "cleanup": "Undid temporary harness update and this session indicator insertion; original chart indicator retained. No script published."
+  }
+}

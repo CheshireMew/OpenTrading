@@ -17,7 +17,6 @@ import {
 
 import { useMoney } from '@/composables/useMoney'
 import { formatAdaptivePrice } from '@/modules/format'
-import type { TradeSetupResponseItem } from '@/modules/market/contracts'
 import {
   buildMainPriceFormat,
   buildStrategyMarkers,
@@ -25,10 +24,8 @@ import {
   type TradingViewStrategyMarker,
   type TradingViewVolumePoint,
 } from './tradingViewChartPresentation'
-import {
-  useTradingViewTradeOverlay,
-  type TradingViewMainSeries,
-} from './useTradingViewTradeOverlay'
+type TradingViewMainSeries = ISeriesApi<'Candlestick'> | ISeriesApi<'Area'>
+
 
 export interface TradingViewChartColors {
   upColor: string
@@ -44,7 +41,6 @@ export interface TradingViewChartProps {
   chartType: 'candlestick' | 'area'
   autoResize: boolean
   colors: TradingViewChartColors
-  tradeSetup?: TradeSetupResponseItem | null
   strategyMarkers: TradingViewStrategyMarker[]
 }
 
@@ -111,15 +107,6 @@ export const useTradingViewChart = (
   let volumeSeries: ISeriesApi<'Histogram'> | null = null
   let strategyMarkerPlugin: ISeriesMarkersPluginApi<Time> | null = null
   let resizeObserver: ResizeObserver | null = null
-
-  const overlay = useTradingViewTradeOverlay({
-    props,
-    t,
-    chartContainer,
-    getChart: () => chart,
-    getMainSeries: () => mainSeries,
-    chartPriceText,
-  })
 
   const createMainSeries = (): TradingViewMainSeries | null => {
     if (!chart) return null
@@ -203,12 +190,9 @@ export const useTradingViewChart = (
   const syncMainData = (next: TradingViewDataPoint[] = props.data, previous: TradingViewDataPoint[] = []) => {
     if (!mainSeries && chart) {
       mainSeries = createMainSeries()
-      overlay.syncTradeSetup()
     }
     mainSeries?.applyOptions({ priceFormat: buildMainPriceFormat(next) })
     syncCandleSeries(next, previous)
-    overlay.syncAutoscale()
-    overlay.scheduleOverlayUpdate()
     syncStrategyMarkers()
   }
 
@@ -230,7 +214,6 @@ export const useTradingViewChart = (
     })
     mainSeries = createMainSeries()
     updateData()
-    overlay.syncTradeSetup()
     syncStrategyMarkers()
   }
 
@@ -250,7 +233,6 @@ export const useTradingViewChart = (
         wickDownColor: colors.downColor,
       })
     }
-    overlay.syncTradeSetup()
   }
 
   onMounted(() => {
@@ -261,19 +243,16 @@ export const useTradingViewChart = (
         if (!entries.length || entries[0].target !== chartContainer.value || !chart) return
         const rect = entries[0].contentRect
         chart.applyOptions({ width: rect.width, height: rect.height })
-        overlay.scheduleOverlayUpdate()
       })
       resizeObserver.observe(container)
     }
     chart?.timeScale().subscribeVisibleLogicalRangeChange(() => {
       const logicalRange = chart?.timeScale().getVisibleLogicalRange()
-      overlay.scheduleOverlayUpdate()
       if (logicalRange && logicalRange.from < 10) emit('load-more')
     })
   })
 
   onUnmounted(() => {
-    overlay.disposeTradeOverlay()
     strategyMarkerPlugin?.detach()
     strategyMarkerPlugin = null
     chart?.remove()
@@ -286,14 +265,11 @@ export const useTradingViewChart = (
 
   watch(() => props.data, syncMainData)
   watch(() => props.volumeData, syncVolumeData)
-  watch(() => props.tradeSetup, overlay.syncTradeSetup, { deep: true })
   watch(() => props.strategyMarkers, syncStrategyMarkers, { deep: true })
-  watch(displayCurrency, overlay.syncTradeSetup)
   watch(() => props.colors, syncColors, { deep: true })
 
   return {
     chartContainer,
-    tradeOverlay: overlay.tradeOverlay,
     chartPriceText,
     getChart: () => chart,
   }

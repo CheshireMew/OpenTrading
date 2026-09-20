@@ -1,34 +1,7 @@
 from __future__ import annotations
 
-from typing import Literal
 
 from pydantic import BaseModel
-
-
-class TradeSetupResponseItem(BaseModel):
-    side: str
-    entry: float
-    target: float
-    stop: float
-    risk_reward: float
-    confidence: int
-    risk_amount: float
-    entry_time: int
-    style: str
-    strategy: str
-    source: str
-
-
-class TradeSetupResponse(BaseModel):
-    symbol: str
-    timeframe: str
-    timestamp: str
-    current_price: float | None
-    setup: TradeSetupResponseItem | None
-    reason: str
-    source: str
-    status: Literal["ready", "waiting", "unavailable", "rejected"]
-    error_code: str | None
 
 
 class IndicatorHistoryPoint(BaseModel):

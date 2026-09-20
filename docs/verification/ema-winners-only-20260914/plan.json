@@ -1,0 +1,184 @@
+{
+  "scope": "Read saved EMA-channel winner records only. No new backtests or parameters, no momentum strategy.",
+  "selection": [
+    {
+      "asset": "ETH",
+      "path": ".heimdall_runtime/eth-intrabar-short-window-20260913/policies/fixed.json.gz",
+      "period": [
+        "2020-12-28",
+        "2026-09-10"
+      ],
+      "timeframe": "15m",
+      "parameters": {
+        "center_length": 55,
+        "width_length": 31,
+        "trigger_mult": 0.4,
+        "chase_mult": 2,
+        "initial_stop_pct": 1,
+        "activation_pct": 2,
+        "giveback_pct": 50,
+        "confirmation_level": 3,
+        "max_wait_bars": 2,
+        "entry_bar_assumption": 0,
+        "price_tick": 0.01,
+        "reverse_exit": true,
+        "stop_reentry": false,
+        "protection_update": "5m close; next interval effective"
+      },
+      "expected_return": 64338.15700231341
+    },
+    {
+      "asset": "SOL",
+      "run": "af5770399b73f7594bb37dc4a91be7d9",
+      "expected_return": 62757.42703245354,
+      "path": ".heimdall_runtime\\local_backtests\\af5770399b73f7594bb37dc4a91be7d9\\result.json",
+      "period": [
+        "2020-09-10",
+        "2026-09-10"
+      ],
+      "timeframe": "15m",
+      "parameters": {
+        "activation_pct": 2,
+        "center_length": 55,
+        "chase_mult": 2,
+        "confirmation_level": 3,
+        "direction_filter": false,
+        "entry_bar_assumption": 0,
+        "giveback_pct": 50,
+        "initial_stop_pct": 1,
+        "max_wait_bars": 2,
+        "price_tick": 0.01,
+        "stop_cap_pct": 2,
+        "stop_floor_pct": 0.5,
+        "stop_method": 0,
+        "stop_mult": 1.5,
+        "stop_reentry": false,
+        "trigger_mult": 0.4,
+        "width_length": 50
+      }
+    },
+    {
+      "asset": "BNB",
+      "run": "657b2b8086588a254442b82b128d34df",
+      "expected_return": 4099.551015351587,
+      "path": ".heimdall_runtime\\local_backtests\\657b2b8086588a254442b82b128d34df\\result.json",
+      "period": [
+        "2018-09-10",
+        "2026-09-10"
+      ],
+      "timeframe": "15m",
+      "parameters": {
+        "activation_pct": 2,
+        "center_length": 55,
+        "chase_mult": 1.5,
+        "confirmation_level": 3,
+        "direction_filter": false,
+        "entry_bar_assumption": 0,
+        "giveback_pct": 50,
+        "initial_stop_pct": 2,
+        "max_wait_bars": 2,
+        "price_tick": 0.01,
+        "stop_cap_pct": 2,
+        "stop_floor_pct": 0.5,
+        "stop_method": 0,
+        "stop_mult": 1.5,
+        "stop_reentry": false,
+        "trigger_mult": 0.8,
+        "width_length": 50
+      }
+    },
+    {
+      "asset": "BTC",
+      "path": ".heimdall_runtime/cloud-direct-adaptation-20260912/traces/btc/1h-c0r0t0.json.gz",
+      "period": [
+        "2020-10-01",
+        "2026-09-10"
+      ],
+      "timeframe": "1h",
+      "parameters": {
+        "center_length": 55,
+        "width_length": 31,
+        "trigger_mult": 0.4,
+        "chase_mult": 2.0,
+        "activation_pct": 2.0,
+        "giveback_pct": 50.0,
+        "initial_stop_pct": 1.0,
+        "initial_stop_width": 0,
+        "record_indicators": false,
+        "adaptive_center": false,
+        "scaled_risk": false,
+        "atr_trailing": false,
+        "efficiency_gate": false
+      },
+      "expected_return": 900.2193012619836
+    },
+    {
+      "asset": "ZEC",
+      "run": "b44a8ccf09545f17b66f0b277477c64b",
+      "expected_return": 582.2641607997643,
+      "path": ".heimdall_runtime\\local_backtests\\b44a8ccf09545f17b66f0b277477c64b\\result.json",
+      "period": [
+        "2019-09-10",
+        "2026-09-10"
+      ],
+      "timeframe": "30m",
+      "parameters": {
+        "activation_pct": 1.0,
+        "center_length": 144,
+        "chase_mult": 3.0,
+        "confirmation_level": 3,
+        "direction_filter": false,
+        "entry_bar_assumption": 0,
+        "giveback_pct": 35.0,
+        "initial_stop_pct": 1,
+        "max_wait_bars": 2,
+        "price_tick": 0.01,
+        "stop_cap_pct": 2,
+        "stop_floor_pct": 0.5,
+        "stop_method": 0,
+        "stop_mult": 1.5,
+        "stop_reentry": false,
+        "trigger_mult": 1.2,
+        "width_length": 31
+      }
+    },
+    {
+      "asset": "PAXG",
+      "run": "12f938fa9f949f0180651109a335e032",
+      "expected_return": 245.47590174996685,
+      "path": ".heimdall_runtime\\local_backtests\\12f938fa9f949f0180651109a335e032\\result.json",
+      "period": [
+        "2021-01-22",
+        "2026-09-10"
+      ],
+      "timeframe": "4h",
+      "parameters": {
+        "activation_pct": 2.0,
+        "center_length": 55,
+        "chase_mult": 1.5,
+        "confirmation_level": 3,
+        "direction_filter": false,
+        "entry_bar_assumption": 0,
+        "giveback_pct": 50.0,
+        "initial_stop_pct": 4,
+        "max_wait_bars": 2,
+        "price_tick": 0.01,
+        "stop_cap_pct": 2,
+        "stop_floor_pct": 0.5,
+        "stop_method": 0,
+        "stop_mult": 1.5,
+        "stop_reentry": false,
+        "trigger_mult": 1.2,
+        "width_length": 50
+      }
+    }
+  ],
+  "calculations": [
+    "Preserve original per-trade prices and returns. Winners-only compounds only strictly positive trade returns; negative returns replaced with0. This is retrospective perfect selection, not an achievable filter or guaranteed bound for a changed strategy.",
+    "Equal-stake decomposition: every trade normalized to10000 units; gross wins, gross losses, net sum, mean winning/losing percentage, loss absorption of gross profits. Descriptive trade score, not another financed portfolio backtest.",
+    "Winning trade concentration: largest10% of winners by unlevered return, their fraction of total positive returns; single largest win; mean/median holding; trades/year.",
+    "Loss categories: losing opposite-signal exits held <=4 native periods, other losing opposite exits, fixed stops, profit protection, other. Short-duration opposite exit is only a whipsaw proxy, not a proven sideways regime label.",
+    "Compare mean losses and mean wins: saving10 average losing trades can tolerate missing at most10*mean_loss/mean_win average winners before equal-stake net benefit is gone. Illustrative break-even condition, not predictive filtering."
+  ],
+  "record_policy": "Source snapshots unchanged. Save hashes, per-trade classification, all summary tables and reproducible read-only calculation."
+}

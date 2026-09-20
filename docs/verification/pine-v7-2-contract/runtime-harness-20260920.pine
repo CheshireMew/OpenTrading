@@ -1,0 +1,220 @@
+//@version=6
+indicator("Heimdall v7.2 runtime validation", overlay=true)
+// VALIDATION ONLY: 650 warmup bars, then 240 fixed OHLC bars.
+var oo = array.from(101.8000,100.0000,100.2071,100.4000,100.5657,100.6928,100.7727,100.8000,100.7727,100.6928,100.5657,100.4000,100.2071,100.0000,99.7929,99.6000,99.4343,99.3072,99.2273,99.2000,99.2273,99.3072,99.4343,99.6000,99.7929,100.0000,100.2071,100.4000,100.5657,100.6928,100.7727,100.8000,100.7727,100.6928,100.5657,100.4000,100.2071,101.8000,99.7929,99.6000,99.4343,97.5072,99.2273,99.2000,99.2273,99.3072,99.4343,99.6000,99.7929,100.0000,100.2071,100.4000,100.5657,100.6928,100.7727,100.8000,100.7727,100.6928,100.5657,100.4000,100.2071,100.0000,98.9647,98.0000,97.1716,96.5359,96.1363,96.0000,96.1363,96.5359,97.1716,98.0000,98.9647,100.0000,102.8353,102.0000,102.8284,103.4641,103.8637,104.0000,103.8637,103.4641,101.0284,102.0000,101.0353,100.0000,98.9647,98.0000,97.1716,96.5359,96.1363,96.0000,96.1363,96.5359,97.1716,98.0000,98.9647,100.0000,101.0353,102.0000,102.8284,103.4641,103.8637,104.0000,103.8637,103.4641,102.8284,102.0000,101.0353,100.0000,98.9647,99.8000,97.1716,96.5359,96.1363,96.0000,96.1363,96.5359,97.1716,98.0000,98.9647,100.0000,100.3106,98.8000,100.8485,101.0392,101.1591,101.2000,101.1591,101.0392,100.8485,100.6000,100.3106,100.0000,99.6894,99.4000,99.1515,98.9608,98.8409,98.8000,98.8409,98.9608,99.1515,99.4000,99.6894,100.0000,100.3106,100.6000,102.6485,101.0392,101.1591,101.2000,101.1591,101.0392,100.8485,100.6000,100.3106,100.0000,99.6894,99.4000,99.1515,98.9608,98.8409,98.8000,97.0409,98.9608,99.1515,99.4000,99.6894,100.0000,100.3106,100.6000,100.8485,101.0392,101.1591,101.2000,101.1591,101.0392,100.8485,100.6000,100.3106,100.0000,98.4471,97.0000,95.7574,96.6038,94.2044,94.0000,94.2044,94.8038,95.7574,97.0000,98.4471,100.0000,101.5529,103.0000,104.2426,105.1962,105.7956,106.0000,105.7956,105.1962,104.2426,103.0000,101.5529,98.2000,98.4471,97.0000,95.7574,94.8038,94.2044,94.0000,94.2044,94.8038,95.7574,97.0000,98.4471,100.0000,101.5529,103.0000,104.2426,105.1962,107.5956,106.0000,105.7956,105.1962,104.2426,103.0000,101.5529,100.0000,98.4471,97.0000,95.7574,94.8038,94.2044,94.0000,94.2044,94.8038,95.7574,97.0000)
+var hh = array.from(103.3000,100.3271,100.5200,100.6857,100.8128,100.8927,100.9200,100.9200,100.8927,100.8128,100.6857,100.5200,100.3271,100.1200,99.9129,99.7200,99.5543,100.8072,99.3473,99.3473,99.4272,99.5543,99.7200,99.9129,100.1200,100.3271,100.5200,100.6857,100.8128,100.8927,100.9200,100.9200,100.8927,100.8128,102.0657,100.5200,100.3271,101.9200,99.9129,99.7200,99.5543,99.3473,99.3473,99.3473,99.4272,99.5543,99.7200,99.9129,100.1200,100.3271,100.5200,102.0657,100.8128,100.8927,100.9200,100.9200,100.8927,100.8128,100.6857,100.5200,100.3271,100.1200,99.0847,98.1200,97.2916,96.6559,96.2563,96.2563,98.0359,97.2916,98.1200,99.0847,100.1200,101.1553,102.9553,102.9484,103.5841,103.9837,104.1200,104.1200,103.9837,103.5841,102.1200,102.1200,101.1553,101.5000,99.0847,98.1200,97.2916,96.6559,96.2563,96.2563,96.6559,97.2916,98.1200,99.0847,100.1200,101.1553,102.1200,102.9484,103.5841,103.9837,105.5000,104.1200,103.9837,103.5841,102.9484,102.1200,101.1553,100.1200,99.0847,99.9200,97.2916,96.6559,96.2563,96.2563,96.6559,97.2916,98.1200,100.4647,100.1200,100.4306,100.7200,100.9685,101.1592,101.2791,101.3200,101.3200,101.2791,101.1592,100.9685,100.7200,100.4306,100.1200,99.8094,99.5200,100.6515,99.0808,98.9609,98.9609,99.0808,99.2715,99.5200,99.8094,100.1200,100.4306,100.7200,100.9685,102.7685,101.2791,101.3200,101.3200,101.2791,102.5392,100.9685,100.7200,100.4306,100.1200,99.8094,99.5200,99.2715,99.0808,98.9609,98.9609,99.0808,99.2715,99.5200,99.8094,100.1200,100.4306,102.1000,100.9685,101.1592,101.2791,101.3200,101.3200,101.2791,101.1592,100.9685,100.7200,100.4306,100.1200,98.5671,97.1200,95.8774,96.7238,94.3244,95.7044,94.9238,95.8774,97.1200,98.5671,100.1200,101.6729,103.1200,104.3626,105.3162,105.9156,106.1200,106.1200,105.9156,105.3162,104.3626,103.1200,103.0529,98.5671,98.5671,97.1200,95.8774,94.9238,94.3244,94.3244,94.9238,95.8774,97.1200,98.5671,100.1200,101.6729,103.1200,104.3626,105.3162,107.2956,107.7156,106.1200,105.9156,105.3162,104.3626,103.1200,101.6729,100.1200,98.5671,97.1200,95.8774,94.9238,94.3244,94.3244,94.9238,95.8774,98.5000,98.5671)
+var ll = array.from(98.5000,99.8800,100.0871,100.2800,100.4457,100.5728,100.6527,100.6527,100.5728,100.4457,100.2800,100.0871,99.8800,99.6729,99.4800,99.3143,99.1872,97.7273,99.0800,99.0800,99.1073,99.1872,99.3143,99.4800,99.6729,99.8800,100.0871,100.2800,100.4457,100.5728,100.6527,100.6527,100.5728,100.4457,98.9000,100.0871,99.8800,99.6729,99.4800,99.3143,99.1872,97.3872,99.0800,99.0800,99.1073,99.1872,99.3143,99.4800,99.6729,99.8800,100.0871,98.9000,100.4457,100.5728,100.6527,100.6527,100.5728,100.4457,100.2800,100.0871,99.8800,98.8447,97.8800,97.0516,96.4159,96.0163,95.8800,95.8800,94.6363,96.4159,97.0516,97.8800,98.8447,99.8800,101.8800,101.8800,102.7084,103.3441,103.7437,103.7437,103.3441,102.7084,100.9084,100.9153,99.8800,97.4647,97.8800,97.0516,96.4159,96.0163,95.8800,95.8800,96.0163,96.4159,97.0516,97.8800,98.8447,99.8800,100.9153,101.8800,102.7084,103.3441,102.3637,103.7437,103.3441,102.7084,101.8800,100.9153,99.8800,98.8447,97.8800,97.0516,96.4159,96.0163,95.8800,95.8800,96.0163,96.4159,97.0516,96.5000,98.8447,99.8800,100.1906,98.6800,100.7285,100.9192,101.0391,101.0391,100.9192,100.7285,100.4800,100.1906,99.8800,99.5694,99.2800,99.0315,97.4608,98.7209,98.6800,98.6800,98.7209,98.8408,99.0315,99.2800,99.5694,99.8800,100.1906,100.4800,100.9192,100.9192,101.0391,101.0391,100.9192,99.3485,100.4800,100.1906,99.8800,99.5694,99.2800,99.0315,98.8408,98.7209,98.6800,98.6800,96.9209,98.8408,99.0315,99.2800,99.5694,99.8800,98.8106,100.4800,100.7285,100.9192,101.0391,101.0391,100.9192,100.7285,100.4800,100.1906,99.8800,98.3271,96.8800,95.6374,94.6838,94.0844,93.8800,92.5000,94.0844,94.6838,95.6374,96.8800,98.3271,99.8800,101.4329,102.8800,104.1226,105.0762,105.6756,105.6756,105.0762,104.1226,102.8800,101.4329,98.5000,98.0800,96.8800,95.6374,94.6838,94.0844,93.8800,93.8800,94.0844,94.6838,95.6374,96.8800,98.3271,99.8800,101.4329,102.8800,104.1226,103.6962,105.8800,105.6756,105.0762,104.1226,102.8800,101.4329,99.8800,98.3271,96.8800,95.6374,94.6838,94.0844,93.8800,93.8800,94.0844,94.6838,94.2574,96.8800)
+var cc = array.from(100.0000,100.2071,100.4000,100.5657,100.6928,100.7727,100.8000,100.7727,100.6928,100.5657,100.4000,100.2071,100.0000,99.7929,99.6000,99.4343,99.3072,99.2273,99.2000,99.2273,99.3072,99.4343,99.6000,99.7929,100.0000,100.2071,100.4000,100.5657,100.6928,100.7727,100.8000,100.7727,100.6928,100.5657,100.4000,100.2071,100.0000,99.7929,99.6000,99.4343,99.3072,99.2273,99.2000,99.2273,99.3072,99.4343,99.6000,99.7929,100.0000,100.2071,100.4000,100.5657,100.6928,100.7727,100.8000,100.7727,100.6928,100.5657,100.4000,100.2071,100.0000,98.9647,98.0000,97.1716,96.5359,96.1363,96.0000,96.1363,96.5359,97.1716,98.0000,98.9647,100.0000,101.0353,102.0000,102.8284,103.4641,103.8637,104.0000,103.8637,103.4641,102.8284,102.0000,101.0353,100.0000,98.9647,98.0000,97.1716,96.5359,96.1363,96.0000,96.1363,96.5359,97.1716,98.0000,98.9647,100.0000,101.0353,102.0000,102.8284,103.4641,103.8637,104.0000,103.8637,103.4641,102.8284,102.0000,101.0353,100.0000,98.9647,98.0000,97.1716,96.5359,96.1363,96.0000,96.1363,96.5359,97.1716,98.0000,98.9647,100.0000,100.3106,100.6000,100.8485,101.0392,101.1591,101.2000,101.1591,101.0392,100.8485,100.6000,100.3106,100.0000,99.6894,99.4000,99.1515,98.9608,98.8409,98.8000,98.8409,98.9608,99.1515,99.4000,99.6894,100.0000,100.3106,100.6000,100.8485,101.0392,101.1591,101.2000,101.1591,101.0392,100.8485,100.6000,100.3106,100.0000,99.6894,99.4000,99.1515,98.9608,98.8409,98.8000,98.8409,98.9608,99.1515,99.4000,99.6894,100.0000,100.3106,100.6000,100.8485,101.0392,101.1591,101.2000,101.1591,101.0392,100.8485,100.6000,100.3106,100.0000,98.4471,97.0000,95.7574,94.8038,94.2044,94.0000,94.2044,94.8038,95.7574,97.0000,98.4471,100.0000,101.5529,103.0000,104.2426,105.1962,105.7956,106.0000,105.7956,105.1962,104.2426,103.0000,101.5529,100.0000,98.4471,97.0000,95.7574,94.8038,94.2044,94.0000,94.2044,94.8038,95.7574,97.0000,98.4471,100.0000,101.5529,103.0000,104.2426,105.1962,105.7956,106.0000,105.7956,105.1962,104.2426,103.0000,101.5529,100.0000,98.4471,97.0000,95.7574,94.8038,94.2044,94.0000,94.2044,94.8038,95.7574,97.0000,98.4471)
+var eb = array.from(653,664,664,667,676,684,688,692,700,701,712,718,723,732,736,744,747,755,759,761,771,773,785,786,795,799,808,815,820,820,843,852,856,864,867,876,879,888)
+var ea = array.from(1,3,2,3,1,3,2,3,1,3,2,3,1,3,2,3,1,3,2,3,1,3,2,3,1,3,2,3,1,3,1,3,2,3,1,3,2,3)
+var ep = array.from(100.41000000,99.79290000,99.79000000,100.78790000,100.21000000,99.20790000,99.79000000,99.22730000,100.21000000,99.20790000,98.96000000,97.42000000,100.01000000,101.02840000,98.96000000,97.42000000,100.01000000,102.75500000,99.99000000,99.80000000,100.01000000,98.80000000,99.39000000,100.38390000,100.01000000,101.03920000,99.68000000,98.96080000,100.32000000,99.31680000,100.01000000,103.06500000,98.19000000,96.03500000,100.01000000,103.86280000,99.99000000,96.93500000)
+
+int fixtureIndex = bar_index - 650
+int safeIndex = math.max(0, math.min(239, fixtureIndex))
+float _o = fixtureIndex < 0 ? 100.0 : array.get(oo, safeIndex)
+float _h = fixtureIndex < 0 ? 100.2 : array.get(hh, safeIndex)
+float _l = fixtureIndex < 0 ? 99.8 : array.get(ll, safeIndex)
+float _c = fixtureIndex < 0 ? 100.0 : array.get(cc, safeIndex)
+var counts = array.new_int(2, 0)
+var actualEvents = array.new_string()
+var failures = array.new_string()
+observe(int action, float price) =>
+    if bar_index >= 650 and bar_index < 890
+        int cursor = array.get(counts, 0)
+        bool matches = false
+        if cursor < array.size(eb)
+            matches := bar_index == array.get(eb, cursor) and action == array.get(ea, cursor) and math.abs(price - array.get(ep, cursor)) <= 0.0000001
+        string eventText = str.tostring(bar_index) + ":" + str.tostring(action) + ":" + str.tostring(price, "#.########")
+        array.push(actualEvents, eventText)
+        if not matches
+            array.set(counts, 1, array.get(counts, 1) + 1)
+            if array.size(failures) < 5
+                array.push(failures, eventText)
+        array.set(counts, 0, cursor + 1)
+    0
+
+
+// 手工观察指标；只使用当前图表周期，不读取任何小周期。
+// 保留第2/3根盘中突破确认；利润保护在当前周期K线收盘更新。
+// 此改动不同于项目的5分钟保护版本，不沿用其+64,338.16%收益。
+// 历史同根入场和止损先后不明时，保守记为入场后止损。
+
+int centerLen = input.int(55, "中心线 EMA 周期", minval=2)
+int widthLen = input.int(31, "平滑振幅周期", minval=2)
+float trigger = input.float(0.4, "突破门槛：几倍振幅", minval=0.1, step=0.1)
+float chase = input.float(2.0, "超过几倍振幅不追", minval=0.1, step=0.1)
+float priceTick = input.float(0.01, "突破价格单位", minval=0.000001)
+float initialSL = input.float(1.0, "固定止损 %", minval=0.01, maxval=99)
+float activation = input.float(2.0, "浮盈达到多少 % 启动保护", minval=0.01)
+float giveback = input.float(50.0, "允许回吐最高浮盈 %", minval=1, maxval=99)
+bool showOuter = input.bool(true, "显示外围两条线")
+int warmupBars = input.int(650, "预热K线根数（历史不足可调小）", minval=1, tooltip="前这些K线只计算通道，不生成交易标签。周线、月线历史不足650根时，可手动调小。")
+
+if barstate.isfirst
+    if chase <= trigger
+        runtime.error("不追价距离必须大于突破门槛。")
+
+float basis = ta.ema(((_h + _l) / 2), centerLen)
+float width = ta.ema(_h - _l, widthLen)
+float upper = basis + trigger * width
+float lower = basis - trigger * width
+bool rawLong = ta.crossover(_c, upper)
+bool rawShort = ta.crossunder(_c, lower)
+
+// varip仅用于记住本根已经发生的动作，避免实时每次报价重复开仓。
+varip int side = 0
+varip float entryPrice = na
+varip float bestPrice = na
+varip float stopPrice = na
+varip int waiting = 0
+varip int signalBar = na
+varip float bodyEdge = na
+varip int orderSide = 0
+varip float orderPrice = na
+varip float orderCap = na
+varip bool closeNext = false
+varip bool openedLong = false
+varip bool openedShort = false
+varip bool closedLong = false
+varip bool closedShort = false
+varip bool stoppedOut = false
+varip int lastCloseBar = -1
+
+if barstate.isnew
+    openedLong := false
+    openedShort := false
+    closedLong := false
+    closedShort := false
+    stoppedOut := false
+
+// 实时只检查最新报价，避免拿入场前的影线触发入场后的止损。
+// 历史没有逐笔报价，只能用本根OHLC作保守重建。
+float currentOpen = barstate.ishistory ? _o : _c
+float currentHigh = barstate.ishistory ? _h : _c
+float currentLow = barstate.ishistory ? _l : _c
+bool ready = bar_index >= warmupBars
+
+if ready
+    // 已有止损优先；随后执行上一根收盘安排的反向平仓。
+    if side != 0 and (side == 1 ? currentOpen <= stopPrice : currentOpen >= stopPrice)
+        observe(3, currentOpen)
+        stoppedOut := true
+        side := 0
+    if closeNext
+        if side != 0
+            observe(3, currentOpen)
+        if side == 1
+            closedLong := true
+        if side == -1
+            closedShort := true
+        side := 0
+        closeNext := false
+
+    // 突破委托只来自当前周期已经收盘的信号。
+    if orderSide != 0
+        int direction = orderSide
+        bool touched = direction == 1 ? currentHigh >= orderPrice : currentLow <= orderPrice
+        if side != 0
+            orderSide := 0
+        else if touched
+            bool beyondAtOpen = direction * (currentOpen - orderPrice) >= 0
+            float fillPrice = beyondAtOpen ? currentOpen : orderPrice
+            if direction * (fillPrice - orderCap) <= 0
+                observe(direction == 1 ? 1 : 2, fillPrice)
+                side := direction
+                entryPrice := fillPrice
+                bestPrice := fillPrice
+                stopPrice := fillPrice * (1 - direction * initialSL / 100)
+                openedLong := direction == 1
+                openedShort := direction == -1
+                waiting := 0
+            orderSide := 0
+
+    // 固定止损和上一收盘确定的保护价都可以盘中触发。
+    if side != 0 and (side == 1 ? currentLow <= stopPrice : currentHigh >= stopPrice)
+        observe(3, stopPrice)
+        stoppedOut := true
+        side := 0
+    if side != 0
+        bestPrice := side == 1 ? math.max(bestPrice, currentHigh) : math.min(bestPrice, currentLow)
+    else
+        entryPrice := na
+        bestPrice := na
+        stopPrice := na
+
+    if barstate.isconfirmed and bar_index != lastCloseBar
+        lastCloseBar := bar_index
+
+        // 只在当前周期K线收盘抬高保护价，新价从下一根起生效。
+        if side != 0
+            float peakProfit = math.max(0, side * (bestPrice - entryPrice))
+            if peakProfit / entryPrice * 100 >= activation
+                float candidate = entryPrice + side * peakProfit * (1 - giveback / 100)
+                stopPrice := side == 1 ? math.max(stopPrice, candidate) : math.min(stopPrice, candidate)
+
+        // 信号根算第1根；只允许其后第2和第3根突破入场。
+        if waiting != 0 and bar_index - signalBar >= 2
+            waiting := 0
+        int direction = rawLong ? 1 : rawShort ? -1 : 0
+        if direction != 0
+            if waiting != 0 and waiting != direction
+                waiting := 0
+            if side != 0 and side != direction
+                closeNext := true
+            bool near = width > 0 and direction * (_c - basis) <= chase * width
+            if side != direction and waiting == 0 and near
+                waiting := direction
+                signalBar := bar_index
+                bodyEdge := direction == 1 ? math.max(_o, _c) : math.min(_o, _c)
+
+        // 过期、反向或成交会消费旧信号；不会因为价格一直在外侧反复开仓。
+        orderSide := 0
+        orderPrice := na
+        orderCap := na
+        if waiting != 0
+            float level = waiting == 1 ? math.max(bodyEdge, upper) : math.min(bodyEdge, lower)
+            float nextPrice = waiting == 1 ? (math.floor(level / priceTick + 1e-8) + 1) * priceTick : (math.ceil(level / priceTick - 1e-8) - 1) * priceTick
+            float cap = basis + waiting * chase * width
+            if nextPrice > 0 and waiting * (cap - nextPrice) >= 0
+                orderSide := waiting
+                orderPrice := nextPrice
+                orderCap := cap
+
+// 原来的通道样式：中心线、内侧门槛、淡云带、外围±2倍振幅。
+plot(basis, "中心线", color=color.new(color.gray, 40), display=display.pane)
+pUpper = plot(upper, "上突破线", color=color.new(color.green, 25), display=display.pane)
+pLower = plot(lower, "下突破线", color=color.new(color.red, 25), display=display.pane)
+fill(pUpper, pLower, color=_c >= basis ? color.new(color.green, 85) : color.new(color.red, 85))
+plot(showOuter ? basis + 2 * width : na, "外围上沿", color=color.new(color.green, 75), display=display.pane)
+plot(showOuter ? basis - 2 * width : na, "外围下沿", color=color.new(color.red, 75), display=display.pane)
+
+// 恢复旧标签；两种反手文字和颜色均不同，不拆成同坐标的两张标签。
+bool reverseLong = closedShort and openedLong
+bool reverseShort = closedLong and openedShort
+plotshape(openedLong and not reverseLong, "做多", shape.labelup, location.belowbar, #F23645, text="做多", textcolor=color.white, size=size.small, display=display.pane)
+plotshape(openedShort and not reverseShort, "做空", shape.labeldown, location.abovebar, #4CAF50, text="做空", textcolor=color.white, size=size.small, display=display.pane)
+plotshape(reverseLong, "平仓做多", shape.labelup, location.belowbar, #F23645, text="平仓做多", textcolor=color.white, size=size.small, display=display.pane)
+plotshape(reverseShort, "平仓做空", shape.labeldown, location.abovebar, #4CAF50, text="平仓做空", textcolor=color.white, size=size.small, display=display.pane)
+plotshape(closedLong and not reverseShort, "只平多", shape.labeldown, location.abovebar, #E91E63, text="平多", textcolor=color.white, size=size.small, display=display.pane)
+plotshape(closedShort and not reverseLong, "只平空", shape.labelup, location.belowbar, #00897B, text="平空", textcolor=color.white, size=size.small, display=display.pane)
+float labelGap = math.max(width * 1.5, syminfo.mintick * 10)
+plotshape(stoppedOut ? _h + labelGap : na, "止损（含利润保护）", shape.labeldown, location.absolute, #FF9800, text="止损", textcolor=color.white, size=size.small, display=display.pane)
+
+// 数值只留在数据窗口，不加红橙直角线、状态表或成交箭头。
+plot(side != 0 ? entryPrice : na, "模拟入场价", display=display.data_window)
+plot(side != 0 ? stopPrice : na, "当前止损或保护价", display=display.data_window)
+plot(orderSide != 0 ? orderPrice : na, "下一根突破价", display=display.data_window)
+
+// Validation output only; no production trading logic is changed.
+var int checkedBars = 0
+if bar_index >= 650 and bar_index < 890 and barstate.isconfirmed
+    checkedBars += 1
+bool passed = checkedBars == 240 and array.get(counts, 0) == array.size(eb) and array.get(counts, 1) == 0
+string summary = (passed ? "PASS" : "FAIL") + " | bars=" + str.tostring(checkedBars) + " | events=" + str.tostring(array.get(counts, 0)) + "/" + str.tostring(array.size(eb)) + " | mismatches=" + str.tostring(array.get(counts, 1))
+if bar_index == 889 and barstate.isconfirmed
+    log.info(summary)
+    log.info(array.join(actualEvents, ";"))
+var report = table.new(position.middle_center, 1, 2, bgcolor=color.black)
+if barstate.islast
+    table.cell(report, 0, 0, summary, text_color=passed ? color.lime : color.red, text_size=size.large)
+    table.cell(report, 0, 1, "Synthetic historical OHLC; price tolerance 1e-7\n" + array.join(failures, ";"), text_color=color.white)

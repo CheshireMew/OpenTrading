@@ -5,7 +5,7 @@ from typing import Literal
 from fastapi import APIRouter
 from fastapi.routing import APIRoute
 
-FrontendContractTarget = Literal["market", "tools", "config", "research"]
+FrontendContractTarget = Literal["market", "tools", "config", "research", "chartWorkspace"]
 
 FRONTEND_CONTRACT_OPENAPI_KEY = "x-frontend-contract-target"
 
@@ -23,7 +23,7 @@ class FrontendContractRouter(APIRouter):
 
 def frontend_contract_target(route: APIRoute) -> FrontendContractTarget:
     target = (route.openapi_extra or {}).get(FRONTEND_CONTRACT_OPENAPI_KEY)
-    if target in {"market", "tools", "config", "research"}:
+    if target in {"market", "tools", "config", "research", "chartWorkspace"}:
         return target
     raise RuntimeError(f"API route has no frontend contract target: {route.name} {route.path}")
 

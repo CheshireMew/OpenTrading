@@ -1,5 +1,5 @@
 <template>
-  <div class="app-shell flex h-screen flex-col overflow-hidden transition-colors duration-300 md:flex-row">
+  <div class="app-shell flex h-screen flex-col overflow-hidden transition-colors duration-300 md:flex-row" :class="{'app-chart-mode': route.path === '/', 'app-chart-menu-open': sidebarOpen}">
     <a href="#main-content" class="app-skip-link">{{ t('app.skipToContent') }}</a>
 
     <header class="app-mobile-header flex h-14 flex-shrink-0 items-center justify-between border-b px-4 md:hidden">
@@ -21,8 +21,8 @@
       ref="sidebarRef"
       class="app-sidebar fixed inset-y-0 left-0 z-50 w-72 flex-shrink-0 overflow-y-auto transition-transform duration-200 md:static md:z-auto md:w-60 md:translate-x-0"
       :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-      :inert="!desktopNavigation && !sidebarOpen"
-      :aria-hidden="!desktopNavigation && !sidebarOpen ? 'true' : undefined"
+      :inert="(!desktopNavigation || route.path === '/') && !sidebarOpen"
+      :aria-hidden="(!desktopNavigation || route.path === '/') && !sidebarOpen ? 'true' : undefined"
       :role="navigationModalOpen ? 'dialog' : undefined"
       :aria-modal="navigationModalOpen ? 'true' : undefined"
       :aria-label="navigationModalOpen ? t('app.primaryNavigation') : undefined"
@@ -138,7 +138,7 @@ const mainContentRef = ref<HTMLElement | null>(null)
 const bootstrapError = ref(false)
 const bootstrapLoading = ref(false)
 const desktopNavigation = ref(false)
-const navigationModalOpen = computed(() => sidebarOpen.value && !desktopNavigation.value)
+const navigationModalOpen = computed(() => sidebarOpen.value && (!desktopNavigation.value || route.path === '/'))
 const { theme, toggleTheme } = useTheme()
 const { loadCurrencyRates } = useMoney()
 const { loadSymbols } = useSymbolCatalog()
@@ -212,7 +212,9 @@ watchEffect(() => {
   document.title = pageTitle === appTitle ? appTitle : `${pageTitle} · ${appTitle}`
 })
 
+const openWorkspaceNavigation = () => { sidebarOpen.value = true }
 onMounted(() => {
+  window.addEventListener('heimdall:open-navigation', openWorkspaceNavigation)
   desktopMediaQuery = window.matchMedia('(min-width: 768px)')
   syncDesktopNavigation(desktopMediaQuery)
   desktopMediaQuery.addEventListener('change', syncDesktopNavigation)
@@ -220,11 +222,19 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('heimdall:open-navigation', openWorkspaceNavigation)
   desktopMediaQuery?.removeEventListener('change', syncDesktopNavigation)
 })
 </script>
 
 <style>
+.app-chart-mode .app-sidebar{position:fixed!important;z-index:60!important;transform:translateX(-100%)!important}
+.app-chart-mode.app-chart-menu-open .app-sidebar{transform:translateX(0)!important;box-shadow:8px 0 40px #0005}
+.app-chart-mode .app-sidebar-header button{display:inline-flex!important}
+.app-chart-mode .app-main{overflow:hidden!important}
+.app-chart-mode>button.fixed{display:block!important}
+.app-chart-mode .app-mobile-header{display:none!important}
+
 .app-shell {
   --app-shell-bg: #f7f4ed;
   --app-shell-text: #1c1917;

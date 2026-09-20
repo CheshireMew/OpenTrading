@@ -7,7 +7,28 @@ import logging
 import httpx
 import pytest
 
-from app.application.model_contracts import TradeSetupModelOutput
+from typing import Literal
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+class StructuredOutputFixture(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    side: Literal["LONG", "SHORT", "HOLD"]
+    entry: float | None = Field(gt=0)
+    target: float | None = Field(gt=0)
+    stop: float | None = Field(gt=0)
+    confidence: int = Field(ge=0, le=100)
+    reason: str = Field(min_length=1, max_length=500)
+
+    @model_validator(mode="after")
+    def validate_plan_completeness(self) -> "StructuredOutputFixture":
+        levels = (self.entry, self.target, self.stop)
+        if self.side == "HOLD" and any(value is not None for value in levels):
+            raise ValueError("HOLD must not include entry, target, or stop")
+        if self.side != "HOLD" and any(value is None for value in levels):
+            raise ValueError("LONG and SHORT require entry, target, and stop")
+        return self
+
 from app.infra.llm_client import LLMClient, LLMClientFactory
 from config import settings
 from utils.logger import logger
@@ -72,8 +93,8 @@ async def test_openai_compatible_request_uses_json_schema_and_validates_output()
         client = LLMClient(llm_config("openai", "json_schema"), http_client=http_client)
         result = await client.analyze(
             "请返回 JSON",
-            response_model=TradeSetupModelOutput,
-            purpose="trade_setup",
+            response_model=StructuredOutputFixture,
+            purpose="structured_output_test",
         )
 
     assert result.succeeded is True
@@ -99,8 +120,8 @@ async def test_deepseek_request_uses_official_json_object_mode():
         client = LLMClient(llm_config("deepseek", "json_object"), http_client=http_client)
         result = await client.analyze(
             "return JSON",
-            response_model=TradeSetupModelOutput,
-            purpose="trade_setup",
+            response_model=StructuredOutputFixture,
+            purpose="structured_output_test",
         )
 
     assert result.succeeded is True
@@ -119,8 +140,8 @@ async def test_anthropic_request_uses_output_config_and_maps_refusal():
         client = LLMClient(llm_config("anthropic", "anthropic_json_schema"), http_client=http_client)
         result = await client.analyze(
             "return JSON",
-            response_model=TradeSetupModelOutput,
-            purpose="trade_setup",
+            response_model=StructuredOutputFixture,
+            purpose="structured_output_test",
         )
 
     assert result.status == "refused"
@@ -144,8 +165,8 @@ async def test_invalid_json_is_not_retried_and_has_stable_error_code():
         client = LLMClient(llm_config("openai", "json_schema"), http_client=http_client)
         result = await client.analyze(
             "return JSON",
-            response_model=TradeSetupModelOutput,
-            purpose="trade_setup",
+            response_model=StructuredOutputFixture,
+            purpose="structured_output_test",
         )
 
     assert request_count == 1
@@ -166,15 +187,15 @@ async def test_schema_violation_and_missing_configuration_remain_distinguishable
         configured = LLMClient(llm_config("openai", "json_schema"), http_client=http_client)
         schema_result = await configured.analyze(
             "return JSON",
-            response_model=TradeSetupModelOutput,
-            purpose="trade_setup",
+            response_model=StructuredOutputFixture,
+            purpose="structured_output_test",
         )
 
         missing = LLMClient(llm_config("openai", "json_schema") | {"apiKey": ""}, http_client=http_client)
         missing_result = await missing.analyze(
             "return JSON",
-            response_model=TradeSetupModelOutput,
-            purpose="trade_setup",
+            response_model=StructuredOutputFixture,
+            purpose="structured_output_test",
         )
 
     assert schema_result.error_code == "model_schema_invalid"
@@ -208,8 +229,8 @@ async def test_normal_model_logs_exclude_prompt_and_response_content(monkeypatch
             client = LLMClient(llm_config("openai", "json_schema"), http_client=http_client)
             result = await client.analyze(
                 secret_prompt,
-                response_model=TradeSetupModelOutput,
-                purpose="trade_setup",
+                response_model=StructuredOutputFixture,
+                purpose="structured_output_test",
             )
     finally:
         logger.removeHandler(handler)

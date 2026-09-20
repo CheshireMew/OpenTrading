@@ -20,8 +20,9 @@ from app.product import API_PREFIX  # noqa: E402
 from app.domain.market.web3_chains import WEB3_ALL_CHAIN_ID, WEB3_CHAIN_CATALOG  # noqa: E402
 
 FRONTEND_API_DIR = REPO_ROOT / "frontend" / "src" / "api"
-TARGET_FILES = ("market.ts", "tools.ts", "config.ts", "research.ts")
+TARGET_FILES = ("market.ts", "tools.ts", "config.ts", "research.ts", "chartWorkspace.ts")
 TARGET_PATHS = {
+    "chartWorkspace.ts": REPO_ROOT / "frontend" / "src" / "modules" / "chartWorkspace" / "generatedContracts.ts",
     "market.ts": REPO_ROOT / "frontend" / "src" / "modules" / "market" / "generatedContracts.ts",
     "tools.ts": REPO_ROOT / "frontend" / "src" / "modules" / "tools" / "generatedContracts.ts",
     "config.ts": REPO_ROOT / "frontend" / "src" / "modules" / "system" / "generatedContracts.ts",
@@ -29,6 +30,7 @@ TARGET_PATHS = {
 }
 CONTRACT_APP = create_app("api")
 TYPE_NAMESPACE_BY_FILE = {
+    "chartWorkspace.ts": "ChartWorkspaceTypes",
     "market.ts": "MarketTypes",
     "tools.ts": "ToolsTypes",
     "config.ts": "ConfigTypes",
@@ -191,6 +193,7 @@ def render_api_routes() -> str:
         "import type * as MarketTypes from '../modules/market/contracts'",
         "import type * as ToolsTypes from '../modules/tools/contracts'",
         "import type * as ConfigTypes from '../modules/system/contracts'",
+        "import type * as ChartWorkspaceTypes from '../modules/chartWorkspace/generatedContracts'",
         "import type * as ResearchTypes from '../modules/research/contracts'",
         "",
         "export type RouteParams = Record<string, string | number>",

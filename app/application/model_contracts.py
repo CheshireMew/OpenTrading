@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Generic, Literal, TypeVar
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 
 ModelCallStatus = Literal["success", "unavailable", "failed", "refused"]
@@ -32,21 +32,3 @@ class MarketAnalysisModelOutput(BaseModel):
     take_profit: float | None = Field(default=None, gt=0)
 
 
-class TradeSetupModelOutput(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    side: Literal["LONG", "SHORT", "HOLD"]
-    entry: float | None = Field(gt=0)
-    target: float | None = Field(gt=0)
-    stop: float | None = Field(gt=0)
-    confidence: int = Field(ge=0, le=100)
-    reason: str = Field(min_length=1, max_length=500)
-
-    @model_validator(mode="after")
-    def validate_plan_completeness(self) -> "TradeSetupModelOutput":
-        levels = (self.entry, self.target, self.stop)
-        if self.side == "HOLD" and any(value is not None for value in levels):
-            raise ValueError("HOLD must not include entry, target, or stop")
-        if self.side != "HOLD" and any(value is None for value in levels):
-            raise ValueError("LONG and SHORT require entry, target, and stop")
-        return self

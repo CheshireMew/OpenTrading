@@ -1,0 +1,168 @@
+//@version=6
+indicator("Heimdall ETH · EMA55 · 当前周期 v7.2", overlay=true)
+
+// 手工观察指标；只使用当前图表周期，不读取任何小周期。
+// 保留第2/3根盘中突破确认；利润保护在当前周期K线收盘更新。
+// 此改动不同于项目的5分钟保护版本，不沿用其+64,338.16%收益。
+// 历史同根入场和止损先后不明时，保守记为入场后止损。
+
+int centerLen = input.int(55, "中心线 EMA 周期", minval=2)
+int widthLen = input.int(31, "平滑振幅周期", minval=2)
+float trigger = input.float(0.4, "突破门槛：几倍振幅", minval=0.1, step=0.1)
+float chase = input.float(2.0, "超过几倍振幅不追", minval=0.1, step=0.1)
+float priceTick = input.float(0.01, "突破价格单位", minval=0.000001)
+float initialSL = input.float(1.0, "固定止损 %", minval=0.01, maxval=99)
+float activation = input.float(2.0, "浮盈达到多少 % 启动保护", minval=0.01)
+float giveback = input.float(50.0, "允许回吐最高浮盈 %", minval=1, maxval=99)
+bool showOuter = input.bool(true, "显示外围两条线")
+int warmupBars = input.int(650, "预热K线根数（历史不足可调小）", minval=1, tooltip="前这些K线只计算通道，不生成交易标签。周线、月线历史不足650根时，可手动调小。")
+
+if barstate.isfirst
+    if chase <= trigger
+        runtime.error("不追价距离必须大于突破门槛。")
+
+float basis = ta.ema(hl2, centerLen)
+float width = ta.ema(high - low, widthLen)
+float upper = basis + trigger * width
+float lower = basis - trigger * width
+bool rawLong = ta.crossover(close, upper)
+bool rawShort = ta.crossunder(close, lower)
+
+// varip仅用于记住本根已经发生的动作，避免实时每次报价重复开仓。
+varip int side = 0
+varip float entryPrice = na
+varip float bestPrice = na
+varip float stopPrice = na
+varip int waiting = 0
+varip int signalBar = na
+varip float bodyEdge = na
+varip int orderSide = 0
+varip float orderPrice = na
+varip float orderCap = na
+varip bool closeNext = false
+varip bool openedLong = false
+varip bool openedShort = false
+varip bool closedLong = false
+varip bool closedShort = false
+varip bool stoppedOut = false
+varip int lastCloseBar = -1
+
+if barstate.isnew
+    openedLong := false
+    openedShort := false
+    closedLong := false
+    closedShort := false
+    stoppedOut := false
+
+// 实时只检查最新报价，避免拿入场前的影线触发入场后的止损。
+// 历史没有逐笔报价，只能用本根OHLC作保守重建。
+float currentOpen = barstate.ishistory ? open : close
+float currentHigh = barstate.ishistory ? high : close
+float currentLow = barstate.ishistory ? low : close
+bool ready = bar_index >= warmupBars
+
+if ready
+    // 已有止损优先；随后执行上一根收盘安排的反向平仓。
+    if side != 0 and (side == 1 ? currentOpen <= stopPrice : currentOpen >= stopPrice)
+        stoppedOut := true
+        side := 0
+    if closeNext
+        if side == 1
+            closedLong := true
+        if side == -1
+            closedShort := true
+        side := 0
+        closeNext := false
+
+    // 突破委托只来自当前周期已经收盘的信号。
+    if orderSide != 0
+        int direction = orderSide
+        bool touched = direction == 1 ? currentHigh >= orderPrice : currentLow <= orderPrice
+        if side != 0
+            orderSide := 0
+        else if touched
+            bool beyondAtOpen = direction * (currentOpen - orderPrice) >= 0
+            float fillPrice = beyondAtOpen ? currentOpen : orderPrice
+            if direction * (fillPrice - orderCap) <= 0
+                side := direction
+                entryPrice := fillPrice
+                bestPrice := fillPrice
+                stopPrice := fillPrice * (1 - direction * initialSL / 100)
+                openedLong := direction == 1
+                openedShort := direction == -1
+                waiting := 0
+            orderSide := 0
+
+    // 固定止损和上一收盘确定的保护价都可以盘中触发。
+    if side != 0 and (side == 1 ? currentLow <= stopPrice : currentHigh >= stopPrice)
+        stoppedOut := true
+        side := 0
+    if side != 0
+        bestPrice := side == 1 ? math.max(bestPrice, currentHigh) : math.min(bestPrice, currentLow)
+    else
+        entryPrice := na
+        bestPrice := na
+        stopPrice := na
+
+    if barstate.isconfirmed and bar_index != lastCloseBar
+        lastCloseBar := bar_index
+
+        // 只在当前周期K线收盘抬高保护价，新价从下一根起生效。
+        if side != 0
+            float peakProfit = math.max(0, side * (bestPrice - entryPrice))
+            if peakProfit / entryPrice * 100 >= activation
+                float candidate = entryPrice + side * peakProfit * (1 - giveback / 100)
+                stopPrice := side == 1 ? math.max(stopPrice, candidate) : math.min(stopPrice, candidate)
+
+        // 信号根算第1根；只允许其后第2和第3根突破入场。
+        if waiting != 0 and bar_index - signalBar >= 2
+            waiting := 0
+        int direction = rawLong ? 1 : rawShort ? -1 : 0
+        if direction != 0
+            if waiting != 0 and waiting != direction
+                waiting := 0
+            if side != 0 and side != direction
+                closeNext := true
+            bool near = width > 0 and direction * (close - basis) <= chase * width
+            if side != direction and waiting == 0 and near
+                waiting := direction
+                signalBar := bar_index
+                bodyEdge := direction == 1 ? math.max(open, close) : math.min(open, close)
+
+        // 过期、反向或成交会消费旧信号；不会因为价格一直在外侧反复开仓。
+        orderSide := 0
+        orderPrice := na
+        orderCap := na
+        if waiting != 0
+            float level = waiting == 1 ? math.max(bodyEdge, upper) : math.min(bodyEdge, lower)
+            float nextPrice = waiting == 1 ? (math.floor(level / priceTick + 1e-8) + 1) * priceTick : (math.ceil(level / priceTick - 1e-8) - 1) * priceTick
+            float cap = basis + waiting * chase * width
+            if nextPrice > 0 and waiting * (cap - nextPrice) >= 0
+                orderSide := waiting
+                orderPrice := nextPrice
+                orderCap := cap
+
+// 原来的通道样式：中心线、内侧门槛、淡云带、外围±2倍振幅。
+plot(basis, "中心线", color=color.new(color.gray, 40), display=display.pane)
+pUpper = plot(upper, "上突破线", color=color.new(color.green, 25), display=display.pane)
+pLower = plot(lower, "下突破线", color=color.new(color.red, 25), display=display.pane)
+fill(pUpper, pLower, color=close >= basis ? color.new(color.green, 85) : color.new(color.red, 85))
+plot(showOuter ? basis + 2 * width : na, "外围上沿", color=color.new(color.green, 75), display=display.pane)
+plot(showOuter ? basis - 2 * width : na, "外围下沿", color=color.new(color.red, 75), display=display.pane)
+
+// 恢复旧标签；两种反手文字和颜色均不同，不拆成同坐标的两张标签。
+bool reverseLong = closedShort and openedLong
+bool reverseShort = closedLong and openedShort
+plotshape(openedLong and not reverseLong, "做多", shape.labelup, location.belowbar, #F23645, text="做多", textcolor=color.white, size=size.small, display=display.pane)
+plotshape(openedShort and not reverseShort, "做空", shape.labeldown, location.abovebar, #4CAF50, text="做空", textcolor=color.white, size=size.small, display=display.pane)
+plotshape(reverseLong, "平仓做多", shape.labelup, location.belowbar, #F23645, text="平仓做多", textcolor=color.white, size=size.small, display=display.pane)
+plotshape(reverseShort, "平仓做空", shape.labeldown, location.abovebar, #4CAF50, text="平仓做空", textcolor=color.white, size=size.small, display=display.pane)
+plotshape(closedLong and not reverseShort, "只平多", shape.labeldown, location.abovebar, #E91E63, text="平多", textcolor=color.white, size=size.small, display=display.pane)
+plotshape(closedShort and not reverseLong, "只平空", shape.labelup, location.belowbar, #00897B, text="平空", textcolor=color.white, size=size.small, display=display.pane)
+float labelGap = math.max(width * 1.5, syminfo.mintick * 10)
+plotshape(stoppedOut ? high + labelGap : na, "止损（含利润保护）", shape.labeldown, location.absolute, #FF9800, text="止损", textcolor=color.white, size=size.small, display=display.pane)
+
+// 数值只留在数据窗口，不加红橙直角线、状态表或成交箭头。
+plot(side != 0 ? entryPrice : na, "模拟入场价", display=display.data_window)
+plot(side != 0 ? stopPrice : na, "当前止损或保护价", display=display.data_window)
+plot(orderSide != 0 ? orderPrice : na, "下一根突破价", display=display.data_window)

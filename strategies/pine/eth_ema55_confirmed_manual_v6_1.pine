@@ -1,0 +1,223 @@
+//@version=6
+indicator("Heimdall ETH · EMA55 盘中确认 · 分色标签 v6.1", overlay=true, max_labels_count=500)
+
+// 手工观察指标，不自动下单，不使用 strategy 原生成交箭头。
+// 对应固定版 +64,338.16%：2020-12-28 至 2026-09-10，项目 ETH/USDT 数据。
+// 这里不承诺复现该收益：图表交易所、可用历史、5分钟数据覆盖均可能不同。
+// 成交标签由已完成的5分钟K线确认，可能晚于实际触价；手工条件单参考数据窗口。
+// 历史同一5分钟内先突破还是先碰止损无法确定时，沿用项目“先入场再止损”。
+
+string rules = "交易参数"
+int centerLen = input.int(55, "中心 EMA", minval=2, group=rules)
+int widthLen = input.int(31, "高低差 EMA", minval=2, group=rules)
+float trigger = input.float(0.4, "突破门槛 / 振幅", minval=0.1, step=0.1, group=rules)
+float chase = input.float(2.0, "不追价距离 / 振幅", minval=0.1, step=0.1, group=rules)
+float priceTick = input.float(0.01, "突破价格单位", minval=0.000001, group=rules)
+float initialSL = input.float(1.0, "固定止损 %", minval=0.01, maxval=20, group=rules)
+float activation = input.float(2.0, "浮盈多少 % 启动保护", minval=0.01, group=rules)
+float giveback = input.float(50.0, "允许回吐最高浮盈 %", minval=1, maxval=99, group=rules)
+
+string visuals = "显示"
+bool showOuter = input.bool(true, "显示外围振幅边界", group=visuals)
+int keepLabels = input.int(200, "保留最近标签数", minval=10, maxval=450, group=visuals)
+float spacing = input.float(1.5, "标签垂直间距", minval=0.5, step=0.5, group=visuals)
+bool orderAlerts = input.bool(false, "提醒下一根条件单价位", group=visuals)
+bool fillAlerts = input.bool(false, "提醒5分钟已确认的成交记录", group=visuals)
+bool limitStart = input.bool(false, "指定开始跟踪时间", group=visuals)
+int startAt = input.time(timestamp("28 Dec 2020 00:00 +0000"), "开始时间", group=visuals)
+
+if barstate.isfirst
+    if timeframe.in_seconds() != 900
+        runtime.error("请使用标准15分钟K线。")
+    if chase <= trigger
+        runtime.error("不追价距离必须大于突破门槛。")
+
+float basis = ta.ema(hl2, centerLen)
+float width = ta.ema(high - low, widthLen)
+float upper = basis + trigger * width
+float lower = basis - trigger * width
+bool rawLong = ta.crossover(close, upper)
+bool rawShort = ta.crossunder(close, lower)
+
+type Mark
+    string actionText
+    int side
+    bool entry
+    float price
+    int stamp
+
+type TradeState
+    int side = 0
+    float entryPrice = na
+    float best = na
+    float stop = na
+    bool protected = false
+    int waiting = 0
+    int signalBar = na
+    float target = na
+    int orderSide = 0
+    float orderPrice = na
+    float cap = na
+    bool closeNext = false
+
+method exitPosition(TradeState s, array<Mark> events, float price, int stamp, string reason)
+    events.push(Mark.new(reason, s.side, false, price, stamp))
+    s.side := 0
+    s.entryPrice := na
+    s.best := na
+    s.stop := na
+    s.protected := false
+
+method stopped(TradeState s, float lo, float hi)
+    s.side != 0 and not na(s.stop) and (s.side == 1 ? lo <= s.stop : hi >= s.stop)
+
+method step(TradeState s, array<Mark> events, int stamp, float o, float h, float l, float c)
+    // 开盘越过原保护价优先；其次原反向退出；再检查此前挂出的突破委托。
+    if s.stopped(o, o)
+        s.exitPosition(events, o, stamp, s.protected ? "保盈" : "止损")
+    if s.closeNext
+        if s.side != 0
+            s.exitPosition(events, o, stamp, s.side == 1 ? "平多" : "平空")
+        s.closeNext := false
+    if s.orderSide != 0
+        int d = s.orderSide
+        bool touched = d == 1 ? h >= s.orderPrice : l <= s.orderPrice
+        bool gapEntry = d * (o - s.orderPrice) >= 0
+        float price = gapEntry ? o : s.orderPrice
+        if s.side != 0
+            s.orderSide := 0
+        else if touched
+            if d * (price - s.cap) <= 0
+                s.side := d
+                s.entryPrice := price
+                s.best := price
+                s.stop := price * (1 - d * initialSL / 100)
+                s.protected := false
+                s.waiting := 0
+                events.push(Mark.new(d == 1 ? "做多" : "做空", d, true, price, stamp))
+            // 超过不追价边界也取消本根委托，不能等回落后在同根偷偷成交。
+            s.orderSide := 0
+    if s.stopped(l, h)
+        s.exitPosition(events, s.stop, stamp, s.protected ? "保盈" : "止损")
+    // 只有仍持仓才更新峰值；新保护价从下一根5分钟开始生效。
+    if s.side != 0
+        s.best := s.side == 1 ? math.max(s.best, h) : math.min(s.best, l)
+        float profit = math.max(0, s.side * (s.best - s.entryPrice))
+        if profit / s.entryPrice * 100 >= activation
+            s.protected := true
+            float candidate = s.entryPrice + s.side * profit * (1 - giveback / 100)
+            s.stop := s.side == 1 ? math.max(s.stop, candidate) : math.min(s.stop, candidate)
+
+// 普通var状态会在实时15分钟K线的每次更新前回滚，按已完成5分钟重新计算。
+// 不用varip保存交易状态，否则历史重算和实时处理会走不同规则。
+var TradeState s = TradeState.new()
+array<Mark> events = array.new<Mark>()
+[times, ends, opens, highs, lows, closes] = request.security_lower_tf(syminfo.tickerid, "5", [time, time_close, open, high, low, close])
+bool ready = bar_index >= 650 and (not limitStart or time >= startAt)
+int count = array.size(times)
+int done = 0
+bool sequenceOK = true
+if count > 0
+    for i = 0 to count - 1
+        bool finished = barstate.ishistory or barstate.isconfirmed or array.get(ends, i) <= timenow
+        if finished
+            sequenceOK := sequenceOK and array.get(times, i) == time + done * 300000
+            done += 1
+bool fullData = done == 3 and sequenceOK
+
+if ready and sequenceOK and (not barstate.isconfirmed or fullData)
+    if done > 0
+        for i = 0 to done - 1
+            s.step(events, array.get(times, i), array.get(opens, i), array.get(highs, i), array.get(lows, i), array.get(closes, i))
+    if barstate.isconfirmed
+        // 原信号为第1根，仅随后第2、第3根允许盘中突破。
+        if s.waiting != 0 and bar_index - s.signalBar >= 2
+            s.waiting := 0
+        int raw = rawLong ? 1 : rawShort ? -1 : 0
+        if raw != 0
+            if s.waiting != 0 and s.waiting != raw
+                s.waiting := 0
+            if s.side != 0 and s.side != raw
+                s.closeNext := true
+            bool near = width > 0 and raw * (close - basis) <= chase * width
+            if s.side != raw and s.waiting == 0 and near
+                s.waiting := raw
+                s.signalBar := bar_index
+                s.target := raw == 1 ? math.max(open, close) : math.min(open, close)
+        // 下一根的触发价、追价上限只能使用本根收盘时已知的数据。
+        s.orderSide := 0
+        s.orderPrice := na
+        s.cap := na
+        if s.waiting != 0
+            int d = s.waiting
+            float level = d == 1 ? math.max(s.target, upper) : math.min(s.target, lower)
+            float price = d == 1 ? (math.floor(level / priceTick + 1e-8) + 1) * priceTick : (math.ceil(level / priceTick - 1e-8) - 1) * priceTick
+            float cap = basis + d * chase * width
+            if price > 0 and d * (cap - price) >= 0
+                s.orderSide := d
+                s.orderPrice := price
+                s.cap := cap
+        if orderAlerts and barstate.isrealtime
+            if s.closeNext
+                alert(s.side == 1 ? "反向信号：下一根开盘平多。新开空另等突破确认。" : "反向信号：下一根开盘平空。新开多另等突破确认。", alert.freq_all)
+            if s.orderSide != 0
+                alert((s.orderSide == 1 ? "下一根条件做多：突破 " : "下一根条件做空：跌破 ") + str.tostring(s.orderPrice, format.mintick) + "；不追价边界 " + str.tostring(s.cap, format.mintick) + "；固定止损 " + str.tostring(initialSL) + "%", alert.freq_all)
+else if barstate.isconfirmed
+    // 缺少细周期时停止重建该段持仓，绝不悄悄用15分钟冒充5分钟保护。
+    s := TradeState.new()
+
+// 图表只画通道；止损、保护、开仓价仅在数据窗口提供。
+plot(basis, "中心 EMA(hl2)", color=color.new(color.gray, 40), display=display.pane)
+pUp = plot(upper, "多头突破线", color=color.new(color.green, 25), display=display.pane)
+pDn = plot(lower, "空头突破线", color=color.new(color.red, 25), display=display.pane)
+fill(pUp, pDn, color=close >= basis ? color.new(color.green, 85) : color.new(color.red, 85))
+plot(showOuter ? basis + 2 * width : na, "外侧上沿：中心+2倍振幅", color=color.new(color.green, 75), display=display.pane)
+plot(showOuter ? basis - 2 * width : na, "外侧下沿：中心-2倍振幅", color=color.new(color.red, 75), display=display.pane)
+plot(s.side, "模拟持仓：1多/-1空/0无", display=display.data_window)
+plot(s.side != 0 ? s.entryPrice : na, "模拟开仓价", display=display.data_window)
+plot(s.side != 0 ? s.stop : na, "当前止损或保盈价", display=display.data_window)
+plot(s.orderSide, "下根条件单方向：1多/-1空/0无", display=display.data_window)
+plot(s.orderSide != 0 ? s.orderPrice : na, "下根突破触发价", display=display.data_window)
+plot(s.orderSide != 0 ? s.cap : na, "下根不追价边界", display=display.data_window)
+plot(fullData ? 1 : 0, "本根5分钟数据齐全", display=display.data_window)
+
+// 平仓和开仓是两件事，分别显示。颜色不依赖盈亏，也不共用蓝色。
+var array<label> labels = array.new<label>()
+varip array<string> alerted = array.new<string>()
+if barstate.isnew
+    array.clear(alerted)
+int above = 0
+int below = 0
+float gap = math.max(width * spacing, syminfo.mintick * 20)
+if array.size(events) > 0
+    for i = 0 to array.size(events) - 1
+        Mark e = array.get(events, i)
+        bool under = e.entry ? e.side == 1 : e.side == -1
+        if under
+            below += 1
+        else
+            above += 1
+        float y = under ? low - below * gap : high + above * gap
+        color ink = switch e.actionText
+            "做多" => #F23645
+            "做空" => #4CAF50
+            "平多" => #9C27B0
+            "平空" => #00838F
+            "止损" => #FF9800
+            => #B8860B
+        string tip = str.format_time(e.stamp, "yyyy-MM-dd HH:mm", syminfo.timezone) + " · " + syminfo.timezone + "\n" + (e.side == 1 ? "多仓" : "空仓") + " · " + e.actionText + "\n模拟成交价 " + str.tostring(e.price, format.mintick) + "\n由已完成5分钟K线确认，时间为其开盘时间；非实际账户成交。"
+        label lb = label.new(bar_index, y, e.actionText, yloc=yloc.price, style=under ? label.style_label_up : label.style_label_down, color=ink, textcolor=color.white, size=size.small, tooltip=tip)
+        array.push(labels, lb)
+        while array.size(labels) > keepLabels
+            label.delete(array.shift(labels))
+        string key = str.tostring(e.stamp) + ":" + str.tostring(i) + ":" + e.actionText
+        if fillAlerts and barstate.isrealtime and not array.includes(alerted, key)
+            alert("5分钟记录已确认：" + e.actionText + "，模拟价格 " + str.tostring(e.price, format.mintick) + "。不是此刻市价开仓指令。", alert.freq_all)
+            array.push(alerted, key)
+
+var label dataNotice = na
+if barstate.islast
+    label.delete(dataNotice)
+    dataNotice := na
+    if not ready or (barstate.isconfirmed and not fullData) or (not barstate.isconfirmed and not sequenceOK)
+        dataNotice := label.new(bar_index, high + 5 * gap, not ready ? "等待650根预热或开始时间" : "5分钟数据不足，暂停生成交易标签", style=label.style_label_down, color=color.gray, textcolor=color.white, size=size.small)

@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "scope": "共享的历史 OHLC 执行事件样例。actions 是上一根收盘已经生成的指令；隔离成交、退出与保护时序，不代表完整 EMA 信号对照。",
+  "step_ms": 60000,
+  "cases": [
+    {
+      "id": "waiting_expires_after_two_bars",
+      "description": "只给信号后两根委托；第三根触价也不得追溯成交。",
+      "bars": [
+        [
+          100,
+          100,
+          100,
+          100
+        ],
+        [
+          100,
+          104,
+          99,
+          102
+        ],
+        [
+          102,
+          104,
+          101,
+          103
+        ],
+        [
+          103,
+          110,
+          102,
+          108
+        ]
+      ],
+      "actions": {
+        "0": {
+          "order": {
+            "side": "long",
+            "trigger": 105
+          }
+        },
+        "1": {
+          "order": {
+            "side": "long",
+            "trigger": 105
+          }
+        }
+      },
+      "expected_fills": [],
+      "pine_anchor": "bar_index - signalBar >= 2"
+    },
+    {
+      "id": "opposite_exit_without_entry",
+      "description": "原反向信号先平仓，新方向未突破时只平仓。",
+      "bars": [
+        [
+          100,
+          100,
+          100,
+          100
+        ],
+        [
+          100,
+          102,
+          98,
+          101
+        ],
+        [
+          101,
+          104,
+          100,
+          103
+        ]
+      ],
+      "actions": {
+        "0": {
+          "intent": "short"
+        },
+        "1": {
+          "intent": "close",
+          "order": {
+            "side": "long",
+            "trigger": 105
+          }
+        }
+      },
+      "expected_fills": [
+        [
+          1,
+          "short",
+          "open",
+          100
+        ],
+        [
+          2,
+          "close",
+          "open",
+          101
+        ]
+      ],
+      "pine_anchor": "if closeNext"
+    },
+    {
+      "id": "protection_effective_next_bar",
+      "description": "入场根最高价110对应保护107.5；该根低点104不触发新保护，下一根才触发。",
+      "bars": [
+        [
+          100,
+          100,
+          100,
+          100
+        ],
+        [
+          104,
+          110,
+          104,
+          109
+        ],
+        [
+          109,
+          110,
+          106,
+          108
+        ]
+      ],
+      "actions": {
+        "0": {
+          "order": {
+            "side": "long",
+            "trigger": 105,
+            "stop_pct": 1,
+            "protection": [
+              2,
+              50
+            ]
+          }
+        }
+      },
+      "expected_fills": [
+        [
+          1,
+          "long",
+          "intrabar",
+          105
+        ],
+        [
+          2,
+          "close",
+          "intrabar",
+          107.5
+        ]
+      ],
+      "exit_reason": "profit_protection",
+      "pine_anchor": "if barstate.isconfirmed and bar_index != lastCloseBar"
+    },
+    {
+      "id": "ambiguous_entry_bar_stop",
+      "description": "同根突破与止损顺序未知，保守保留入场后止损事件。",
+      "bars": [
+        [
+          100,
+          100,
+          100,
+          100
+        ],
+        [
+          100,
+          110,
+          98,
+          108
+        ]
+      ],
+      "actions": {
+        "0": {
+          "order": {
+            "side": "long",
+            "trigger": 105,
+            "stop_pct": 1
+          }
+        }
+      },
+      "expected_fills": [
+        [
+          1,
+          "long",
+          "intrabar",
+          105
+        ],
+        [
+          1,
+          "close",
+          "intrabar",
+          103.95
+        ]
+      ],
+      "exit_reason": "stop_loss",
+      "ambiguous": true,
+      "pine_anchor": "if side != 0 and (side == 1 ? currentLow <= stopPrice : currentHigh >= stopPrice)"
+    },
+    {
+      "id": "gap_past_chase_cap",
+      "description": "开盘越过允许追价上限，不能按突破价虚构成交。",
+      "bars": [
+        [
+          100,
+          100,
+          100,
+          100
+        ],
+        [
+          111,
+          112,
+          110,
+          111
+        ]
+      ],
+      "actions": {
+        "0": {
+          "order": {
+            "side": "long",
+            "trigger": 105,
+            "cap": 110
+          }
+        }
+      },
+      "expected_fills": [],
+      "pine_anchor": "if direction * (fillPrice - orderCap) <= 0"
+    }
+  ]
+}

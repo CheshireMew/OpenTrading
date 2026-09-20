@@ -78,6 +78,9 @@ async def lifespan(app):
     finally:
         await _cancel_task(getattr(app.state, "background_services_task", None))
         await _shutdown_background_services(app)
+        workspace = getattr(app.state, "chart_workspace", None)
+        if workspace is not None:
+            await workspace.close()
         await _shutdown_runtime_services(app)
 
 

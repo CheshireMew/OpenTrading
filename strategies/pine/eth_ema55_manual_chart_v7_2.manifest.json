@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "rule_version": "manual-chart-v7.2",
+  "pine": {
+    "path": "strategies/pine/eth_ema55_manual_chart_v7_2.pine",
+    "sha256": "df212d1411acd55bfcefe996399720df6aaceb3ac2341cfcaa67efa7c1c0f2ed"
+  },
+  "sources": [
+    {
+      "path": "docs/verification/eth-intrabar-short-window-20260913/policies/fixed.json",
+      "sha256": "a1b39660c15194677bc60fa790dcab1fb8997d8a54b110456a114317ba91409e",
+      "pointer": "/report",
+      "role": "历史固定版原报告；非本 Pine 收益"
+    },
+    {
+      "path": "docs/PINE_CODE_STANDARD.md",
+      "sha256": "301512c92eb772f54280a03132ddfe15b9537ae3b4f0f8d24043abe26f538348",
+      "role": "用户已确认的当前图表周期与标签规范"
+    }
+  ],
+  "execution": {
+    "signal_timeframe": "current_chart",
+    "fill_timeframe": "current_chart",
+    "protection_update": "current_chart_close_effective_next_bar",
+    "lower_timeframe_requests": false,
+    "ambiguous_entry": "stop_first",
+    "warmup_default": 650
+  },
+  "intentional_differences": [
+    "历史原报告使用5分钟更新保护；v7.2只按当前图表周期收盘更新，不引用该收益。",
+    "Pine为手工观察indicator，实时用报价和varip记住本根事件；Python研究结果为历史OHLC模拟。",
+    "Pine末根不强制结束持仓；Python回测结束会平仓并记录end_of_backtest。",
+    "Pine默认650根预热且允许手工改值；新Python运行按保存的参数预热规则计算，需要显式对齐后才能逐笔比较。",
+    "Pine仅交付固定百分比止损和实体确认；Python策略还提供其它独立实验选项，不能自动称为同版。"
+  ],
+  "labels": [
+    {
+      "text": "做多",
+      "color": "#F23645"
+    },
+    {
+      "text": "做空",
+      "color": "#4CAF50"
+    },
+    {
+      "text": "平仓做多",
+      "color": "#F23645"
+    },
+    {
+      "text": "平仓做空",
+      "color": "#4CAF50"
+    },
+    {
+      "text": "平多",
+      "color": "#E91E63"
+    },
+    {
+      "text": "平空",
+      "color": "#00897B"
+    },
+    {
+      "text": "止损",
+      "color": "#FF9800"
+    }
+  ],
+  "fixtures": {
+    "path": "docs/verification/pine-v7-2-contract/event-fixtures.json",
+    "sha256": "12d22690f0c6bd689c5af9d1e96fd11ff822ee0dbd4849c024640a72b2e5b57d"
+  },
+  "verification": {
+    "command": "python -m scripts.verify_pine_contract",
+    "python_event_tests": "run command to check current state",
+    "pine_static": "hash and declared rule anchors only",
+    "tradingview_compile": "passed",
+    "pine_runtime_event_parity": "passed_synthetic_240_bars_38_events",
+    "tradingview_attempt": {
+      "path": "docs/verification/pine-v7-2-contract/tradingview-attempt-20260920.json",
+      "status": "verified_with_bounded_historical_runtime_parity"
+    },
+    "runtime_scope": "650 warmup + 240 synthetic historical OHLC bars, 38 fills, 1e-7 price tolerance; real-time tick behavior and full market history not verified."
+  }
+}

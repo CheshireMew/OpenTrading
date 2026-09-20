@@ -11,10 +11,13 @@
     "test": "node --test",
     "typecheck": "vue-tsc --noEmit",
     "build": "npm run typecheck && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postinstall": "node scripts/patch-pinets.mjs"
   },
   "dependencies": {
     "@heroicons/vue": "^2.2.0",
+    "@luxalgo/vela": "0.7.6",
+    "@luxalgo/vela-pinets": "0.2.12",
     "autoprefixer": "^10.4.23",
     "axios": "^1.13.2",
     "chart.js": "^4.5.1",
@@ -23,6 +26,8 @@
     "date-fns": "^4.1.0",
     "echarts": "^6.0.0",
     "lightweight-charts": "^5.1.0",
+    "monaco-editor": "0.56.0",
+    "pinets": "0.9.34",
     "pinia": "^3.0.4",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.19",

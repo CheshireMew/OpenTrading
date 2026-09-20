@@ -11,6 +11,24 @@ from utils.time import utc_now_naive
 Base = declarative_base()
 
 
+class LocalBacktestRunRow(Base):
+    __tablename__ = "local_backtest_runs"
+    id = Column(String(64), primary_key=True)
+    status = Column(String(30), nullable=False, index=True)
+    created_at = Column(DateTime, nullable=False, default=utc_now_naive)
+    payload = Column(JSON, nullable=False)
+
+
+class LocalBacktestRecordRow(Base):
+    __tablename__ = "local_backtest_records"
+    run_id = Column(String(64), ForeignKey("local_backtest_runs.id"), primary_key=True)
+    kind = Column(String(20), primary_key=True)
+    sequence = Column(Integer, primary_key=True)
+    timestamp = Column(BigInteger, nullable=False)
+    payload = Column(JSON, nullable=False)
+    __table_args__ = (Index("ix_local_backtest_record_time", "run_id", "kind", "timestamp"),)
+
+
 class BinanceMarketResearchSeries(Base):
     """Binance historical research series persisted after normalization."""
     __tablename__ = 'binance_market_research_series'

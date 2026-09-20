@@ -1,10 +1,30 @@
 export const APP_ROUTE_DEFINITIONS = [
   {
+    path: '/research/results',
+    name: 'ResearchResults',
+    component: () => import('@/views/research/ResearchResults.vue'),
+    meta: { titleKey: 'nav.researchResults' },
+    nav: { section: 'research', labelKey: 'nav.researchResults', icon: 'BookmarkSquareIcon' },
+  },
+  {
+    path: '/research/parameter-sweeps',
+    name: 'ParameterSweeps',
+    component: () => import('@/views/research/ParameterSweeps.vue'),
+    meta: { titleKey: 'nav.parameterSweeps' },
+    nav: { section: 'research', labelKey: 'nav.parameterSweeps', icon: 'PresentationChartLineIcon' },
+  },
+  {
+    path: '/research/backtests',
+    name: 'LocalBacktests',
+    component: () => import('@/views/research/LocalBacktests.vue'),
+    meta: { titleKey: 'nav.localBacktests' },
+    nav: { section: 'research', labelKey: 'nav.localBacktests', icon: 'PresentationChartLineIcon' },
+  },
+  {
     path: '/',
     name: 'Dashboard',
-    component: () => import('@/views/Dashboard.vue'),
+    component: () => import('@/views/ChartWorkspace.vue'),
     meta: { titleKey: 'nav.realtime' },
-    keepAlive: true,
     nav: {
       section: 'primary',
       labelKey: 'nav.realtime',
@@ -143,7 +163,7 @@ const hasKeepAlive = (
 export const APP_NAV_ITEMS = APP_ROUTE_DEFINITIONS.filter(hasNav)
 export const APP_KEEP_ALIVE_ROUTE_NAMES = APP_ROUTE_DEFINITIONS
   .filter(hasKeepAlive)
-  .map((route) => route.name)
+  .map((route: { name: string }) => route.name)
 
 export type AppNavItem = (typeof APP_NAV_ITEMS)[number]
 export type AppNavSectionKey = (typeof APP_NAV_SECTIONS)[number]['key']

@@ -10,7 +10,7 @@ from app.infra.executor import run_database
 from app.lifecycle import build_health_payload
 from app.product import API_PREFIX
 from app.runtime import RuntimeRole, runtime_role_has_target
-from app.routers import config_router, market, research, tools
+from app.routers import config_router, market, research, tools, local_backtests, chart_workspace
 from config import settings
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -71,9 +71,11 @@ async def frontend_fallback(full_path: str):
 
 def register_app_routes(app: FastAPI, *, role: RuntimeRole) -> None:
     if runtime_role_has_target(role, "api"):
+        app.include_router(chart_workspace.router, prefix=API_PREFIX)
         app.include_router(market.router, prefix=API_PREFIX, tags=["市场数据"])
         app.include_router(tools.router, prefix=f"{API_PREFIX}/tools", tags=["工具"])
         app.include_router(research.router, prefix=API_PREFIX, tags=["研究追踪"])
+        app.include_router(local_backtests.router, prefix=API_PREFIX, tags=["策略回测"])
         app.include_router(config_router.router, prefix=API_PREFIX, tags=["配置"])
     app.add_api_route("/", root, methods=["GET"], include_in_schema=False)
     app.add_api_route("/health", health_check, methods=["GET"])

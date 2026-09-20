@@ -13,7 +13,9 @@
     "notFound": "Page not found"
   },
   "nav": {
-    "realtime": "Dashboard",
+    "localBacktests": "Strategy Backtests",
+    "parameterSweeps": "Parameter Comparison",
+    "realtime": "Chart workspace",
     "indicators": "Indicators",
     "marketSignals": "Market Signals",
     "binanceMarket": "Binance Market",
@@ -31,7 +33,8 @@
     "halving": "Halving",
     "system": "System",
     "settings": "Settings",
-    "dataHealth": "Data Health"
+    "dataHealth": "Data Health",
+    "researchResults": "Research results"
   },
   "theme": {
     "dark": "Dark Mode",
@@ -100,8 +103,17 @@
     "thesis": "Current thesis and evidence",
     "saving": "Saving…",
     "saveThesis": "Save current thesis",
-    "tabs": { "journal": "Journal", "alerts": "Alerts", "timeline": "Timeline" },
-    "noteKinds": { "thesis": "Core thesis", "update": "Update", "review": "Review", "decision": "Decision" },
+    "tabs": {
+      "journal": "Journal",
+      "alerts": "Alerts",
+      "timeline": "Timeline"
+    },
+    "noteKinds": {
+      "thesis": "Core thesis",
+      "update": "Update",
+      "review": "Review",
+      "decision": "Decision"
+    },
     "noteTitle": "Note title",
     "noteContent": "Record new evidence, changes in judgment, and the next review condition",
     "addNote": "Add journal entry",
@@ -166,7 +178,7 @@
     "includeArchived": "Include archived records",
     "records": "Signal records",
     "loading": "Loading signals…",
-    "empty": "No signals yet. A record is created the first time a trade setup is generated on the dashboard.",
+    "empty": "No historical signals. Smart order generation is retired; existing signals remain available.",
     "total": "Total signals",
     "resolved": "Resolved",
     "winRate": "Target hit rate",
@@ -277,7 +289,13 @@
     "archive": "Archive",
     "restore": "Restore",
     "choose": "Choose or generate a report.",
-    "types": { "daily_brief": "Daily research brief", "weekly_brief": "Weekly research brief", "asset_review": "Asset review", "portfolio_review": "Portfolio review", "decision_review": "Decision review" }
+    "types": {
+      "daily_brief": "Daily research brief",
+      "weekly_brief": "Weekly research brief",
+      "asset_review": "Asset review",
+      "portfolio_review": "Portfolio review",
+      "decision_review": "Decision review"
+    }
   },
   "dataHealth": {
     "title": "Data Health and Repair",
@@ -303,48 +321,22 @@
     "refreshBinance": "Refresh Binance snapshot",
     "checkAlerts": "Evaluate alerts now",
     "checkSignals": "Evaluate signals now",
-    "status": { "healthy": "Healthy", "degraded": "Degraded", "empty": "No data", "ready": "Ready", "stale": "Stale", "failed": "Failed", "stopped": "Stopped", "starting": "Starting" },
-    "actions": { "verify_database": "Verify database", "refresh_binance_snapshot": "Refresh Binance", "hydrate_symbol_history": "Hydrate history", "evaluate_research_alerts": "Evaluate alerts", "evaluate_trade_signals": "Evaluate signals" }
-  },
-  "dashboard": {
-    "loadingHistory": "Loading History...",
-    "historyLoadFailed": "Market history could not be loaded.",
-    "tradeSetup": "Trade Setup",
-    "initialMargin": "Initial Margin",
-    "style": "Style",
-    "decisionMode": "Decision Mode",
-    "builtInRules": "Built-in Rules",
-    "aiDecision": "AI Decision",
-    "strategy": "Strategy",
-    "strategies": {
-      "maxReturn": "Maximum Return",
-      "steadyBreakout": "Steady Breakout",
-      "pullbackReversal": "Pullback Reversal"
+    "status": {
+      "healthy": "Healthy",
+      "degraded": "Degraded",
+      "empty": "No data",
+      "ready": "Ready",
+      "stale": "Stale",
+      "failed": "Failed",
+      "stopped": "Stopped",
+      "starting": "Starting"
     },
-    "analyzing": "Analyzing...",
-    "askDirection": "Ask Long / Short",
-    "unsupported": "Unsupported Symbol",
-    "long": "Long",
-    "short": "Short",
-    "rules": "Rules",
-    "entry": "Entry",
-    "target": "Target",
-    "stop": "Stop",
-    "riskReward": "Risk / Reward",
-    "aiTimeout": "AI request timed out. Please try again.",
-    "rulesTimeout": "Rule analysis timed out. Please try again.",
-    "setupFailed": "Unable to generate a trade setup right now.",
-    "tradeSetupUnavailable": "No trade setup is available right now.",
-    "openSettings": "Open model settings",
-    "tradeSetupErrors": {
-      "kline_insufficient": "More market history is needed before a setup can be generated.",
-      "indicators_incomplete": "Indicators are still being calculated. Try again after the next update.",
-      "no_clear_signal": "Long and short conditions are not clear yet. Wait for the next candle.",
-      "model_not_configured": "AI analysis is not configured yet. Add a model API key in Settings.",
-      "model_output_unavailable": "The AI service did not return a usable result. Please retry.",
-      "model_hold": "The model recommends waiting instead of opening a position.",
-      "model_plan_incomplete": "The model did not provide a complete entry, target, and stop.",
-      "model_price_structure_invalid": "The model returned an invalid price structure, so it was not displayed."
+    "actions": {
+      "verify_database": "Verify database",
+      "refresh_binance_snapshot": "Refresh Binance",
+      "hydrate_symbol_history": "Hydrate history",
+      "evaluate_research_alerts": "Evaluate alerts",
+      "evaluate_trade_signals": "Evaluate signals"
     }
   },
   "marketSignals": {
@@ -940,7 +932,7 @@
     "cache": "Cache",
     "production": "Production",
     "llmProvider": "Model Provider",
-    "llmDescription": "Used for AI analysis and long/short decisions.",
+    "llmDescription": "Used for market analysis and research reports.",
     "apiKeySet": "API Key configured",
     "apiKeyUnset": "API Key not configured",
     "provider": "Provider",

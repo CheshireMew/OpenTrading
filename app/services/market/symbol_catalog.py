@@ -14,6 +14,7 @@ from config import settings
 EXTRA_MARKET_SYMBOL_EXCHANGES: dict[str, str] = {
     "BNB/USDT": settings.EXCHANGE_ID,
     "PAXG/USDT": settings.EXCHANGE_ID,
+    "ZEC/USDT": settings.EXCHANGE_ID,
     "OKB/USDT": "okx",
 }
 

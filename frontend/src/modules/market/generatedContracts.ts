@@ -110,18 +110,6 @@ export interface MarketIndicatorResponse {
   history: Array<IndicatorHistoryPoint>
 }
 
-export interface TradeSetupResponse {
-  symbol: string
-  timeframe: string
-  timestamp: string
-  current_price: number | null
-  setup: TradeSetupResponseItem | null
-  reason: string
-  source: string
-  status: "ready" | "waiting" | "unavailable" | "rejected"
-  error_code: string | null
-}
-
 export interface BinanceMarketPageResponse {
   exchange: string
   quote_asset: string
@@ -547,20 +535,6 @@ export interface OhlcvPointResponse {
   volume: number
 }
 
-export interface TradeSetupResponseItem {
-  side: string
-  entry: number
-  target: number
-  stop: number
-  risk_reward: number
-  confidence: number
-  risk_amount: number
-  entry_time: number
-  style: string
-  strategy: string
-  source: string
-}
-
 export interface GetBinanceMarketContractDetailQueryParams {
   symbol: string
   period?: string
@@ -681,14 +655,4 @@ export interface GetRealtimeAnalysisQueryParams {
   symbol: string
   timeframe?: string | null
   limit?: number | null
-}
-
-export interface GetTradeSetupQueryParams {
-  symbol: string
-  timeframe?: string
-  limit?: number
-  account_size?: number
-  style?: string
-  strategy?: string
-  mode?: string
 }

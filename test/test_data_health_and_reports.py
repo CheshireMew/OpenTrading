@@ -59,7 +59,7 @@ async def test_data_health_reports_coverage_and_scoped_database_repair(installed
     health = await service.get_health()
     repair = await service.repair(DataRepairCommand(action="verify_database"))
 
-    assert health.databaseRevision == "017_research_reports"
+    assert health.databaseRevision == "018_local_backtests"
     assert any(source.id == "database" for source in health.sources)
     kline_source = next(source for source in health.sources if source.id == "klines")
     assert kline_source.gapCount == 1

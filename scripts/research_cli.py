@@ -5,6 +5,8 @@ import asyncio
 from datetime import datetime
 import json
 import sys
+import logging
+from contextlib import contextmanager, redirect_stdout
 from typing import Any
 
 from app.contracts.data_health import DataRepairCommand
@@ -16,9 +18,36 @@ from app.runtime import build_app_runtime_services
 SCHEMA_VERSION = 1
 
 
+@contextmanager
+def diagnostic_output():
+    """Keep library logs/prints off the machine-readable stdout channel."""
+    redirected = []
+    loggers = [logging.getLogger(), *logging.Logger.manager.loggerDict.values()]
+    for logger in loggers:
+        if isinstance(logger, logging.Logger):
+            for handler in logger.handlers:
+                if isinstance(handler, logging.StreamHandler) and handler.stream is sys.stdout:
+                    redirected.append((handler, handler.stream))
+                    handler.setStream(sys.stderr)
+    try:
+        with redirect_stdout(sys.stderr):
+            yield
+    finally:
+        for handler, stream in redirected:
+            handler.setStream(stream)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Heimdall structured research CLI")
     subparsers = parser.add_subparsers(dest="resource", required=True)
+    from scripts.local_backtest_cli import add_parser
+    add_parser(subparsers)
+    from scripts.research_study_cli import add_parser as add_study_parser
+    add_study_parser(subparsers)
+    from scripts.research_catalog_cli import add_parser as add_catalog_parser
+    add_catalog_parser(subparsers)
+    from scripts.parameter_sweep_cli import add_parser as add_sweep_parser
+    add_sweep_parser(subparsers)
 
     health = subparsers.add_parser("health", help="Inspect or repair data health")
     health.add_argument(
@@ -71,6 +100,18 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 async def execute(args: argparse.Namespace) -> Any:
+    if args.resource == "backtest":
+        from scripts.local_backtest_cli import execute as execute_backtest
+        return await execute_backtest(args)
+    if args.resource == 'study':
+        from scripts.research_study_cli import execute as execute_study
+        return await execute_study(args)
+    if args.resource == 'catalog':
+        from scripts.research_catalog_cli import execute as execute_catalog
+        return await execute_catalog(args)
+    if args.resource == 'sweep':
+        from scripts.parameter_sweep_cli import execute as execute_sweep
+        return await execute_sweep(args)
     runtime = await asyncio.to_thread(build_app_runtime_services, "api")
     api = runtime.require_api()
     try:
@@ -133,7 +174,8 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
     try:
-        data = asyncio.run(execute(args))
+        with diagnostic_output():
+            data = asyncio.run(execute(args))
         payload = {"schemaVersion": SCHEMA_VERSION, "ok": True, "command": args.resource, "data": serialize(data)}
         print(json.dumps(payload, ensure_ascii=False, separators=(",", ":")))
         return 0

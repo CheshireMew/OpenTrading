@@ -83,6 +83,8 @@ class BackgroundRuntimeController:
         self._state = BackgroundRuntimeState(status=BackgroundRuntimeStatus.DISABLED)
         self._startup_task: asyncio.Task[None] | None = None
         self._owner_id = f"{os.getpid()}-{uuid.uuid4().hex}"
+        from app.services.local_backtest_runtime import LocalBacktestRuntime
+        self._local_backtests = LocalBacktestRuntime(runtime_services.infra.database_runtime)
 
     @property
     def state(self) -> BackgroundRuntimeState:
@@ -138,6 +140,7 @@ class BackgroundRuntimeController:
     async def _bootstrap(self) -> None:
         try:
             await self.runtime_services.require_background().market_scheduler.start(self._owner_id)
+            await self._local_backtests.start()
             runtime_status = self.runtime_services.infra.runtime_status
             if runtime_status is not None:
                 await asyncio.to_thread(
@@ -163,5 +166,6 @@ class BackgroundRuntimeController:
             logger.error(f"后台运行时启动失败: {exc}", exc_info=True)
 
     async def _shutdown_runtime_services(self) -> None:
+        await self._local_backtests.shutdown()
         if self.runtime_services.background is not None:
             await self.runtime_services.background.market_scheduler.shutdown()

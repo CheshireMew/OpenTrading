@@ -293,12 +293,7 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
             llm_client_factory=llm_clients,
         )
         trade_signal_repository = TradeSignalRepository(database_runtime)
-        market_insight = MarketInsightAppService(
-            indicator_service=indicator_service,
-            market_query_service=market_query,
-            llm_client_factory=llm_clients,
-            trade_signal_repository=trade_signal_repository,
-        )
+        market_insight = MarketInsightAppService(indicator_service=indicator_service)
         market_websocket = MarketWebSocketService()
         index_data = IndexDataService(kline_store=kline_store)
         web3_client = BinanceApiSupport(

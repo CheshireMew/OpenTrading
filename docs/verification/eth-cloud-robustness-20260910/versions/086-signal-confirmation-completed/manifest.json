@@ -1,0 +1,106 @@
+{
+  "label": "086-signal-confirmation-completed",
+  "created_at": "2026-09-12T23:53:12.476223+00:00",
+  "files": [
+    {
+      "path": "docs/verification/eth-signal-confirmation-20260913/answers.json",
+      "sha256": "2664173910a4718d3f468088af489a1d5514c120c34b6ce9c035fb94b85b609c",
+      "bytes": 3410
+    },
+    {
+      "path": "docs/verification/eth-signal-confirmation-20260913/baseline-parity.json",
+      "sha256": "94016e58bbf9f1435f15c0ceac83263cff3ad4e44cfe27605640cf8f64e7853b",
+      "bytes": 1048
+    },
+    {
+      "path": "docs/verification/eth-signal-confirmation-20260913/body_two_bars-events.json",
+      "sha256": "c20c2e56d52130b0768f91251eb579af77c981f456abd52de927f918809c8cac",
+      "bytes": 12597071
+    },
+    {
+      "path": "docs/verification/eth-signal-confirmation-20260913/body_two_bars-lineage.json",
+      "sha256": "a12a52126becf64655c3b26a48ae3910ad93ef5e02d097e48c0a0156aa4c2c01",
+      "bytes": 2030743
+    },
+    {
+      "path": "docs/verification/eth-signal-confirmation-20260913/close_unlimited-events.json",
+      "sha256": "6f552fedc9c5554d3a8569bffe3cd5ba585f502577c1366ac3602bacba0b67fc",
+      "bytes": 10138831
+    },
+    {
+      "path": "docs/verification/eth-signal-confirmation-20260913/close_unlimited-lineage.json",
+      "sha256": "dabcddf23dc928b2cc3fccd228f61e541a9334293c892ac401d768cb3668dbda",
+      "bytes": 2329893
+    },
+    {
+      "path": "docs/verification/eth-signal-confirmation-20260913/completion.json",
+      "sha256": "9c455c9dd70eb39a57ad29c62a331d2389ebc74f613196d7bc1c95d66cd851cf",
+      "bytes": 4261
+    },
+    {
+      "path": "docs/verification/eth-signal-confirmation-20260913/entry-price-attribution.json",
+      "sha256": "114779d4cbf63f8c158b7eff99a3e056ad565753859d99604771e99ab0697cf3",
+      "bytes": 1294
+    },
+    {
+      "path": "docs/verification/eth-signal-confirmation-20260913/plan.json",
+      "sha256": "7addc0e385b3febc4d789110a69b534ec7a87a10ce86d6903830abc1390c5de4",
+      "bytes": 3564
+    },
+    {
+      "path": "docs/verification/eth-signal-confirmation-20260913/preview.json",
+      "sha256": "aceaf8e2631269e393366a1f5670f9a767a2a64213f9be86797a9b602d12b4a0",
+      "bytes": 341
+    },
+    {
+      "path": "docs/verification/eth-signal-confirmation-20260913/README.md",
+      "sha256": "ea0e8f905248bbc20fe3272dac1612ba0ce40d3f63a5bf1cb74adc49e78a06ec",
+      "bytes": 6357
+    },
+    {
+      "path": "docs/verification/eth-signal-confirmation-20260913/results.json",
+      "sha256": "c73ca493ac83260ff0c4d8679777a4e590d28ae75d93cd5bc459e48bef1ad788",
+      "bytes": 71996
+    },
+    {
+      "path": "docs/verification/eth-signal-confirmation-20260913/RULES.md",
+      "sha256": "dc4cd3cc3fc0340a3a759d9e2ff987b76572d1c9ac74c6c8bc711dd87663f27f",
+      "bytes": 2665
+    },
+    {
+      "path": "docs/verification/eth-signal-confirmation-20260913/study.json",
+      "sha256": "5de454b54e43d1a56b886e6bffde23142a4e28c3e703039bbec26de8ac7b0d4b",
+      "bytes": 1078
+    },
+    {
+      "path": "docs/verification/eth-signal-confirmation-20260913/wick_unlimited-events.json",
+      "sha256": "565573af3c797c87b1974b1fccbbf63ee401df04e82dee1911060975d9f90210",
+      "bytes": 9646659
+    },
+    {
+      "path": "docs/verification/eth-signal-confirmation-20260913/wick_unlimited-lineage.json",
+      "sha256": "fbbeb73b9cbad9e5eefda06d663076a528cc09ad8facdd28e05bee5fe08587b1",
+      "bytes": 2076412
+    },
+    {
+      "path": "scripts/cloud_signal_confirmation_study.py",
+      "sha256": "d8c17bf4e33ef0651b52fdf7b3e98508f30611dfe88d976544c11f6d8c91d582",
+      "bytes": 12146
+    },
+    {
+      "path": "scripts/report_cloud_signal_confirmation.py",
+      "sha256": "3d0df811df6d9111fedba7b2429b6f0f422d91c944bea92ff5f0c30c33d479a3",
+      "bytes": 4927
+    },
+    {
+      "path": "strategies/trend_cloud_signal_confirmation_v1.py",
+      "sha256": "66424217f7b9a02aef5c79a4704a8c2351ceeecf802278bbac279a4b5146ee03",
+      "bytes": 7078
+    },
+    {
+      "path": "test/test_cloud_signal_confirmation.py",
+      "sha256": "74d8df950c519d718b01746bd6813cac6086faf3d30968b8478789e56102355b",
+      "bytes": 4516
+    }
+  ]
+}

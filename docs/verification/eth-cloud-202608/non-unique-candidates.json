@@ -1,0 +1,74 @@
+{
+  "data_hash": "581332eae2f99a0926859c18551ed1eaf6e4f24f3f97f4c1eb73c3fb8124c5d0",
+  "method": "Heimdall simulate on the same immutable run data; no download",
+  "candidates": [
+    {
+      "parameters": {
+        "mode": "cross",
+        "source": "hlc3",
+        "ema_length": 30,
+        "atr_length": 14,
+        "cloud_mult": 0.45,
+        "trigger_mult": 0.95,
+        "rsi_length": 14,
+        "volume_mult": 1.8,
+        "cooldown": 10
+      },
+      "matched": 19,
+      "missing": 0,
+      "extra": 0,
+      "cloud_rmse_px": 2.3622618461036184
+    },
+    {
+      "parameters": {
+        "mode": "cross",
+        "source": "hlc3",
+        "ema_length": 31,
+        "atr_length": 14,
+        "cloud_mult": 0.45,
+        "trigger_mult": 0.99,
+        "rsi_length": 14,
+        "volume_mult": 1.8,
+        "cooldown": 10
+      },
+      "matched": 19,
+      "missing": 0,
+      "extra": 0,
+      "cloud_rmse_px": 1.1027324109308803
+    },
+    {
+      "parameters": {
+        "mode": "cross",
+        "source": "hl2",
+        "ema_length": 30,
+        "atr_length": 14,
+        "cloud_mult": 0.45,
+        "trigger_mult": 0.95,
+        "rsi_length": 14,
+        "volume_mult": 1.8,
+        "cooldown": 10
+      },
+      "matched": 19,
+      "missing": 0,
+      "extra": 0,
+      "cloud_rmse_px": 1.8132049490464759
+    },
+    {
+      "parameters": {
+        "mode": "cross",
+        "source": "close",
+        "ema_length": 29,
+        "atr_length": 14,
+        "cloud_mult": 0.45,
+        "trigger_mult": 0.9,
+        "rsi_length": 14,
+        "volume_mult": 1.8,
+        "cooldown": 10
+      },
+      "matched": 19,
+      "missing": 0,
+      "extra": 0,
+      "cloud_rmse_px": 5.523058574491069
+    }
+  ]
+}

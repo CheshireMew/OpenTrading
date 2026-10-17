@@ -1,0 +1,26 @@
+{
+  "label": "037-frozen-four-asset-transfer",
+  "created_at": "2026-09-11T04:07:22.991087+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "25dbf1e84947ba22b8a5df80ffa49214ee8252632377bb17420f396e9ab1b822",
+      "bytes": 15630
+    },
+    {
+      "path": "docs/verification/alt-cloud-transfer-20260911/plan.json",
+      "sha256": "821610f13b2ec2be1aba35e82bba5efc7fc38cabbf8eaf756450d27a14c8e4f1",
+      "bytes": 18181
+    },
+    {
+      "path": "scripts/alt_cloud_parameter_study.py",
+      "sha256": "9a6a9043f7dee00b53dd320816825c764c441fcefcbe4fa2e576cd1d7aa74174",
+      "bytes": 15077
+    },
+    {
+      "path": "strategies/trend_cloud_parameters_v4.py",
+      "sha256": "518ec7480dc4e5b8fd57d6804dd74bde88103f3c4c847a51028d2d5ef309173e",
+      "bytes": 5381
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "label": "082-width-entry-stop-reentry-frozen",
+  "created_at": "2026-09-12T15:07:32.738335+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "26ca6ade398a9ebe0e43edcf9f318f766803dc98324b3dcd658768528f9f5731",
+      "bytes": 17159
+    },
+    {
+      "path": "docs/LOCAL_BACKTESTS.md",
+      "sha256": "00fec4754933e76cff28d2347a1260ba33ea04e9673526623e6faa21ea852d43",
+      "bytes": 20506
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/baseline-parity.json",
+      "sha256": "983059c63519b55fb830b2623352323ca9e49e105ae417bf5f215876764b2738",
+      "bytes": 1138
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/plan.json",
+      "sha256": "e12bac27a287b35be6857025acff585b25693adcd3e40622d92f45d64f499b7e",
+      "bytes": 7690
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/study.json",
+      "sha256": "40d283ef41761816490d2074653d248ef897ae157391df85d8494ca86a39ae37",
+      "bytes": 1140
+    },
+    {
+      "path": "scripts/cloud_width_reentry_study.py",
+      "sha256": "46a11c1ca82196130d04ab9ecf9b6aee4a13402a13ccc65fc448975b0a4d3d65",
+      "bytes": 11681
+    },
+    {
+      "path": "strategies/trend_cloud_width_reentry_v1.py",
+      "sha256": "a75d225dfe5a1af6e4ca20a2ada267aa42147254a698ffd2975ec98713d2b577",
+      "bytes": 9354
+    },
+    {
+      "path": "test/test_cloud_width_reentry.py",
+      "sha256": "584b85cab0b939a7dacf60fdaf63c5127a4da2764c9c7b8dccc2ad804ab35a7a",
+      "bytes": 5477
+    }
+  ]
+}

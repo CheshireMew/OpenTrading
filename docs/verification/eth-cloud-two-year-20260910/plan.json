@@ -1,0 +1,44 @@
+{
+  "study": "ETH 15m two-year fixed-rule comparison",
+  "created_date": "2026-09-10",
+  "status": "Rules fixed before comparing two-year returns. User correction: do not calculate fees or slippage. The earlier costed trial is archived and excluded.",
+  "symbol": "ETH/USDT",
+  "timeframe": "15m",
+  "start": "2024-09-10T00:00:00Z",
+  "end": "2026-09-10T00:00:00Z",
+  "initial_cash": 10000,
+  "position_pct": 100,
+  "warmup_bars": 650,
+  "cost_assumption": "No fees or slippage, explicitly requested by user",
+  "periods": {
+    "selection": ["2024-09-10T00:00:00Z", "2025-09-10T00:00:00Z"],
+    "validation": ["2025-09-10T00:00:00Z", "2026-08-18T00:00:00Z"],
+    "recent": ["2026-08-23T00:00:00Z", "2026-09-10T00:00:00Z"]
+  },
+  "screenshot_exclusion": ["2026-08-18T00:00:00Z", "2026-08-23T00:00:00Z"],
+  "variants": {
+    "original_05": "原脚本＋图二参数 ATR0.5",
+    "original_15": "原脚本默认 ATR1.5",
+    "ema31_atr": "截图候选 EMA31＋ATR14",
+    "ema31_range": "EMA31＋平滑高低差，无 ATR",
+    "ema30_hlc3": "截图候选 hlc3／EMA30",
+    "ema30_hl2": "截图候选 hl2／EMA30",
+    "ema29_close": "截图候选 close／EMA29",
+    "high_low_ema": "高低价 EMA31 通道，无 ATR",
+    "wma41_atr": "WMA41＋ATR16",
+    "sma28_atr": "SMA28＋ATR16",
+    "dual_ema": "EMA26／36 双均线带",
+    "ema31_cross": "单 EMA31 穿越基准",
+    "buy_hold": "买入持有基准",
+    "cash": "持有现金基准"
+  },
+  "rules": {
+    "execution": "Confirmed close decisions, next-open execution; reverse on opposite signal; ignore repeated same-side signals; close at end; no additional TP/SL orders or leverage.",
+    "band_variants": "The fitted EMA variants retain their previous trigger thresholds. High-low channel: EMA(hl2,31) ± 0.99*EMA(high-low,31). WMA41 and SMA28: close source ±0.99*ATR16. Dual EMA26/36 hl2: average center ±2.2*half absolute spread. EMA-only uses center crossings.",
+    "original": "Original RSI/volume/cooldown signals retained; signal-to-position mapping and reverse-only exit are study assumptions, not rules supplied by the Pine indicator.",
+    "benchmark": "Buy-and-hold first signal at first main close, fill at next open, close at last close; same sizing as strategies. Cash return fixed at zero, no interest.",
+    "selection": "Among the 12 non-benchmark variants, require positive return, profit factor >1 and at least 30 completed trades in selection period; rank by return / maximum close-equity drawdown, break ties by return. If none qualify, no qualifying winner. Do not reselect using validation returns.",
+    "robustness": "Report full-period returns, calendar month returns, trade counts, long/short breakdown and standalone validation/recent segments; also check long-only results to separate synthetic short contributions.",
+    "inference_limits": "These parameters were influenced by an August 2026 screenshot. Historical split validation excludes that interval but is not a strictly prospective or blind experiment. No guarantee of statistical significance or future performance."
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "label": "081-entry-width-outcome-audit",
+  "created_at": "2026-09-12T14:49:55.008378+00:00",
+  "files": [
+    {
+      "path": "docs/verification/eth-cloud-width-entry-20260912/entry-width-audit.json",
+      "sha256": "5860ecfb1b55422a82839e47edc48403b98ab3b4a607ea7f6a1003781a523225",
+      "bytes": 3238799
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-entry-20260912/README.md",
+      "sha256": "c65d17575bf0ac40f25c87bb7cc0812fd0af6b790eda11b71005ded92ab9faaf",
+      "bytes": 1955
+    },
+    {
+      "path": "scripts/audit_cloud_entry_width.py",
+      "sha256": "df611136c37c22dc19cc9a5a1ef9b3cc6d19db4a7c6d5a2c194ed2845e101d08",
+      "bytes": 4049
+    }
+  ]
+}

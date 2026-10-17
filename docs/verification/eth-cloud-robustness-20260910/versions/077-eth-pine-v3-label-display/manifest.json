@@ -1,0 +1,16 @@
+{
+  "label": "077-eth-pine-v3-label-display",
+  "created_at": "2026-09-12T14:16:05.859274+00:00",
+  "files": [
+    {
+      "path": "strategies/pine/eth_ema55_six_year_v3.md",
+      "sha256": "5162268da911dd56974c855e730d33c0208333eab901fa1ea9f4cc88058464bc",
+      "bytes": 1106
+    },
+    {
+      "path": "strategies/pine/eth_ema55_six_year_v3.pine",
+      "sha256": "7b68780bf8eda11488460afa6c3382ba32ca2d72c9509ad167dd252713595cdd",
+      "bytes": 10013
+    }
+  ]
+}

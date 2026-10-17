@@ -1,0 +1,58 @@
+{
+  "checked_at": "2026-09-11T03:09:07.986545+00:00",
+  "changes": "Report explanations and parameter labels only. No new backtest, no parameter reselection, original results unchanged.",
+  "checks": [
+    "8 questions cover all 12 early variants",
+    "EMA31 with/without threshold retains same price source and width calculation",
+    "ATR comparison distinguishes RMA smoothing of true range and high-low range",
+    "BTC displayed full parameters match frozen source results",
+    "BTC report and cross-asset questions displayed through CUA",
+    "Both generated browser scripts passed node --check"
+  ],
+  "files": [
+    {
+      "path": "scripts/cloud_study_findings.py",
+      "sha256": "ebcf389e8e3ab07b41c439f37587379cfbad2350f22e961420eafb5bff141c28"
+    },
+    {
+      "path": "scripts/render_cloud_cross_asset_study.py",
+      "sha256": "97308498bb42bcc00b725c674c32e6dfdf43767cdbc4c897c1781ac869ea850d"
+    },
+    {
+      "path": "scripts/report_btc_cloud_parameters.py",
+      "sha256": "4aa462f84012718e08ea68053b84fc1d345a053bb6d5df1d3fb8410285b57fee"
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/FINDINGS.md",
+      "sha256": "ad3cdcc50cc24b665bb10ca001d8b3ebe52c192eb69ad337d375802e3872720f"
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/findings.json",
+      "sha256": "844d84c045b55e2189b7e5c2f7038a0d13a068ce5097818b4bebb63355c6fab0"
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/REPORT.md",
+      "sha256": "b81527c736b861dca6afdf8a45fee9e15420106a5cb3903755664711a88c1bdd"
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/report.html",
+      "sha256": "f2aac0996826a2c76ba66841d6a5713e7f47f3f4bcaa28235e2270fa2f42ec00"
+    },
+    {
+      "path": "docs/verification/btc-cloud-parameters-20260911/REPORT.md",
+      "sha256": "72efaa23a1c40b264ea756fb3d260e849827fb4839ded751ee214b418b7667b3"
+    },
+    {
+      "path": "docs/verification/btc-cloud-parameters-20260911/report.html",
+      "sha256": "f8767173b8ff5c2ac60223efc90d178c7781a9c126b2c9960186a3f6334ed48d"
+    },
+    {
+      "path": "docs/verification/eth-cloud-two-year-20260910/cross-asset.html",
+      "sha256": "f2aac0996826a2c76ba66841d6a5713e7f47f3f4bcaa28235e2270fa2f42ec00"
+    },
+    {
+      "path": "docs/verification/eth-cloud-two-year-20260910/btc-parameters.html",
+      "sha256": "f8767173b8ff5c2ac60223efc90d178c7781a9c126b2c9960186a3f6334ed48d"
+    }
+  ]
+}

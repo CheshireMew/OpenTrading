@@ -1,0 +1,381 @@
+{
+  "label": "100_eth_zec_methods_completed",
+  "created_at": "2026-09-13T05:13:32.314935+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "ccdd04ba62b5e821a556d215da2d129087bbe461835c5aeda83d7e54a8d5d9e2",
+      "bytes": 24654
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/answers.json",
+      "sha256": "e45f1705dd24d341e0dd7ef133d917b57183a22a1c316b15a106d0b8a26d9523",
+      "bytes": 2541
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/atr_stop-lineage.json",
+      "sha256": "22c4707fea1480d89132cf5507503357c81dfafc7e6e8dfbe97e52fb20dedf80",
+      "bytes": 1977113
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/baseline-lineage.json",
+      "sha256": "a6725ed1155672b51bbb89f7a007b385b2ecf5ff477ed6d489131c198cceee07",
+      "bytes": 1973931
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/baseline-parity.json",
+      "sha256": "dd5a755bef9cc3e89aced554b804f666260207cf3cf489afce1a3127db4a9d4f",
+      "bytes": 464
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/completion.json",
+      "sha256": "3f8ea3ad4a8262cc6da555b6657f65082395a12e5eb2dc75f1843143946e4ec1",
+      "bytes": 3517
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/execution-data.json",
+      "sha256": "28899fc6e25b1ef0e6e04a39f4731e81b82eec5cc4a144415a9a8ce5413c77d8",
+      "bytes": 35776146
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/execution-prefix.json",
+      "sha256": "3fb8cb3a0166e3bae2eb019a048bb59524b0d2ba7a1cdf44fc4da0ff9bb0a803",
+      "bytes": 293012
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/fine-data-check.json",
+      "sha256": "3d2217e68e95a68c202b90a8869b6c807b20a7f221b36ad603daffac8a08227c",
+      "bytes": 1243
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/fine_control-lineage.json",
+      "sha256": "1339b8289c77b202eb40e408df9d776b7f159f8fbf0bb95c00600d1814e5021b",
+      "bytes": 1973712
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/fine_protect-lineage.json",
+      "sha256": "0feb1e5d67990e7246903a9e7d58f6ca414af6fddadfcfa016afbe3b80ca972c",
+      "bytes": 1974210
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/plan.json",
+      "sha256": "e3e8cc7a1e25dff49b7a1a3f0f1417f1e14bf6afe3b1f4fa48591852d5cca16c",
+      "bytes": 4836
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/preview.json",
+      "sha256": "db9e4e98d793795fc409269d3291cb11556674dae11d3f64845cbae976d4be76",
+      "bytes": 370
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/README.md",
+      "sha256": "b7af6e741117999cd67e62092273652a2f423405f80f68812f10d2ec50db1614",
+      "bytes": 4340
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/results.json",
+      "sha256": "016f5b013d14091b568af56df1353a74597f4e73321e6eb0e726af49badbd81e",
+      "bytes": 21473
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/RULES.md",
+      "sha256": "3581bf81d40846cf4582fee539fcd81dee7974671c7eabb5a48c388453a2fe73",
+      "bytes": 1955
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/study.json",
+      "sha256": "0fc5093569168f50f7700261b5e3121d5bf515686c48a6e2c7602fd7ce22f3ea",
+      "bytes": 1031
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/test-results.json",
+      "sha256": "3fbf0cbf562bb7df4bb2997d3b3e04e46f987899116b6b09925bfc5a3d93ea0f",
+      "bytes": 597
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/width_stop-lineage.json",
+      "sha256": "91ed631137921b21182699427de1a41ae6b2dfbf1ee322da1f30b386cbaff68e",
+      "bytes": 1978446
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/eth/answers.json",
+      "sha256": "aa65b74b1944819b69c7818496647f4154ce888902bdb63ca4109325738afec1",
+      "bytes": 1370
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/eth/completion.json",
+      "sha256": "adc70df16b1693c37376b6f03388dc043adc20e9b9e1b0d372ef750631fd562a",
+      "bytes": 2175
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/eth/fine_combined-lineage.json",
+      "sha256": "12794b2b07b3bd83343201c4cfde0e06a8f94798061e2194dd12bd4b88b6bf5c",
+      "bytes": 1978805
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/eth/fine_control-lineage.json",
+      "sha256": "1339b8289c77b202eb40e408df9d776b7f159f8fbf0bb95c00600d1814e5021b",
+      "bytes": 1973712
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/eth/fine_protect-lineage.json",
+      "sha256": "0feb1e5d67990e7246903a9e7d58f6ca414af6fddadfcfa016afbe3b80ca972c",
+      "bytes": 1974210
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/eth/fine_width_stop-lineage.json",
+      "sha256": "03c9fbdbb93250063317fb89e65b84536761c7fc7f21e012d6cf4a616f7bfe4f",
+      "bytes": 1978446
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/eth/plan.json",
+      "sha256": "155c8fc1b685a96327642e6f3991d9a36e56003f0ef51dce75e8a20c96a44532",
+      "bytes": 4106
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/eth/README.md",
+      "sha256": "c79ba64c12c2ddde468aad6bcad044190ae71c8c2ec7245037e8ae3712c24a24",
+      "bytes": 2722
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/eth/results.json",
+      "sha256": "d941a554a6b91ccc71c1f2eba726c9fcf49669ebbb82e8977749906d1107ec51",
+      "bytes": 18157
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/eth/RULES.md",
+      "sha256": "4298113d56f918782b7687b0320342f67ca15cca16ddaf2b80fe69471c56a830",
+      "bytes": 1267
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/eth/study.json",
+      "sha256": "2dce1786cccd9bbcabfc271ebbd59b9462b4dcbd9e2bae86bed2c95ad855393f",
+      "bytes": 836
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/eth/verification.json",
+      "sha256": "2dfca5aea1cb7496a85344387bb1b32d9c8f33e3d7716141892390d3cad7c4b2",
+      "bytes": 435
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/README.md",
+      "sha256": "ed1122a1107cca6c5925a36c4abd12541ff6c13f009ae7bbfced70cf552db964",
+      "bytes": 3457
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/summary.json",
+      "sha256": "64c98cfe229af4c6bc7d8012e52e715854ac13bfb646e9d630f38265b075d91f",
+      "bytes": 73717
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/zec/answers.json",
+      "sha256": "62119e9dd229d0a23bb1263738bd5d32b44f448c86f1732dc2234e111840d3a6",
+      "bytes": 1334
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/zec/completion.json",
+      "sha256": "406698c53d97e1057334230641343bf61e94c1b30f8f72b384da406457c9269f",
+      "bytes": 2139
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/zec/fine_combined-lineage.json",
+      "sha256": "a28f9f5e81ed9768f55f29efa272bab18ad0216baaa2c8d2e9458481ce78e2b8",
+      "bytes": 1671789
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/zec/fine_control-lineage.json",
+      "sha256": "bfce32b0f19ff434241db97bb04cf4ba0e8bdaf4b183263e22dda69826a5dcfc",
+      "bytes": 1655888
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/zec/fine_protect-lineage.json",
+      "sha256": "b4388f1db97fcdf2626336b0597af10474c0351ef4b97e94ad6a3de880f772e6",
+      "bytes": 1663514
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/zec/fine_width_stop-lineage.json",
+      "sha256": "d6329313a8c6087df2d3ed47a0cbb60e449cdfa1962b6a980476d0da3f1dc766",
+      "bytes": 1661765
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/zec/plan.json",
+      "sha256": "038b5a41fad0fbbbce97712937cf3d3c30f2d5b55f16f8aa901055540fa1d29b",
+      "bytes": 4134
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/zec/README.md",
+      "sha256": "d5dafc3af7f41ccaf8f79a2c69adef20a0eb595b0a80dd7423e80767e3ac3bf3",
+      "bytes": 2713
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/zec/results.json",
+      "sha256": "b40b95dc355e4f344c6a30e202f07ed18b7bab157f5a41d13e38dbf9d1d88ac2",
+      "bytes": 19405
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/zec/RULES.md",
+      "sha256": "0209e9cfc40b3ffa55d39a602ce9011904be1132ca59192ad68e302a02895d0e",
+      "bytes": 1274
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/zec/study.json",
+      "sha256": "88dedb1b6194e1984d80c1e9fb6dfab1c384cb603a4f304165bdceec61e6413e",
+      "bytes": 836
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/zec/verification.json",
+      "sha256": "c432ccb3173f6cd99c26aaca151cb208d6541f544e8f80f590a651ae7ffc7069",
+      "bytes": 435
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/eth/answers.json",
+      "sha256": "b51bf111919f027008638672142ab4f72c564bffd4b568115c5ea5fd4aca2046",
+      "bytes": 523
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/eth/baseline-lineage.json",
+      "sha256": "a6725ed1155672b51bbb89f7a007b385b2ecf5ff477ed6d489131c198cceee07",
+      "bytes": 1973931
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/eth/completion.json",
+      "sha256": "1474d4f344de65db6b3bef6aa4793bc5a0c2fe96c714702ad8f6b73e7869752e",
+      "bytes": 1167
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/eth/giveback35-lineage.json",
+      "sha256": "3d7c9e7eddb8817984836fe8fb00d1970405d5fac2073b0ccab4b080af6bea91",
+      "bytes": 2016059
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/eth/plan.json",
+      "sha256": "ef4f9d450136a1fad6a6e2ae973e5a75c7091e40cd34ae21f9b9f94a79db266c",
+      "bytes": 1987
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/eth/README.md",
+      "sha256": "7b8de18ea4cb6cea4621a6191a96fb8fedbcabe13ba7c9ce1e57285481d27810",
+      "bytes": 1994
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/eth/results.json",
+      "sha256": "8946e0dcf1eb1c8a810280594e062d2299f162503c06c90853086a2a43741ba6",
+      "bytes": 8306
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/eth/RULES.md",
+      "sha256": "cd40651d3a8b285dff037f3895f93cf12d399004a31f690cafb45ddd784c8dbd",
+      "bytes": 646
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/eth/study.json",
+      "sha256": "bdea7db6723bc5b34dfdd5fddc3ff3fcfeb72a33a56a075069bd5e8e79e61a4c",
+      "bytes": 669
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/eth/verification.json",
+      "sha256": "889f900f48223747135b4bbbacf3bf6c4266fa63aac448e30233e040173acfc7",
+      "bytes": 383
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/zec/answers.json",
+      "sha256": "f072d5c9869726e38aaf348f476e05b27e9a98e2befc4a2bac1d85b2dc9e373a",
+      "bytes": 2224
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/zec/atr_stop-lineage.json",
+      "sha256": "f6c9b489940a93d3646576d3684b49966dfd9fc2da5db32ced6a4dc224fd59a3",
+      "bytes": 1655371
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/zec/baseline-lineage.json",
+      "sha256": "ef7323da84a560064b0fe1c1fad2c89c836b806093c903e54a84b02b331d8d21",
+      "bytes": 1657061
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/zec/completion.json",
+      "sha256": "f0787e3d42e83028beb72342e4132c71b33f4b907481aaf41378db3d0472c11d",
+      "bytes": 3045
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/zec/fine-data-check.json",
+      "sha256": "5df4a29e8310b686895d4f2590aac459e1ac76514f2c4b5a59f1d3537362e981",
+      "bytes": 86015
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/zec/fine_control-lineage.json",
+      "sha256": "bfce32b0f19ff434241db97bb04cf4ba0e8bdaf4b183263e22dda69826a5dcfc",
+      "bytes": 1655888
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/zec/fine_protect-lineage.json",
+      "sha256": "b4388f1db97fcdf2626336b0597af10474c0351ef4b97e94ad6a3de880f772e6",
+      "bytes": 1663514
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/zec/plan.json",
+      "sha256": "a6f08016c510214ba4ce620657a54db764398d1731da007a7e6723ed4af9f082",
+      "bytes": 8689
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/zec/README.md",
+      "sha256": "4e00e4e47ba00aecbe0d7518f2518d7f3ec60edcda28b7593b42852ecd108b04",
+      "bytes": 4406
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/zec/results.json",
+      "sha256": "3541b4ebb6b866917029302dd6ba1e49c44d4e30adc8b1967bd9dee0afff6b50",
+      "bytes": 23070
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/zec/RULES.md",
+      "sha256": "ea432b884e79bda18bdc8afd94f42df91e8f5d0c8a8e7242a512083fa2ed1b90",
+      "bytes": 866
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/zec/study.json",
+      "sha256": "0132a4c0a553ec4dc962379913a4c077905391c88a93f247057b7cbc7ea4800e",
+      "bytes": 862
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/zec/timeframe-comparison.json",
+      "sha256": "111bdeaca530859bff8ed2508e5a98b33735de732523a3180967e74ccbd953c1",
+      "bytes": 1001
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/zec/verification.json",
+      "sha256": "783b522044e3ed69aed33262f4747689a22396b7439216369269f64bd3af4543",
+      "bytes": 439
+    },
+    {
+      "path": "docs/verification/intrabar-requested-followups-20260913/zec/width_stop-lineage.json",
+      "sha256": "ab27d793cc5f7aaecb2cde6eb16c08cdbf0c4ef9f870d2da2754e46367f43b91",
+      "bytes": 1662452
+    },
+    {
+      "path": "scripts/eth_intrabar_methods_study.py",
+      "sha256": "dbfb0beb8f068f51e9704258ce5465fc18b7ff469005c8c1047b98dc396c9482",
+      "bytes": 15784
+    },
+    {
+      "path": "scripts/intrabar_combined_study.py",
+      "sha256": "31af8fcb98bed2f621cc804c6480bbc91e5c7a3cded3199e1db82c494b51a46b",
+      "bytes": 15173
+    },
+    {
+      "path": "scripts/intrabar_requested_followups.py",
+      "sha256": "4925d58e4bb81721a76649beb3d1081046f4f7e9dbb2ade1c99c9397766eebd6",
+      "bytes": 15789
+    },
+    {
+      "path": "scripts/zec_intrabar_methods_study.py",
+      "sha256": "fba8ddda8b75792357813214362925f0f6cb395dfa735e92cea43951f2471003",
+      "bytes": 23452
+    },
+    {
+      "path": "strategies/trend_cloud_intrabar_methods_v3.py",
+      "sha256": "0ea141561ca6d49e4a77430e3fd3cd3a751fd031ec8a98759439b2e1c7cd2cb0",
+      "bytes": 10190
+    }
+  ]
+}

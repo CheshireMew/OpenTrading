@@ -1,0 +1,39 @@
+{
+  "title": "ETH 15分钟：直接2%止损对照",
+  "base": {
+    "strategy": "trend_cloud_stop_confirmation_v1",
+    "symbol": "ETH/USDT",
+    "timeframe": "15m",
+    "start": "2020-09-10T00:00:00Z",
+    "end": "2026-09-18T00:00:00Z",
+    "parameters": {
+      "center_length": 55,
+      "width_length": 31,
+      "trigger_mult": 0.4,
+      "chase_mult": 2,
+      "confirmation_level": 3,
+      "max_wait_bars": 2,
+      "price_tick": 0.01,
+      "entry_bar_assumption": 0,
+      "activation_pct": 2,
+      "giveback_pct": 50,
+      "initial_stop_pct": 2,
+      "direction_filter": false,
+      "stop_method": 0,
+      "stop_mult": 1.5,
+      "stop_floor_pct": 0.5,
+      "stop_cap_pct": 2,
+      "stop_reentry": false,
+      "stop_confirmation": "immediate",
+      "stop_range_lock": false
+    },
+    "initial_cash": 10000,
+    "position_pct": 100,
+    "data_gap_policy": "observed_bars",
+    "intrabar_profit_protection": false,
+    "execution_timeframe": "5m",
+    "execution_gap_policy": "coarse_fallback"
+  },
+  "axes": {},
+  "max_runs": 1
+}

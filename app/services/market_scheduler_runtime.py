@@ -35,7 +35,7 @@ class MarketSchedulerRuntime:
         self._bootstrap_task: asyncio.Task[None] | None = None
         self._job = MarketIndicatorCronJob(
             repository=indicator_repository,
-            providers=_build_indicator_providers(indicator_repository),
+            providers=_build_indicator_providers(),
         )
 
     async def start(self, owner_id: str = "") -> None:
@@ -149,23 +149,13 @@ class MarketSchedulerRuntime:
             self._bootstrap_task = None
 
 
-def _build_indicator_providers(indicator_repository):
-    from app.services.indicators.crypto_gold_provider import CryptoGoldProvider
-    from app.services.indicators.macro_provider_v2 import MacroProviderV2 as MacroProvider
+def _build_indicator_providers():
     from app.services.indicators.onchain_provider import OnchainProvider
     from app.services.indicators.sentiment_provider import SentimentProvider
     from app.services.indicators.tech_calculator import TechCalculatorProvider
 
     return [
-        MacroProvider(
-            latest_timestamp_reader=getattr(
-                indicator_repository,
-                "get_latest_timestamps",
-                None,
-            )
-        ),
         OnchainProvider(),
         SentimentProvider(),
         TechCalculatorProvider(),
-        CryptoGoldProvider(),
     ]

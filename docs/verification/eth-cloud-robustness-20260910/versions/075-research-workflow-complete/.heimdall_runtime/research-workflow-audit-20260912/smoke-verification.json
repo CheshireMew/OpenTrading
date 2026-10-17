@@ -1,0 +1,1 @@
+{"compact_response_bytes":1355,"full_result_file_bytes":50462980,"run_id":"4c549bfe4fe0496fa43830193dd06728","runs_after":133,"runs_before":133,"study_id":"14b3138a70c74d4e955ced74aa6a8e86","study_status":"completed","submitted":{"errors":[],"execution":"由现有后台回测队列执行；status 查询进度，无需轮询整个结果","skipped":["existing"],"submitted":[]}}

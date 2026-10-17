@@ -1,0 +1,23 @@
+{
+  "source_record": "docs/verification/eth-intrabar-short-window-20260913/policies/fixed.json",
+  "static_checks": {
+    "pine_v6": true,
+    "indicator_no_native_strategy_arrows": true,
+    "separate_direction_colors": true,
+    "no_merged_text": true,
+    "no_stop_lines": true,
+    "five_minute_arrays": true,
+    "confirmed_signal": true,
+    "two_following_bars": true,
+    "old_versions_retained": true,
+    "no_tabs": true
+  },
+  "balanced_delimiters": true,
+  "pine_compilation": "not run",
+  "trade_parity": "not verified in TradingView",
+  "new_backtests": 0,
+  "files": {
+    "strategies\\pine\\eth_ema55_confirmed_manual_v6.pine": "ce4c51f64e1b2aa59bb9b351247483a2337d8ec5a5ed898885edbc4ec68129fe",
+    "docs\\PINE_CODE_STANDARD.md": "043da9dc729f860ad1241a406b115106e1ad03bf859029f4dffb9f2da2343a41"
+  }
+}

@@ -1,0 +1,227 @@
+{
+  "created_at_utc": "2026-09-11T02:23:37.272654+00:00",
+  "strategy_id": "joint__c55_w31_t0p4_d2_a2_g50_s1",
+  "parameters": {
+    "center_length": 55,
+    "width_length": 31,
+    "trigger_mult": 0.4,
+    "chase_mult": 2.0,
+    "activation_pct": 2.0,
+    "giveback_pct": 50.0,
+    "initial_stop_pct": 1.0,
+    "initial_stop_width": 0,
+    "record_indicators": false
+  },
+  "method": "Read-only derivation from existing project simulator traces. No strategy changes, no new simulations. Fees and slippage remain zero; position is 100% of current equity, without leverage.",
+  "comparison": {
+    "eth_same_six": {
+      "trace_path": ".heimdall_runtime/cloud-cross-asset-20260911/traces/eth/joint__c55_w31_t0p4_d2_a2_g50_s1-full.json",
+      "trace_sha256": "c61481ad0f55ba45f4931fc44fa108d31422deb8c000f2f982a8bf78bd587533",
+      "period": [
+        "2020-09-10T00:00:00Z",
+        "2026-09-10T00:00:00Z"
+      ],
+      "report": {
+        "initial_cash": 10000,
+        "final_equity": 2592904.893126031,
+        "profit": 2582904.893126031,
+        "return_pct": 25829.04893126031,
+        "max_drawdown_pct": 33.0501556318353,
+        "total_trades": 9427,
+        "wins": 2540,
+        "losses": 6886,
+        "breakeven": 1,
+        "win_rate": 26.943884586825078,
+        "average_return_pct": 0.07073251435932387,
+        "payoff_ratio": 2.9819505829148385,
+        "profit_factor": 1.0999353006976023,
+        "average_duration_minutes": 257.0717089211838,
+        "ambiguous_trades": 0,
+        "notes": [
+          "基于所选价格数据、不计成本的多空策略模拟",
+          "最大回撤按每根收盘权益计算",
+          "无亏损时利润因子为空；无交易时胜率为空",
+          "K 线内退出的持仓时间按所属 K 线开盘时间近似"
+        ]
+      },
+      "average_winning_trade_pct": 1.8262312505983724,
+      "average_losing_trade_pct": -0.5767981358777985,
+      "protection_activated_count": 2067,
+      "protection_activated_pct": 21.926381669672217,
+      "opposite_exits_without_protection_count": 5432,
+      "side_mean_return_pct": {
+        "long": 0.09662514830813114,
+        "short": 0.04483438653528876
+      },
+      "compound_reconciliation_pct": 25829.04893126036
+    },
+    "btc_same_six": {
+      "trace_path": ".heimdall_runtime/cloud-cross-asset-20260911/traces/btc/joint__c55_w31_t0p4_d2_a2_g50_s1-same_six.json",
+      "trace_sha256": "ae647413d4facdc90c30425eff8aa8cdfc135f3612659eb726f7087f330da233",
+      "period": [
+        "2020-09-10T00:00:00Z",
+        "2026-09-10T00:00:00Z"
+      ],
+      "report": {
+        "initial_cash": 10000,
+        "final_equity": 18853.707530624324,
+        "profit": 8853.707530624324,
+        "return_pct": 88.53707530624324,
+        "max_drawdown_pct": 53.816994684401344,
+        "total_trades": 9379,
+        "wins": 2306,
+        "losses": 7073,
+        "breakeven": 0,
+        "win_rate": 24.586842947009277,
+        "average_return_pct": 0.014075309420128173,
+        "payoff_ratio": 3.136599255853161,
+        "profit_factor": 1.0226209365187882,
+        "average_duration_minutes": 282.75775669047874,
+        "ambiguous_trades": 0,
+        "notes": [
+          "基于所选价格数据、不计成本的多空策略模拟",
+          "最大回撤按每根收盘权益计算",
+          "无亏损时利润因子为空；无交易时胜率为空",
+          "K 线内退出的持仓时间按所属 K 线开盘时间近似"
+        ]
+      },
+      "average_winning_trade_pct": 1.487726173033839,
+      "average_losing_trade_pct": -0.4663769585698644,
+      "protection_activated_count": 1573,
+      "protection_activated_pct": 16.771510822049258,
+      "opposite_exits_without_protection_count": 6612,
+      "side_mean_return_pct": {
+        "long": 0.04256257999724028,
+        "short": -0.01372183347289548
+      },
+      "compound_reconciliation_pct": 88.53707530624202
+    },
+    "btc_eight_years": {
+      "trace_path": ".heimdall_runtime/cloud-cross-asset-20260911/traces/btc/joint__c55_w31_t0p4_d2_a2_g50_s1-full.json",
+      "trace_sha256": "e18c0e075dea5f745e911a029dce18afcee7876513e2e940bc6f0f629d4eb23d",
+      "period": [
+        "2018-09-10T00:00:00Z",
+        "2026-09-10T00:00:00Z"
+      ],
+      "report": {
+        "initial_cash": 10000,
+        "final_equity": 23178.369513958813,
+        "profit": 13178.369513958813,
+        "return_pct": 131.78369513958813,
+        "max_drawdown_pct": 58.35146488755322,
+        "total_trades": 12358,
+        "wins": 3011,
+        "losses": 9347,
+        "breakeven": 0,
+        "win_rate": 24.36478394562227,
+        "average_return_pct": 0.014764601881554273,
+        "payoff_ratio": 3.173408442030454,
+        "profit_factor": 1.0222673391412964,
+        "average_duration_minutes": 283.76557695419973,
+        "ambiguous_trades": 0,
+        "notes": [
+          "基于所选价格数据、不计成本的多空策略模拟",
+          "最大回撤按每根收盘权益计算",
+          "无亏损时利润因子为空；无交易时胜率为空",
+          "K 线内退出的持仓时间按所属 K 线开盘时间近似"
+        ]
+      },
+      "average_winning_trade_pct": 1.540302036574199,
+      "average_losing_trade_pct": -0.4766650777867408,
+      "protection_activated_count": 2094,
+      "protection_activated_pct": 16.944489399579222,
+      "opposite_exits_without_protection_count": 8579,
+      "side_mean_return_pct": {
+        "long": 0.041364583033952844,
+        "short": -0.01138294056703264
+      },
+      "compound_reconciliation_pct": 131.7836951395878
+    }
+  },
+  "btc_continuous_annual_returns": [
+    {
+      "start_utc": "2018-09-10T00:00:00Z",
+      "end_utc": "2019-09-10T00:00:00Z",
+      "opening_equity": 10000.0,
+      "ending_equity": 9728.294275048713,
+      "return_pct": -2.7170572495128775,
+      "valuation_bar_timestamp": 1568072700000,
+      "standalone_annual_return_pct": -2.9899213991929185
+    },
+    {
+      "start_utc": "2019-09-10T00:00:00Z",
+      "end_utc": "2020-09-10T00:00:00Z",
+      "opening_equity": 9728.294275048713,
+      "ending_equity": 12374.637035019392,
+      "return_pct": 27.202536078272853,
+      "valuation_bar_timestamp": 1599695100000,
+      "standalone_annual_return_pct": 27.13769422681065
+    },
+    {
+      "start_utc": "2020-09-10T00:00:00Z",
+      "end_utc": "2021-09-10T00:00:00Z",
+      "opening_equity": 12374.637035019392,
+      "ending_equity": 11508.08496596781,
+      "return_pct": -7.002646353176245,
+      "valuation_bar_timestamp": 1631231100000,
+      "standalone_annual_return_pct": -6.20879665040891
+    },
+    {
+      "start_utc": "2021-09-10T00:00:00Z",
+      "end_utc": "2022-09-10T00:00:00Z",
+      "opening_equity": 11508.08496596781,
+      "ending_equity": 12772.981664068893,
+      "return_pct": 10.991374341097494,
+      "valuation_bar_timestamp": 1662767100000,
+      "standalone_annual_return_pct": 11.15404797678714
+    },
+    {
+      "start_utc": "2022-09-10T00:00:00Z",
+      "end_utc": "2023-09-10T00:00:00Z",
+      "opening_equity": 12772.981664068893,
+      "ending_equity": 16952.064415752357,
+      "return_pct": 32.718145704690514,
+      "valuation_bar_timestamp": 1694303100000,
+      "standalone_annual_return_pct": 32.732030757250705
+    },
+    {
+      "start_utc": "2023-09-10T00:00:00Z",
+      "end_utc": "2024-09-10T00:00:00Z",
+      "opening_equity": 16952.064415752357,
+      "ending_equity": 24001.896079611928,
+      "return_pct": 41.58686217183472,
+      "valuation_bar_timestamp": 1725925500000,
+      "standalone_annual_return_pct": 41.58817561731385
+    },
+    {
+      "start_utc": "2024-09-10T00:00:00Z",
+      "end_utc": "2025-09-10T00:00:00Z",
+      "opening_equity": 24001.896079611928,
+      "ending_equity": 20535.463577997412,
+      "return_pct": -14.442327764926155,
+      "valuation_bar_timestamp": 1757461500000,
+      "standalone_annual_return_pct": -13.770142640290429
+    },
+    {
+      "start_utc": "2025-09-10T00:00:00Z",
+      "end_utc": "2026-09-10T00:00:00Z",
+      "opening_equity": 20535.463577997412,
+      "ending_equity": 23178.369513958813,
+      "return_pct": 12.869959939901833,
+      "valuation_bar_timestamp": 1788998400000,
+      "standalone_annual_return_pct": 12.741455618029484
+    }
+  ],
+  "annual_method": "Continuous eight-year equity, marked to market including open trades at each annual boundary. Interior boundaries use the last observed bar before Sep 10 00:00 UTC; terminal value is saved simulator final equity. No annual position reset. Standalone annual values are also retained for comparison; annual reset can change boundary trades.",
+  "annual_product_return_pct": 131.7836951395881,
+  "formulas": {
+    "continuous_annual_return_pct": "100 * (ending_equity / opening_equity - 1)",
+    "mean_trade_return_pct": "arithmetic average of trade return_pct",
+    "compound_final_return_pct": "100 * (product(1 + trade.return_pct / 100) - 1)"
+  },
+  "limitations": [
+    "Asset differences are descriptive evidence, not causal proof of a universally optimal parameter or absence of overfitting.",
+    "The parameters were selected using ETH history. BTC transfer is weaker.",
+    "Recorded source market-data gaps and simulator execution assumptions remain those of the original report."
+  ]
+}

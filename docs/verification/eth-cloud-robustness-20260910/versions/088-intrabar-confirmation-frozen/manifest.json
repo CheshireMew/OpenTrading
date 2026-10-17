@@ -1,0 +1,56 @@
+{
+  "label": "088-intrabar-confirmation-frozen",
+  "created_at": "2026-09-13T00:07:50.305505+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "c94c64e35c373ef390c87e5474fce0317a097116b435d9e1f4a24f2436f48486",
+      "bytes": 23153
+    },
+    {
+      "path": "docs/LOCAL_BACKTESTS.md",
+      "sha256": "92dfb00166602dd9a0a3491bf89aec8a3de38aa33f15ce4eb2c79003bff491b4",
+      "bytes": 21841
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/baseline-parity.json",
+      "sha256": "62ea15c6c9df568c42c80989410cbba89402fb3e4039a357cb5f10c51fded796",
+      "bytes": 967
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/plan.json",
+      "sha256": "242e0cf486402b8299aab946325767963148920cbb4d219d0a7afd8ffdbfcfe3",
+      "bytes": 7625
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/preview.json",
+      "sha256": "e4514dca221e7adebf65bf13a65d528d014683b2d4b65cc4d50f07f8b1143f22",
+      "bytes": 345
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/RULES.md",
+      "sha256": "364355b805d5daeab2fea49dd554a88a816dc12fd1d59b169541e56764d62d49",
+      "bytes": 3451
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/study.json",
+      "sha256": "c9d918fc7637d88f6da485c6475759a14262d69cd83c024d2d7cd71367fb57fe",
+      "bytes": 1070
+    },
+    {
+      "path": "scripts/cloud_intrabar_confirmation_study.py",
+      "sha256": "614e995a837551583dafee5511ece76b02e1be6a604c8efbd7b99bada6b6f948",
+      "bytes": 10189
+    },
+    {
+      "path": "strategies/trend_cloud_intrabar_confirmation_v1.py",
+      "sha256": "ac87957316b93f39a5519d0472b35ca169ba3db8c9e7d4037e5617c1aa66389e",
+      "bytes": 6990
+    },
+    {
+      "path": "test/test_intrabar_stop_entry.py",
+      "sha256": "fd7935123d8b379b6d71bec3872ee326bc1ef7b8b711aaa5f491f1974bcddec0",
+      "bytes": 6842
+    }
+  ]
+}

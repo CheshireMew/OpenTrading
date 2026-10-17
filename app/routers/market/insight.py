@@ -16,7 +16,7 @@ router = FrontendContractRouter(frontend_contract_target="market", tags=["Market
 
 @router.get("/indicators", response_model=list[MarketIndicatorResponse])
 async def get_market_indicators(
-    category: str | None = Query(None, description="过滤分类, 如 Macro, Onchain, Sentiment, General"),
+    category: str | None = Query(None, description="过滤分类, 如 Onchain, Sentiment, Tech"),
     days: int = Query(settings.INDICATORS_DEFAULT_DAYS, description="历史数据天数"),
     service = Depends(get_market_insight_service),
 ):

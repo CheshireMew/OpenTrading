@@ -1,0 +1,1 @@
+{"command":"python -m pytest test/test_cloud_comparison_strategy.py test/test_cloud_robustness.py test/test_cloud_manual.py test/test_cloud_entry.py test/test_cloud_context.py test/test_cloud_parameters.py test/test_backtest_history.py -q","passed":76,"duration_seconds":27.96}

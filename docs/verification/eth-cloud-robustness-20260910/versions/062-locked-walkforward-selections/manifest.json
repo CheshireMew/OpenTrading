@@ -1,0 +1,21 @@
+{
+  "label": "062-locked-walkforward-selections",
+  "created_at": "2026-09-12T00:40:27.521236+00:00",
+  "files": [
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/plan.json",
+      "sha256": "d4322df5db53c91e37118c1ef448b84f783502484fe11b2f37ac006e6aa6f876",
+      "bytes": 11688
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/selection-lock.json",
+      "sha256": "742cc5bfc40469b107e6894cf718216ca5969637d02998cd4950a4095ee391b9",
+      "bytes": 6162008
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/training.json",
+      "sha256": "77b6485048d41affd28ca680389bcd8389720941cdfba33bcc2e214490815031",
+      "bytes": 2498412
+    }
+  ]
+}

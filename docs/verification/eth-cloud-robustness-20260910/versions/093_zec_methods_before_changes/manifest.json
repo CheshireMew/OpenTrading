@@ -1,0 +1,36 @@
+{
+  "label": "093_zec_methods_before_changes",
+  "created_at": "2026-09-13T01:02:37.715582+00:00",
+  "files": [
+    {
+      "path": "app/contracts/local_backtest.py",
+      "sha256": "483788b5b8818d921e83f6d4abdfb65dd18ca6ded158782d981539d7fd8248b3",
+      "bytes": 2316
+    },
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "c94c64e35c373ef390c87e5474fce0317a097116b435d9e1f4a24f2436f48486",
+      "bytes": 23153
+    },
+    {
+      "path": "app/services/local_backtest_service.py",
+      "sha256": "36014f53f648c90fafce392a16f319288b7d0d8c82f034f849241f26ba2867f5",
+      "bytes": 11107
+    },
+    {
+      "path": "app/services/research_study_service.py",
+      "sha256": "dd63937e33a8a17b83b7caacc9bf65a20c33bf65b45fa8cc90697c57c663f1c8",
+      "bytes": 20988
+    },
+    {
+      "path": "scripts/local_backtest_worker.py",
+      "sha256": "5764063a97c7bd7756ef8945807e41800a783d85147784222cbba1ae98a37f60",
+      "bytes": 5795
+    },
+    {
+      "path": "strategies/trend_cloud_intrabar_confirmation_v2.py",
+      "sha256": "537f383411e822ff328c4e6c364971da7c88c95b47c3537595ba1248d90eac45",
+      "bytes": 7118
+    }
+  ]
+}

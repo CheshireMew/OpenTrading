@@ -10,6 +10,7 @@ from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 from app.infra.db.database import DatabaseRuntime
 from app.infra.db.schema import MarketIndicatorData, MarketIndicatorMeta
+from app.domain.market.indicator_catalog import MARKET_INDICATOR_META
 
 
 class MarketIndicatorRepository:
@@ -18,7 +19,11 @@ class MarketIndicatorRepository:
 
     def list_active_meta(self, category: str | None = None) -> list[dict[str, Any]]:
         with self.database_runtime.session_scope() as session:
-            query = session.query(MarketIndicatorMeta).filter(MarketIndicatorMeta.is_active == 1)
+            # Historical rows stay in storage; only supported indicators remain visible.
+            query = session.query(MarketIndicatorMeta).filter(
+                MarketIndicatorMeta.is_active == 1,
+                MarketIndicatorMeta.id.in_(MARKET_INDICATOR_META),
+            )
             if category:
                 query = query.filter(MarketIndicatorMeta.category == category)
             rows = query.order_by(MarketIndicatorMeta.category.asc(), MarketIndicatorMeta.name.asc()).all()

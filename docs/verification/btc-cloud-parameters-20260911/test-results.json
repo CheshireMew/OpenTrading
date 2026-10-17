@@ -1,0 +1,14 @@
+{
+  "checked_at": "2026-09-11T02:46:25.837925+00:00",
+  "command": "venv/Scripts/python.exe -m pytest test/test_btc_cloud_parameter_study.py test/test_cloud_parameters.py test/test_profit_protection.py -q",
+  "result": "29 passed",
+  "duration_seconds": 9.1,
+  "coverage": [
+    "pairwise-balanced joint design",
+    "single-axis neighbor integrity",
+    "final-period selection gates",
+    "selection ignores final returns",
+    "existing EMA strategy parameters",
+    "profit-protection execution"
+  ]
+}

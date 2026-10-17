@@ -1,0 +1,31 @@
+{
+  "title": "ETH信号收盘价盘中突破：5分钟核对成交并更新利润保护",
+  "base": {
+    "data_gap_policy": "observed_bars",
+    "end": "2026-09-10T00:00:00Z",
+    "initial_cash": 10000.0,
+    "parameters": {
+      "activation_pct": 2,
+      "center_length": 55,
+      "chase_mult": 2,
+      "confirmation_level": 1,
+      "entry_bar_assumption": 0,
+      "giveback_pct": 50,
+      "initial_stop_pct": 1,
+      "max_wait_bars": 0,
+      "price_tick": 0.01,
+      "trigger_mult": 0.4,
+      "width_length": 31
+    },
+    "position_pct": 100.0,
+    "start": "2020-09-10T00:00:00Z",
+    "strategy": "trend_cloud_intrabar_confirmation_v1",
+    "symbol": "ETH/USDT",
+    "timeframe": "15m",
+    "execution_timeframe": "5m",
+    "intrabar_profit_protection": true
+  },
+  "source_run": "3f31380c7267449f53743dc1fe5bcebd",
+  "axes": {},
+  "max_runs": 1
+}

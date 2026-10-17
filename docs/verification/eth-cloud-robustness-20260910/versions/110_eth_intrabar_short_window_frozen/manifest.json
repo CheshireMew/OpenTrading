@@ -1,0 +1,41 @@
+{
+  "label": "110_eth_intrabar_short_window_frozen",
+  "created_at": "2026-09-13T10:29:41.021244+00:00",
+  "files": [
+    {
+      "path": "app/domain/cloud_intrabar_selection_v1.py",
+      "sha256": "9c4836bf773a9d5f357e502e9733f1acaa6528128c2581e16eaf62bc0321f1d7",
+      "bytes": 3662
+    },
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "ccdd04ba62b5e821a556d215da2d129087bbe461835c5aeda83d7e54a8d5d9e2",
+      "bytes": 24654
+    },
+    {
+      "path": "docs/verification/eth-intrabar-short-window-20260913/plan.json",
+      "sha256": "76730b618875d33e5884da3cdecad6c71b6e0bcfa05bd5f8c271a9f077905df8",
+      "bytes": 6659
+    },
+    {
+      "path": "docs/verification/eth-intrabar-short-window-20260913/RULES.md",
+      "sha256": "10c394ccca6a5a0b4fc53574dbe8b599213e2928933d9e5bf19fb35b6d4ae592",
+      "bytes": 1552
+    },
+    {
+      "path": "scripts/eth_intrabar_short_window_study.py",
+      "sha256": "9909855554ea53e4afbd0d2d7c505422f137dc52413d205ee2cc9592ecf36a6f",
+      "bytes": 15256
+    },
+    {
+      "path": "strategies/trend_cloud_intrabar_methods_v3.py",
+      "sha256": "0ea141561ca6d49e4a77430e3fd3cd3a751fd031ec8a98759439b2e1c7cd2cb0",
+      "bytes": 10190
+    },
+    {
+      "path": "test/test_cloud_intrabar_selection.py",
+      "sha256": "8c1689accd076da88eaffcc5acfa300bcda7ba6e449f559b03b63cd5623fbe8a",
+      "bytes": 3763
+    }
+  ]
+}

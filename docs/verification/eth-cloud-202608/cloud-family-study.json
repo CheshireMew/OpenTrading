@@ -1,0 +1,1493 @@
+{
+  "run_id": "bd9ce7f3f6224eb4bf0fda53bae301f6",
+  "data_hash": "581332eae2f99a0926859c18551ed1eaf6e4f24f3f97f4c1eb73c3fb8124c5d0",
+  "reference_hash": "6bfc73d8895bd99c3b3ee688b44cb08b19b75e943bea2f771ae8eaf838c2a7f8",
+  "source": {
+    "exchange": "binance",
+    "symbol": "ETH/USDT",
+    "storage_symbol": "ETH/USDT",
+    "price_type": "spot"
+  },
+  "scope": "Same-image geometry search; not blind, not out-of-sample, not original-source identification. No downloads.",
+  "search": {
+    "sources": [
+      "close",
+      "open",
+      "high",
+      "low",
+      "hl2",
+      "hlc3",
+      "ohlc4"
+    ],
+    "smoothers": [
+      "EMA",
+      "RMA",
+      "SMA",
+      "WMA",
+      "DEMA",
+      "TEMA",
+      "HMA",
+      "KAMA"
+    ],
+    "center_lengths": [
+      2,
+      100
+    ],
+    "width_lengths": [
+      2,
+      60
+    ],
+    "center_selection": "Keep 3 smallest center-line errors for each smoother, then fit widths; not exhaustive.",
+    "width_fit": "One constant nonnegative multiplier, actual log-pixel residual; natural channels fix it at 1.",
+    "signal_use": "No signals used to rank geometry; fixed prior signal rule checked only for ATR vs high-low replacement.",
+    "not_scored": "Color switches, covered parts, bottom horizontal fill, text, unfinished last bar."
+  },
+  "best_center_per_smoother": [
+    {
+      "kind": "EMA",
+      "source": "hl2",
+      "length": 31,
+      "center_rmse_px": 0.8877751625558195
+    },
+    {
+      "kind": "RMA",
+      "source": "hl2",
+      "length": 16,
+      "center_rmse_px": 0.8877751625558195
+    },
+    {
+      "kind": "WMA",
+      "source": "close",
+      "length": 42,
+      "center_rmse_px": 5.910593965499202
+    },
+    {
+      "kind": "SMA",
+      "source": "close",
+      "length": 28,
+      "center_rmse_px": 10.801278412526564
+    },
+    {
+      "kind": "DEMA",
+      "source": "low",
+      "length": 62,
+      "center_rmse_px": 15.926283632567259
+    },
+    {
+      "kind": "TEMA",
+      "source": "low",
+      "length": 93,
+      "center_rmse_px": 17.79426861744968
+    },
+    {
+      "kind": "HMA",
+      "source": "low",
+      "length": 98,
+      "center_rmse_px": 18.67169966833702
+    },
+    {
+      "kind": "KAMA",
+      "source": "open",
+      "length": 100,
+      "center_rmse_px": 42.225780565803014
+    }
+  ],
+  "families": [
+    {
+      "family": "EMA + ATR",
+      "parameters": {
+        "source": "hl2",
+        "length": 31,
+        "width_length": 16
+      },
+      "width_multiplier": 0.44999836141447336,
+      "rmse_px": 1.02048737210727,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 1.02048737210727,
+        "median_absolute_error_px": 0.6089465745782263,
+        "maximum_absolute_error_px": 5.984919297709439,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        1.1146253278564378,
+        0.9551818584881027,
+        0.9845920097214625
+      ]
+    },
+    {
+      "family": "RMA + ATR",
+      "parameters": {
+        "source": "hl2",
+        "length": 16,
+        "width_length": 16
+      },
+      "width_multiplier": 0.44999836141447336,
+      "rmse_px": 1.02048737210727,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 1.02048737210727,
+        "median_absolute_error_px": 0.6089465745782263,
+        "maximum_absolute_error_px": 5.984919297709439,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        1.1146253278564378,
+        0.9551818584881027,
+        0.9845920097214625
+      ]
+    },
+    {
+      "family": "EMA(high/low) scaled channel",
+      "parameters": {
+        "length": 31
+      },
+      "width_multiplier": 0.9000025843855599,
+      "rmse_px": 1.0204982719111892,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 1.0204982719111892,
+        "median_absolute_error_px": 0.6088882058542282,
+        "maximum_absolute_error_px": 5.9849730827630765,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        1.114631296720752,
+        0.9551845733115549,
+        0.9846165102208111
+      ]
+    },
+    {
+      "family": "RMA(high/low) scaled channel",
+      "parameters": {
+        "length": 16
+      },
+      "width_multiplier": 0.9000025843855599,
+      "rmse_px": 1.0204982719111892,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 1.0204982719111892,
+        "median_absolute_error_px": 0.6088882058542282,
+        "maximum_absolute_error_px": 5.9849730827630765,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        1.114631296720752,
+        0.9551845733115549,
+        0.9846165102208111
+      ]
+    },
+    {
+      "family": "EMA + RMA(high-low)",
+      "parameters": {
+        "source": "hl2",
+        "length": 31,
+        "width_length": 16
+      },
+      "width_multiplier": 0.45000129219277274,
+      "rmse_px": 1.0204982719112021,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 1.0204982719112021,
+        "median_absolute_error_px": 0.6088882058552514,
+        "maximum_absolute_error_px": 5.984973082764668,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        1.1146312967206988,
+        0.9551845733116808,
+        0.9846165102207884
+      ]
+    },
+    {
+      "family": "RMA + RMA(high-low)",
+      "parameters": {
+        "source": "hl2",
+        "length": 16,
+        "width_length": 16
+      },
+      "width_multiplier": 0.45000129219277274,
+      "rmse_px": 1.0204982719112021,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 1.0204982719112021,
+        "median_absolute_error_px": 0.6088882058552514,
+        "maximum_absolute_error_px": 5.984973082764668,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        1.1146312967206988,
+        0.9551845733116808,
+        0.9846165102207884
+      ]
+    },
+    {
+      "family": "prior candidate (fixed)",
+      "parameters": {
+        "source": "hlc3",
+        "length": 31,
+        "width_length": 14
+      },
+      "width_multiplier": 0.45,
+      "rmse_px": 1.1027324109306613,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 1.1027324109306613,
+        "median_absolute_error_px": 0.5093826551536722,
+        "maximum_absolute_error_px": 5.899383379610242,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        1.5137929779041266,
+        0.9721138296417993,
+        0.6414684969802947
+      ]
+    },
+    {
+      "family": "same candidate using high-low (fixed)",
+      "parameters": {
+        "source": "hlc3",
+        "length": 31,
+        "width_length": 14
+      },
+      "width_multiplier": 0.45,
+      "rmse_px": 1.1027368977791177,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 1.1027368977791177,
+        "median_absolute_error_px": 0.509383290027472,
+        "maximum_absolute_error_px": 5.899383379532196,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        1.5137915306590122,
+        0.9721074587366317,
+        0.6415047057849141
+      ]
+    },
+    {
+      "family": "EMA(high/low) channel",
+      "parameters": {
+        "length": 31
+      },
+      "width_multiplier": 1.0,
+      "rmse_px": 1.5480976594047913,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 1.5480976594047913,
+        "median_absolute_error_px": 1.1416535382155644,
+        "maximum_absolute_error_px": 6.902411736174088,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        1.655217605828487,
+        1.5787021797783414,
+        1.3992044861571529
+      ]
+    },
+    {
+      "family": "RMA(high/low) channel",
+      "parameters": {
+        "length": 16
+      },
+      "width_multiplier": 1.0,
+      "rmse_px": 1.5480976594047913,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 1.5480976594047913,
+        "median_absolute_error_px": 1.1416535382155644,
+        "maximum_absolute_error_px": 6.902411736174088,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        1.655217605828487,
+        1.5787021797783414,
+        1.3992044861571529
+      ]
+    },
+    {
+      "family": "EMA + SMA(high-low)",
+      "parameters": {
+        "source": "hl2",
+        "length": 31,
+        "width_length": 35
+      },
+      "width_multiplier": 0.4796853558644662,
+      "rmse_px": 1.5671991554237696,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 1.5671991554237696,
+        "median_absolute_error_px": 1.0769487798677346,
+        "maximum_absolute_error_px": 5.649969183312635,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        2.012432988425384,
+        1.244072543101529,
+        1.3306902542970331
+      ]
+    },
+    {
+      "family": "RMA + SMA(high-low)",
+      "parameters": {
+        "source": "hl2",
+        "length": 16,
+        "width_length": 35
+      },
+      "width_multiplier": 0.4796853558644662,
+      "rmse_px": 1.5671991554237696,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 1.5671991554237696,
+        "median_absolute_error_px": 1.0769487798677346,
+        "maximum_absolute_error_px": 5.649969183312635,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        2.012432988425384,
+        1.244072543101529,
+        1.3306902542970331
+      ]
+    },
+    {
+      "family": "EMA percentage envelope",
+      "parameters": {
+        "source": "hl2",
+        "length": 31
+      },
+      "width_multiplier": 0.0032131553965907243,
+      "rmse_px": 3.5169254537053254,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 3.516925453705326,
+        "median_absolute_error_px": 1.5816021210891051,
+        "maximum_absolute_error_px": 10.705486528281426,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        4.842132166212198,
+        3.249610399446851,
+        1.7607050512511406
+      ]
+    },
+    {
+      "family": "RMA percentage envelope",
+      "parameters": {
+        "source": "hl2",
+        "length": 16
+      },
+      "width_multiplier": 0.0032131553965907243,
+      "rmse_px": 3.5169254537053254,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 3.516925453705326,
+        "median_absolute_error_px": 1.5816021210891051,
+        "maximum_absolute_error_px": 10.705486528281426,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        4.842132166212198,
+        3.249610399446851,
+        1.7607050512511406
+      ]
+    },
+    {
+      "family": "EMA + rolling_std(close)",
+      "parameters": {
+        "source": "hl2",
+        "length": 31,
+        "width_length": 60
+      },
+      "width_multiplier": 0.13344032649837245,
+      "rmse_px": 4.357561781421962,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 4.357561781421961,
+        "median_absolute_error_px": 4.125726152417968,
+        "maximum_absolute_error_px": 8.648139569281966,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        3.9147844283740323,
+        4.998133289750278,
+        4.081440987442828
+      ]
+    },
+    {
+      "family": "RMA + rolling_std(close)",
+      "parameters": {
+        "source": "hl2",
+        "length": 16,
+        "width_length": 60
+      },
+      "width_multiplier": 0.13344032649837245,
+      "rmse_px": 4.357561781421962,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 4.357561781421961,
+        "median_absolute_error_px": 4.125726152417968,
+        "maximum_absolute_error_px": 8.648139569281966,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        3.9147844283740323,
+        4.998133289750278,
+        4.081440987442828
+      ]
+    },
+    {
+      "family": "dual EMA band",
+      "parameters": {
+        "source": "hl2",
+        "fast": 26,
+        "slow": 36
+      },
+      "width_multiplier": 1.0,
+      "rmse_px": 5.4217701207849105,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 5.4217701207849105,
+        "median_absolute_error_px": 4.462045075950044,
+        "maximum_absolute_error_px": 13.33421335335953,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        4.025874461452328,
+        5.725533919336676,
+        6.260780293786007
+      ]
+    },
+    {
+      "family": "WMA + ATR",
+      "parameters": {
+        "source": "close",
+        "length": 41,
+        "width_length": 16
+      },
+      "width_multiplier": 0.4510713794232686,
+      "rmse_px": 5.922599677595552,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 5.922599677595553,
+        "median_absolute_error_px": 3.183403343449527,
+        "maximum_absolute_error_px": 16.877429120914883,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        4.5192352108069205,
+        4.102221094429601,
+        8.24498975287323
+      ]
+    },
+    {
+      "family": "WMA + RMA(high-low)",
+      "parameters": {
+        "source": "close",
+        "length": 41,
+        "width_length": 16
+      },
+      "width_multiplier": 0.4510743108095009,
+      "rmse_px": 5.922601732402968,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 5.922601732402968,
+        "median_absolute_error_px": 3.183342220976897,
+        "maximum_absolute_error_px": 16.87758351890136,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        4.51923697351194,
+        4.102221659677701,
+        8.244992933538617
+      ]
+    },
+    {
+      "family": "WMA + SMA(high-low)",
+      "parameters": {
+        "source": "close",
+        "length": 41,
+        "width_length": 35
+      },
+      "width_multiplier": 0.4810903837928546,
+      "rmse_px": 6.037115688741322,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 6.037115688741322,
+        "median_absolute_error_px": 3.1414598329263583,
+        "maximum_absolute_error_px": 17.24603900129324,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        4.81044191268856,
+        4.177537620171914,
+        8.291448941797654
+      ]
+    },
+    {
+      "family": "WMA(high/low) scaled channel",
+      "parameters": {
+        "length": 40
+      },
+      "width_multiplier": 0.8977104892354675,
+      "rmse_px": 6.0544679081744714,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 6.0544679081744714,
+        "median_absolute_error_px": 3.9798245295218635,
+        "maximum_absolute_error_px": 17.039490363859954,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        5.30715092744791,
+        4.115502363001949,
+        8.053976302843076
+      ]
+    },
+    {
+      "family": "WMA(high/low) channel",
+      "parameters": {
+        "length": 40
+      },
+      "width_multiplier": 1.0,
+      "rmse_px": 6.170833818542952,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 6.170833818542952,
+        "median_absolute_error_px": 3.8315723242261015,
+        "maximum_absolute_error_px": 16.99471478936465,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        5.467291260212605,
+        4.314692844266502,
+        8.107386877647967
+      ]
+    },
+    {
+      "family": "WMA percentage envelope",
+      "parameters": {
+        "source": "close",
+        "length": 41
+      },
+      "width_multiplier": 0.0032164028074486784,
+      "rmse_px": 6.814283948756762,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 6.814283948756762,
+        "median_absolute_error_px": 4.910008108555189,
+        "maximum_absolute_error_px": 19.54950039625487,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        6.531690328031416,
+        5.148189953196472,
+        8.374757242294244
+      ]
+    },
+    {
+      "family": "WMA + rolling_std(close)",
+      "parameters": {
+        "source": "close",
+        "length": 41,
+        "width_length": 60
+      },
+      "width_multiplier": 0.1337391053628696,
+      "rmse_px": 7.283950171874293,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 7.283950171874293,
+        "median_absolute_error_px": 5.097499004026929,
+        "maximum_absolute_error_px": 21.363716195935552,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        5.873304690492791,
+        6.394612193720347,
+        9.153197103941391
+      ]
+    },
+    {
+      "family": "SMA + ATR",
+      "parameters": {
+        "source": "close",
+        "length": 28,
+        "width_length": 16
+      },
+      "width_multiplier": 0.45072566743048315,
+      "rmse_px": 10.809283708696897,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 10.809283708696897,
+        "median_absolute_error_px": 6.514565511875858,
+        "maximum_absolute_error_px": 23.772459936260475,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        12.143183572789127,
+        6.540753216305716,
+        12.660311329751385
+      ]
+    },
+    {
+      "family": "SMA + RMA(high-low)",
+      "parameters": {
+        "source": "close",
+        "length": 28,
+        "width_length": 16
+      },
+      "width_multiplier": 0.4507285931585917,
+      "rmse_px": 10.809284885793543,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 10.809284885793543,
+        "median_absolute_error_px": 6.5146486719342676,
+        "maximum_absolute_error_px": 23.77252930647171,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        12.143184348232996,
+        6.540753523976105,
+        12.660313442018625
+      ]
+    },
+    {
+      "family": "SMA + SMA(high-low)",
+      "parameters": {
+        "source": "close",
+        "length": 28,
+        "width_length": 36
+      },
+      "width_multiplier": 0.4854793205412822,
+      "rmse_px": 10.87001178916446,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 10.87001178916446,
+        "median_absolute_error_px": 6.452566768728644,
+        "maximum_absolute_error_px": 25.75585889410968,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        12.252907713872977,
+        6.587933875972994,
+        12.686088786180024
+      ]
+    },
+    {
+      "family": "SMA(high/low) scaled channel",
+      "parameters": {
+        "length": 27
+      },
+      "width_multiplier": 0.8934252883637213,
+      "rmse_px": 11.167570625158373,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 11.167570625158373,
+        "median_absolute_error_px": 7.702328429277941,
+        "maximum_absolute_error_px": 25.69320237988245,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        12.842702336837851,
+        6.818277135497476,
+        12.75617476340899
+      ]
+    },
+    {
+      "family": "SMA(high/low) channel",
+      "parameters": {
+        "length": 27
+      },
+      "width_multiplier": 1.0,
+      "rmse_px": 11.236215987321225,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 11.236215987321225,
+        "median_absolute_error_px": 7.296709978840084,
+        "maximum_absolute_error_px": 24.497145910594895,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        12.94759277041764,
+        6.887988823625794,
+        12.793478829397198
+      ]
+    },
+    {
+      "family": "SMA percentage envelope",
+      "parameters": {
+        "source": "close",
+        "length": 28
+      },
+      "width_multiplier": 0.0032149551576809345,
+      "rmse_px": 11.322272232902739,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 11.322272232902739,
+        "median_absolute_error_px": 7.023705061591528,
+        "maximum_absolute_error_px": 25.077484611273235,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        13.025912610851803,
+        7.243276133351781,
+        12.745277441403527
+      ]
+    },
+    {
+      "family": "SMA + rolling_std(close)",
+      "parameters": {
+        "source": "close",
+        "length": 28,
+        "width_length": 60
+      },
+      "width_multiplier": 0.13355636285137773,
+      "rmse_px": 11.612768818924831,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 11.612768818924831,
+        "median_absolute_error_px": 7.799882132878906,
+        "maximum_absolute_error_px": 26.722394789467046,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        12.710622859835244,
+        8.177296027077878,
+        13.271815818717064
+      ]
+    },
+    {
+      "family": "dual SMA band",
+      "parameters": {
+        "source": "close",
+        "fast": 24,
+        "slow": 31
+      },
+      "width_multiplier": 1.0,
+      "rmse_px": 11.910022377305836,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 11.910022377305838,
+        "median_absolute_error_px": 7.743119685475548,
+        "maximum_absolute_error_px": 32.00977628843276,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        13.143533910191373,
+        8.646685248720779,
+        13.342722722330002
+      ]
+    },
+    {
+      "family": "DEMA + ATR",
+      "parameters": {
+        "source": "low",
+        "length": 62,
+        "width_length": 16
+      },
+      "width_multiplier": 0.45372883760861427,
+      "rmse_px": 15.920060042313125,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 15.920060042313125,
+        "median_absolute_error_px": 14.037741983542162,
+        "maximum_absolute_error_px": 36.02172467603225,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        7.057577593935565,
+        22.47191762676584,
+        14.336961042494128
+      ]
+    },
+    {
+      "family": "DEMA + RMA(high-low)",
+      "parameters": {
+        "source": "low",
+        "length": 62,
+        "width_length": 16
+      },
+      "width_multiplier": 0.45373178680812243,
+      "rmse_px": 15.920060803676941,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 15.920060803676941,
+        "median_absolute_error_px": 14.03769959951211,
+        "maximum_absolute_error_px": 36.021673231044986,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        7.057579039020937,
+        22.471917654456547,
+        14.336962824029685
+      ]
+    },
+    {
+      "family": "DEMA + SMA(high-low)",
+      "parameters": {
+        "source": "low",
+        "length": 62,
+        "width_length": 36
+      },
+      "width_multiplier": 0.48871360919340734,
+      "rmse_px": 15.96151355966814,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 15.96151355966814,
+        "median_absolute_error_px": 14.00216103440826,
+        "maximum_absolute_error_px": 37.627371123924604,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        7.243503670471142,
+        22.485201918616614,
+        14.361653616534573
+      ]
+    },
+    {
+      "family": "DEMA percentage envelope",
+      "parameters": {
+        "source": "low",
+        "length": 62
+      },
+      "width_multiplier": 0.003226488162579493,
+      "rmse_px": 16.27330347884521,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 16.273303478845214,
+        "median_absolute_error_px": 13.601268100756187,
+        "maximum_absolute_error_px": 37.94315592500698,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        8.493157025970646,
+        22.68571064026046,
+        14.411316207146587
+      ]
+    },
+    {
+      "family": "DEMA + rolling_std(close)",
+      "parameters": {
+        "source": "low",
+        "length": 62,
+        "width_length": 60
+      },
+      "width_multiplier": 0.13447679187141803,
+      "rmse_px": 16.47732924819606,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 16.47732924819606,
+        "median_absolute_error_px": 13.45829617908862,
+        "maximum_absolute_error_px": 39.274530919563404,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        7.991604338984361,
+        23.006577739105367,
+        14.877458730710687
+      ]
+    },
+    {
+      "family": "TEMA + ATR",
+      "parameters": {
+        "source": "low",
+        "length": 93,
+        "width_length": 16
+      },
+      "width_multiplier": 0.45422588198280767,
+      "rmse_px": 17.787009342637948,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 17.787009342637948,
+        "median_absolute_error_px": 11.847271258257251,
+        "maximum_absolute_error_px": 46.85533163883173,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        11.713361825955491,
+        26.2407069561099,
+        11.106554697253463
+      ]
+    },
+    {
+      "family": "TEMA + RMA(high-low)",
+      "parameters": {
+        "source": "low",
+        "length": 93,
+        "width_length": 16
+      },
+      "width_multiplier": 0.4542288499635524,
+      "rmse_px": 17.787009883125073,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 17.787009883125073,
+        "median_absolute_error_px": 11.847183981540596,
+        "maximum_absolute_error_px": 46.855383781561386,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        11.713362547582932,
+        26.24070689363333,
+        11.106556680559143
+      ]
+    },
+    {
+      "family": "TEMA + SMA(high-low)",
+      "parameters": {
+        "source": "low",
+        "length": 93,
+        "width_length": 35
+      },
+      "width_multiplier": 0.4847800420304448,
+      "rmse_px": 17.82398540375109,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 17.82398540375109,
+        "median_absolute_error_px": 12.005396944614475,
+        "maximum_absolute_error_px": 48.546651851528,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        11.824210250734227,
+        26.251437283403845,
+        11.141519623522727
+      ]
+    },
+    {
+      "family": "TEMA percentage envelope",
+      "parameters": {
+        "source": "low",
+        "length": 93
+      },
+      "width_multiplier": 0.00322707191074022,
+      "rmse_px": 18.105017956464973,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 18.105017956464977,
+        "median_absolute_error_px": 11.505213944548956,
+        "maximum_absolute_error_px": 48.81158096343029,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        12.633339683602479,
+        26.42539210318046,
+        11.201446613881627
+      ]
+    },
+    {
+      "family": "TEMA + rolling_std(close)",
+      "parameters": {
+        "source": "low",
+        "length": 93,
+        "width_length": 60
+      },
+      "width_multiplier": 0.13508776954228124,
+      "rmse_px": 18.280950116941405,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 18.280950116941405,
+        "median_absolute_error_px": 12.212608323689608,
+        "maximum_absolute_error_px": 50.12345623150031,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        12.29737592766033,
+        26.69383158502967,
+        11.781057343811403
+      ]
+    },
+    {
+      "family": "HMA + ATR",
+      "parameters": {
+        "source": "low",
+        "length": 98,
+        "width_length": 17
+      },
+      "width_multiplier": 0.45766305634291615,
+      "rmse_px": 18.672162642182858,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 18.672162642182858,
+        "median_absolute_error_px": 10.939146966521378,
+        "maximum_absolute_error_px": 47.776716567753624,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        18.033415495489535,
+        11.023367565373725,
+        24.479180261889727
+      ]
+    },
+    {
+      "family": "HMA + RMA(high-low)",
+      "parameters": {
+        "source": "low",
+        "length": 98,
+        "width_length": 17
+      },
+      "width_multiplier": 0.4576660886238556,
+      "rmse_px": 18.672163110403506,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 18.672163110403506,
+        "median_absolute_error_px": 10.939020452680282,
+        "maximum_absolute_error_px": 47.77688480308163,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        18.033415705954805,
+        11.02336752995202,
+        24.479181194238556
+      ]
+    },
+    {
+      "family": "HMA + SMA(high-low)",
+      "parameters": {
+        "source": "low",
+        "length": 98,
+        "width_length": 36
+      },
+      "width_multiplier": 0.48744261620272267,
+      "rmse_px": 18.704899978390692,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 18.704899978390692,
+        "median_absolute_error_px": 10.98058565472141,
+        "maximum_absolute_error_px": 47.6813334803081,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        18.101754473891486,
+        11.049161427212088,
+        24.492087831117185
+      ]
+    },
+    {
+      "family": "HMA percentage envelope",
+      "parameters": {
+        "source": "low",
+        "length": 98
+      },
+      "width_multiplier": 0.0032193245308391183,
+      "rmse_px": 18.97429991284869,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 18.974299912848693,
+        "median_absolute_error_px": 11.372308599666198,
+        "maximum_absolute_error_px": 50.523100273093576,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        18.639490744451177,
+        11.454158998687266,
+        24.524351122272325
+      ]
+    },
+    {
+      "family": "HMA + rolling_std(close)",
+      "parameters": {
+        "source": "low",
+        "length": 98,
+        "width_length": 60
+      },
+      "width_multiplier": 0.13416638766219496,
+      "rmse_px": 19.1459153579334,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 19.1459153579334,
+        "median_absolute_error_px": 11.468112705600205,
+        "maximum_absolute_error_px": 52.320537148796575,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        18.415613670622477,
+        12.058922289469901,
+        24.802132791966876
+      ]
+    },
+    {
+      "family": "HMA(high/low) scaled channel",
+      "parameters": {
+        "length": 100
+      },
+      "width_multiplier": 0.8645349588209126,
+      "rmse_px": 24.81641364562603,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 24.81641364562603,
+        "median_absolute_error_px": 17.820338828128342,
+        "maximum_absolute_error_px": 63.395203840201134,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        16.894471465213403,
+        20.876860515611014,
+        33.560343973434684
+      ]
+    },
+    {
+      "family": "HMA(high/low) channel",
+      "parameters": {
+        "length": 100
+      },
+      "width_multiplier": 1.0,
+      "rmse_px": 24.86964765715059,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 24.86964765715059,
+        "median_absolute_error_px": 17.506297347595137,
+        "maximum_absolute_error_px": 63.194950993646046,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        17.00169661553441,
+        20.96503728348581,
+        33.56944514983563
+      ]
+    },
+    {
+      "family": "DEMA(high/low) scaled channel",
+      "parameters": {
+        "length": 68
+      },
+      "width_multiplier": 0.8867610402515702,
+      "rmse_px": 25.41392567951412,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 25.41392567951412,
+        "median_absolute_error_px": 23.09028041747834,
+        "maximum_absolute_error_px": 48.839435224253975,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        8.455834020652544,
+        34.559936166747086,
+        25.91741766644863
+      ]
+    },
+    {
+      "family": "DEMA(high/low) channel",
+      "parameters": {
+        "length": 68
+      },
+      "width_multiplier": 1.0,
+      "rmse_px": 25.44934535434918,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 25.44934535434918,
+        "median_absolute_error_px": 23.18656839212329,
+        "maximum_absolute_error_px": 49.87914266156747,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        8.600000199362823,
+        34.586822856438154,
+        25.93837346795534
+      ]
+    },
+    {
+      "family": "TEMA(high/low) scaled channel",
+      "parameters": {
+        "length": 98
+      },
+      "width_multiplier": 0.8733789186033942,
+      "rmse_px": 27.569665389627527,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 27.569665389627527,
+        "median_absolute_error_px": 24.532691184938372,
+        "maximum_absolute_error_px": 60.654191610371754,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        16.987723957658474,
+        38.69173781763232,
+        22.240189038721667
+      ]
+    },
+    {
+      "family": "TEMA(high/low) channel",
+      "parameters": {
+        "length": 98
+      },
+      "width_multiplier": 1.0,
+      "rmse_px": 27.611711112256483,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 27.611711112256483,
+        "median_absolute_error_px": 24.418596794733155,
+        "maximum_absolute_error_px": 61.39154420836246,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        17.10336903968643,
+        38.71701877742365,
+        22.264029197812444
+      ]
+    },
+    {
+      "family": "KAMA + ATR",
+      "parameters": {
+        "source": "open",
+        "length": 100,
+        "width_length": 15
+      },
+      "width_multiplier": 0.45044859243926305,
+      "rmse_px": 42.22018776427818,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 42.22018776427818,
+        "median_absolute_error_px": 23.426556559128954,
+        "maximum_absolute_error_px": 138.03856446791588,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        48.03289732743376,
+        49.47873453806278,
+        24.337797094166806
+      ]
+    },
+    {
+      "family": "KAMA + RMA(high-low)",
+      "parameters": {
+        "source": "open",
+        "length": 100,
+        "width_length": 15
+      },
+      "width_multiplier": 0.45045155321897823,
+      "rmse_px": 42.22018777463229,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 42.22018777463229,
+        "median_absolute_error_px": 23.42655663378065,
+        "maximum_absolute_error_px": 138.03845090634104,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        48.03289735988102,
+        49.47873431554026,
+        24.33779753640297
+      ]
+    },
+    {
+      "family": "KAMA + SMA(high-low)",
+      "parameters": {
+        "source": "open",
+        "length": 100,
+        "width_length": 32
+      },
+      "width_multiplier": 0.4713999968785748,
+      "rmse_px": 42.23746437607772,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 42.23746437607772,
+        "median_absolute_error_px": 22.598273505787603,
+        "maximum_absolute_error_px": 137.80474330563243,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        48.06192257089346,
+        49.483297119461305,
+        24.361139048448795
+      ]
+    },
+    {
+      "family": "KAMA percentage envelope",
+      "parameters": {
+        "source": "open",
+        "length": 100
+      },
+      "width_multiplier": 0.003219217157714233,
+      "rmse_px": 42.36049833530404,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 42.360498335304044,
+        "median_absolute_error_px": 22.865375478194238,
+        "maximum_absolute_error_px": 145.43068963106407,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        48.27151284104725,
+        49.585542256085354,
+        24.379715028122757
+      ]
+    },
+    {
+      "family": "KAMA + rolling_std(close)",
+      "parameters": {
+        "source": "open",
+        "length": 100,
+        "width_length": 60
+      },
+      "width_multiplier": 0.1390313213669377,
+      "rmse_px": 42.410267440284144,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 42.410267440284144,
+        "median_absolute_error_px": 23.830409229725262,
+        "maximum_absolute_error_px": 141.35309242318112,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        48.179038642849406,
+        49.68793521411002,
+        24.61263258325905
+      ]
+    },
+    {
+      "family": "KAMA(high/low) scaled channel",
+      "parameters": {
+        "length": 100
+      },
+      "width_multiplier": 1.091053538561281,
+      "rmse_px": 43.77821620030071,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 43.77821620030072,
+        "median_absolute_error_px": 18.97727932810136,
+        "maximum_absolute_error_px": 147.23488053447227,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        55.100238703784875,
+        48.2729221612005,
+        19.577674066278203
+      ]
+    },
+    {
+      "family": "KAMA(high/low) channel",
+      "parameters": {
+        "length": 100
+      },
+      "width_multiplier": 1.0,
+      "rmse_px": 43.785399896753404,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 43.785399896753404,
+        "median_absolute_error_px": 18.408286958845935,
+        "maximum_absolute_error_px": 147.97480278166904,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        55.078821531264225,
+        48.29705468283238,
+        19.62655497142794
+      ]
+    },
+    {
+      "family": "Donchian channel",
+      "parameters": {
+        "length": 8
+      },
+      "width_multiplier": 1.0,
+      "rmse_px": 84.35284712196521,
+      "comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 84.35284712196521,
+        "median_absolute_error_px": 34.36495889518082,
+        "maximum_absolute_error_px": 330.03435856257784,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      },
+      "regional_rmse_px": [
+        114.85283248266254,
+        70.56227021827964,
+        56.35602314834544
+      ]
+    }
+  ],
+  "true_range_vs_high_low": {
+    "main_bars": 291,
+    "different_bars": 3,
+    "max_difference": 0.010000000000218279,
+    "max_smoothed_difference": 0.0008547223427193273
+  },
+  "fixed_cross_signal_checks": [
+    {
+      "width": "ATR(14)",
+      "sequential_project_simulation": true,
+      "prefix_observations_equal": true,
+      "actual_count": 19,
+      "matched_count": 19,
+      "missing_count": 0,
+      "extra_count": 0,
+      "all_signals_match": true,
+      "cloud_rmse_px": 1.1027324109308803
+    },
+    {
+      "width": "RMA(high-low,14)",
+      "sequential_project_simulation": true,
+      "prefix_observations_equal": true,
+      "actual_count": 19,
+      "matched_count": 19,
+      "missing_count": 0,
+      "extra_count": 0,
+      "all_signals_match": true,
+      "cloud_rmse_px": 1.1027368977794778
+    }
+  ],
+  "validation": {
+    "snapshot_hash": true,
+    "all_61_geometry_results_checked_by_project_comparator": true,
+    "prior_candidate_max_difference_from_saved_run_price": 0.0
+  }
+}

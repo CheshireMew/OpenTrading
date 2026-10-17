@@ -1,0 +1,199 @@
+{
+  "run_ids": {
+    "original": "204b45adb2604b9eb5e801a036fa3051",
+    "candidate": "bd9ce7f3f6224eb4bf0fda53bae301f6",
+    "rerun": "09e04d464266412b8ad0d6cc959eac0b"
+  },
+  "snapshot_rerun_equal": {
+    "signals": true,
+    "indicators": true,
+    "fills": true,
+    "trades": true,
+    "equity": true,
+    "levels": true,
+    "report": true
+  },
+  "data_hash": "581332eae2f99a0926859c18551ed1eaf6e4f24f3f97f4c1eb73c3fb8124c5d0",
+  "strategy_hash": "3560c7787cbdd7bd50e80c2bb845d136d7aed14763f4ad12cffebe5070fd3cdc",
+  "start": "2026-08-19T08:15:00Z",
+  "end": "2026-08-22T09:00:00Z",
+  "source": {
+    "exchange": "binance",
+    "symbol": "ETH/USDT",
+    "storage_symbol": "ETH/USDT",
+    "price_type": "spot"
+  },
+  "comparisons": {
+    "original": {
+      "run_id": "204b45adb2604b9eb5e801a036fa3051",
+      "reference_context": {
+        "source": "用户第一张截图，人工读取标记位置；非原指标导出的信号清单",
+        "image_size": [
+          2109,
+          1145
+        ],
+        "image_sha256": "7f4410bb3344c8eb4c93ba0a20589051ecbdf92dfba525d5e1caf6f5669f2f49",
+        "symbol_visible": "ETHUSD",
+        "exchange": "unknown",
+        "timeframe": "15m",
+        "year_month": "2026-08（用户确认）",
+        "timezone": "UTC+8（按大幅波动与项目行情对齐推断）",
+        "x_at_aug20_midnight": 196,
+        "pixels_per_bar": 6.25,
+        "uncertainty": "标记遮挡和人工读取存在误差；最左标记局部被裁剪。最后一根有倒计时，是未收盘状态。",
+        "cloud_measurement": "对数刻度由右侧 21 个价格刻度拟合；读取原尺寸图片填充色，排除水印区域与标记左右 23 像素；仅比较清晰可见云带，不比较文字和网格。"
+      },
+      "scope": "仅核验提供的时间区间与信号位置；匹配不证明原始公式相同，也不检验区间外表现",
+      "tolerance_bars": 0,
+      "reference_count": 19,
+      "actual_count": 0,
+      "matched_count": 0,
+      "missing_count": 19,
+      "extra_count": 0,
+      "all_signals_match": false,
+      "missing": [
+        {
+          "timestamp": 1787128200000,
+          "action": "long"
+        },
+        {
+          "timestamp": 1787136300000,
+          "action": "long"
+        },
+        {
+          "timestamp": 1787196600000,
+          "action": "long"
+        },
+        {
+          "timestamp": 1787206500000,
+          "action": "long"
+        },
+        {
+          "timestamp": 1787212800000,
+          "action": "long"
+        },
+        {
+          "timestamp": 1787229900000,
+          "action": "long"
+        },
+        {
+          "timestamp": 1787238000000,
+          "action": "long"
+        },
+        {
+          "timestamp": 1787253300000,
+          "action": "long"
+        },
+        {
+          "timestamp": 1787267700000,
+          "action": "long"
+        },
+        {
+          "timestamp": 1787270400000,
+          "action": "long"
+        },
+        {
+          "timestamp": 1787287500000,
+          "action": "long"
+        },
+        {
+          "timestamp": 1787291100000,
+          "action": "long"
+        },
+        {
+          "timestamp": 1787304600000,
+          "action": "long"
+        },
+        {
+          "timestamp": 1787324400000,
+          "action": "long"
+        },
+        {
+          "timestamp": 1787330700000,
+          "action": "long"
+        },
+        {
+          "timestamp": 1787337900000,
+          "action": "long"
+        },
+        {
+          "timestamp": 1787339700000,
+          "action": "long"
+        },
+        {
+          "timestamp": 1787342400000,
+          "action": "long"
+        },
+        {
+          "timestamp": 1787374800000,
+          "action": "short"
+        }
+      ],
+      "extra": [],
+      "cloud_comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 4.662642221176244,
+        "median_absolute_error_px": 2.654954716004795,
+        "maximum_absolute_error_px": 16.27667361403178,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      }
+    },
+    "candidate": {
+      "run_id": "bd9ce7f3f6224eb4bf0fda53bae301f6",
+      "reference_context": {
+        "source": "用户第一张截图，人工读取标记位置；非原指标导出的信号清单",
+        "image_size": [
+          2109,
+          1145
+        ],
+        "image_sha256": "7f4410bb3344c8eb4c93ba0a20589051ecbdf92dfba525d5e1caf6f5669f2f49",
+        "symbol_visible": "ETHUSD",
+        "exchange": "unknown",
+        "timeframe": "15m",
+        "year_month": "2026-08（用户确认）",
+        "timezone": "UTC+8（按大幅波动与项目行情对齐推断）",
+        "x_at_aug20_midnight": 196,
+        "pixels_per_bar": 6.25,
+        "uncertainty": "标记遮挡和人工读取存在误差；最左标记局部被裁剪。最后一根有倒计时，是未收盘状态。",
+        "cloud_measurement": "对数刻度由右侧 21 个价格刻度拟合；读取原尺寸图片填充色，排除水印区域与标记左右 23 像素；仅比较清晰可见云带，不比较文字和网格。"
+      },
+      "scope": "仅核验提供的时间区间与信号位置；匹配不证明原始公式相同，也不检验区间外表现",
+      "tolerance_bars": 0,
+      "reference_count": 19,
+      "actual_count": 19,
+      "matched_count": 19,
+      "missing_count": 0,
+      "extra_count": 0,
+      "all_signals_match": true,
+      "missing": [],
+      "extra": [],
+      "cloud_comparison": {
+        "sample_count": 120,
+        "unavailable_count": 0,
+        "rmse_px": 1.1027324109308803,
+        "median_absolute_error_px": 0.5093826551536722,
+        "maximum_absolute_error_px": 5.899383379610242,
+        "method": "按截图对数坐标，比较无遮挡采样列的云带上下沿；栅格与数据源误差保留，不据此认定原公式"
+      }
+    }
+  },
+  "verification": {
+    "backend_tests": 53,
+    "backend_result": "passed",
+    "frontend_contracts": "generated",
+    "frontend_typecheck": "passed",
+    "frontend_build": "passed",
+    "browser_checks": [
+      "white log chart and UTC+8 view loaded",
+      "click last short candle selects 2026-08-22 13:00 UTC+8",
+      "short condition true at close 2445.19",
+      "signals/fills toggle verified",
+      "expanded chart resize verified",
+      "console error list empty"
+    ],
+    "pine_compiled_in_tradingview": false,
+    "full_pixel_reproduction": false,
+    "original_formula_identified": false
+  }
+}

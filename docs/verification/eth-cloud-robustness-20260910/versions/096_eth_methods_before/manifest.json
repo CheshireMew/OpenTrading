@@ -1,0 +1,31 @@
+{
+  "label": "096_eth_methods_before",
+  "created_at": "2026-09-13T04:49:35.920066+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "ccdd04ba62b5e821a556d215da2d129087bbe461835c5aeda83d7e54a8d5d9e2",
+      "bytes": 24654
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/plan.json",
+      "sha256": "242e0cf486402b8299aab946325767963148920cbb4d219d0a7afd8ffdbfcfe3",
+      "bytes": 7625
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/results.json",
+      "sha256": "772b37d620446c5b2f22e12664aeb629d028e30a12d39c4d4aeda69dfdc8a033",
+      "bytes": 38559
+    },
+    {
+      "path": "scripts/zec_intrabar_methods_study.py",
+      "sha256": "ca3eb8883114f5b6600bc32134c16638fffd17e41440fb2a06ff728a164f721a",
+      "bytes": 23423
+    },
+    {
+      "path": "strategies/trend_cloud_intrabar_methods_v3.py",
+      "sha256": "0ea141561ca6d49e4a77430e3fd3cd3a751fd031ec8a98759439b2e1c7cd2cb0",
+      "bytes": 10190
+    }
+  ]
+}

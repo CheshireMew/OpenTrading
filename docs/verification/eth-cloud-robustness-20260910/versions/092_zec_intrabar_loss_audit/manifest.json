@@ -1,0 +1,36 @@
+{
+  "label": "092_zec_intrabar_loss_audit",
+  "created_at": "2026-09-13T00:53:05.234939+00:00",
+  "files": [
+    {
+      "path": "docs/verification/zec-intrabar-no-stop-20260913/loss-audit-20260913/diagnosis.json",
+      "sha256": "b4404fd6d17ef7a84d0b7fa7742ebc7ed7ccaa35dbfb241dbb65acc3e9337add",
+      "bytes": 15284
+    },
+    {
+      "path": "docs/verification/zec-intrabar-no-stop-20260913/loss-audit-20260913/loss-trades.json",
+      "sha256": "b76a867f0139b4b88500dc810f0f97d3a8586bc507a7384c2175c0c9bd317982",
+      "bytes": 2665046
+    },
+    {
+      "path": "docs/verification/zec-intrabar-no-stop-20260913/loss-audit-20260913/profit-protection-example.json",
+      "sha256": "889f837fce5df1fe830433b4f8aaecd5ad0fd6569a2781daca5953ee41b84055",
+      "bytes": 1546
+    },
+    {
+      "path": "docs/verification/zec-intrabar-no-stop-20260913/loss-audit-20260913/README.md",
+      "sha256": "5ad4c3456839979ae36b93a59e9caf10c69cc6d112940fdef1b28c85003202d3",
+      "bytes": 7021
+    },
+    {
+      "path": "docs/verification/zec-intrabar-no-stop-20260913/loss-audit-20260913/same-entry-no-stop-pairs.json",
+      "sha256": "b5895b17d02631210389cdea0ca049c37b823f64bbdf76cc639dbe9c63bb33af",
+      "bytes": 382521
+    },
+    {
+      "path": "scripts/diagnose_zec_intrabar_losses.py",
+      "sha256": "7557610b297c0ef8658ffb4b70cebfe8a575e6c63610bcc23b975bb01d1aa818",
+      "bytes": 9434
+    }
+  ]
+}

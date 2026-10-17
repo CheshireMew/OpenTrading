@@ -1,0 +1,14 @@
+{
+  "maximum_drawdown": {
+    "trades": 1374,
+    "median_preentry_width_pct": 0.34460784308759196,
+    "recorded_profit_peak_at_least_2_pct": 19.57787481804949
+  },
+  "outside_maximum_drawdown": {
+    "trades": 6529,
+    "median_preentry_width_pct": 0.49495678559642275,
+    "recorded_profit_peak_at_least_2_pct": 32.74620922040128
+  },
+  "closed_loss_share_of_account_decline_pct": 91.21593865115258,
+  "note": "仅描述已保存交易在最大回撤期间与其他时间的区别，不是经过回测验证的过滤条件。"
+}

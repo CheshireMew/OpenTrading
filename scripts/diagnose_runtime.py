@@ -4,21 +4,15 @@ import argparse
 import asyncio
 
 from app.runtime import build_app_runtime_services
-from config import settings
 
 
 async def check_external_sources() -> None:
     print("\nExternal data sources")
 
-    from app.services.indicators.crypto_gold_provider import CryptoGoldProvider
-    from app.services.indicators.macro_provider_v2 import MacroProviderV2
     from app.services.indicators.onchain_provider import OnchainProvider
     from app.services.indicators.sentiment_provider import SentimentProvider
 
     checks = [
-        ("FRED US10Y", lambda: MacroProviderV2()._fetch_fred_api("DGS10", "US10Y_CHECK") if settings.FRED_API_KEY else None),
-        ("YFinance ^TNX", lambda: MacroProviderV2()._fetch_yfinance_ticker("^TNX", "US10Y_CHECK")),
-        ("Binance PAXG", lambda: CryptoGoldProvider()._fetch_gold_price()),
         ("Mempool.space", lambda: OnchainProvider()._fetch_mempool_data()),
         ("Fear & Greed", lambda: SentimentProvider()._fetch_fear_greed_index()),
     ]

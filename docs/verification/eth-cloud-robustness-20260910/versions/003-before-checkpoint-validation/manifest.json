@@ -1,0 +1,11 @@
+{
+  "label": "003-before-checkpoint-validation",
+  "created_at": "2026-09-10T08:55:40.319283+00:00",
+  "files": [
+    {
+      "path": "scripts/cloud_strategy_versions.py",
+      "sha256": "2fb53341c30300af9618313f4d33ca4c610be27877183ab39b2e05d77e3bfa77",
+      "bytes": 1684
+    }
+  ]
+}

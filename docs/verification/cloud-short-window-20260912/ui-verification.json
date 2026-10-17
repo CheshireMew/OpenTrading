@@ -1,0 +1,14 @@
+{
+  "date": "2026-09-12",
+  "url": "http://127.0.0.1:8787/cloud-short-window.html",
+  "status": "passed",
+  "checks": [
+    "Summary tables display all four assets, early-selected methods and full-history best methods separately.",
+    "Switching to PAXG, look12w_update2w displays 51.89% full return and 1016 trades.",
+    "Switching the matrix to later_return_pct displays 85.15% for PAXG look12w_update2w.",
+    "PAXG hourly eligibility coverage displays 5.2%, 49.1%, 96.5%, 100.0% for 2,4,8,12-week windows.",
+    "Switching back to ETH look8w_update2w displays 11688.42% full return, 12168 trades, 3345 wins, 8822 losses and 1 flat trade.",
+    "Browser console returned no errors.",
+    "Visual screenshot inspected: Chinese conclusion paragraphs are readable and do not overflow the viewport."
+  ]
+}

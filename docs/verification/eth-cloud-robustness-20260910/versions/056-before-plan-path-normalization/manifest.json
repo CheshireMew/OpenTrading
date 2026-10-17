@@ -1,0 +1,11 @@
+{
+  "label": "056-before-plan-path-normalization",
+  "created_at": "2026-09-11T13:58:10.867602+00:00",
+  "files": [
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/plan.json",
+      "sha256": "320515f3d71b2d9fe5900c769e21d0bf988766e4e27f49812f3dcd9fd4ba431b",
+      "bytes": 11692
+    }
+  ]
+}

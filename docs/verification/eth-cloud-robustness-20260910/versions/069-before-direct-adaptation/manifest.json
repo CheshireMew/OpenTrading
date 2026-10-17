@@ -1,0 +1,26 @@
+{
+  "label": "069-before-direct-adaptation",
+  "created_at": "2026-09-12T08:50:18.287607+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "212dc0a791e66fc3754ef01d927ab7d29f8a9e44cae747872ca41a5459ce09b1",
+      "bytes": 16653
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/CONCLUSIONS.md",
+      "sha256": "050b07b48eb71f7a334fdb68307d791ccfb13c85302e38716349bf41258c3830",
+      "bytes": 4022
+    },
+    {
+      "path": "strategies/trend_cloud_parameters_v4.py",
+      "sha256": "518ec7480dc4e5b8fd57d6804dd74bde88103f3c4c847a51028d2d5ef309173e",
+      "bytes": 5381
+    },
+    {
+      "path": "strategies/trend_cloud_timeframe_v6.py",
+      "sha256": "9db203de4b5eaaba5137529c0cdbc5f1075dc26dc5a8c8b83dc3e6d09dc298ae",
+      "bytes": 5016
+    }
+  ]
+}

@@ -1,0 +1,319 @@
+{
+  "scope": "Three requested variants only; no parameter search. BNB adds support/resistance location gate only. SOL/BTC jointly add body confirmation and 5m protection. Existing baselines reused.",
+  "rows": [
+    {
+      "asset": "BNB",
+      "batch": "2574d0a325324462a57dbf83dd02d5b5",
+      "run": "fe04eeeaab47ba4d702d9661afebeb45",
+      "config": {
+        "data_gap_policy": "observed_bars",
+        "end": "2026-09-10T00:00:00Z",
+        "execution_timeframe": "5m",
+        "initial_cash": 10000.0,
+        "intrabar_profit_protection": true,
+        "parameters": {
+          "activation_pct": 2,
+          "center_length": 55,
+          "chase_mult": 1.5,
+          "confirmation_level": 3,
+          "direction_filter": false,
+          "entry_bar_assumption": 0,
+          "giveback_pct": 50,
+          "initial_stop_pct": 2,
+          "max_wait_bars": 2,
+          "price_tick": 0.01,
+          "stop_cap_pct": 2,
+          "stop_floor_pct": 0.5,
+          "stop_method": 0,
+          "stop_mult": 1.5,
+          "stop_reentry": false,
+          "support_gate": true,
+          "trigger_mult": 0.8,
+          "width_length": 50
+        },
+        "position_pct": 100.0,
+        "start": "2018-09-10T00:00:00Z",
+        "strategy": "trend_cloud_intrabar_support_v1",
+        "symbol": "BNB/USDT",
+        "timeframe": "15m"
+      },
+      "baseline": {
+        "return_pct": 4099.551015351587,
+        "wins": 2777,
+        "losses": 5123,
+        "win_rate": 35.13855497912185,
+        "max_drawdown_pct": 68.1863518343389,
+        "total_trades": 7903,
+        "breakeven": 3
+      },
+      "report": {
+        "ambiguous_trades": 1,
+        "average_duration_minutes": 399.2960288808664,
+        "average_return_pct": 0.08380287157466298,
+        "breakeven": 3,
+        "final_equity": 365219.63992727146,
+        "initial_cash": 10000.0,
+        "losses": 3754,
+        "max_drawdown_pct": 62.35687278530264,
+        "notes": [
+          "基于所选价格数据、不计成本的多空策略模拟",
+          "最大回撤按每根收盘权益计算",
+          "无亏损时利润因子为空；无交易时胜率为空",
+          "K 线内退出的持仓时间按所属 K 线开盘时间近似",
+          "盘中突破委托仅用前一收盘已知价位；同根入场与止损先后不明的交易已标记，并按保存的 ambiguity_policy 处理",
+          "交易信号保持原周期；匹配的细周期行情逐根成交。细周期缺失或不匹配时回退原周期，已计数。保护仅在选定周期收盘更新，下一根生效。"
+        ],
+        "payoff_ratio": 1.9305025381311924,
+        "profit": 355219.63992727146,
+        "profit_factor": 1.0593594109084328,
+        "return_pct": 3552.1963992727146,
+        "total_trades": 5817,
+        "win_rate": 35.41344335568162,
+        "wins": 2060
+      },
+      "execution_detail": {
+        "detailed_candles": 280193,
+        "fallback_candles": 7,
+        "profit_protection_update": "execution_close"
+      },
+      "baseline_source": "docs\\verification\\bnb-final-two-20260914\\results.json",
+      "baseline_source_hash": "3d5df719d066724f9ab9ebf771cf422b5a1bbdda31fcb85e925fc374e889220f",
+      "hashes": {
+        "data_hash": "9b901188a0d1711d2943b2158788e5be0029248f555c2361418c3e42dcaa0f9a",
+        "engine_code_hash": "ccdd04ba62b5e821a556d215da2d129087bbe461835c5aeda83d7e54a8d5d9e2",
+        "execution_alignment_hash": "dc2fa2c77495813fcffd04e5663a2ee0f8ca1059d746ba40a7ed75b1c3d6b8ac",
+        "execution_data_hash": "e908026480f1ef76e66d0dd4ad99257fb87da2f741fe1bcec18c7d272906f95c",
+        "result_hash": "d199de6a9d42ef9af3c0f2bb9433f1833904c5a533a4d67a37724a1cb059c6ad",
+        "strategy_hash": "91c77e389e747b1893bfbdab6a2a14d983ad0b84d0ccb1d7fe6de6b5f6e55b90"
+      },
+      "native_rows_equal": true,
+      "entry_lineage_checks": 5817,
+      "source_folder": "D:\\Code\\Heimdall\\.heimdall_runtime\\local_backtests\\fe04eeeaab47ba4d702d9661afebeb45",
+      "exits": {
+        "stop_loss": 379,
+        "profit_protection": 1585,
+        "signal": 3852,
+        "end_of_backtest": 1
+      },
+      "losing_exits": {
+        "stop_loss": 379,
+        "signal": 3374,
+        "profit_protection": 1
+      },
+      "location_gate_counts": {
+        "raw_signals": 22603,
+        "raw_signals_failing_location": 7953,
+        "armed": 6309
+      }
+    },
+    {
+      "asset": "SOL",
+      "batch": "dadb58ef0c9942a693d8c83a7d1111ab",
+      "run": "af5770399b73f7594bb37dc4a91be7d9",
+      "config": {
+        "data_gap_policy": "observed_bars",
+        "end": "2026-09-10T00:00:00Z",
+        "execution_timeframe": "5m",
+        "initial_cash": 10000.0,
+        "intrabar_profit_protection": true,
+        "parameters": {
+          "activation_pct": 2,
+          "center_length": 55,
+          "chase_mult": 2,
+          "confirmation_level": 3,
+          "direction_filter": false,
+          "entry_bar_assumption": 0,
+          "giveback_pct": 50,
+          "initial_stop_pct": 1,
+          "max_wait_bars": 2,
+          "price_tick": 0.01,
+          "stop_cap_pct": 2,
+          "stop_floor_pct": 0.5,
+          "stop_method": 0,
+          "stop_mult": 1.5,
+          "stop_reentry": false,
+          "trigger_mult": 0.4,
+          "width_length": 50
+        },
+        "position_pct": 100.0,
+        "start": "2020-09-10T00:00:00Z",
+        "strategy": "trend_cloud_intrabar_methods_v3",
+        "symbol": "SOL/USDT",
+        "timeframe": "15m"
+      },
+      "baseline": {
+        "return_pct": 56444.51300060773,
+        "wins": 3360,
+        "losses": 7315,
+        "win_rate": 31.431244153414404,
+        "max_drawdown_pct": 47.5515174849379,
+        "total_trades": 10690,
+        "breakeven": 15
+      },
+      "report": {
+        "ambiguous_trades": 127,
+        "average_duration_minutes": 189.8046912862266,
+        "average_return_pct": 0.07641400606437192,
+        "breakeven": 18,
+        "final_equity": 6285742.703245354,
+        "initial_cash": 10000.0,
+        "losses": 7009,
+        "max_drawdown_pct": 48.002218151148206,
+        "notes": [
+          "基于所选价格数据、不计成本的多空策略模拟",
+          "最大回撤按每根收盘权益计算",
+          "无亏损时利润因子为空；无交易时胜率为空",
+          "K 线内退出的持仓时间按所属 K 线开盘时间近似",
+          "盘中突破委托仅用前一收盘已知价位；同根入场与止损先后不明的交易已标记，并按保存的 ambiguity_policy 处理",
+          "交易信号保持原周期；匹配的细周期行情逐根成交。细周期缺失或不匹配时回退原周期，已计数。保护仅在选定周期收盘更新，下一根生效。"
+        ],
+        "payoff_ratio": 2.3448783811730234,
+        "profit": 6275742.703245354,
+        "profit_factor": 1.1006776821314375,
+        "return_pct": 62757.42703245354,
+        "total_trades": 10317,
+        "win_rate": 31.889115052825435,
+        "wins": 3290
+      },
+      "execution_detail": {
+        "detailed_candles": 210202,
+        "fallback_candles": 40,
+        "profit_protection_update": "execution_close"
+      },
+      "baseline_source": "docs\\verification\\alt-cloud-transfer-20260911\\results.json",
+      "baseline_source_hash": "5011a7c9b677ec9a96c41ddcbd3135d65e4f1a51dd40e6ff603bd25f267da3cb",
+      "hashes": {
+        "data_hash": "7eca91a2810b9c802233074413978f53ee6f6a6d12e3ca5f7028a2ebd9a8c1cb",
+        "engine_code_hash": "ccdd04ba62b5e821a556d215da2d129087bbe461835c5aeda83d7e54a8d5d9e2",
+        "execution_alignment_hash": "aaa2382b010aaba4924fc1eb4547541814a110e173e9e137b7959a7d8b2d94df",
+        "execution_data_hash": "318a3512eb08ff392f880fa1652057f8f61abf2fa1a5a24d23cd0f3b8763ee8c",
+        "result_hash": "3bf769a728c94909651b7ee39ca7bf188d9ac21c6a7e0c9255492be7db70bc0c",
+        "strategy_hash": "0ea141561ca6d49e4a77430e3fd3cd3a751fd031ec8a98759439b2e1c7cd2cb0"
+      },
+      "native_rows_equal": true,
+      "entry_lineage_checks": 10317,
+      "source_folder": "D:\\Code\\Heimdall\\.heimdall_runtime\\local_backtests\\af5770399b73f7594bb37dc4a91be7d9",
+      "exits": {
+        "stop_loss": 3946,
+        "profit_protection": 2885,
+        "signal": 3485,
+        "end_of_backtest": 1
+      },
+      "losing_exits": {
+        "stop_loss": 3946,
+        "signal": 3062,
+        "profit_protection": 1
+      }
+    },
+    {
+      "asset": "BTC",
+      "batch": "2535b236234547c4ab6f06dd313f6b0c",
+      "run": "4995ecee4dfced48d5a75c10aa1cf67d",
+      "config": {
+        "data_gap_policy": "observed_bars",
+        "end": "2026-09-10T00:00:00Z",
+        "execution_timeframe": "5m",
+        "initial_cash": 10000.0,
+        "intrabar_profit_protection": true,
+        "parameters": {
+          "activation_pct": 2,
+          "center_length": 55,
+          "chase_mult": 2,
+          "confirmation_level": 3,
+          "direction_filter": false,
+          "entry_bar_assumption": 0,
+          "giveback_pct": 50,
+          "initial_stop_pct": 1,
+          "max_wait_bars": 2,
+          "price_tick": 0.01,
+          "stop_cap_pct": 2,
+          "stop_floor_pct": 0.5,
+          "stop_method": 0,
+          "stop_mult": 1.5,
+          "stop_reentry": false,
+          "trigger_mult": 0.4,
+          "width_length": 31
+        },
+        "position_pct": 100.0,
+        "start": "2020-10-01T00:00:00Z",
+        "strategy": "trend_cloud_intrabar_methods_v3",
+        "symbol": "BTC/USDT",
+        "timeframe": "1h"
+      },
+      "baseline": {
+        "return_pct": 900.2193012619836,
+        "wins": 781,
+        "losses": 1706,
+        "win_rate": 31.403297145154806,
+        "max_drawdown_pct": 31.844064440011454,
+        "total_trades": 2487,
+        "breakeven": 0
+      },
+      "report": {
+        "ambiguous_trades": 7,
+        "average_duration_minutes": 743.3609874544719,
+        "average_return_pct": 0.1100950012322977,
+        "breakeven": 0,
+        "final_equity": 95596.07008688648,
+        "initial_cash": 10000.0,
+        "losses": 1680,
+        "max_drawdown_pct": 31.632959992891184,
+        "notes": [
+          "基于所选价格数据、不计成本的多空策略模拟",
+          "最大回撤按每根收盘权益计算",
+          "无亏损时利润因子为空；无交易时胜率为空",
+          "K 线内退出的持仓时间按所属 K 线开盘时间近似",
+          "盘中突破委托仅用前一收盘已知价位；同根入场与止损先后不明的交易已标记，并按保存的 ambiguity_policy 处理",
+          "交易信号保持原周期；匹配的细周期行情逐根成交。细周期缺失或不匹配时回退原周期，已计数。保护仅在选定周期收盘更新，下一根生效。"
+        ],
+        "payoff_ratio": 2.4215306071394775,
+        "profit": 85596.07008688648,
+        "profit_factor": 1.1401373275281708,
+        "return_pct": 855.9607008688648,
+        "total_trades": 2471,
+        "win_rate": 32.01133144475921,
+        "wins": 791
+      },
+      "execution_detail": {
+        "detailed_candles": 52052,
+        "fallback_candles": 8,
+        "profit_protection_update": "execution_close"
+      },
+      "baseline_source": "docs\\verification\\cloud-direct-adaptation-20260912\\results.json",
+      "baseline_source_hash": "a1e7594c99f4c1e5da087923c10018ce75ca90b0959d73c7dedcb9024e1f04db",
+      "hashes": {
+        "data_hash": "a1c2240ff0b91716edf56a2295fc4a3a6c1a6508a1d2b32115d17d5e201feb68",
+        "engine_code_hash": "ccdd04ba62b5e821a556d215da2d129087bbe461835c5aeda83d7e54a8d5d9e2",
+        "execution_alignment_hash": "952e6570ab25e6e3bc132fd283bb706892731256a3348a6806ee7a70de6f78ab",
+        "execution_data_hash": "997611bf046d329f397be217a4bac096bc7056aa602341f68b723ddf309082be",
+        "result_hash": "5d958e7b434e327133ff470bb2925f028f0e11c5dacfd87b876e277d4abfeba0",
+        "strategy_hash": "0ea141561ca6d49e4a77430e3fd3cd3a751fd031ec8a98759439b2e1c7cd2cb0"
+      },
+      "native_rows_equal": true,
+      "entry_lineage_checks": 2471,
+      "source_folder": "D:\\Code\\Heimdall\\.heimdall_runtime\\local_backtests\\4995ecee4dfced48d5a75c10aa1cf67d",
+      "exits": {
+        "profit_protection": 715,
+        "signal": 691,
+        "stop_loss": 1064,
+        "end_of_backtest": 1
+      },
+      "losing_exits": {
+        "signal": 615,
+        "stop_loss": 1064,
+        "profit_protection": 1
+      }
+    }
+  ],
+  "tests": {
+    "command": "python -m pytest test/test_intrabar_support_gate.py -q",
+    "passed": 6
+  },
+  "notes": [
+    "100% current equity compounding; no fees/slippage/leverage.",
+    "BNB changes only the signal-time location gate.",
+    "SOL/BTC jointly change confirmation and execution/protection granularity; not separate attribution.",
+    "Maximum drawdown measured at each native timeframe close.",
+    "Historical explorations, not an untouched holdout."
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "scope": "Re-run same nine variants with 5m profit protection and 5m delayed initial stop confirmation; preserve all other inputs.",
+  "period": [
+    "2020-09-10",
+    "2026-09-18"
+  ],
+  "later_period": [
+    "2024-09-18",
+    "2026-09-18"
+  ],
+  "signal_and_protection_timeframe": "15m signals; 5m protection",
+  "execution_timeframe": "5m",
+  "costs": 0,
+  "position_pct": 100,
+  "modes": {
+    "immediate": "触及即止损",
+    "next_bar_open": "第一根触及后只检查下一根开盘；收回则继续持仓，后来再次触及可以重新开始一次等待",
+    "next_bar_touch": "第一根触及后，下一根开盘在止损之外立即退出；否则下一根盘中再次触及退出；整根未触及则重置",
+    "next_bar_close": "第一根触及后只检查下一根收盘，仍在止损之外按该收盘退出；否则重置"
+  },
+  "lock_rule": "Only actual initial-stop exits freeze that signal candle high/low at close; block same-bar reentry; later close outside creates one new signal, ordinary entry confirmation and chase cap still apply. Reverse exits and profit protection remain active.",
+  "cases": 8,
+  "extra_case": "immediate 2% without lock, added by user after confirming 1% baseline",
+  "nominal_stop_warning": "Delayed exits may exceed nominal stop; next bar now means next available 5m execution bar; three pre-existing fallback buckets remain disclosed.",
+  "inference_limit": "History has already been examined. Later two years are a descriptive slice, not an untouched validation set. Do not select new parameters after viewing results.",
+  "total_cases": 9,
+  "main_cases": 8,
+  "initial_stop_pct": 1,
+  "signal_timeframe": "15m",
+  "protection_timeframe": "5m",
+  "stop_confirmation_timeframe": "5m",
+  "source_run": "ea24648f16ad39296f014bf9d96a28b1",
+  "prior_results": "docs\\verification\\eth-stop-confirmation-20260919\\results.json",
+  "range_lock_timeframe": "15m, unchanged"
+}

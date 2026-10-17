@@ -1,0 +1,1 @@
+[{"conclusion":"仅取消反向平仓：收益+61,349.61%→+7,179.05%；胜率27.39%→34.91%；交易9289→3277笔；最大回撤29.46%→36.97%。","decision":"reject","evidence":["artifact:results","case:baseline","case:no_reverse"],"limitation":"全仓复利不计费用，历史已见；5分钟并非逐笔行情。","question":"no_reverse","scope":"ETH六年15分钟，只有反向平仓开关不同。"}]

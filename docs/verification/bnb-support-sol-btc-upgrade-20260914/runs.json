@@ -1,0 +1,14 @@
+{
+  "sol": {
+    "batch": "dadb58ef0c9942a693d8c83a7d1111ab",
+    "run": "af5770399b73f7594bb37dc4a91be7d9"
+  },
+  "btc": {
+    "batch": "2535b236234547c4ab6f06dd313f6b0c",
+    "run": "4995ecee4dfced48d5a75c10aa1cf67d"
+  },
+  "bnb": {
+    "batch": "2574d0a325324462a57dbf83dd02d5b5",
+    "run": "fe04eeeaab47ba4d702d9661afebeb45"
+  }
+}

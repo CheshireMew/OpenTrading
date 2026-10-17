@@ -33,8 +33,6 @@ class AppSettings(BaseSettings):
     DEEPSEEK_BASE_URL: str = "https://api.deepseek.com"
     AI_MODEL: str = "deepseek-chat"
 
-    FRED_API_KEY: str = ""
-
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
@@ -123,16 +121,12 @@ class AppSettings(BaseSettings):
     MARKET_CRON_INTERVAL_HOURS: int = 4
     BACKGROUND_HEARTBEAT_INTERVAL_SECONDS: int = 10
     BACKGROUND_HEARTBEAT_STALE_SECONDS: int = 45
-    MARKET_INDICATOR_OVERLAP_DAYS: int = 14
     MARKET_EXPENSIVE_INDICATOR_TTL: int = 86400
 
     SENTIMENT_API_URL: str = "https://api.alternative.me/fng/"
     MEMPOOL_API_URL: str = "https://mempool.space/api/v1/mining/hashrate/3d"
     STABLECOIN_CHART_API_URL: str = "https://stablecoins.llama.fi/stablecoincharts/all"
     STABLECOIN_LIST_API_URL: str = "https://stablecoins.llama.fi/stablecoins?includePrices=false"
-    FRED_API_URL: str = "https://api.stlouisfed.org/fred/series/observations"
-    FRED_REQUEST_TIMEOUT: int = 15
-    YFINANCE_REQUEST_DELAY: int = 2
     BINANCE_PUBLIC_BASE_URL: str = "https://api.binance.com"
     BINANCE_FUTURES_USDM_BASE_URL: str = "https://fapi.binance.com"
     BINANCE_WEB3_BASE_URL: str = "https://web3.binance.com"
@@ -180,7 +174,6 @@ class AppSettings(BaseSettings):
     TEMP_DIR: Path = Field(default_factory=lambda: _default_runtime_root() / "tmp")
     BACKGROUND_RUNTIME_LOCK_PATH: Path = Field(default_factory=lambda: _default_runtime_root() / "runtime" / "background.lock")
     LLM_CONFIG_PATH: Path = Field(default_factory=lambda: _default_runtime_root() / "config" / "llm_provider_config.json")
-    FRED_CONFIG_PATH: Path = Field(default_factory=lambda: _default_runtime_root() / "config" / "fred_api_config.json")
     BLOCKING_DATABASE_MAX_WORKERS: int = 8
     BLOCKING_COMPUTE_MAX_WORKERS: int = 2
     BLOCKING_EXTERNAL_IO_MAX_WORKERS: int = 8

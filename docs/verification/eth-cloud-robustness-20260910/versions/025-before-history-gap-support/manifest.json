@@ -1,0 +1,26 @@
+{
+  "label": "025-before-history-gap-support",
+  "created_at": "2026-09-10T16:15:43.050649+00:00",
+  "files": [
+    {
+      "path": "app/contracts/local_backtest.py",
+      "sha256": "3e7c034fd1bc3ac1c949f823069390a62e1c872cf244da269d8a5ccf534ef5db",
+      "bytes": 2249
+    },
+    {
+      "path": "frontend/src/views/research/LocalBacktests.vue",
+      "sha256": "2069c467fc392ef8b73470673fd9606bef6647cbab3260d4ea0e82caa205980f",
+      "bytes": 30749
+    },
+    {
+      "path": "scripts/local_backtest_cli.py",
+      "sha256": "5833596016d309a5abdcb626409f490b36bffe0fcbcf0d304a25f222a0c080dc",
+      "bytes": 5415
+    },
+    {
+      "path": "scripts/local_backtest_worker.py",
+      "sha256": "965a335c23bb06d91322196fc011d44ca72a0d2cd74d01a5e938b97ce427602f",
+      "bytes": 4661
+    }
+  ]
+}

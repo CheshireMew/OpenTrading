@@ -1,0 +1,81 @@
+{
+  "label": "073-completed-entry-cause-audit",
+  "created_at": "2026-09-12T09:31:39.366571+00:00",
+  "files": [
+    {
+      "path": "app/domain/cloud_entry_path_audit.py",
+      "sha256": "479f15e855f385981d7ee7c846afffcd7d196eb5ba50c196404f1fafb5b44920",
+      "bytes": 3989
+    },
+    {
+      "path": "docs/verification/cloud-entry-cause-20260912/cloud-entry-cause.html",
+      "sha256": "c1f151ea4a907bf118c7a10a3061d555135a0b08fcde45e8f67b690543f1dab5",
+      "bytes": 278793
+    },
+    {
+      "path": "docs/verification/cloud-entry-cause-20260912/CONCLUSIONS.md",
+      "sha256": "b03904494d5c07bb03de1e37b18e26f9ae259d97b0772269960de5ae5958e9ad",
+      "bytes": 4256
+    },
+    {
+      "path": "docs/verification/cloud-entry-cause-20260912/feature-lookback-verification.json",
+      "sha256": "64597e4c9c1a6e20590b9f6d0e77fb395d6f9d2df919dbf400e50161e0699caa",
+      "bytes": 379
+    },
+    {
+      "path": "docs/verification/cloud-entry-cause-20260912/plan.json",
+      "sha256": "a24bd01af310a2ad1df4a3cafbfec3f2d7ba4bf0a1ed22a28b31d8608f70d17c",
+      "bytes": 5327
+    },
+    {
+      "path": "docs/verification/cloud-entry-cause-20260912/presentation.json",
+      "sha256": "1bb1f6c08b131f072f058cd675fb5f003ce165dacbe878520325067892ce101b",
+      "bytes": 263883
+    },
+    {
+      "path": "docs/verification/cloud-entry-cause-20260912/results.json",
+      "sha256": "5c65e0875663448a287836751b76444d01c3360174c060a1b1329341a7cb365a",
+      "bytes": 262856
+    },
+    {
+      "path": "docs/verification/cloud-entry-cause-20260912/RESULTS.md",
+      "sha256": "6d29484ae04953db0d57a4890818d497a4980fb5eed159d195e15ed628eb5868",
+      "bytes": 3022
+    },
+    {
+      "path": "docs/verification/cloud-entry-cause-20260912/RUNBOOK.md",
+      "sha256": "47ea042140db09edb4bcea83881708c46284f5c41dfc09faef87163f060d8123",
+      "bytes": 2565
+    },
+    {
+      "path": "docs/verification/cloud-entry-cause-20260912/UI-CHECK.md",
+      "sha256": "e920af8233c3ebdd57e856ab4c0d2ff350b8fd3f0266d20aefb10739c708a14c",
+      "bytes": 612
+    },
+    {
+      "path": "docs/verification/cloud-entry-cause-20260912/verification.json",
+      "sha256": "ccee5a93cadc51b854bdb92fec6a5ce8c80ee09a177923bb82aa36a657816403",
+      "bytes": 2248
+    },
+    {
+      "path": "scripts/cloud_entry_cause_audit.py",
+      "sha256": "7ce286870be3f9f3ed14e3bee81650a85542bcbb94681263e7677ad7373e5c5b",
+      "bytes": 13909
+    },
+    {
+      "path": "scripts/finalize_cloud_entry_cause.py",
+      "sha256": "ebb72afeb3fa919fb9a11ddbab5f23a65df247a581900d805c29f5e7a82fd00d",
+      "bytes": 2425
+    },
+    {
+      "path": "scripts/report_cloud_entry_cause.py",
+      "sha256": "1dd54c7896c870a67d7490ea69ee34be8531628e908711c3e69abfa9c92ad748",
+      "bytes": 17027
+    },
+    {
+      "path": "test/test_cloud_entry_path_audit.py",
+      "sha256": "ed842d9bafa749ec07400de4624d03085cd6a0e194f9c629287b6e1a787d6c6b",
+      "bytes": 2131
+    }
+  ]
+}

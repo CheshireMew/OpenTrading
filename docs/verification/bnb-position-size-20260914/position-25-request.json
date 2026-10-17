@@ -1,0 +1,37 @@
+{
+  "title": "BNB原版：每笔投入当时资金的25%",
+  "base": {
+    "data_gap_policy": "observed_bars",
+    "end": "2026-09-10T00:00:00Z",
+    "execution_timeframe": "5m",
+    "initial_cash": 10000.0,
+    "intrabar_profit_protection": true,
+    "parameters": {
+      "activation_pct": 2,
+      "center_length": 55,
+      "chase_mult": 1.5,
+      "confirmation_level": 3,
+      "direction_filter": false,
+      "entry_bar_assumption": 0,
+      "giveback_pct": 50,
+      "initial_stop_pct": 2,
+      "max_wait_bars": 2,
+      "price_tick": 0.01,
+      "stop_cap_pct": 2,
+      "stop_floor_pct": 0.5,
+      "stop_method": 0,
+      "stop_mult": 1.5,
+      "stop_reentry": false,
+      "trigger_mult": 0.8,
+      "width_length": 50
+    },
+    "position_pct": 25,
+    "start": "2018-09-10T00:00:00Z",
+    "strategy": "trend_cloud_intrabar_methods_v3",
+    "symbol": "BNB/USDT",
+    "timeframe": "15m"
+  },
+  "axes": {},
+  "max_runs": 1,
+  "source_run": "657b2b8086588a254442b82b128d34df"
+}

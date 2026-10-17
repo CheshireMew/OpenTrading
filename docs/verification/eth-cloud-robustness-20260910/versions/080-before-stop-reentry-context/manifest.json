@@ -1,0 +1,16 @@
+{
+  "label": "080-before-stop-reentry-context",
+  "created_at": "2026-09-12T14:35:40.097109+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "212dc0a791e66fc3754ef01d927ab7d29f8a9e44cae747872ca41a5459ce09b1",
+      "bytes": 16653
+    },
+    {
+      "path": "strategies/trend_cloud_parameters_v4.py",
+      "sha256": "518ec7480dc4e5b8fd57d6804dd74bde88103f3c4c847a51028d2d5ef309173e",
+      "bytes": 5381
+    }
+  ]
+}

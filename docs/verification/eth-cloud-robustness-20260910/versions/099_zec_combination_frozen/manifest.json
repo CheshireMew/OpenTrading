@@ -1,0 +1,46 @@
+{
+  "label": "099_zec_combination_frozen",
+  "created_at": "2026-09-13T05:07:16.065360+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "ccdd04ba62b5e821a556d215da2d129087bbe461835c5aeda83d7e54a8d5d9e2",
+      "bytes": 24654
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/zec/plan.json",
+      "sha256": "038b5a41fad0fbbbce97712937cf3d3c30f2d5b55f16f8aa901055540fa1d29b",
+      "bytes": 4134
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/zec/RULES.md",
+      "sha256": "0209e9cfc40b3ffa55d39a602ce9011904be1132ca59192ad68e302a02895d0e",
+      "bytes": 1274
+    },
+    {
+      "path": "docs/verification/intrabar-combined-20260913/zec/study.json",
+      "sha256": "88dedb1b6194e1984d80c1e9fb6dfab1c384cb603a4f304165bdceec61e6413e",
+      "bytes": 836
+    },
+    {
+      "path": "scripts/intrabar_combined_study.py",
+      "sha256": "69b467d44665962923ba98be94071908f0023de1b22b6d598ed4c23855e42739",
+      "bytes": 10259
+    },
+    {
+      "path": "scripts/intrabar_requested_followups.py",
+      "sha256": "7b03d77dc5680ad67f10286c325cd6e2ff4f75bf0a9a0d0d29fb685faf82256d",
+      "bytes": 15593
+    },
+    {
+      "path": "scripts/zec_intrabar_methods_study.py",
+      "sha256": "fba8ddda8b75792357813214362925f0f6cb395dfa735e92cea43951f2471003",
+      "bytes": 23452
+    },
+    {
+      "path": "strategies/trend_cloud_intrabar_methods_v3.py",
+      "sha256": "0ea141561ca6d49e4a77430e3fd3cd3a751fd031ec8a98759439b2e1c7cd2cb0",
+      "bytes": 10190
+    }
+  ]
+}

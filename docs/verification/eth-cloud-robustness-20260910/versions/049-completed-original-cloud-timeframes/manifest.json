@@ -1,0 +1,116 @@
+{
+  "label": "049-completed-original-cloud-timeframes",
+  "created_at": "2026-09-11T13:14:45.268237+00:00",
+  "files": [
+    {
+      "path": "docs/verification/cloud-timeframe-20260911/check_cloud_timeframe_data-before-zero-volume-refinement.py",
+      "sha256": "4c7f096aaef1696ea778b16c313644cf72be70d4d22b1c3038de1b392e4a9853",
+      "bytes": 4029
+    },
+    {
+      "path": "docs/verification/cloud-timeframe-20260911/cloud-timeframes.html",
+      "sha256": "2f51ec2c6dea19cc764f3de744a1963508bc08e432f23790c1c6285ff625fe3c",
+      "bytes": 2183690
+    },
+    {
+      "path": "docs/verification/cloud-timeframe-20260911/data-before-cache-correction.json",
+      "sha256": "7177db0a98c11cbb4efd52db76b8f6275920a2a0754e8370f5b6e8c5b49af35c",
+      "bytes": 15500
+    },
+    {
+      "path": "docs/verification/cloud-timeframe-20260911/data-verification.json",
+      "sha256": "fa7223d01732175a846fb9c5b0ed129df69a40a946335db35befa12034c4efab",
+      "bytes": 295
+    },
+    {
+      "path": "docs/verification/cloud-timeframe-20260911/data.json",
+      "sha256": "90163ae01b7a41f6b7297a6e0825d526f61839f9d025ff7498b408b422a126c9",
+      "bytes": 15699
+    },
+    {
+      "path": "docs/verification/cloud-timeframe-20260911/details.json",
+      "sha256": "01f36175bb64dc0b2f9b06baeb29f6664b9ff1ec67b4c92588a0232ddcbccf5e",
+      "bytes": 1523948
+    },
+    {
+      "path": "docs/verification/cloud-timeframe-20260911/native-timeframe-live-recheck.json",
+      "sha256": "64201a63105e0504f50b729c3827db0f448b4baa448035c9bb033a2bf41c1017",
+      "bytes": 702
+    },
+    {
+      "path": "docs/verification/cloud-timeframe-20260911/plan.json",
+      "sha256": "9c947ef645f26aa2b2d6f1a1b4aebb061548900ca4d5bc3b05ba64572d9120d7",
+      "bytes": 9390
+    },
+    {
+      "path": "docs/verification/cloud-timeframe-20260911/preexisting-hourly-cache-tail-check.json",
+      "sha256": "1b7c68993ed68e9cc6726223ccd0b3acf57564c490d73868c30d3af65db4fffe",
+      "bytes": 175
+    },
+    {
+      "path": "docs/verification/cloud-timeframe-20260911/report-data.json",
+      "sha256": "435a4b500909987bc63613269be1d6d98b0bc944cbd1c0505d14d97f155fde66",
+      "bytes": 2044887
+    },
+    {
+      "path": "docs/verification/cloud-timeframe-20260911/REPORT.md",
+      "sha256": "dee264e483c7d9a9328c5b8dc105cd801640d25dd8f07f44cab496ee8545298d",
+      "bytes": 14842
+    },
+    {
+      "path": "docs/verification/cloud-timeframe-20260911/results.json",
+      "sha256": "5abf3ea2a28a5ad04a89b56593a2f633aea1362be2b2865b888a5143ac951dd5",
+      "bytes": 520861
+    },
+    {
+      "path": "docs/verification/cloud-timeframe-20260911/test-receipt.json",
+      "sha256": "c104daa2f21202d4344c8bbdd093d3159ece444e661cf5b132118bcbd9601b65",
+      "bytes": 188
+    },
+    {
+      "path": "docs/verification/cloud-timeframe-20260911/ui-verification.json",
+      "sha256": "41c56658e9c80f0c15ec18978a51fa12ddf8676383ca3fa171ba89e04d48eb40",
+      "bytes": 337
+    },
+    {
+      "path": "docs/verification/cloud-timeframe-20260911/verification.json",
+      "sha256": "f1cdfae34d6d8e176880d4e6090abfdc79064b99877a0fbaedb21664dfd8375e",
+      "bytes": 19817
+    },
+    {
+      "path": "scripts/check_cloud_timeframe_data.py",
+      "sha256": "4ec799af00eab5aa86871f77fbff709d4fd712b38efe2305912ae1ca46526371",
+      "bytes": 4286
+    },
+    {
+      "path": "scripts/cloud_timeframe_study.py",
+      "sha256": "432b69cd32821ab80bddbb449cfcc0f4cf0a17ce40610f5e90c7e9d6e169e5ac",
+      "bytes": 17723
+    },
+    {
+      "path": "scripts/report_cloud_timeframe.py",
+      "sha256": "0367a4d2642c3b2c24e69ba4a6341fe6c673b43dea47f50a85c8d96a5b518bad",
+      "bytes": 21086
+    },
+    {
+      "path": "strategies/trend_cloud_atr_confirm_v5.py",
+      "sha256": "e8c0b18de96d22e8fdb528fdc920db036f7bc7a8d78c25aaa05ffec691e87174",
+      "bytes": 4630
+    },
+    {
+      "path": "strategies/trend_cloud_parameters_v4.py",
+      "sha256": "518ec7480dc4e5b8fd57d6804dd74bde88103f3c4c847a51028d2d5ef309173e",
+      "bytes": 5381
+    },
+    {
+      "path": "strategies/trend_cloud_timeframe_v6.py",
+      "sha256": "9db203de4b5eaaba5137529c0cdbc5f1075dc26dc5a8c8b83dc3e6d09dc298ae",
+      "bytes": 5016
+    },
+    {
+      "path": "test/test_cloud_timeframe.py",
+      "sha256": "aa63d94ab5e9d1d27096ab205c898859a053247b25c54e8fde075f6f2adeaf20",
+      "bytes": 3047
+    }
+  ]
+}

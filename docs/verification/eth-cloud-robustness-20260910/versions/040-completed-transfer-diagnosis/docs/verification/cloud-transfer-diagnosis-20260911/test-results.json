@@ -1,0 +1,13 @@
+{
+  "checked_at": "2026-09-11T08:19:06.192238+00:00",
+  "command": "venv/Scripts/python.exe -m pytest test/test_cloud_trade_attribution.py -q",
+  "passed": 6,
+  "duration_seconds": 2.24,
+  "tests_cover": [
+    "calendar mark-to-market boundary attribution",
+    "compound side reconciliation",
+    "no entry-feature lookahead",
+    "volume denominator",
+    "direction-only gate preserves opposite exit and allowed intent"
+  ]
+}

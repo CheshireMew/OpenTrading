@@ -1,0 +1,11 @@
+{
+  "center_length": 55,
+  "width_length": 31,
+  "trigger_mult": 0.4,
+  "chase_mult": 2.0,
+  "activation_pct": 2.0,
+  "giveback_pct": 50.0,
+  "initial_stop_pct": 1.0,
+  "initial_stop_width": 0,
+  "record_indicators": true
+}

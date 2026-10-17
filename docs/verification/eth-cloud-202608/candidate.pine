@@ -1,0 +1,36 @@
+//@version=6
+indicator("ETH 趋势云带 · 截图拟合候选（原公式未确认）", overlay=true, max_labels_count=500)
+
+// Reconstructed from one screenshot. Signal locations were checked with Heimdall
+// on Binance ETH/USDT 15m, 2026-08-19 08:15 through 2026-08-22 09:00 UTC.
+// This is not the original author's code. Other parameter sets also fit.
+// No timestamp rules, future data, negative offsets or historical relabeling.
+emaLength = input.int(31, "EMA 长度", minval=2)
+atrLength = input.int(14, "ATR 长度", minval=2)
+source = input.source(hlc3, "均线价格")
+cloudMult = input.float(0.45, "可见云带 ATR 系数", minval=0.01, step=0.01)
+triggerMult = input.float(0.99, "信号门槛 ATR 系数", minval=0.0, step=0.01)
+showTriggers = input.bool(false, "显示信号门槛")
+
+base = ta.ema(source, emaLength)
+atr = ta.atr(atrLength)
+cloudUpper = base + cloudMult * atr
+cloudLower = base - cloudMult * atr
+triggerUpper = base + triggerMult * atr
+triggerLower = base - triggerMult * atr
+up = close > base
+cloudColor = up ? color.new(#4caf50, 60) : close < base ? color.new(#f23645, 65) : color.new(color.gray, 65)
+upperPlot = plot(cloudUpper, "云带上沿", color=na)
+lowerPlot = plot(cloudLower, "云带下沿", color=na)
+fill(upperPlot, lowerPlot, color=cloudColor)
+plot(showTriggers ? triggerUpper : na, "做多门槛", color=color.new(color.green, 40))
+plot(showTriggers ? triggerLower : na, "做空门槛", color=color.new(color.red, 40))
+
+crossUp = ta.crossover(close, triggerUpper)
+crossDown = ta.crossunder(close, triggerLower)
+longSignal = barstate.isconfirmed and crossUp
+shortSignal = barstate.isconfirmed and crossDown
+plotshape(longSignal, title="做多", location=location.belowbar, style=shape.labelup, color=color.new(#4caf50, 48), text="做多", textcolor=#2962ff, size=size.small)
+plotshape(shortSignal, title="做空", location=location.abovebar, style=shape.labeldown, color=color.new(#f23645, 48), text="做空", textcolor=#2962ff, size=size.small)
+alertcondition(longSignal, title="做多信号", message="截图拟合候选：{{ticker}} 收盘上穿门槛")
+alertcondition(shortSignal, title="做空信号", message="截图拟合候选：{{ticker}} 收盘下穿门槛")

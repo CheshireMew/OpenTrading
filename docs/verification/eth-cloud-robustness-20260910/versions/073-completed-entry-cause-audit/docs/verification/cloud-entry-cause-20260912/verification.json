@@ -1,0 +1,56 @@
+{
+  "status": "completed",
+  "checked_at": "2026-09-12T09:31:39.329571+00:00",
+  "original_trades": 31866,
+  "new_strategy_backtests": 0,
+  "reused_forward_values_matched": 63709,
+  "matched_hashes": 15,
+  "core_sources": {
+    "scripts/cloud_entry_cause_audit.py": "7ce286870be3f9f3ed14e3bee81650a85542bcbb94681263e7677ad7373e5c5b",
+    "app/domain/cloud_entry_path_audit.py": "479f15e855f385981d7ee7c846afffcd7d196eb5ba50c196404f1fafb5b44920",
+    "test/test_cloud_entry_path_audit.py": "ed842d9bafa749ec07400de4624d03085cd6a0e194f9c629287b6e1a787d6c6b"
+  },
+  "targeted_tests_passed": 8,
+  "category_counts_sum_to_valid_samples": true,
+  "public_html_and_data_match_saved_report": true,
+  "javascript_syntax": "node --check passed",
+  "ui": {
+    "url": "http://127.0.0.1:8787/cloud-entry-cause.html",
+    "assets_checked": [
+      "paxg",
+      "zec",
+      "eth"
+    ],
+    "controls_checked": [
+      "asset",
+      "horizon",
+      "scale",
+      "period",
+      "example",
+      "year-details"
+    ],
+    "observed_checks": [
+      "PAXG full 4h: 8624 valid losses, 8602 no target",
+      "ZEC later 1h ATR: 2720 valid losses, 2587 no target",
+      "ETH full 4h: 6813 valid losses",
+      "ZEC 2025-01-03 long example: entry58.26 exit57.93, -0.57%"
+    ],
+    "browser_console_errors": [],
+    "visual_check": "Viewport table and real candlestick example inspected; full-page stitching has repeated screenshot bands, DOM sections are single."
+  },
+  "decision": "Stop parameter rescue of original15m PAXG/ZEC within this research line; no three predeclared pre-entry conditions passed. Earlier versions retained.",
+  "records": {
+    "paxg": {
+      "path": ".heimdall_runtime/cloud-entry-cause-20260912/paxg-trades.json.gz",
+      "hash": "b74df5486cfbf373b342391acd990d8ae3aabf95063e8ee8ded0d1b7456340f6"
+    },
+    "zec": {
+      "path": ".heimdall_runtime/cloud-entry-cause-20260912/zec-trades.json.gz",
+      "hash": "369296a948beff600538cb9a19e5d15942899c2cfc4f40fde1e37dcc9fb80c34"
+    },
+    "eth": {
+      "path": ".heimdall_runtime/cloud-entry-cause-20260912/eth-trades.json.gz",
+      "hash": "cc6cb1cfd3bd98d25135833e910a2576440b12bbf2d36bf37f3a056a343b1d69"
+    }
+  }
+}

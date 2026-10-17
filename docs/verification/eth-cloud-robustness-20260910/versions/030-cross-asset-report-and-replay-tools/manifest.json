@@ -1,0 +1,36 @@
+{
+  "label": "030-cross-asset-report-and-replay-tools",
+  "created_at": "2026-09-10T21:35:23.091316+00:00",
+  "files": [
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/btc-gap-recheck.json",
+      "sha256": "d77bc69ab3fe866137bcb352c26f7100eb833a8294015b68bf2172989b7a43d1",
+      "bytes": 1314
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/data.json",
+      "sha256": "80761c860a57ed250a78c59953393519899c5b3c5dc39999efc6e78e7f25d973",
+      "bytes": 2720
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/test-results.json",
+      "sha256": "d0b18868f71f3a82320d09a644c282d99b749dfe78d7187ac0376d4418da6e69",
+      "bytes": 279
+    },
+    {
+      "path": "scripts/audit_cloud_cross_asset_study.py",
+      "sha256": "b2b43eb048ed7a437a5594eb2588eda658aabde71f9a088b9e33a481c6ae02db",
+      "bytes": 4797
+    },
+    {
+      "path": "scripts/publish_cloud_cross_asset_study.py",
+      "sha256": "5a8d8b99ec6b97013a1f5cc9a321da77c05adf33347083fb09540a8777c1cea7",
+      "bytes": 3565
+    },
+    {
+      "path": "scripts/render_cloud_cross_asset_study.py",
+      "sha256": "8adc28b30ba195bdc7ca939b26a4c163fa9ba35024219b62ef7ce396de11c177",
+      "bytes": 19219
+    }
+  ]
+}

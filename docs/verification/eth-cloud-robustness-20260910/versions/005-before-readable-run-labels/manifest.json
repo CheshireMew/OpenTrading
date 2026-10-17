@@ -1,0 +1,11 @@
+{
+  "label": "005-before-readable-run-labels",
+  "created_at": "2026-09-10T08:58:53.957877+00:00",
+  "files": [
+    {
+      "path": "frontend/src/views/research/LocalBacktests.vue",
+      "sha256": "e6935011991ce865d93f3dd54a456c8b24e6f67f6e37e40e509a58a2e9cafc22",
+      "bytes": 27163
+    }
+  ]
+}

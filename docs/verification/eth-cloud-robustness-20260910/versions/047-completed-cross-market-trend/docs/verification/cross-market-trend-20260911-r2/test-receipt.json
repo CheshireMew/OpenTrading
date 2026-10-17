@@ -1,0 +1,1 @@
+{"command":"venv/Scripts/python.exe -m pytest test/test_cross_market_trend.py test/test_cloud_atr_confirmation.py test/test_local_backtest_engine.py -q","passed":60,"failed":0,"seconds":21.65,"platform":"Windows","created_at":"2026-09-11T09:41:58.787700+00:00"}

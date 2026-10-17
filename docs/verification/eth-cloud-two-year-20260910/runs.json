@@ -1,0 +1,19 @@
+{
+  "plan_hash": "82b809ca038c05995574d1b88abd6e951db0271b6257b3baa1f7a057566c25f0",
+  "runs": {
+    "original_05": "4f4ca210a6ce4495b615150ce2c22331",
+    "original_15": "96d5ca38ced34dab8bf083619828199d",
+    "ema31_atr": "168ff5358c5247f58c683348a171258e",
+    "ema31_range": "72c515519c354a09a66299253d86624d",
+    "ema30_hlc3": "7acd24eee3b34f519d94d88416580531",
+    "ema30_hl2": "7e2f95dfd3524cc490a0518d943af72b",
+    "ema29_close": "f584087fa1e243e092f9b94a3ad3e002",
+    "high_low_ema": "5557507494a441d8a0f70088e305a29f",
+    "wma41_atr": "961b9fb2de4a492ab6f973e0b7ec6735",
+    "sma28_atr": "c4dd754c472e4ff69fbe3e1b46052bfd",
+    "dual_ema": "27d1acfc154442b6b02dc32188d60b92",
+    "ema31_cross": "b693286f5a4441889b849bb3fbdf907c",
+    "buy_hold": "ebc3bed9bb7f4f2eabb52d97c1882e66",
+    "cash": "b1c54d93dd5148278dec940d6f46905f"
+  }
+}

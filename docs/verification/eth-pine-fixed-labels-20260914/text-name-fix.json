@@ -1,0 +1,11 @@
+{
+  "error": "TradingView screenshot: text cannot be used as a variable or function name at 43:12",
+  "fix": "Rename Mark.text to Mark.actionText and all five field references; title v6.1; no trading or drawing behavior changes",
+  "original_retained": "strategies\\pine\\eth_ema55_confirmed_manual_v6.pine",
+  "fixed_file": "strategies\\pine\\eth_ema55_confirmed_manual_v6_1.pine",
+  "source_hash": "ce4c51f64e1b2aa59bb9b351247483a2337d8ec5a5ed898885edbc4ec68129fe",
+  "fixed_hash": "869b90096505cb161551c761eb5407b3fb82e5ab6d7d286970e879ec437e2695",
+  "all_references_replaced": true,
+  "only_rename_and_version_change": true,
+  "tradingview_compilation": "not run"
+}

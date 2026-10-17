@@ -1,0 +1,26 @@
+{
+  "label": "014-frozen-entry-only-study",
+  "created_at": "2026-09-10T13:25:10.989928+00:00",
+  "files": [
+    {
+      "path": "docs/verification/eth-cloud-entry-20260910/plan.json",
+      "sha256": "2722fc6e00d6ad84453c6f13b057b41a7ca84f6267413a3ad419c2473263cced",
+      "bytes": 4780
+    },
+    {
+      "path": "scripts/cloud_entry_study.py",
+      "sha256": "70a9c6b6c5c11f8e193935e913b5e7e5820bac6a44117bdfbc3ce104a29c3906",
+      "bytes": 13943
+    },
+    {
+      "path": "strategies/trend_cloud_entry_v2.py",
+      "sha256": "f6e03ad6b3e688f5cc2861788d658319ac592e3b47d30905d4c8e780e92c1e0e",
+      "bytes": 6284
+    },
+    {
+      "path": "test/test_cloud_entry.py",
+      "sha256": "dd631dd4724c949be4be455c87bab59858bea280ca3cb202787c47b12ca1f34e",
+      "bytes": 3312
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "label": "108_eth_no_reverse_frozen",
+  "created_at": "2026-09-13T10:03:39.952228+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "ccdd04ba62b5e821a556d215da2d129087bbe461835c5aeda83d7e54a8d5d9e2",
+      "bytes": 24654
+    },
+    {
+      "path": "docs/verification/eth-no-reverse-20260913/checks-reused.json",
+      "sha256": "97d6d7511793f984ce97a06f7b58644502606c32124dcf73291e925c62391364",
+      "bytes": 683
+    },
+    {
+      "path": "docs/verification/eth-no-reverse-20260913/plan.json",
+      "sha256": "f23e0663f447e06ffcebebc1278d0e11b05e729008d55be4d94cfa462764124b",
+      "bytes": 2226
+    },
+    {
+      "path": "docs/verification/eth-no-reverse-20260913/RULES.md",
+      "sha256": "ccd3c02d15c09aae1beca0e89c00aa96365063c0339bb76e83fa5bf5864ccc23",
+      "bytes": 1061
+    },
+    {
+      "path": "docs/verification/eth-no-reverse-20260913/study.json",
+      "sha256": "c61a5764715cc5678ad46d39ec2676a5698076dfc9cb907e78d09bf5b8259f53",
+      "bytes": 626
+    },
+    {
+      "path": "scripts/eth_no_reverse_study.py",
+      "sha256": "b77b35647b2e0d35cdf3d04d2c36c47c794b4d69fa97f79401090cb4ddf392b4",
+      "bytes": 9917
+    },
+    {
+      "path": "strategies/trend_cloud_intrabar_exit_v4.py",
+      "sha256": "7988f9e0d2aaf5f94bcb6536dbab2b419b81fdf5d7dc54669e0ab79fae20987d",
+      "bytes": 10428
+    },
+    {
+      "path": "strategies/trend_cloud_intrabar_methods_v3.py",
+      "sha256": "0ea141561ca6d49e4a77430e3fd3cd3a751fd031ec8a98759439b2e1c7cd2cb0",
+      "bytes": 10190
+    },
+    {
+      "path": "test/test_intrabar_reverse_exit.py",
+      "sha256": "6e5865eee91e2a702a69bb723ab0665db289e29ed4073643b46e851958b75866",
+      "bytes": 2477
+    }
+  ]
+}

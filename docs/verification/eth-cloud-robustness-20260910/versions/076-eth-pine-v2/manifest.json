@@ -1,0 +1,41 @@
+{
+  "label": "076-eth-pine-v2",
+  "created_at": "2026-09-12T14:10:29.963088+00:00",
+  "files": [
+    {
+      "path": "docs/verification/eth-pine-sept11-20260912/case-result.json",
+      "sha256": "ccb24ab9418e1939c2c3e44918d1fb1a794e8d2aeab0ee579d0cf5da9a3f8ebb",
+      "bytes": 4627
+    },
+    {
+      "path": "docs/verification/eth-pine-sept11-20260912/display-change-verification.json",
+      "sha256": "36ce5b4b8f74c2b94dcdf496e5b2fdd2a251ff263428b63fcff5118989f3ad24",
+      "bytes": 696
+    },
+    {
+      "path": "docs/verification/eth-pine-sept11-20260912/original-parameters.json",
+      "sha256": "c4300e0e4b9ade0ee78067ad566a32bc627000fbd1c497658fc737e92080f2eb",
+      "bytes": 233
+    },
+    {
+      "path": "strategies/pine/eth_ema55_six_year_v1.md",
+      "sha256": "9cdcdef9fbb3574e1e5648617c0330e1c87f108d9eab920d1d3185dd44148f82",
+      "bytes": 4226
+    },
+    {
+      "path": "strategies/pine/eth_ema55_six_year_v1.pine",
+      "sha256": "c0578ca1e9767236753f052bced1425e065d2898fdc178af6436cb4238a85b68",
+      "bytes": 9647
+    },
+    {
+      "path": "strategies/pine/eth_ema55_six_year_v2.md",
+      "sha256": "a3783eacf5edb833d114fc48d7e6785c6128d1b3b1cd8f4aa9489777a45e40e8",
+      "bytes": 3164
+    },
+    {
+      "path": "strategies/pine/eth_ema55_six_year_v2.pine",
+      "sha256": "a9259187611347ce5c5e296c0fc5c39ee8f83ec88c1429fdfafda8b1a1bf6478",
+      "bytes": 9885
+    }
+  ]
+}

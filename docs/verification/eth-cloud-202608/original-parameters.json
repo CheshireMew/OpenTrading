@@ -1,0 +1,10 @@
+{
+  "mode": "original",
+  "source": "close",
+  "ema_length": 34,
+  "atr_length": 14,
+  "cloud_mult": 0.5,
+  "rsi_length": 14,
+  "volume_mult": 1.8,
+  "cooldown": 10
+}

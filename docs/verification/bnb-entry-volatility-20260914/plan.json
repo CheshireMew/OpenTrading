@@ -1,0 +1,20 @@
+{
+  "baseline_run": "657b2b8086588a254442b82b128d34df",
+  "hypothesis": "入场前波动不足，是否稳定对应负收益；只在有依据时检验低波动不开新仓",
+  "feature": "100 * EMA(high-low,50) / close；使用挂出实际成交委托前已收盘的15分钟K线，禁止使用入场K线的高低价",
+  "candidate_cutoff_pct": 0.4,
+  "cutoff_origin": "原亏损归因已使用的0.15%和0.4%档位；本轮只考虑0.4%一个过滤门槛，0.15%仅描述，不搜索最优门槛",
+  "development": "2018-09-10至2023-01-01 UTC，选择条件只使用在分界前已经平仓的交易",
+  "development_full_years": [2019, 2020, 2021, 2022],
+  "later_check": "2023-01-01至2026-09-10 UTC；此前历史已看过，只能称历史复核",
+  "gate_to_run_one_comparison": {
+    "minimum_trades_in_each_group_each_full_year": 100,
+    "minimum_full_years_low_group_worse_mean_log_return": 3,
+    "pooled_development_low_group": "每笔等本金收益合计及对数收益合计均小于0",
+    "pooled_development_high_group": "每笔等本金收益合计及对数收益合计均大于0"
+  },
+  "if_supported": "只跑一个15分钟原版加振幅低于0.4%不开新仓的对照，通过项目现有批测入口；反向退出、2%固定止损和5分钟保护更新均不变；只限制新开仓，不推迟已有仓位退出；待确认单的允许状态只在15分钟收盘更新，不延长原等待期。",
+  "if_not_supported": "停止该过滤方向，不改门槛、不补搜指标、不回测未经支持的过滤策略；明确列出反证",
+  "attribution": "按相同本金统计被过滤组的赚钱、亏钱、净收益及漏掉的大盈利；旧交易分组不是过滤后策略的回测收益",
+  "retention": "全部新增文件独立保存，不覆盖旧策略、数据或结果；只复用本地已保存的项目数据及归因函数"
+}

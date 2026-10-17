@@ -1,0 +1,9 @@
+{
+  "status": "passed",
+  "source_hashes": "all matched frozen plan",
+  "trace_hashes": 96,
+  "original_engine_exact_controls": 8,
+  "targeted_tests_passed": 7,
+  "entry_gate_shared_trade_exits": "exact on all8 asset/timeframe pairs",
+  "return_selection": false
+}

@@ -1,0 +1,166 @@
+{
+  "label": "001-before-new-tests",
+  "created_at": "2026-09-10T08:40:45.752540+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "25dbf1e84947ba22b8a5df80ffa49214ee8252632377bb17420f396e9ab1b822",
+      "bytes": 15630
+    },
+    {
+      "path": "app/services/local_backtest_runtime.py",
+      "sha256": "c6e42ffcba153cf726862858f8e0d7504a2690b3a9de7c7746a87b951835f232",
+      "bytes": 3441
+    },
+    {
+      "path": "app/services/local_backtest_service.py",
+      "sha256": "5c6fae1bed6b8251d3060db1aa830b73a92d2f60ba5a7c11d7c304630925b4dc",
+      "bytes": 9086
+    },
+    {
+      "path": "app/services/local_backtest_strategies.py",
+      "sha256": "4452ec9182d3d7ad65581c8509ab4c4841c715e6fd35062c5abfd3baa81768c9",
+      "bytes": 4651
+    },
+    {
+      "path": "docs/LOCAL_BACKTESTS.md",
+      "sha256": "ca5b1e7c8a90e4266955153fa645e07aa96ad6ab32c21a7394caa4cad008a7ed",
+      "bytes": 18244
+    },
+    {
+      "path": "docs/verification/eth-cloud-two-year-20260910/DIAGNOSTICS.md",
+      "sha256": "7d1507328ac79075b4b5b3bf433634ea1f2f5b32b8e31aaac5789e687415792d",
+      "bytes": 10706
+    },
+    {
+      "path": "docs/verification/eth-cloud-two-year-20260910/experiments-plan.json",
+      "sha256": "825b401f183ed69fc1659234d3b9ebb13a94e7fa52e5287649c7497a85ae114a",
+      "bytes": 5043
+    },
+    {
+      "path": "docs/verification/eth-cloud-two-year-20260910/experiments-project-run.json",
+      "sha256": "93ba621c5e86457bbd99d6769a970a12ba22df87feffd7fc6535e9c2e3ca3244",
+      "bytes": 421
+    },
+    {
+      "path": "docs/verification/eth-cloud-two-year-20260910/experiments-results.json",
+      "sha256": "fa59a20bbf27ddaeef2f64092d9ac7dfae863bae73d18959434f6ab342ae1b4a",
+      "bytes": 4207504
+    },
+    {
+      "path": "docs/verification/eth-cloud-two-year-20260910/experiments-selection.json",
+      "sha256": "c6efdef628b81c23eea4732a30f3d64e4735bf1825ef590376f1b4fe22391b69",
+      "bytes": 1065596
+    },
+    {
+      "path": "docs/verification/eth-cloud-two-year-20260910/plan.json",
+      "sha256": "82b809ca038c05995574d1b88abd6e951db0271b6257b3baa1f7a057566c25f0",
+      "bytes": 3079
+    },
+    {
+      "path": "docs/verification/eth-cloud-two-year-20260910/REPORT.md",
+      "sha256": "8e283b388675d6817f8a9d517d109cdc2d695ef5dd3bee122cefe494b7eddf23",
+      "bytes": 9381
+    },
+    {
+      "path": "docs/verification/eth-cloud-two-year-20260910/results.json",
+      "sha256": "5288d015b14bc860404e63ea42279ee429a7e394b2acd4ee27ae1914b34208fd",
+      "bytes": 3324668
+    },
+    {
+      "path": "docs/verification/eth-cloud-two-year-20260910/selection.json",
+      "sha256": "b62226be1465a5c3e8000cbe4f092fc2c3b350c22943dce0c15787074bdb82f7",
+      "bytes": 513174
+    },
+    {
+      "path": "docs/verification/eth-profit-protection-20260910/plan.json",
+      "sha256": "cd886c3f3e7fa48e4607d5eb9ddd454809c09ad1e690019c2a5718448186b983",
+      "bytes": 4323
+    },
+    {
+      "path": "docs/verification/eth-profit-protection-20260910/project-runs.json",
+      "sha256": "05810db224efb944b5ec4c723eb9c22f38601c524271b69d90b56700b90c644a",
+      "bytes": 766
+    },
+    {
+      "path": "docs/verification/eth-profit-protection-20260910/report.html",
+      "sha256": "42ee60bbb41c6dc6a7dfcf398937ec260958da7376d23b4dee4ce7f0214eb316",
+      "bytes": 2392215
+    },
+    {
+      "path": "docs/verification/eth-profit-protection-20260910/REPORT.md",
+      "sha256": "aa233efae370ebc26cd6efa51b092369c486320efc9e124eb901eafcf525e485",
+      "bytes": 11460
+    },
+    {
+      "path": "docs/verification/eth-profit-protection-20260910/results.json",
+      "sha256": "8c4f2c5fb2fcfdcaf91c83505feaa4ec2541c8fa8c2c44745b456898e948ca22",
+      "bytes": 2205435
+    },
+    {
+      "path": "docs/verification/eth-profit-protection-20260910/selection.json",
+      "sha256": "4dc4737da51550f4274416f574f3640b7cdb0abf52c58e20cdca0a483ae21f1f",
+      "bytes": 424078
+    },
+    {
+      "path": "docs/verification/eth-profit-protection-20260910/verification.json",
+      "sha256": "d97f4af180fe2dcb0344babd1582255b65291a0df4bcce65efa41dfc12ae8238",
+      "bytes": 894
+    },
+    {
+      "path": "docs/verification/eth-profit-protection-20260910/width-selection.json",
+      "sha256": "f96bacb18d9561a1da63f1f23036a9c0c2b72f14aeedaebb717cf8723fe5881d",
+      "bytes": 302653
+    },
+    {
+      "path": "scripts/cloud_strategy_versions.py",
+      "sha256": "2fb53341c30300af9618313f4d33ca4c610be27877183ab39b2e05d77e3bfa77",
+      "bytes": 1684
+    },
+    {
+      "path": "scripts/profit_protection_study.py",
+      "sha256": "a156b444bb291ec54998b0456d83006af1ffe0a32eb3db6b951a98b2520eda35",
+      "bytes": 14924
+    },
+    {
+      "path": "scripts/render_profit_protection_study.py",
+      "sha256": "b2cd04e51c8902a2ba295be3a053dac64ae52cbe17e53a95ce6d8e5879159c92",
+      "bytes": 21452
+    },
+    {
+      "path": "scripts/trend_cloud_diagnostics.py",
+      "sha256": "93c97c50a4645091d8503f3958f8f335c9f54a34913032a72adb39e1998c508c",
+      "bytes": 14039
+    },
+    {
+      "path": "scripts/trend_cloud_study.py",
+      "sha256": "9bfd88992beeb2bd60b8cf8780d2bb8b3f58d0d88d5fd7297510d39d7de9327a",
+      "bytes": 10538
+    },
+    {
+      "path": "strategies/adaptive_cloud.py",
+      "sha256": "3560c7787cbdd7bd50e80c2bb845d136d7aed14763f4ad12cffebe5070fd3cdc",
+      "bytes": 6605
+    },
+    {
+      "path": "strategies/ma_cross.py",
+      "sha256": "f26e6eb889e9a55bbbbc2c1bba8352dfb64913b9dd8013a910d16506c0903a95",
+      "bytes": 1437
+    },
+    {
+      "path": "strategies/trend_cloud_comparison.py",
+      "sha256": "aab6ecaab98565ec60b9579c7cd4fe12d8f455784ba36503bd7267a96dc479dd",
+      "bytes": 7272
+    },
+    {
+      "path": "strategies/trend_cloud_experiments.py",
+      "sha256": "17a595b286f4e94d2a23c4c3e89b7e24590e2a0de8f3e82c9140065f1a8cc9ed",
+      "bytes": 6464
+    },
+    {
+      "path": "strategies/trend_cloud_profit_protection.py",
+      "sha256": "d051cfecdcfd7b1e530b685bb20e6b4938fa6987c00161bda2198e6a814cfe25",
+      "bytes": 3638
+    }
+  ]
+}

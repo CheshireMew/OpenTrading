@@ -1,0 +1,26 @@
+{
+  "label": "018-frozen-context-study",
+  "created_at": "2026-09-10T13:49:56.177416+00:00",
+  "files": [
+    {
+      "path": "docs/verification/eth-cloud-context-20260910/plan.json",
+      "sha256": "27ad3405baa5e91643a52fc13eb2b87b19d02939c236417f7e0cc19254fccadf",
+      "bytes": 5649
+    },
+    {
+      "path": "scripts/cloud_context_study.py",
+      "sha256": "aa840fdfa634c485972a4674e8b3887959f12c175253af149fbf387ddf69e630",
+      "bytes": 16217
+    },
+    {
+      "path": "strategies/trend_cloud_context_v3.py",
+      "sha256": "38afd3ee65249c766336a69d5bb72af8a0914c510265a16aaa76d1e27c68839b",
+      "bytes": 10940
+    },
+    {
+      "path": "test/test_cloud_context.py",
+      "sha256": "68ffa10373796bdfd1f1e6c69461d724b3044122e432433909239769eae10768",
+      "bytes": 5190
+    }
+  ]
+}

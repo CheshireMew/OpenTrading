@@ -1,0 +1,56 @@
+{
+  "label": "060-walkforward-data-and-methodology",
+  "created_at": "2026-09-11T14:13:55.506161+00:00",
+  "files": [
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/data-before-live-correction.json",
+      "sha256": "95420c368049b3d2e3079d631597d9947cbbda822eda400c7009f69392f47da8",
+      "bytes": 33022
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/data-verification.json",
+      "sha256": "84e93b4e76d507df5cffb24819de818f733b3dabdaedb381d10dbc8ad13a72a8",
+      "bytes": 237
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/data.json",
+      "sha256": "50bc4deb1ee52ee9e0c2b992fe2a6857acb7d287b18437c972e7b12b5da3e25c",
+      "bytes": 33647
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/engine-baseline-verification.json",
+      "sha256": "7d342a00cc071a788f8edaabe05967fa6d19a6869b9e247ad7793ad7fd1b5b04",
+      "bytes": 291
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/legacy-15m-data-check.json",
+      "sha256": "262a38d27e4e02a20df3f92dbb96334f1fa485760241df5068f43eb621b1e4a0",
+      "bytes": 66
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/methodology-note.json",
+      "sha256": "6c7b4f5e45f830b25faaefe05311cd50450cbec4677a1965e4a88eb84ce09a2b",
+      "bytes": 733
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/native-live-recheck.json",
+      "sha256": "d06c935d05206d8e8eef4e8044fe3f22a2950389f6cd4d50039cbe68ba97901b",
+      "bytes": 859
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/RUNBOOK.md",
+      "sha256": "a0c08572570d28588a41bbb1715d4297f86621273305711a0fcef2abfbccb126",
+      "bytes": 3729
+    },
+    {
+      "path": "scripts/analyze_cloud_walkforward_exits.py",
+      "sha256": "1c9755d5f27b2543a0e754e029eb509e3520fb0ad54b249161fa60766289a255",
+      "bytes": 3290
+    },
+    {
+      "path": "scripts/report_cloud_walkforward.py",
+      "sha256": "24bd3d4b0bc72e82b5eedf7632a6b21eb78feff7777bf77d1b702aab4cad107c",
+      "bytes": 16707
+    }
+  ]
+}

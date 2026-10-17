@@ -1,0 +1,1 @@
+{"cases":10,"data_check":"复用结果校验快照；新数据由项目回测工作进程在计算前检查，预览不下载行情","max_warmup_calendar_hours":162.5,"new_runs":6,"periods":[["2020-09-10T00:00:00Z","2026-09-10T00:00:00Z","exploration"]],"reused_cases":4,"title":"ETH 六年：积累信号后的盘中突破入场","warnings":[]}

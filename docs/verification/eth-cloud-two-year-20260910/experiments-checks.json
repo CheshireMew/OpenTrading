@@ -1,0 +1,32 @@
+{
+  "ema31_atr vs ema31_range": {
+    "identical_completed_trades": true,
+    "signal_counts": [
+      6758,
+      6758
+    ],
+    "different_signals_each_side": [
+      1,
+      1
+    ]
+  },
+  "hl2_atr16 vs high_low_ema": {
+    "identical_completed_trades": true,
+    "signal_counts": [
+      6757,
+      6757
+    ],
+    "different_signals_each_side": [
+      0,
+      0
+    ]
+  },
+  "target4_matched_baseline_winners": {
+    "matched_entries": 605,
+    "all_baseline_winners": 605,
+    "original_mean_return_pct": 2.1688886404290413,
+    "target_mean_return_pct": 1.5985438752101357,
+    "lower_return_count": 236,
+    "note": "Same entry time and direction; compares the first resulting trade only. Extra re-entries are included in the full strategy results, not in this pair subset."
+  }
+}

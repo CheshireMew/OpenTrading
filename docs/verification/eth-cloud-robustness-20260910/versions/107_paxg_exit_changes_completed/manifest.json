@@ -1,0 +1,51 @@
+{
+  "label": "107_paxg_exit_changes_completed",
+  "created_at": "2026-09-13T09:52:44.532173+00:00",
+  "files": [
+    {
+      "path": "docs/verification/paxg-exit-comparison-20260913/answers.json",
+      "sha256": "df8e3ec1ca7fb347306f010d61531ee8dd7ac2b7dd891917abf15a32ec99f067",
+      "bytes": 930
+    },
+    {
+      "path": "docs/verification/paxg-exit-comparison-20260913/completion.json",
+      "sha256": "3c38f945a471e0cb7d65e1b102108e8e19f399716ae06b34033dae829a2f1fe4",
+      "bytes": 1654
+    },
+    {
+      "path": "docs/verification/paxg-exit-comparison-20260913/plan.json",
+      "sha256": "9bfd431ff68b2c0d6a7fafe8c97dba845f8079b71ed9a41ea72aa6e3c2e98d75",
+      "bytes": 3219
+    },
+    {
+      "path": "docs/verification/paxg-exit-comparison-20260913/README.md",
+      "sha256": "e57cde1340fb12c20869a378715ff6598387220e7742ba1cee531738f6171691",
+      "bytes": 2444
+    },
+    {
+      "path": "docs/verification/paxg-exit-comparison-20260913/results.json",
+      "sha256": "1c8679a6775403dd7f21ec8417ebc4bc4983439dfb1fba140be6fc4b8db676a9",
+      "bytes": 14460
+    },
+    {
+      "path": "docs/verification/paxg-exit-comparison-20260913/study.json",
+      "sha256": "24dcae532761f570d7802d3445eb32d7e8a2d42b0aef1ca85900f56f1a4d2c1a",
+      "bytes": 755
+    },
+    {
+      "path": "docs/verification/paxg-exit-comparison-20260913/tests.json",
+      "sha256": "b91627efea035baa8f6c9ccc1745604bf91d72ae3bd5da70ea5a7dc956a52580",
+      "bytes": 592
+    },
+    {
+      "path": "docs/verification/paxg-exit-comparison-20260913/verification.json",
+      "sha256": "8638411d8d13366ac7872dd484fdd5859d6a2f580e5c9cbfcbdf92f92da7a254",
+      "bytes": 554
+    },
+    {
+      "path": "scripts/paxg_exit_comparison_study.py",
+      "sha256": "90c7b514b992f0a574c6ca722d71dc55c05d2dd48fe33ad13ab1363e796812c1",
+      "bytes": 10731
+    }
+  ]
+}

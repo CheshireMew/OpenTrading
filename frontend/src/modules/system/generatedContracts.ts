@@ -63,17 +63,6 @@ export interface LlmProviderConfigUpdateRequest {
   reasoningEnabled?: boolean
 }
 
-export interface FredApiConfigResponse {
-  apiKey?: string
-  apiKeySet?: boolean
-  apiKeyPreview?: string
-  source?: string
-}
-
-export interface FredApiConfigUpdateRequest {
-  apiKey?: string | null
-}
-
 export interface DataSourceHealthResponse {
   id: string
   name: string

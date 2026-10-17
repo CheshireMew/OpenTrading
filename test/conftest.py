@@ -70,19 +70,6 @@ class StubLlmConfigService:
         return self.read_config()
 
 
-class StubFredApiConfigService:
-    def read_config(self):
-        return {
-            "apiKey": "",
-            "apiKeySet": False,
-            "apiKeyPreview": "",
-            "source": "unset",
-        }
-
-    def save_config(self, payload):
-        return self.read_config()
-
-
 @pytest.fixture(autouse=True)
 def installed_database_runtime(tmp_path):
     database_url = f"sqlite:///{(tmp_path / 'test.db').as_posix()}"
@@ -136,7 +123,6 @@ def api_harness(installed_database_runtime):
         "tools_app": StubToolsAppService(),
         "currency_rate": StubCurrencyRateService(),
         "llm_config": StubLlmConfigService(),
-        "fred_api_config": StubFredApiConfigService(),
     }
     app = main_module.app
     app.state.runtime_services = AppRuntimeServices(
@@ -146,7 +132,6 @@ def api_harness(installed_database_runtime):
             system=SystemRuntimeServices(
                 services["currency_rate"],
                 services["llm_config"],
-                services["fred_api_config"],
             ),
             market=MarketRuntimeServices(
                 exchange_gateway=object(),

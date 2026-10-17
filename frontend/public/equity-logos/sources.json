@@ -1,0 +1,1906 @@
+{
+  "reviewed_at": "2026-10-17",
+  "description": "Reviewed company logos; funds and indices use issuer/provider branding. Local files require no remote requests.",
+  "logos": [
+    {
+      "asset": "tencent",
+      "tickers": [
+        "TENCENT",
+        "TENCENTHKD"
+      ],
+      "domain": "www.tencent.com",
+      "reuse_ticker": "",
+      "source_url": "https://www.tencent.com/wp-content/uploads/2022/12/04_Tencent_Graphics.png",
+      "file": "tencent.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fwww.tencent.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.tencent.com&size=128",
+      "sha256": "07eac7c5e244ba0816f04fa313a5093931a5b4ae7067635a17e4ec66369ae1b9",
+      "bytes": 795
+    },
+    {
+      "asset": "xiaomi",
+      "tickers": [
+        "XIAOMI",
+        "XIAOMIHKD"
+      ],
+      "domain": "mi.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "xiaomi.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fmi.com&sz=128",
+      "resolved_url": "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://mi.com&size=128",
+      "sha256": "462ee40dacbe0fba4d47c033b434db260887c73cd5b0b8defafa6097c3c99e0c",
+      "bytes": 1283
+    },
+    {
+      "asset": "anthropic",
+      "tickers": [
+        "ANTHROPIC"
+      ],
+      "domain": "anthropic.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "anthropic.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fanthropic.com&sz=128",
+      "resolved_url": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://anthropic.com&size=128",
+      "sha256": "f1d612cf8894e5f47da0e2db35a95d61fda3f33fc3ffa2785998ba2ecf78daab",
+      "bytes": 948
+    },
+    {
+      "asset": "cxmt",
+      "tickers": [
+        "CXMT"
+      ],
+      "domain": "www.cxmt.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "cxmt.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fwww.cxmt.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.cxmt.com&size=128",
+      "sha256": "1c38df92b9ac370999249c8b897ab0b80c17872addbd1d7fc8d10daddb74f9ba",
+      "bytes": 1182
+    },
+    {
+      "asset": "hanmi",
+      "tickers": [
+        "HANMI"
+      ],
+      "domain": "hanmisemi.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "hanmi.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fhanmisemi.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://hanmisemi.com&size=128",
+      "sha256": "93f58667a6808f55f67a811b19389e3e3daf42b592d1e5a7035d3a4642f591ae",
+      "bytes": 1412
+    },
+    {
+      "asset": "hyundai",
+      "tickers": [
+        "HYUNDAI"
+      ],
+      "domain": "hyundai.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "hyundai.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fhyundai.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://hyundai.com&size=128",
+      "sha256": "99498e63a642df2375ea4074bba3b98bc935b35d7d62208f34ad56fe22770720",
+      "bytes": 721
+    },
+    {
+      "asset": "lg",
+      "tickers": [
+        "LGELECTRONICS"
+      ],
+      "domain": "lg.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "lg.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Flg.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://lg.com&size=128",
+      "sha256": "59e9db32bce40abd51518dd11be19bf81a05415c2a79e9332c22d4b8ad4184cf",
+      "bytes": 4398
+    },
+    {
+      "asset": "minimax",
+      "tickers": [
+        "MINIMAX",
+        "MINIMAXHKD"
+      ],
+      "domain": "minimax.io",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "minimax.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fminimax.io&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://minimax.io&size=128",
+      "sha256": "b56a9594c74534fa4ff335965fdb6f22c59723dabbe8fecededdc21193bb354d",
+      "bytes": 1525
+    },
+    {
+      "asset": "moonshot",
+      "tickers": [
+        "MOONSHOT"
+      ],
+      "domain": "moonshot.ai",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "moonshot.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fmoonshot.ai&sz=128",
+      "resolved_url": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://moonshot.ai&size=128",
+      "sha256": "179d5d5014667ad5605c92cfeb72318e40683bc28001216582f8abc600877795",
+      "bytes": 1664
+    },
+    {
+      "asset": "naver",
+      "tickers": [
+        "NAVER"
+      ],
+      "domain": "navercorp.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "naver.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fnavercorp.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://navercorp.com&size=128",
+      "sha256": "765874508cf414bc3e823df2e6462d529922c3a8763085dc7a96b48b7f134526",
+      "bytes": 448
+    },
+    {
+      "asset": "openai",
+      "tickers": [
+        "OPENAI",
+        "PREOPAI"
+      ],
+      "domain": "openai.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "openai.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fopenai.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://openai.com&size=128",
+      "sha256": "8dba942326ba6368c2670603c0ef1d2087fc2bf3ed992fed9d57b2ea69907ddf",
+      "bytes": 1829
+    },
+    {
+      "asset": "oura",
+      "tickers": [
+        "OURA"
+      ],
+      "domain": "ouraring.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "oura.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fouraring.com&sz=128",
+      "resolved_url": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://ouraring.com&size=128",
+      "sha256": "fa94cbcc4db005fb5f030238b74f3ebb77ce519b05616731830123eb4d85eb9c",
+      "bytes": 1190
+    },
+    {
+      "asset": "popmart",
+      "tickers": [
+        "POPMART"
+      ],
+      "domain": "popmart.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "popmart.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fpopmart.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://popmart.com&size=128",
+      "sha256": "3cde1d0a0065fea9860ded1d5e0a9856f37d16c5218bc4b978d9a844d66eb4e8",
+      "bytes": 514
+    },
+    {
+      "asset": "samsung",
+      "tickers": [
+        "SAMSUNG"
+      ],
+      "domain": "samsung.com",
+      "reuse_ticker": "",
+      "source_url": "https://companieslogo.com/img/orig/005930.KS_BIG-0a7bc052.png?t=1740479219",
+      "file": "samsung.png",
+      "download_url": "https://companieslogo.com/img/orig/005930.KS_BIG-0a7bc052.png?t=1740479219",
+      "resolved_url": "https://companieslogo.com/img/orig/005930.KS_BIG-0a7bc052.png?t=1740479219",
+      "sha256": "30c986bf290a2e2c343efc2518b2905ab4ff0f578581c28ffdceecdf83c3a9ef",
+      "bytes": 23653
+    },
+    {
+      "asset": "skhynix",
+      "tickers": [
+        "SKHYNIX"
+      ],
+      "domain": "skhynix.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "skhynix.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fskhynix.com&sz=128",
+      "resolved_url": "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://skhynix.com&size=128",
+      "sha256": "7edb26aebf03e69519daf222c7e4d6c145a700233be9ae951334e860f91bf5c0",
+      "bytes": 512
+    },
+    {
+      "asset": "unitree",
+      "tickers": [
+        "UNITREE"
+      ],
+      "domain": "unitree.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "unitree.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Funitree.com&sz=128",
+      "resolved_url": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://unitree.com&size=128",
+      "sha256": "38e57a7807ca74bc21a854cf5a4c9a926035ce3626798acf04a31a01abd07a7c",
+      "bytes": 735
+    },
+    {
+      "asset": "zhipu",
+      "tickers": [
+        "ZHIPU",
+        "ZHIPUHKD"
+      ],
+      "domain": "zhipuai.cn",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "zhipu.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fzhipuai.cn&sz=128",
+      "resolved_url": "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://zhipuai.cn&size=128",
+      "sha256": "53159db6dd034eef49857c08a2d5c2afab99a004cd486b067ba536a8d4801249",
+      "bytes": 1027
+    },
+    {
+      "asset": "innolight",
+      "tickers": [
+        "ZHONGJI"
+      ],
+      "domain": "www.zj-innolight.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "innolight.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fwww.zj-innolight.com&sz=128",
+      "resolved_url": "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.zj-innolight.com&size=128",
+      "sha256": "92deda1525f2dc3f96c4342438ec75a31f741aeadf6d6c455b32dd47375c458f",
+      "bytes": 1402
+    },
+    {
+      "asset": "csop",
+      "tickers": [
+        "CSOPSAMSUNG2L",
+        "CSOPSKHYNIX2L",
+        "CSOPSK2LHKD",
+        "CSOPSS2LHKD"
+      ],
+      "domain": "csopasset.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "csop.jpg",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fcsopasset.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://csopasset.com&size=128",
+      "sha256": "3cc20607318d44d3167b5ad301f1059ba1025506517837fbbd67ecf68f1a7160",
+      "bytes": 1296
+    },
+    {
+      "asset": "innio",
+      "tickers": [
+        "INIO"
+      ],
+      "domain": "innio.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "innio.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Finnio.com&sz=128",
+      "resolved_url": "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://innio.com&size=128",
+      "sha256": "1691cd85dbc742c47e307682c20431223aa2ddea20ba2819502823c022cff709",
+      "bytes": 1106
+    },
+    {
+      "asset": "nikkei",
+      "tickers": [
+        "JP225"
+      ],
+      "domain": "nikkei.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "nikkei.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fnikkei.com&sz=128",
+      "resolved_url": "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://nikkei.com&size=128",
+      "sha256": "df8193710a40e763b55462f4718ddbc11e4974d6dcaeadafa8c3ff2598a0ccc0",
+      "bytes": 1290
+    },
+    {
+      "asset": "kioxia",
+      "tickers": [
+        "KIOXIA"
+      ],
+      "domain": "kioxia.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "kioxia.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fkioxia.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://kioxia.com&size=128",
+      "sha256": "0b642b6685c24a03b6b297e8cc1eeeaba67e1c8b1952286086c3c05857a3ba7f",
+      "bytes": 813
+    },
+    {
+      "asset": "krx",
+      "tickers": [
+        "KR200"
+      ],
+      "domain": "global.krx.co.kr",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "krx.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fglobal.krx.co.kr&sz=128",
+      "resolved_url": "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://global.krx.co.kr&size=128",
+      "sha256": "fd4ceae1c5c8081442b1ff6c6db503fc03b8ff6df01fedc5be75583686950435",
+      "bytes": 369
+    },
+    {
+      "asset": "meituan",
+      "tickers": [
+        "MEITUAN"
+      ],
+      "domain": "meituan.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "meituan.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fmeituan.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://meituan.com&size=128",
+      "sha256": "fabcd5482402d14d652f6cbad4837e09c9933a8442898fdc2597f2213aaecccc",
+      "bytes": 1861
+    },
+    {
+      "asset": "samsungsem",
+      "tickers": [
+        "SAMSUNGEM"
+      ],
+      "domain": "samsungsem.com",
+      "reuse_ticker": "",
+      "source_url": "https://companieslogo.com/img/orig/005930.KS_BIG-0a7bc052.png?t=1740479219",
+      "file": "samsungsem.png",
+      "download_url": "https://companieslogo.com/img/orig/005930.KS_BIG-0a7bc052.png?t=1740479219",
+      "resolved_url": "https://companieslogo.com/img/orig/005930.KS_BIG-0a7bc052.png?t=1740479219",
+      "sha256": "30c986bf290a2e2c343efc2518b2905ab4ff0f578581c28ffdceecdf83c3a9ef",
+      "bytes": 23653
+    },
+    {
+      "asset": "shein",
+      "tickers": [
+        "SHEIN",
+        "SHEINHKD",
+        "HK0625"
+      ],
+      "domain": "sheingroup.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "shein.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fsheingroup.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://sheingroup.com&size=128",
+      "sha256": "9886dd08fa16b0d6650ef40967ed714243901f66a63aaa5cb9842999df8d5060",
+      "bytes": 877
+    },
+    {
+      "asset": "softbank",
+      "tickers": [
+        "SOFTBANK"
+      ],
+      "domain": "group.softbank",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "softbank.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fgroup.softbank&sz=128",
+      "resolved_url": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://group.softbank&size=128",
+      "sha256": "73162208661b9fae84f70ee3fd8aa9123e006c309018e7b0228ec2cf10a49cc6",
+      "bytes": 96
+    },
+    {
+      "asset": "leverageshares",
+      "tickers": [
+        "SPCH",
+        "SSPC",
+        "CBRG",
+        "SKHX"
+      ],
+      "domain": "leverageshares.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "leverageshares.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fleverageshares.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://leverageshares.com&size=128",
+      "sha256": "7af90522eda77b5dffb8bf0e84b23682780554b242a13cba91eb5b9b82e7a924",
+      "bytes": 1705
+    },
+    {
+      "asset": "grayscale",
+      "tickers": [
+        "ZCSH"
+      ],
+      "domain": "grayscale.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "grayscale.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fgrayscale.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://grayscale.com&size=128",
+      "sha256": "70c7e81e41596c0dc215555432155795dec1a3187df1a91ce6b30eaa9262cbda",
+      "bytes": 2407
+    },
+    {
+      "asset": "accenture",
+      "tickers": [
+        "ACNSTOCK"
+      ],
+      "domain": "",
+      "reuse_ticker": "ACN",
+      "source_url": "",
+      "file": "accenture.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/ACN.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/ACN.png",
+      "sha256": "d6515a23428a68c60556849a7c9bc12047fe09d8cf6c8c30cf1217aff76e101b",
+      "bytes": 3568
+    },
+    {
+      "asset": "afg",
+      "tickers": [
+        "AFGE"
+      ],
+      "domain": "",
+      "reuse_ticker": "AFG",
+      "source_url": "",
+      "file": "afg.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/AFG.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/AFG.png",
+      "sha256": "0200a3c2f817f879c7df9192dcbec1acced2f956b5251c391bc5cc21f420c270",
+      "bytes": 2446
+    },
+    {
+      "asset": "brookfield-renewable",
+      "tickers": [
+        "BEPC"
+      ],
+      "domain": "",
+      "reuse_ticker": "BEP",
+      "source_url": "",
+      "file": "brookfield-renewable.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/BEP.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/BEP.png",
+      "sha256": "e166f1a9fa871ea5092c6fc1bf195d61a5578555f2ebb3c6af26d63d7ea17907",
+      "bytes": 1199
+    },
+    {
+      "asset": "brookfield-infrastructure",
+      "tickers": [
+        "BIPC"
+      ],
+      "domain": "",
+      "reuse_ticker": "BIP",
+      "source_url": "",
+      "file": "brookfield-infrastructure.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/BIP.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/BIP.png",
+      "sha256": "e166f1a9fa871ea5092c6fc1bf195d61a5578555f2ebb3c6af26d63d7ea17907",
+      "bytes": 1199
+    },
+    {
+      "asset": "microsectors",
+      "tickers": [
+        "BULZ",
+        "FNGU",
+        "GDXU"
+      ],
+      "domain": "microsectors.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "microsectors.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fmicrosectors.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://microsectors.com&size=128",
+      "sha256": "ae112db960ba131b5f0d35e2783616b7fff2bc77b9d34720318963ad09ea6e5b",
+      "bytes": 1621
+    },
+    {
+      "asset": "chs",
+      "tickers": [
+        "CHSCO"
+      ],
+      "domain": "chsinc.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "chs.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fchsinc.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://chsinc.com&size=128",
+      "sha256": "e61a8c4571e883b3c453343d6e19bd24ae3ad4c3185ec85834857a8af206c91c",
+      "bytes": 2250
+    },
+    {
+      "asset": "cms",
+      "tickers": [
+        "CMSA"
+      ],
+      "domain": "",
+      "reuse_ticker": "CMS",
+      "source_url": "",
+      "file": "cms.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/CMS.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/CMS.png",
+      "sha256": "c81fb0f6bcadb44693d7e822afc7edd9216a740da455965c9cff6c04531db85a",
+      "bytes": 3392
+    },
+    {
+      "asset": "cheniere",
+      "tickers": [
+        "CQP"
+      ],
+      "domain": "",
+      "reuse_ticker": "LNG",
+      "source_url": "",
+      "file": "cheniere.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/LNG.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/LNG.png",
+      "sha256": "cfb12b0c29fd81f4739d62862f8f9872e9b6669025dc603b358945bf32cb3862",
+      "bytes": 4927
+    },
+    {
+      "asset": "proshares",
+      "tickers": [
+        "CRCA",
+        "SKHU"
+      ],
+      "domain": "proshares.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "proshares.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fproshares.com&sz=128",
+      "resolved_url": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://proshares.com&size=128",
+      "sha256": "5d35938290b71c5d11bfbfb1ea88f981a8c55f4984b97a8a734c56cf844f727c",
+      "bytes": 1364
+    },
+    {
+      "asset": "chevron",
+      "tickers": [
+        "CVXSTOCK"
+      ],
+      "domain": "",
+      "reuse_ticker": "CVX",
+      "source_url": "",
+      "file": "chevron.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/CVX.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/CVX.png",
+      "sha256": "040f2a4263ca150b887560e4fa7b2f28c9f85da8345e37986ad6e60c17fcf8b2",
+      "bytes": 4640
+    },
+    {
+      "asset": "invesco",
+      "tickers": [
+        "DBC"
+      ],
+      "domain": "invesco.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "invesco.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Finvesco.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://invesco.com&size=128",
+      "sha256": "2c226d2e701da6e377ee901da7cec8b918bb2a6049058fe169773fc54d96958b",
+      "bytes": 1106
+    },
+    {
+      "asset": "spdr",
+      "tickers": [
+        "DIASTOCK"
+      ],
+      "domain": "",
+      "reuse_ticker": "DIA",
+      "source_url": "",
+      "file": "spdr.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/DIA-9fe3.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/DIA-9fe3.png",
+      "sha256": "6ceacb60e7c11d2b5fb30742edbec79facc1b5b91dc5c0de95c6df22158a0f4f",
+      "bytes": 12779
+    },
+    {
+      "asset": "doosanrobotics",
+      "tickers": [
+        "DOOSBOT"
+      ],
+      "domain": "doosanrobotics.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "doosanrobotics.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fdoosanrobotics.com&sz=128",
+      "resolved_url": "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://doosanrobotics.com&size=128",
+      "sha256": "891e803a6b9e2355b0d44b7bb2e2a4107e30fbe933b2f5bd23ae752a0e497f22",
+      "bytes": 326
+    },
+    {
+      "asset": "doosanenerbility",
+      "tickers": [
+        "DOOSENER"
+      ],
+      "domain": "doosanenerbility.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "doosanenerbility.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fdoosanenerbility.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://doosanenerbility.com&size=128",
+      "sha256": "891e803a6b9e2355b0d44b7bb2e2a4107e30fbe933b2f5bd23ae752a0e497f22",
+      "bytes": 326
+    },
+    {
+      "asset": "dte",
+      "tickers": [
+        "DTW"
+      ],
+      "domain": "",
+      "reuse_ticker": "DTE",
+      "source_url": "",
+      "file": "dte.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/DTE.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/DTE.png",
+      "sha256": "18e4017dafb2b5992f0b1a368fd2195790a7c9076f0359f2268c64d1bb5f3e9a",
+      "bytes": 1446
+    },
+    {
+      "asset": "entergy",
+      "tickers": [
+        "ELC"
+      ],
+      "domain": "",
+      "reuse_ticker": "ETR",
+      "source_url": "",
+      "file": "entergy.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/ETR.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/ETR.png",
+      "sha256": "a812d3ecaa7cf7c0a0b6aaa6943cbebb8e75e31ff71c368e12ab8f43cf112c6d",
+      "bytes": 4044
+    },
+    {
+      "asset": "franklin",
+      "tickers": [
+        "FGDL"
+      ],
+      "domain": "franklintempleton.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "franklin.png",
+      "download_url": "https://franklintempletonprod.widen.net/content/pmhnbht3ff/png/favicon_ft.png",
+      "resolved_url": "https://franklintempletonprod.widen.net/content/pmhnbht3ff/png/favicon_ft.png",
+      "sha256": "1e4e2288eee3ed4e6294fa358b9c65bcf0a8301dfeb0a4a729ae9633bc357d9e",
+      "bytes": 970
+    },
+    {
+      "asset": "fidelity",
+      "tickers": [
+        "FINA",
+        "FSOL"
+      ],
+      "domain": "fidelity.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "fidelity.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Ffidelity.com&sz=128",
+      "resolved_url": "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://fidelity.com&size=128",
+      "sha256": "62055f21eb54844aa76414b10ecb345e795722f956d90a2adefa6e07bcc1dcb7",
+      "bytes": 3389
+    },
+    {
+      "asset": "gigadevice",
+      "tickers": [
+        "GIGADEV",
+        "GIGADEVICE"
+      ],
+      "domain": "gigadevice.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "gigadevice.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fgigadevice.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://gigadevice.com&size=128",
+      "sha256": "7a9c9a11f5cb8134654afd50b33638b7ee8100713ac9c5c893f22de7beea6cc5",
+      "bytes": 3290
+    },
+    {
+      "asset": "lenovo",
+      "tickers": [
+        "HK0992",
+        "LENOVOHKD"
+      ],
+      "domain": "lenovo.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "lenovo.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Flenovo.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://lenovo.com&size=128",
+      "sha256": "8ce85e358fad00b46a11848e91ac7ce3f90c0fad5c4811168b86469675a2b9f8",
+      "bytes": 248
+    },
+    {
+      "asset": "hangseng",
+      "tickers": [
+        "HSI"
+      ],
+      "domain": "www.hsi.com.hk",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "hangseng.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fwww.hsi.com.hk&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.hsi.com.hk&size=128",
+      "sha256": "7d4f67a928cfbf95afdaf93386b62529ab8cc3a28925fca72a15f66b6d1c90cd",
+      "bytes": 4191
+    },
+    {
+      "asset": "defiance",
+      "tickers": [
+        "IRE",
+        "MUZ"
+      ],
+      "domain": "defianceetfs.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "defiance.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fdefianceetfs.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://defianceetfs.com&size=128",
+      "sha256": "c75aa87ca89fceb547be7206fa45171ec203bd44d08515bdb39b7b2eec818adc",
+      "bytes": 950
+    },
+    {
+      "asset": "jio",
+      "tickers": [
+        "JIO"
+      ],
+      "domain": "jio.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "jio.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fjio.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://jio.com&size=128",
+      "sha256": "0db62ffe4e923e6ab9606aa97b27ede17b19dae367bd772c79673ec8f937c550",
+      "bytes": 2278
+    },
+    {
+      "asset": "navient",
+      "tickers": [
+        "JSM"
+      ],
+      "domain": "",
+      "reuse_ticker": "NAVI",
+      "source_url": "",
+      "file": "navient.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/NAVI.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/NAVI.png",
+      "sha256": "9d78ca4aadd49b9e349ec9267e97ac16e472fd6f47151033b30aa477f96395e0",
+      "bytes": 1877
+    },
+    {
+      "asset": "kakao",
+      "tickers": [
+        "KAKAO"
+      ],
+      "domain": "kakaocorp.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "kakao.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fkakaocorp.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://kakaocorp.com&size=128",
+      "sha256": "7e9da62ddba915cd96ea88590aa0dd924d416591cf546e27a8d6cb3fe821608b",
+      "bytes": 398
+    },
+    {
+      "asset": "kb",
+      "tickers": [
+        "KBFG"
+      ],
+      "domain": "kbfg.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "kb.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fkbfg.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://kbfg.com&size=128",
+      "sha256": "6e367138a30f0ebdf5746f168db0fa2bcee7f298ee9c1ce5fe2476fa16eed382",
+      "bytes": 2280
+    },
+    {
+      "asset": "kia",
+      "tickers": [
+        "KIA"
+      ],
+      "domain": "kia.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "kia.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fkia.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://kia.com&size=128",
+      "sha256": "9e0dbedeaf688ef8c5923fec6b722ca13579556b3ed9926e664ed50260d82443",
+      "bytes": 391
+    },
+    {
+      "asset": "kodex",
+      "tickers": [
+        "KODEX200"
+      ],
+      "domain": "samsungfund.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "kodex.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fsamsungfund.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://samsungfund.com&size=128",
+      "sha256": "c1878470e45748498e90da1c69681b8f458df0d103f549ae25227deedf75f127",
+      "bytes": 885
+    },
+    {
+      "asset": "kuaishou",
+      "tickers": [
+        "KUAISHOU"
+      ],
+      "domain": "kuaishou.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "kuaishou.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fkuaishou.com&sz=128",
+      "resolved_url": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://kuaishou.com&size=128",
+      "sha256": "f15af9088808dd660128b2a397263efeab9354aa69ee4f2a8b1d44d55ff4cc24",
+      "bytes": 1424
+    },
+    {
+      "asset": "lasertec",
+      "tickers": [
+        "LASERTEC"
+      ],
+      "domain": "lasertec.co.jp",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "lasertec.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Flasertec.co.jp&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://lasertec.co.jp&size=128",
+      "sha256": "0ef5f13994fb09a8748da9573950629f95dd20be23ab36b52566805fbaabe780",
+      "bytes": 649
+    },
+    {
+      "asset": "tema",
+      "tickers": [
+        "LAZR"
+      ],
+      "domain": "temaetfs.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "tema.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Ftemaetfs.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://temaetfs.com&size=128",
+      "sha256": "2a09722d6710c9b61e362f3cfb72adb8609cb1eeaf802b1d7ff2552b7fa04144",
+      "bytes": 404
+    },
+    {
+      "asset": "lgenergy",
+      "tickers": [
+        "LGENERGY"
+      ],
+      "domain": "lgensol.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "lgenergy.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Flgensol.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://lgensol.com&size=128",
+      "sha256": "969c7b11bc98bf00196c305e06c1fbf5254d03c53bf21cab5f55db08b59dbf12",
+      "bytes": 854
+    },
+    {
+      "asset": "lime",
+      "tickers": [
+        "LIME"
+      ],
+      "domain": "li.me",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "lime.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fli.me&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://li.me&size=128",
+      "sha256": "3b1e056ab9e7e73436316709d2843546fd6f170121900434ebf6c3919f76a7de",
+      "bytes": 2362
+    },
+    {
+      "asset": "amg",
+      "tickers": [
+        "MGR"
+      ],
+      "domain": "",
+      "reuse_ticker": "AMG",
+      "source_url": "",
+      "file": "amg.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/AMG.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/AMG.png",
+      "sha256": "cb75db8d67cbff3ccde0f5a9ec9ac9d694900370818fea3a30b7f1547cd1b560",
+      "bytes": 1621
+    },
+    {
+      "asset": "nasdaq",
+      "tickers": [
+        "NDX100",
+        "US100"
+      ],
+      "domain": "nasdaq.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "nasdaq.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fnasdaq.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://nasdaq.com&size=128",
+      "sha256": "2338a49577e82711379de7d83149a2ca04ca2de1b0b62ab4c037e4da0923f98d",
+      "bytes": 1064
+    },
+    {
+      "asset": "netease",
+      "tickers": [
+        "NETEASE"
+      ],
+      "domain": "netease.com",
+      "reuse_ticker": "NTES",
+      "source_url": "",
+      "file": "netease.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/NTES.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/NTES.png",
+      "sha256": "49cb59a34aed57e0f85e14d56db6fb5b24ee3619a23591ffee8bb3763a18472b",
+      "bytes": 2758
+    },
+    {
+      "asset": "nokia",
+      "tickers": [
+        "NOKSTOCK"
+      ],
+      "domain": "",
+      "reuse_ticker": "NOK",
+      "source_url": "",
+      "file": "nokia.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/NOK.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/NOK.png",
+      "sha256": "7b0f8e00d2f012bdc596405ea3367014c8cd72b34d60d8207a4827e590410cb8",
+      "bytes": 3705
+    },
+    {
+      "asset": "northerntrust",
+      "tickers": [
+        "NTRSO"
+      ],
+      "domain": "",
+      "reuse_ticker": "NTRS",
+      "source_url": "",
+      "file": "northerntrust.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/NTRS.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/NTRS.png",
+      "sha256": "f4e409f9bbe6a2aca6eb073396cd96fe311dc876123f666863864786d23e0edf",
+      "bytes": 2250
+    },
+    {
+      "asset": "plains",
+      "tickers": [
+        "PAA"
+      ],
+      "domain": "",
+      "reuse_ticker": "PAGP",
+      "source_url": "",
+      "file": "plains.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/PAGP.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/PAGP.png",
+      "sha256": "b367dd42aaa124841d9947d45101769fdd4edd63c46f775c3b91dd21fc54be03",
+      "bytes": 3974
+    },
+    {
+      "asset": "prudential",
+      "tickers": [
+        "PFH"
+      ],
+      "domain": "",
+      "reuse_ticker": "PRU",
+      "source_url": "",
+      "file": "prudential.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/PRU.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/PRU.png",
+      "sha256": "109cdf877884058376bef6c5bd34a6ca19ffc48967f57e37f29bea94def2e1ba",
+      "bytes": 2140
+    },
+    {
+      "asset": "polymarket",
+      "tickers": [
+        "POLYMARKET"
+      ],
+      "domain": "polymarket.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "polymarket.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fpolymarket.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://polymarket.com&size=128",
+      "sha256": "7abb2731d3b3541bf81d1ca390668d301bb58a7cc9bb46db505a5b6d49057bc7",
+      "bytes": 2473
+    },
+    {
+      "asset": "spacex",
+      "tickers": [
+        "PRESPC"
+      ],
+      "domain": "",
+      "reuse_ticker": "SPCX",
+      "source_url": "",
+      "file": "spacex.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/SPCX-7c71.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/SPCX-7c71.png",
+      "sha256": "8a11db70e61dada9cd72349e6727b9418dd62d21e5c516103efc1a336059577c",
+      "bytes": 13759
+    },
+    {
+      "asset": "quantinuum",
+      "tickers": [
+        "QNTSTOCK"
+      ],
+      "domain": "",
+      "reuse_ticker": "QNT",
+      "source_url": "",
+      "file": "quantinuum.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/QNT-33ce.jpg",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/QNT-33ce.jpg",
+      "sha256": "c4b0a61d1178d9e3e9a8c136c3c0e2f5aeba29ad58a81ed0cc3f014efb3008db",
+      "bytes": 13811
+    },
+    {
+      "asset": "rtx",
+      "tickers": [
+        "RTXSTOCK"
+      ],
+      "domain": "",
+      "reuse_ticker": "RTX",
+      "source_url": "https://prd-sc102-cdn.rtx.com/-/media/themes/raytheon-technologies/rtx-shared/rtx-theme/images/rtx_logo.svg?rev=57e660dbd2ee4ef6895a84799210c5bf&rid=a5829bdc17c74537842441a8a1b055f2",
+      "file": "rtx.svg",
+      "download_url": "https://prd-sc102-cdn.rtx.com/-/media/themes/raytheon-technologies/rtx-shared/rtx-theme/images/rtx_logo.svg?rev=57e660dbd2ee4ef6895a84799210c5bf&rid=a5829bdc17c74537842441a8a1b055f2",
+      "resolved_url": "https://prd-sc102-cdn.rtx.com/-/media/themes/raytheon-technologies/rtx-shared/rtx-theme/images/rtx_logo.svg?rev=57e660dbd2ee4ef6895a84799210c5bf&rid=a5829bdc17c74537842441a8a1b055f2",
+      "sha256": "661ea5d1258db40a454bd1f407efcf11632ee34eaa7b4cf9a8624a828f269c94",
+      "bytes": 2030
+    },
+    {
+      "asset": "strive",
+      "tickers": [
+        "SATA"
+      ],
+      "domain": "",
+      "reuse_ticker": "ASST",
+      "source_url": "",
+      "file": "strive.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/ASST.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/ASST.png",
+      "sha256": "2b11198f00850b3c2e57a47b654d39fb7f198fd31ba2c5e7004a2eb6daa1af95",
+      "bytes": 4463
+    },
+    {
+      "asset": "seneca",
+      "tickers": [
+        "SENEB"
+      ],
+      "domain": "",
+      "reuse_ticker": "SENEA",
+      "source_url": "",
+      "file": "seneca.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/SENEA.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/SENEA.png",
+      "sha256": "2013281f5e5a4a5494bdfd8eeb133dcebf219aaefbb5b6f6cf6bbecb3de3b9de",
+      "bytes": 1908
+    },
+    {
+      "asset": "stifel",
+      "tickers": [
+        "SFB"
+      ],
+      "domain": "",
+      "reuse_ticker": "SF",
+      "source_url": "",
+      "file": "stifel.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/SF.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/SF.png",
+      "sha256": "3b118cf41f4ffebaf5e6ab8fcd2e75b61f65770bcfd916337e5e38cb5c36dabb",
+      "bytes": 2737
+    },
+    {
+      "asset": "abrdn",
+      "tickers": [
+        "SGOL"
+      ],
+      "domain": "abrdn.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "abrdn.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fabrdn.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://abrdn.com&size=128",
+      "sha256": "cf799fb88f62cb88704dd8408613a5546283238a5c76ef83d80d0cead57f43d5",
+      "bytes": 2569
+    },
+    {
+      "asset": "smic",
+      "tickers": [
+        "SMIC"
+      ],
+      "domain": "smics.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "smic.png",
+      "download_url": "https://www.smics.com/images/title-logo.png",
+      "resolved_url": "https://www.smics.com/images/title-logo.png",
+      "sha256": "e0f266c795f8ee5d09b38d6bed6cfec8007005837ed44e81ab97972f5ed74d8b",
+      "bytes": 1856
+    },
+    {
+      "asset": "southern",
+      "tickers": [
+        "SOJC"
+      ],
+      "domain": "",
+      "reuse_ticker": "SO",
+      "source_url": "https://www.southerncompany.com/content/dam/southerncompany/logos/southern_company_logo_dark_text_horizontal.svg",
+      "file": "southern.svg",
+      "download_url": "https://www.southerncompany.com/content/dam/southerncompany/logos/southern_company_logo_dark_text_horizontal.svg",
+      "resolved_url": "https://www.southerncompany.com/content/dam/southerncompany/logos/southern_company_logo_dark_text_horizontal.svg",
+      "sha256": "2a3bd71ee30e427fa36d1402c1656b3cfa93be035d289f622a2a4819284cb57a",
+      "bytes": 4531
+    },
+    {
+      "asset": "spglobal",
+      "tickers": [
+        "SP500",
+        "US500"
+      ],
+      "domain": "spglobal.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "spglobal.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fspglobal.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://spglobal.com&size=128",
+      "sha256": "eff37901aad35aa79aca00cb72076b28dc393f29ba795f00cb6a77db2cacca0c",
+      "bytes": 307
+    },
+    {
+      "asset": "samsungbiologics",
+      "tickers": [
+        "SSBIOLOGICS"
+      ],
+      "domain": "samsungbiologics.com",
+      "reuse_ticker": "",
+      "source_url": "https://companieslogo.com/img/orig/005930.KS_BIG-0a7bc052.png?t=1740479219",
+      "file": "samsungbiologics.png",
+      "download_url": "https://companieslogo.com/img/orig/005930.KS_BIG-0a7bc052.png?t=1740479219",
+      "resolved_url": "https://companieslogo.com/img/orig/005930.KS_BIG-0a7bc052.png?t=1740479219",
+      "sha256": "30c986bf290a2e2c343efc2518b2905ab4ff0f578581c28ffdceecdf83c3a9ef",
+      "bytes": 23653
+    },
+    {
+      "asset": "strategy",
+      "tickers": [
+        "STRD",
+        "STRF",
+        "STRK"
+      ],
+      "domain": "",
+      "reuse_ticker": "MSTR",
+      "source_url": "https://companieslogo.com/img/orig/MSTR_BIG-7252aadf.png?t=1741969284",
+      "file": "strategy.png",
+      "download_url": "https://companieslogo.com/img/orig/MSTR_BIG-7252aadf.png?t=1741969284",
+      "resolved_url": "https://companieslogo.com/img/orig/MSTR_BIG-7252aadf.png?t=1741969284",
+      "sha256": "cceca2af3e6b56ea79a828aa364b9a6dc81f33e5a2f8a118e859d5dd7b833e7b",
+      "bytes": 23367
+    },
+    {
+      "asset": "sumitomo",
+      "tickers": [
+        "SUMIELEC"
+      ],
+      "domain": "sumitomoelectric.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "sumitomo.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fsumitomoelectric.com&sz=128",
+      "resolved_url": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://sumitomoelectric.com&size=128",
+      "sha256": "014c29e76e7946402eb4657017446f75d1d057e3970ce1cd158100389c49d2f3",
+      "bytes": 1465
+    },
+    {
+      "asset": "stablecoinx",
+      "tickers": [
+        "USDESTOCK"
+      ],
+      "domain": "",
+      "reuse_ticker": "USDE",
+      "source_url": "",
+      "file": "stablecoinx.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/USDE-0f8a.jpeg",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/USDE-0f8a.jpeg",
+      "sha256": "dc635c5ec40cb02808a46fd3e4f64b1aea63d51f2f4e07b8d6e03ae7ef8d2e9c",
+      "bytes": 13080
+    },
+    {
+      "asset": "wiley",
+      "tickers": [
+        "WLYB"
+      ],
+      "domain": "",
+      "reuse_ticker": "WLY",
+      "source_url": "",
+      "file": "wiley.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/WLY.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/WLY.png",
+      "sha256": "4f16874031417feaad82d52786418b4c1e47f9d5f4528d006641049e034fc3c1",
+      "bytes": 1636
+    },
+    {
+      "asset": "adstec",
+      "tickers": [
+        "ADSE"
+      ],
+      "domain": "www.ads-tec-energy.com",
+      "reuse_ticker": "",
+      "source_url": "https://logos.stockanalysis.com/adse.svg",
+      "file": "adstec.svg",
+      "download_url": "https://logos.stockanalysis.com/adse.svg",
+      "resolved_url": "https://logos.stockanalysis.com/adse.svg",
+      "sha256": "f1209778a95fbd8f39b11d2824dc297105ed06e181896e5059d1090698fd1ce7",
+      "bytes": 3321
+    },
+    {
+      "asset": "advantest",
+      "tickers": [
+        "ADVANTEST"
+      ],
+      "domain": "advantest.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "advantest.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fadvantest.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://advantest.com&size=128",
+      "sha256": "b35af575f301c5b611d75cc7085fead933ef91b2f1b64af60ab1f245601a4b9a",
+      "bytes": 1722
+    },
+    {
+      "asset": "air",
+      "tickers": [
+        "AIIR"
+      ],
+      "domain": "air.global",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "air.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fair.global&sz=128",
+      "resolved_url": "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://air.global&size=128",
+      "sha256": "33104cc4f335c4eeae4eac71051b4b2893d0c4c5cfb7e1a2ec5408f7b91a4173",
+      "bytes": 2147
+    },
+    {
+      "asset": "apnimed",
+      "tickers": [
+        "APMD"
+      ],
+      "domain": "apnimed.com",
+      "reuse_ticker": "",
+      "source_url": "https://logos.stockanalysis.com/apmd.svg",
+      "file": "apnimed.svg",
+      "download_url": "https://logos.stockanalysis.com/apmd.svg",
+      "resolved_url": "https://logos.stockanalysis.com/apmd.svg",
+      "sha256": "915d2ca6c12a51c7d4fd8599866fd82631cd1f7e29d59659db21399a8939ff95",
+      "bytes": 719
+    },
+    {
+      "asset": "attovia",
+      "tickers": [
+        "ATTO"
+      ],
+      "domain": "www.attovia.com",
+      "reuse_ticker": "",
+      "source_url": "https://logos.stockanalysis.com/atto.svg",
+      "file": "attovia.svg",
+      "download_url": "https://logos.stockanalysis.com/atto.svg",
+      "resolved_url": "https://logos.stockanalysis.com/atto.svg",
+      "sha256": "73577d27bd8e3b355a848c32740540829b624b539c1c352cb19fe41ead7b7b13",
+      "bytes": 5184
+    },
+    {
+      "asset": "avalyn",
+      "tickers": [
+        "AVLN"
+      ],
+      "domain": "www.avalynpharma.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "avalyn.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fwww.avalynpharma.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.avalynpharma.com&size=128",
+      "sha256": "b10db16ad06c7b8f8e70ff2b34a847181d5043f843617dcfbfbb697458b0cd7d",
+      "bytes": 1751
+    },
+    {
+      "asset": "ayagold",
+      "tickers": [
+        "AYA"
+      ],
+      "domain": "ayagoldsilver.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "ayagold.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fayagoldsilver.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://ayagoldsilver.com&size=128",
+      "sha256": "6c7638ef7ed0cc217a54fe26de5419e4ac72c8789787e19091428f42698c6548",
+      "bytes": 888
+    },
+    {
+      "asset": "azul",
+      "tickers": [
+        "AZUL"
+      ],
+      "domain": "www.voeazul.com.br",
+      "reuse_ticker": "",
+      "source_url": "https://logos.stockanalysis.com/azul.svg",
+      "file": "azul.svg",
+      "download_url": "https://logos.stockanalysis.com/azul.svg",
+      "resolved_url": "https://logos.stockanalysis.com/azul.svg",
+      "sha256": "5f7308c82410ba1014e0eb89cb14e325e1eec7d2bea7094894e2d22893abaaf4",
+      "bytes": 3968
+    },
+    {
+      "asset": "bradesco",
+      "tickers": [
+        "BBD"
+      ],
+      "domain": "banco.bradesco",
+      "reuse_ticker": "",
+      "source_url": "https://logos.stockanalysis.com/bbd.svg",
+      "file": "bradesco.svg",
+      "download_url": "https://logos.stockanalysis.com/bbd.svg",
+      "resolved_url": "https://logos.stockanalysis.com/bbd.svg",
+      "sha256": "aaa8258bb6c52adc0d47198460fab38b469ad644f3ce846b3d61e3cc3b78c5d5",
+      "bytes": 3521
+    },
+    {
+      "asset": "braveheart",
+      "tickers": [
+        "BRVE"
+      ],
+      "domain": "www.braveheart.bio",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "braveheart.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fwww.braveheart.bio&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.braveheart.bio&size=128",
+      "sha256": "054f80dfb4a51eae803f19749443c36dfbe5a0a451d6b1b709f7a1ad60502e88",
+      "bytes": 2646
+    },
+    {
+      "asset": "buuu",
+      "tickers": [
+        "BUUU"
+      ],
+      "domain": "bucreation.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "buuu.jpg",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fbucreation.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://bucreation.com&size=128",
+      "sha256": "bf33a799a54c1c270eef214fcb181def6f0ea20224cbfa2f69d82d4bf9f6f540",
+      "bytes": 1691
+    },
+    {
+      "asset": "capitalclean",
+      "tickers": [
+        "CCEC"
+      ],
+      "domain": "www.capitalcleanenergycarriers.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "capitalclean.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fwww.capitalcleanenergycarriers.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.capitalcleanenergycarriers.com&size=128",
+      "sha256": "40c8dad7d715b9243ac56ddab5f912f7bc5a258232035366b8cc881a78950b83",
+      "bytes": 34170
+    },
+    {
+      "asset": "chronoscale",
+      "tickers": [
+        "CHRN"
+      ],
+      "domain": "chronoscale.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "chronoscale.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fchronoscale.com&sz=128",
+      "resolved_url": "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://chronoscale.com&size=128",
+      "sha256": "fbef2847ab0c7b14894cf0e553a843a7f14b002361f904769e11470d6dc7acc9",
+      "bytes": 2426
+    },
+    {
+      "asset": "bancolombia",
+      "tickers": [
+        "CIB"
+      ],
+      "domain": "www.bancolombia.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "bancolombia.png",
+      "download_url": "https://www.bancolombia.com/apple-touch-icon.png",
+      "resolved_url": "https://www.bancolombia.com/apple-touch-icon.png",
+      "sha256": "4224188415d6a91bbbe20bedfd46a396fde6683eec669623a28bfd504cbe61a0",
+      "bytes": 5211
+    },
+    {
+      "asset": "hemab",
+      "tickers": [
+        "COAG"
+      ],
+      "domain": "www.hemab.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "hemab.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fwww.hemab.com&sz=128",
+      "resolved_url": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.hemab.com&size=128",
+      "sha256": "524613b0fb042abcbcdea2f317afce02075415683499457d41a4d9752de58fb6",
+      "bytes": 952
+    },
+    {
+      "asset": "csquare",
+      "tickers": [
+        "CSQR"
+      ],
+      "domain": "www.csquare.com",
+      "reuse_ticker": "",
+      "source_url": "https://logos.stockanalysis.com/csqr.svg",
+      "file": "csquare.svg",
+      "download_url": "https://logos.stockanalysis.com/csqr.svg",
+      "resolved_url": "https://logos.stockanalysis.com/csqr.svg",
+      "sha256": "8b61bbe4da3224c15a684240945d50d4ee0e0e2be458222d46ca3812ce47fced",
+      "bytes": 400
+    },
+    {
+      "asset": "eaglerock",
+      "tickers": [
+        "EROK"
+      ],
+      "domain": "www.erok.com",
+      "reuse_ticker": "",
+      "source_url": "https://logos.stockanalysis.com/erok.svg",
+      "file": "eaglerock.svg",
+      "download_url": "https://logos.stockanalysis.com/erok.svg",
+      "resolved_url": "https://logos.stockanalysis.com/erok.svg",
+      "sha256": "1673de48bbc81e885e98cc64c269cd99c914b65343383450d3a0ee883978f17c",
+      "bytes": 1101
+    },
+    {
+      "asset": "corgi",
+      "tickers": [
+        "EUV"
+      ],
+      "domain": "corgiinvest.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "corgi.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fcorgiinvest.com&sz=128",
+      "resolved_url": "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://corgiinvest.com&size=128",
+      "sha256": "2da7cfded534394db2a99c7037d5594bd8bb09e32023fd0e4f77a471996ba096",
+      "bytes": 2595
+    },
+    {
+      "asset": "londian",
+      "tickers": [
+        "FOIL"
+      ],
+      "domain": "www.londianwason.com",
+      "reuse_ticker": "",
+      "source_url": "https://logos.stockanalysis.com/foil.svg",
+      "file": "londian.svg",
+      "download_url": "https://logos.stockanalysis.com/foil.svg",
+      "resolved_url": "https://logos.stockanalysis.com/foil.svg",
+      "sha256": "7fddf5418834076a9c6f7a715d5c96faafd4948cc2a02c0c59c37ab978267cd0",
+      "bytes": 4533
+    },
+    {
+      "asset": "formula",
+      "tickers": [
+        "FORTY"
+      ],
+      "domain": "www.formulasystems.com",
+      "reuse_ticker": "",
+      "source_url": "https://logos.stockanalysis.com/forty.svg",
+      "file": "formula.svg",
+      "download_url": "https://logos.stockanalysis.com/forty.svg",
+      "resolved_url": "https://logos.stockanalysis.com/forty.svg",
+      "sha256": "1b817806df87663060bf7f1b57aa6ceee5dd05c38c59d4d9930c3f0d138a8189",
+      "bytes": 522
+    },
+    {
+      "asset": "forbright",
+      "tickers": [
+        "FRBT"
+      ],
+      "domain": "www.forbrightbank.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "forbright.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fwww.forbrightbank.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.forbrightbank.com&size=128",
+      "sha256": "ccdb7af0249dc768b804734b294d8494fca8fa00b82ec11089cdb56229664156",
+      "bytes": 780
+    },
+    {
+      "asset": "hotel101",
+      "tickers": [
+        "HBNB"
+      ],
+      "domain": "www.hotel101global.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "hotel101.png",
+      "download_url": "https://hotel101global.com/wp-content/uploads/2023/06/favicon.png",
+      "resolved_url": "https://hotel101global.com/wp-content/uploads/2023/06/favicon.png",
+      "sha256": "f6862e882073f294b78b9c322230d59cbf174cf3a8f43463a30fd239b3c6416c",
+      "bytes": 4456
+    },
+    {
+      "asset": "icahn",
+      "tickers": [
+        "IEP"
+      ],
+      "domain": "www.ielp.com",
+      "reuse_ticker": "",
+      "source_url": "https://logos.stockanalysis.com/iep.svg",
+      "file": "icahn.svg",
+      "download_url": "https://logos.stockanalysis.com/iep.svg",
+      "resolved_url": "https://logos.stockanalysis.com/iep.svg",
+      "sha256": "8eeaa5010d39ed892dbadccd8c6e3105b424db1bfff997b10e597b516a6f16f1",
+      "bytes": 280042
+    },
+    {
+      "asset": "iqm",
+      "tickers": [
+        "IQMX"
+      ],
+      "domain": "iqm.tech",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "iqm.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fiqm.tech&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://iqm.tech&size=128",
+      "sha256": "0b96f86183438fc0faf3584bd4fcd9e225268990d6cde011cd4662a5cee7655e",
+      "bytes": 1493
+    },
+    {
+      "asset": "itg",
+      "tickers": [
+        "ITG"
+      ],
+      "domain": "www.itgcomm.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "itg.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fwww.itgcomm.com&sz=128",
+      "resolved_url": "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.itgcomm.com&size=128",
+      "sha256": "f90d853bbc9825f922340390903f00a7d2e156e4396aab5f269a65e1410c0ea5",
+      "bytes": 2720
+    },
+    {
+      "asset": "kardigan",
+      "tickers": [
+        "KARD"
+      ],
+      "domain": "www.kardigan.bio",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "kardigan.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fwww.kardigan.bio&sz=128",
+      "resolved_url": "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.kardigan.bio&size=128",
+      "sha256": "cc5ee9ad1e048614950a28f0cb50bf1a0ae89efbde73edf01068e5bfed23b302",
+      "bytes": 2774
+    },
+    {
+      "asset": "liongroup",
+      "tickers": [
+        "LGHL"
+      ],
+      "domain": "ir.liongrouphl.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "liongroup.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fir.liongrouphl.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://ir.liongrouphl.com&size=128",
+      "sha256": "2a09a3be220d099db0bccb73aa036af7db116e194f7424373aca68a1c417c05d",
+      "bytes": 1787
+    },
+    {
+      "asset": "latigo",
+      "tickers": [
+        "LTGO"
+      ],
+      "domain": "latigobio.com",
+      "reuse_ticker": "",
+      "source_url": "https://logos.stockanalysis.com/ltgo.svg",
+      "file": "latigo.svg",
+      "download_url": "https://logos.stockanalysis.com/ltgo.svg",
+      "resolved_url": "https://logos.stockanalysis.com/ltgo.svg",
+      "sha256": "f44c8df4b3aebe5f16e3cc7b28644d9fc39a7871febfc2dc244d1832615e2050",
+      "bytes": 5149
+    },
+    {
+      "asset": "lyntris",
+      "tickers": [
+        "LYNX"
+      ],
+      "domain": "www.lyntris.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "lyntris.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fwww.lyntris.com&sz=128",
+      "resolved_url": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.lyntris.com&size=128",
+      "sha256": "abc133464367b8618dbce89354693f5009d9cd859fff868a85cc9e3b162eca15",
+      "bytes": 587
+    },
+    {
+      "asset": "mplx",
+      "tickers": [
+        "MPLX"
+      ],
+      "domain": "www.mplx.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "mplx.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fwww.mplx.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.mplx.com&size=128",
+      "sha256": "6ca7992ed4313599c4042462e840f8938465195ce45b3a301ada898f4ab7a905",
+      "bytes": 783
+    },
+    {
+      "asset": "nakamoto",
+      "tickers": [
+        "NAKA"
+      ],
+      "domain": "nakamoto.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "nakamoto.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fnakamoto.com&sz=128",
+      "resolved_url": "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://nakamoto.com&size=128",
+      "sha256": "82410d9b564da8259c2790cfdb48bfb47da88c8d5242bf344853d2089f70e0c4",
+      "bytes": 1482
+    },
+    {
+      "asset": "obsidian",
+      "tickers": [
+        "OBX"
+      ],
+      "domain": "obsidiantx.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "obsidian.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fobsidiantx.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://obsidiantx.com&size=128",
+      "sha256": "1ba2ddb2873c91314162f8ddc29fb440cd48ac470d5f26632c87b11e69ca9b28",
+      "bytes": 1938
+    },
+    {
+      "asset": "odyssey",
+      "tickers": [
+        "ODTX"
+      ],
+      "domain": "odysseytx.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "odyssey.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fodysseytx.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://odysseytx.com&size=128",
+      "sha256": "d4682d5a1db1fdc66776979babef5e7fbed77874a02e77e254b6b5422b8c75fc",
+      "bytes": 3102
+    },
+    {
+      "asset": "polibeli",
+      "tickers": [
+        "PLBL"
+      ],
+      "domain": "www.polibeli.id",
+      "reuse_ticker": "",
+      "source_url": "https://logos.stockanalysis.com/plbl.svg",
+      "file": "polibeli.svg",
+      "download_url": "https://logos.stockanalysis.com/plbl.svg",
+      "resolved_url": "https://logos.stockanalysis.com/plbl.svg",
+      "sha256": "cf95c258e6b00b6bd0402d0aa7dfc11562c2c01df38832a18237aba630343c7e",
+      "bytes": 1857
+    },
+    {
+      "asset": "pershing",
+      "tickers": [
+        "PS"
+      ],
+      "domain": "pershingsquareholdings.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "pershing.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fpershingsquareholdings.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://pershingsquareholdings.com&size=128",
+      "sha256": "5b79873a4b4aff35bc706a2bd5f5736ee66bd012a23d6315902b6fff1f033323",
+      "bytes": 940
+    },
+    {
+      "asset": "regencell",
+      "tickers": [
+        "RGC"
+      ],
+      "domain": "www.regencellbioscience.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "regencell.jpg",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fwww.regencellbioscience.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.regencellbioscience.com&size=128",
+      "sha256": "abb96c6434e46e6d52195a529f6d53f55f37cf500656c2eb5e6fcc57fa04a44d",
+      "bytes": 5563
+    },
+    {
+      "asset": "simec",
+      "tickers": [
+        "SIM"
+      ],
+      "domain": "www.gsimec.com.mx",
+      "reuse_ticker": "",
+      "source_url": "https://companieslogo.com/img/orig/SIMECB.MX_BIG-aec5ecf1.png?t=1742622281",
+      "file": "simec.png",
+      "download_url": "https://companieslogo.com/img/orig/SIMECB.MX_BIG-aec5ecf1.png?t=1742622281",
+      "resolved_url": "https://companieslogo.com/img/orig/SIMECB.MX_BIG-aec5ecf1.png?t=1742622281",
+      "sha256": "438d11d3588ad0d405ab9eee69e5dbfc6160d3b4d0576bead4e40e19a8ca6bba",
+      "bytes": 48634
+    },
+    {
+      "asset": "sinda",
+      "tickers": [
+        "SIND"
+      ],
+      "domain": "sinda.mx",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "sinda.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fsinda.mx&sz=128",
+      "resolved_url": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://sinda.mx&size=128",
+      "sha256": "3e26d88c4df3c0401a95b6568806fdea68ee0cf9c3553a4bff864c674232f91d",
+      "bytes": 930
+    },
+    {
+      "asset": "seaport",
+      "tickers": [
+        "SPTX"
+      ],
+      "domain": "seaporttx.com",
+      "reuse_ticker": "",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2042347/000119312526178716/g73463g00a03.jpg",
+      "file": "seaport.jpg",
+      "download_url": "https://www.sec.gov/Archives/edgar/data/2042347/000119312526178716/g73463g00a03.jpg",
+      "resolved_url": "https://www.sec.gov/Archives/edgar/data/2042347/000119312526178716/g73463g00a03.jpg",
+      "sha256": "6b03aee05d69a11a72dfb1600c721a6d3686c25e9edf112034efa1b7e13de9cc",
+      "bytes": 40157
+    },
+    {
+      "asset": "sunshine",
+      "tickers": [
+        "SSMR"
+      ],
+      "domain": "sunshinesilvermining.com",
+      "reuse_ticker": "",
+      "source_url": "https://logos.stockanalysis.com/ssmr.svg",
+      "file": "sunshine.svg",
+      "download_url": "https://logos.stockanalysis.com/ssmr.svg",
+      "resolved_url": "https://logos.stockanalysis.com/ssmr.svg",
+      "sha256": "911bdfb06a0558651972502b65ee8ea33f89d1e9d41a92a2bc4eccfb2904f40d",
+      "bytes": 3624
+    },
+    {
+      "asset": "standardnuclear",
+      "tickers": [
+        "STDN"
+      ],
+      "domain": "www.standardnuclear.com",
+      "reuse_ticker": "",
+      "source_url": "https://logos.stockanalysis.com/stdn.svg",
+      "file": "standardnuclear.svg",
+      "download_url": "https://logos.stockanalysis.com/stdn.svg",
+      "resolved_url": "https://logos.stockanalysis.com/stdn.svg",
+      "sha256": "708ebca0a9b78aff6c8ff3006080b3c3ea5039d6395add72801755a46647ce87",
+      "bytes": 3782
+    },
+    {
+      "asset": "sunoco",
+      "tickers": [
+        "SUN"
+      ],
+      "domain": "www.sunocolp.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "sunoco.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fwww.sunocolp.com&sz=128",
+      "resolved_url": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.sunocolp.com&size=128",
+      "sha256": "c87ae8c4285d77f2113520349dd4855347bae1313c8dfdb152233c5fdd8e6324",
+      "bytes": 1418
+    },
+    {
+      "asset": "tokyoelectron",
+      "tickers": [
+        "TOKYOEL"
+      ],
+      "domain": "www.tel.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "tokyoelectron.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fwww.tel.com&sz=128",
+      "resolved_url": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.tel.com&size=128",
+      "sha256": "95f9d1d804576ebbfbeb19bc3ab709da2072c8b28096f9304dc9dfab7d01a08c",
+      "bytes": 502
+    },
+    {
+      "asset": "topfinancial",
+      "tickers": [
+        "TOP"
+      ],
+      "domain": "www.zyfgl.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "topfinancial.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fwww.zyfgl.com&sz=128",
+      "resolved_url": "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.zyfgl.com&size=128",
+      "sha256": "27e7e1e239bd35483c391fdb6f1c84f849c7f2a3e911260dbcb44f046e8557d3",
+      "bytes": 1195
+    },
+    {
+      "asset": "trulieve",
+      "tickers": [
+        "TRLV"
+      ],
+      "domain": "www.trulieve.com",
+      "reuse_ticker": "",
+      "source_url": "",
+      "file": "trulieve.png",
+      "download_url": "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fwww.trulieve.com&sz=128",
+      "resolved_url": "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.trulieve.com&size=128",
+      "sha256": "f10d979e6c7a46a3e713ff345c1b90c909e5e66d0e843f4118878c10008bca8b",
+      "bytes": 2296
+    },
+    {
+      "asset": "usacompression",
+      "tickers": [
+        "USAC"
+      ],
+      "domain": "usacompression.com",
+      "reuse_ticker": "",
+      "source_url": "https://logos.stockanalysis.com/usac.svg",
+      "file": "usacompression.svg",
+      "download_url": "https://logos.stockanalysis.com/usac.svg",
+      "resolved_url": "https://logos.stockanalysis.com/usac.svg",
+      "sha256": "5ae3ec1d7a042ac82bae4fa6d2c4c078b927a015c8594086ae998e9b05d8682a",
+      "bytes": 2095
+    },
+    {
+      "asset": "westernmidstream",
+      "tickers": [
+        "WES"
+      ],
+      "domain": "www.westernmidstream.com",
+      "reuse_ticker": "",
+      "source_url": "https://logos.stockanalysis.com/wes.svg",
+      "file": "westernmidstream.svg",
+      "download_url": "https://logos.stockanalysis.com/wes.svg",
+      "resolved_url": "https://logos.stockanalysis.com/wes.svg",
+      "sha256": "f900d57a40bfe0f362c25dac7feb88979792f8c341d8c2e4cc5ddd579c66824e",
+      "bytes": 1421
+    },
+    {
+      "asset": "blackberry",
+      "tickers": [
+        "BBSTOCK"
+      ],
+      "domain": "",
+      "reuse_ticker": "BB",
+      "source_url": "",
+      "file": "blackberry.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/BB.png",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/BB.png",
+      "sha256": "d3f0e6b8e64b6f918539aa59856abf200ff59a411801a938d634ec0aa6d8a7d5",
+      "bytes": 2689
+    },
+    {
+      "asset": "doncasters",
+      "tickers": [
+        "IOND"
+      ],
+      "domain": "doncasters.com",
+      "reuse_ticker": "DPC",
+      "source_url": "",
+      "file": "doncasters.png",
+      "download_url": "https://bin.bnbstatic.com/static/stock/DPC-9686.jpg",
+      "resolved_url": "https://bin.bnbstatic.com/static/stock/DPC-9686.jpg",
+      "sha256": "f96ac7b6ae5c6bb6724ee144c050020b9f09d6fb8d84f79cc84bad58f725e0e4",
+      "bytes": 15642
+    }
+  ]
+}

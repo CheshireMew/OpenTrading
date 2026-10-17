@@ -53,6 +53,13 @@ export const APP_ROUTE_DEFINITIONS = [
     nav: { section: 'indicators', labelKey: 'nav.web3Rank', icon: 'CubeTransparentIcon' },
   },
   {
+    path: '/indicators/equities',
+    name: 'EquityMarket',
+    component: () => import('@/views/indicators/EquityMarket.vue'),
+    meta: { titleKey: 'nav.equities' },
+    nav: { section: 'indicators', labelKey: 'nav.equities', icon: 'ChartBarSquareIcon' },
+  },
+  {
     path: '/research',
     name: 'ResearchWorkbench',
     component: () => import('@/views/research/ResearchWorkbench.vue'),

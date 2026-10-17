@@ -1,0 +1,16 @@
+{
+  "label": "054-before-fixed-atr-controls",
+  "created_at": "2026-09-11T13:53:12.682447+00:00",
+  "files": [
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/plan.json",
+      "sha256": "1cf5b845483091602908249adee73b8d70f1feb06432985cee976d2120ce0a3b",
+      "bytes": 11438
+    },
+    {
+      "path": "scripts/cloud_walkforward_study.py",
+      "sha256": "a4b3397d752a6682b3f504a0da40fbbaf7be8616105de470f53ef89095083db1",
+      "bytes": 27105
+    }
+  ]
+}

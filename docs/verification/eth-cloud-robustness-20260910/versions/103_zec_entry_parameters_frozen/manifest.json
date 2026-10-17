@@ -1,0 +1,41 @@
+{
+  "label": "103_zec_entry_parameters_frozen",
+  "created_at": "2026-09-13T05:51:18.125585+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "ccdd04ba62b5e821a556d215da2d129087bbe461835c5aeda83d7e54a8d5d9e2",
+      "bytes": 24654
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/zec/plan.json",
+      "sha256": "54556c1cc95c9989288587c83beb7305c3abbc204382ce47dc1375b0294762ce",
+      "bytes": 2214
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/zec/RULES.md",
+      "sha256": "fdcd78463a2a960ea8a71f266f3e5e15d123a14c759a5ce12adb611671490461",
+      "bytes": 769
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/zec/study.json",
+      "sha256": "8830f801e78a0029bda4dc703e096bfce305364dc358eeb03c737022a2933063",
+      "bytes": 666
+    },
+    {
+      "path": "scripts/paxg_intrabar_combined_study.py",
+      "sha256": "412e12aebf28cd126f276091e5a269633b77c98bb49e07a4b94abd0dd927fa3d",
+      "bytes": 16626
+    },
+    {
+      "path": "scripts/zec_paxg_entry_parameters_study.py",
+      "sha256": "6333b4a0533523c87a2ae3f2d6b123642a623a091e53bd38806a9996c7d763cd",
+      "bytes": 19635
+    },
+    {
+      "path": "strategies/trend_cloud_intrabar_methods_v3.py",
+      "sha256": "0ea141561ca6d49e4a77430e3fd3cd3a751fd031ec8a98759439b2e1c7cd2cb0",
+      "bytes": 10190
+    }
+  ]
+}

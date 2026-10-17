@@ -1,0 +1,129 @@
+{
+  "scope": "Three requested variants only; no parameter search. BNB adds support/resistance location gate only. SOL/BTC jointly add body confirmation and 5m protection. Existing baselines reused.",
+  "requests": {
+    "sol": {
+      "title": "SOL：原最高收益EMA通道＋实体盘中确认＋5分钟保护",
+      "base": {
+        "strategy": "trend_cloud_intrabar_methods_v3",
+        "symbol": "SOL/USDT",
+        "timeframe": "15m",
+        "start": "2020-09-10T00:00:00Z",
+        "end": "2026-09-10T00:00:00Z",
+        "initial_cash": 10000,
+        "position_pct": 100,
+        "data_gap_policy": "observed_bars",
+        "execution_timeframe": "5m",
+        "intrabar_profit_protection": true,
+        "parameters": {
+          "center_length": 55,
+          "width_length": 50,
+          "trigger_mult": 0.4,
+          "chase_mult": 2,
+          "activation_pct": 2,
+          "giveback_pct": 50,
+          "initial_stop_pct": 1,
+          "stop_method": 0,
+          "confirmation_level": 3,
+          "max_wait_bars": 2,
+          "direction_filter": false,
+          "stop_reentry": false,
+          "entry_bar_assumption": 0,
+          "price_tick": 0.01,
+          "stop_mult": 1.5,
+          "stop_floor_pct": 0.5,
+          "stop_cap_pct": 2
+        }
+      },
+      "axes": {},
+      "max_runs": 1
+    },
+    "btc": {
+      "title": "BTC：原最高收益EMA通道＋实体盘中确认＋5分钟保护",
+      "base": {
+        "strategy": "trend_cloud_intrabar_methods_v3",
+        "symbol": "BTC/USDT",
+        "timeframe": "1h",
+        "start": "2020-10-01T00:00:00Z",
+        "end": "2026-09-10T00:00:00Z",
+        "initial_cash": 10000,
+        "position_pct": 100,
+        "data_gap_policy": "observed_bars",
+        "execution_timeframe": "5m",
+        "intrabar_profit_protection": true,
+        "parameters": {
+          "center_length": 55,
+          "width_length": 31,
+          "trigger_mult": 0.4,
+          "chase_mult": 2,
+          "activation_pct": 2,
+          "giveback_pct": 50,
+          "initial_stop_pct": 1,
+          "stop_method": 0,
+          "confirmation_level": 3,
+          "max_wait_bars": 2,
+          "direction_filter": false,
+          "stop_reentry": false,
+          "entry_bar_assumption": 0,
+          "price_tick": 0.01,
+          "stop_mult": 1.5,
+          "stop_floor_pct": 0.5,
+          "stop_cap_pct": 2
+        }
+      },
+      "axes": {},
+      "max_runs": 1
+    },
+    "bnb": {
+      "title": "BNB：最高收益EMA通道＋支撑阻力位置检查",
+      "base": {
+        "strategy": "trend_cloud_intrabar_support_v1",
+        "symbol": "BNB/USDT",
+        "timeframe": "15m",
+        "start": "2018-09-10T00:00:00Z",
+        "end": "2026-09-10T00:00:00Z",
+        "initial_cash": 10000,
+        "position_pct": 100,
+        "data_gap_policy": "observed_bars",
+        "execution_timeframe": "5m",
+        "intrabar_profit_protection": true,
+        "parameters": {
+          "center_length": 55,
+          "width_length": 50,
+          "trigger_mult": 0.8,
+          "chase_mult": 1.5,
+          "activation_pct": 2,
+          "giveback_pct": 50,
+          "initial_stop_pct": 2,
+          "stop_method": 0,
+          "confirmation_level": 3,
+          "max_wait_bars": 2,
+          "direction_filter": false,
+          "stop_reentry": false,
+          "entry_bar_assumption": 0,
+          "price_tick": 0.01,
+          "stop_mult": 1.5,
+          "stop_floor_pct": 0.5,
+          "stop_cap_pct": 2,
+          "support_gate": true
+        }
+      },
+      "axes": {},
+      "max_runs": 1,
+      "source_run": "657b2b8086588a254442b82b128d34df"
+    }
+  },
+  "baseline_sources": {
+    "bnb": "docs/verification/bnb-final-two-20260914/results.json#/rows/0",
+    "sol": "docs/verification/alt-cloud-transfer-20260911/results.json#/results/sol/c55_w50_t0p4_d2_a2_g50_s1/full",
+    "btc": "docs/verification/cloud-direct-adaptation-20260912/results.json#/results/btc/1h/c0r0t0"
+  },
+  "rules": [
+    "BNB location is assessed on ORIGINAL signal candle, not later intrabar entry. Width is its unchanged EMA(high-low,50).",
+    "Known price levels: previous completed UTC day high/low, strict hourly pivot highs/lows with 2 hours each side; retain120h from confirmation. Level must be known at signal candle open.",
+    "Long: nearest known level below close, distance >0 and <=1W, signal low <=support+0.25W. Short mirrored. Missing levels reject entry. No room, momentum, trend or efficiency filter added.",
+    "A rejected opposite entry MUST still close the old position. Passing signal arms existing next2-bar body-break order; do not require another location touch later. No stop reentry, repeated entries or delayed reverse exit.",
+    "SOL/BTC native periods and all parameters unchanged. Only confirmation_level3, max_wait_bars2 and execution5m/protection5m are added. Residual same5m ambiguity stays stop_first.",
+    "Dates unchanged; full current equity compounding, no fees/slippage/leverage. Fine-data execution is part of requested combined upgrade; no causal claim separating the two changes.",
+    "Preserve requests, baseline metrics, strategy and engine snapshots, hashes, trades, equity and logs. Compare native candle data before attributing differences to strategy."
+  ]
+}

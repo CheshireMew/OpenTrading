@@ -5,7 +5,7 @@ from datetime import datetime
 
 from app.domain.market.index_catalog import IndexInstrument
 from app.services.market.index_history_contracts import IndexFetchResult
-from app.services.market.index_history_fred import FredIndexHistoryProvider
+from app.services.market.index_history_fx import IndexCurrencyHistoryProvider
 from app.services.market.index_history_http import (
     BaostockIndexHistoryProvider,
     CboeIndexHistoryProvider,
@@ -19,7 +19,6 @@ from app.services.market.index_source_catalog import (
     IndexSourceBinding,
     get_index_source_binding,
 )
-from app.services.fred_api_config_service import read_fred_api_key
 from utils.logger import logger
 
 
@@ -32,7 +31,7 @@ HistoryProvider = Callable[
 class IndexHistorySources:
     def __init__(self) -> None:
         self.sina = SinaIndexHistoryProvider()
-        self.fred = FredIndexHistoryProvider()
+        self.currency = IndexCurrencyHistoryProvider()
         self.providers: tuple[HistoryProvider, ...] = (
             self.sina.fetch_hk_history,
             self.sina.fetch_cn_history,
@@ -42,7 +41,6 @@ class IndexHistorySources:
             BaostockIndexHistoryProvider().fetch_history,
             CboeIndexHistoryProvider().fetch_history,
             YFinanceIndexHistoryProvider().fetch_history,
-            self.fred.fetch_history,
         )
         self.pricing_providers = {
             "sina_us_etf": self.sina.fetch_us_etf_history,
@@ -62,7 +60,7 @@ class IndexHistorySources:
             try:
                 result = provider(instrument, source, start_dt, end_dt)
             except Exception as exc:
-                safe_error = redact_exception_message(exc, (read_fred_api_key(),))
+                safe_error = redact_exception_message(exc)
                 provider_name = getattr(provider, "__name__", provider.__class__.__name__)
                 errors.append(f"{provider_name}: {safe_error}")
                 logger.warning(f"指数数据源失败 {instrument.symbol} {provider_name}: {safe_error}")
@@ -89,19 +87,10 @@ class IndexHistorySources:
         source = get_index_source_binding(instrument.symbol)
         return bool(source.pricing_provider in self.pricing_providers)
 
-    def fetch_fred_history(
-        self,
-        instrument: IndexInstrument,
-        start_dt: datetime,
-        end_dt: datetime,
-    ) -> IndexFetchResult:
-        source = get_index_source_binding(instrument.symbol)
-        return self.fred.fetch_history(instrument, source, start_dt, end_dt)
-
     def fetch_usd_fx_rates(
         self,
         currency: str,
         start_dt: datetime,
         end_dt: datetime,
     ) -> dict[str, float]:
-        return self.fred.fetch_usd_fx_rates(currency, start_dt, end_dt)
+        return self.currency.fetch_usd_fx_rates(currency, start_dt, end_dt)

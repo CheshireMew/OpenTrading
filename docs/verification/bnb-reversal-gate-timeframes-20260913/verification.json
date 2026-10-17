@@ -1,0 +1,29 @@
+{
+  "created_at": "2026-09-13T15:48:56.835339+00:00",
+  "passed": 19,
+  "command": "pytest test/test_reverse_after_protection.py test/test_intrabar_reverse_exit.py test/test_zec_intrabar_methods.py -q --basetemp D:/Tools/heimdall-bnb-gate-01",
+  "checks": [
+    "达标前双向均不退出、不反手",
+    "保护启动标志保持有效，不因浮盈回落重新禁用",
+    "新持仓重新等待达标",
+    "空仓入场的固定止损与利润保护不变",
+    "开关关闭与原版本全部交易决策一致",
+    "原策略和回测引擎哈希未改变"
+  ],
+  "sources": {
+    "strategies/trend_cloud_intrabar_methods_v3.py": "0ea141561ca6d49e4a77430e3fd3cd3a751fd031ec8a98759439b2e1c7cd2cb0",
+    "strategies/trend_cloud_reverse_after_protection_v5.py": "d487a6f37cf0c7117e658c2de40040bf636e0323528f2e3e8f7a82ac8b76feb7",
+    "app/domain/local_backtest.py": "ccdd04ba62b5e821a556d215da2d129087bbe461835c5aeda83d7e54a8d5d9e2",
+    "test/test_reverse_after_protection.py": "70eb1402fbeb06cc9c935d224f921c3be38ef70af73320e34c27108124252ab5"
+  },
+  "batches": {
+    "timeframes": "943c93e7e6934d12b55ab7cf2104da45",
+    "gate": "0ba8771046304e45a71039d85e717e8d"
+  },
+  "runs": {
+    "baseline": "657b2b8086588a254442b82b128d34df",
+    "30m": "6128a180c52764c4c8e96da49dd22508",
+    "1h": "d04fd416911cb8d96219aee5fc4d2261",
+    "15m_gate": "8e17f43f3e126c8d953bee698522128a"
+  }
+}

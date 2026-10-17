@@ -1,0 +1,1342 @@
+{
+  "id": "377967fb870f4ec9a6643fbbf8dc36b9",
+  "title": "ETH 15分钟信号，5分钟止损与保护：1%延后止损与止损区域限制，8组",
+  "created_at": "2026-09-19T09:19:58.988334+00:00",
+  "status": "completed",
+  "total": 8,
+  "counts": {
+    "completed": 8
+  },
+  "progress": 1.0,
+  "request": {
+    "axes": {
+      "parameters.stop_confirmation": [
+        "immediate",
+        "next_bar_open",
+        "next_bar_touch",
+        "next_bar_close"
+      ],
+      "parameters.stop_range_lock": [
+        false,
+        true
+      ]
+    },
+    "base": {
+      "data_gap_policy": "observed_bars",
+      "end": "2026-09-18T00:00:00Z",
+      "execution_gap_policy": "coarse_fallback",
+      "execution_timeframe": "5m",
+      "initial_cash": 10000.0,
+      "intrabar_profit_protection": true,
+      "parameters": {
+        "activation_pct": 2,
+        "center_length": 55,
+        "chase_mult": 2,
+        "confirmation_level": 3,
+        "direction_filter": false,
+        "entry_bar_assumption": 0,
+        "giveback_pct": 50,
+        "initial_stop_pct": 1,
+        "max_wait_bars": 2,
+        "price_tick": 0.01,
+        "stop_cap_pct": 2,
+        "stop_confirmation": "immediate",
+        "stop_confirmation_clock": "execution",
+        "stop_floor_pct": 0.5,
+        "stop_method": 0,
+        "stop_mult": 1.5,
+        "stop_range_lock": false,
+        "stop_reentry": false,
+        "trigger_mult": 0.4,
+        "width_length": 31
+      },
+      "position_pct": 100.0,
+      "start": "2020-09-10T00:00:00Z",
+      "strategy": "trend_cloud_stop_confirmation_v2",
+      "symbol": "ETH/USDT",
+      "timeframe": "15m"
+    },
+    "max_runs": 8,
+    "parent": null,
+    "source_run": "ea24648f16ad39296f014bf9d96a28b1",
+    "title": "ETH 15分钟信号，5分钟止损与保护：1%延后止损与止损区域限制，8组"
+  },
+  "axes": {
+    "parameters.stop_confirmation": [
+      "immediate",
+      "next_bar_open",
+      "next_bar_touch",
+      "next_bar_close"
+    ],
+    "parameters.stop_range_lock": [
+      false,
+      true
+    ]
+  },
+  "warnings": [
+    "所有组合均完整留存；排序只描述这段历史。"
+  ],
+  "path": "D:\\Code\\Heimdall\\.heimdall_runtime\\research_studies\\377967fb870f4ec9a6643fbbf8dc36b9",
+  "items": [
+    {
+      "case": "v1",
+      "name": "stop_confirmation=immediate, stop_range_lock=False",
+      "parameters": {
+        "activation_pct": 2,
+        "center_length": 55,
+        "chase_mult": 2,
+        "confirmation_level": 3,
+        "direction_filter": false,
+        "entry_bar_assumption": 0,
+        "giveback_pct": 50,
+        "initial_stop_pct": 1,
+        "max_wait_bars": 2,
+        "price_tick": 0.01,
+        "stop_cap_pct": 2,
+        "stop_confirmation": "immediate",
+        "stop_confirmation_clock": "execution",
+        "stop_floor_pct": 0.5,
+        "stop_method": 0,
+        "stop_mult": 1.5,
+        "stop_range_lock": false,
+        "stop_reentry": false,
+        "trigger_mult": 0.4,
+        "width_length": 31
+      },
+      "timeframe": "15m",
+      "run_id": "a104f90b7738c391f2487cc8cb365677",
+      "status": "completed",
+      "progress": 1.0,
+      "report": {
+        "ambiguous_trades": 28,
+        "average_duration_minutes": 260.8747450896211,
+        "average_return_pct": 0.08042327304722098,
+        "breakeven": 1,
+        "execution_close_max_drawdown_pct": 29.990452740789237,
+        "execution_drawdown_basis": "mixed_closes",
+        "final_equity": 5956555.4527676385,
+        "initial_cash": 10000.0,
+        "losses": 6763,
+        "max_drawdown_pct": 29.459086428111963,
+        "notes": [
+          "基于所选价格数据、不计成本的多空策略模拟",
+          "最大回撤按每根收盘权益计算",
+          "无亏损时利润因子为空；无交易时胜率为空",
+          "K 线内退出的持仓时间按所属 K 线开盘时间近似",
+          "盘中突破委托仅用前一收盘已知价位；同根入场与止损先后不明的交易已标记，并按保存的 ambiguity_policy 处理",
+          "交易信号保持原周期；匹配的细周期行情逐根成交。细周期缺失或不匹配时回退原周期，已计数。保护仅在选定周期收盘更新，下一根生效。"
+        ],
+        "payoff_ratio": 2.9419028929533524,
+        "profit": 5946555.4527676385,
+        "profit_factor": 1.110554204600016,
+        "return_pct": 59465.55452767639,
+        "total_trades": 9317,
+        "win_rate": 27.40152409573897,
+        "wins": 2553
+      },
+      "error": null,
+      "chart_path": "/research/backtests?run=a104f90b7738c391f2487cc8cb365677&view=chart",
+      "execution_summary": {
+        "signal_timeframe": "15m",
+        "execution_timeframe": "5m",
+        "protection_timeframe": "5m",
+        "execution_gap_policy": "coarse_fallback",
+        "matched_intervals": 211007,
+        "fallback_intervals": 3,
+        "coverage_pct": 99.99857826643287,
+        "drawdown_timeframe": "15m",
+        "execution_drawdown_basis": "mixed_closes",
+        "ambiguity_policy": "stop_first",
+        "provenance": {
+          "status": "complete",
+          "missing": [],
+          "exact_replay": true,
+          "note": "证据缺失表示无法确认一致性，不表示历史计算必然错误。"
+        }
+      },
+      "config": {
+        "data_gap_policy": "observed_bars",
+        "end": "2026-09-18T00:00:00Z",
+        "execution_gap_policy": "coarse_fallback",
+        "execution_timeframe": "5m",
+        "initial_cash": 10000.0,
+        "intrabar_profit_protection": true,
+        "parameters": {
+          "activation_pct": 2,
+          "center_length": 55,
+          "chase_mult": 2,
+          "confirmation_level": 3,
+          "direction_filter": false,
+          "entry_bar_assumption": 0,
+          "giveback_pct": 50,
+          "initial_stop_pct": 1,
+          "max_wait_bars": 2,
+          "price_tick": 0.01,
+          "stop_cap_pct": 2,
+          "stop_confirmation": "immediate",
+          "stop_confirmation_clock": "execution",
+          "stop_floor_pct": 0.5,
+          "stop_method": 0,
+          "stop_mult": 1.5,
+          "stop_range_lock": false,
+          "stop_reentry": false,
+          "trigger_mult": 0.4,
+          "width_length": 31
+        },
+        "position_pct": 100.0,
+        "start": "2020-09-10T00:00:00Z",
+        "strategy": "trend_cloud_stop_confirmation_v2",
+        "symbol": "ETH/USDT",
+        "timeframe": "15m"
+      }
+    },
+    {
+      "case": "v4",
+      "name": "stop_confirmation=next_bar_open, stop_range_lock=True",
+      "parameters": {
+        "activation_pct": 2,
+        "center_length": 55,
+        "chase_mult": 2,
+        "confirmation_level": 3,
+        "direction_filter": false,
+        "entry_bar_assumption": 0,
+        "giveback_pct": 50,
+        "initial_stop_pct": 1,
+        "max_wait_bars": 2,
+        "price_tick": 0.01,
+        "stop_cap_pct": 2,
+        "stop_confirmation": "next_bar_open",
+        "stop_confirmation_clock": "execution",
+        "stop_floor_pct": 0.5,
+        "stop_method": 0,
+        "stop_mult": 1.5,
+        "stop_range_lock": true,
+        "stop_reentry": false,
+        "trigger_mult": 0.4,
+        "width_length": 31
+      },
+      "timeframe": "15m",
+      "run_id": "b9e797f91dc4ba34d24826999757cfd4",
+      "status": "completed",
+      "progress": 1.0,
+      "report": {
+        "ambiguous_trades": 31,
+        "average_duration_minutes": 268.8669866300994,
+        "average_return_pct": 0.08211850728338281,
+        "breakeven": 1,
+        "execution_close_max_drawdown_pct": 36.70108251741711,
+        "execution_drawdown_basis": "mixed_closes",
+        "final_equity": 4477137.201827757,
+        "initial_cash": 10000.0,
+        "losses": 6313,
+        "max_drawdown_pct": 33.9034617001171,
+        "notes": [
+          "基于所选价格数据、不计成本的多空策略模拟",
+          "最大回撤按每根收盘权益计算",
+          "无亏损时利润因子为空；无交易时胜率为空",
+          "K 线内退出的持仓时间按所属 K 线开盘时间近似",
+          "盘中突破委托仅用前一收盘已知价位；同根入场与止损先后不明的交易已标记，并按保存的 ambiguity_policy 处理",
+          "交易信号保持原周期；匹配的细周期行情逐根成交。细周期缺失或不匹配时回退原周期，已计数。保护仅在选定周期收盘更新，下一根生效。"
+        ],
+        "payoff_ratio": 2.9342442471513333,
+        "profit": 4467137.201827757,
+        "profit_factor": 1.132702871900491,
+        "return_pct": 44671.37201827757,
+        "total_trades": 8751,
+        "win_rate": 27.8482459147526,
+        "wins": 2437
+      },
+      "error": null,
+      "chart_path": "/research/backtests?run=b9e797f91dc4ba34d24826999757cfd4&view=chart",
+      "execution_summary": {
+        "signal_timeframe": "15m",
+        "execution_timeframe": "5m",
+        "protection_timeframe": "5m",
+        "execution_gap_policy": "coarse_fallback",
+        "matched_intervals": 211007,
+        "fallback_intervals": 3,
+        "coverage_pct": 99.99857826643287,
+        "drawdown_timeframe": "15m",
+        "execution_drawdown_basis": "mixed_closes",
+        "ambiguity_policy": "stop_first",
+        "provenance": {
+          "status": "complete",
+          "missing": [],
+          "exact_replay": true,
+          "note": "证据缺失表示无法确认一致性，不表示历史计算必然错误。"
+        }
+      },
+      "config": {
+        "data_gap_policy": "observed_bars",
+        "end": "2026-09-18T00:00:00Z",
+        "execution_gap_policy": "coarse_fallback",
+        "execution_timeframe": "5m",
+        "initial_cash": 10000.0,
+        "intrabar_profit_protection": true,
+        "parameters": {
+          "activation_pct": 2,
+          "center_length": 55,
+          "chase_mult": 2,
+          "confirmation_level": 3,
+          "direction_filter": false,
+          "entry_bar_assumption": 0,
+          "giveback_pct": 50,
+          "initial_stop_pct": 1,
+          "max_wait_bars": 2,
+          "price_tick": 0.01,
+          "stop_cap_pct": 2,
+          "stop_confirmation": "next_bar_open",
+          "stop_confirmation_clock": "execution",
+          "stop_floor_pct": 0.5,
+          "stop_method": 0,
+          "stop_mult": 1.5,
+          "stop_range_lock": true,
+          "stop_reentry": false,
+          "trigger_mult": 0.4,
+          "width_length": 31
+        },
+        "position_pct": 100.0,
+        "start": "2020-09-10T00:00:00Z",
+        "strategy": "trend_cloud_stop_confirmation_v2",
+        "symbol": "ETH/USDT",
+        "timeframe": "15m"
+      }
+    },
+    {
+      "case": "v8",
+      "name": "stop_confirmation=next_bar_close, stop_range_lock=True",
+      "parameters": {
+        "activation_pct": 2,
+        "center_length": 55,
+        "chase_mult": 2,
+        "confirmation_level": 3,
+        "direction_filter": false,
+        "entry_bar_assumption": 0,
+        "giveback_pct": 50,
+        "initial_stop_pct": 1,
+        "max_wait_bars": 2,
+        "price_tick": 0.01,
+        "stop_cap_pct": 2,
+        "stop_confirmation": "next_bar_close",
+        "stop_confirmation_clock": "execution",
+        "stop_floor_pct": 0.5,
+        "stop_method": 0,
+        "stop_mult": 1.5,
+        "stop_range_lock": true,
+        "stop_reentry": false,
+        "trigger_mult": 0.4,
+        "width_length": 31
+      },
+      "timeframe": "15m",
+      "run_id": "26f5186c14d4b5049ab95f8cd9cd57a1",
+      "status": "completed",
+      "progress": 1.0,
+      "report": {
+        "ambiguous_trades": 28,
+        "average_duration_minutes": 272.5031210986267,
+        "average_return_pct": 0.08149008466856081,
+        "breakeven": 1,
+        "execution_close_max_drawdown_pct": 36.17808355970702,
+        "execution_drawdown_basis": "mixed_closes",
+        "final_equity": 4292134.881972133,
+        "initial_cash": 10000.0,
+        "losses": 6323,
+        "max_drawdown_pct": 35.98030445210082,
+        "notes": [
+          "基于所选价格数据、不计成本的多空策略模拟",
+          "最大回撤按每根收盘权益计算",
+          "无亏损时利润因子为空；无交易时胜率为空",
+          "K 线内退出的持仓时间按所属 K 线开盘时间近似",
+          "盘中突破委托仅用前一收盘已知价位；同根入场与止损先后不明的交易已标记，并按保存的 ambiguity_policy 处理",
+          "交易信号保持原周期；匹配的细周期行情逐根成交。细周期缺失或不匹配时回退原周期，已计数。保护仅在选定周期收盘更新，下一根生效。"
+        ],
+        "payoff_ratio": 2.8641889055149785,
+        "profit": 4282134.881972133,
+        "profit_factor": 1.126559830462716,
+        "return_pct": 42821.34881972133,
+        "total_trades": 8811,
+        "win_rate": 28.2260810350698,
+        "wins": 2487
+      },
+      "error": null,
+      "chart_path": "/research/backtests?run=26f5186c14d4b5049ab95f8cd9cd57a1&view=chart",
+      "execution_summary": {
+        "signal_timeframe": "15m",
+        "execution_timeframe": "5m",
+        "protection_timeframe": "5m",
+        "execution_gap_policy": "coarse_fallback",
+        "matched_intervals": 211007,
+        "fallback_intervals": 3,
+        "coverage_pct": 99.99857826643287,
+        "drawdown_timeframe": "15m",
+        "execution_drawdown_basis": "mixed_closes",
+        "ambiguity_policy": "stop_first",
+        "provenance": {
+          "status": "complete",
+          "missing": [],
+          "exact_replay": true,
+          "note": "证据缺失表示无法确认一致性，不表示历史计算必然错误。"
+        }
+      },
+      "config": {
+        "data_gap_policy": "observed_bars",
+        "end": "2026-09-18T00:00:00Z",
+        "execution_gap_policy": "coarse_fallback",
+        "execution_timeframe": "5m",
+        "initial_cash": 10000.0,
+        "intrabar_profit_protection": true,
+        "parameters": {
+          "activation_pct": 2,
+          "center_length": 55,
+          "chase_mult": 2,
+          "confirmation_level": 3,
+          "direction_filter": false,
+          "entry_bar_assumption": 0,
+          "giveback_pct": 50,
+          "initial_stop_pct": 1,
+          "max_wait_bars": 2,
+          "price_tick": 0.01,
+          "stop_cap_pct": 2,
+          "stop_confirmation": "next_bar_close",
+          "stop_confirmation_clock": "execution",
+          "stop_floor_pct": 0.5,
+          "stop_method": 0,
+          "stop_mult": 1.5,
+          "stop_range_lock": true,
+          "stop_reentry": false,
+          "trigger_mult": 0.4,
+          "width_length": 31
+        },
+        "position_pct": 100.0,
+        "start": "2020-09-10T00:00:00Z",
+        "strategy": "trend_cloud_stop_confirmation_v2",
+        "symbol": "ETH/USDT",
+        "timeframe": "15m"
+      }
+    },
+    {
+      "case": "v6",
+      "name": "stop_confirmation=next_bar_touch, stop_range_lock=True",
+      "parameters": {
+        "activation_pct": 2,
+        "center_length": 55,
+        "chase_mult": 2,
+        "confirmation_level": 3,
+        "direction_filter": false,
+        "entry_bar_assumption": 0,
+        "giveback_pct": 50,
+        "initial_stop_pct": 1,
+        "max_wait_bars": 2,
+        "price_tick": 0.01,
+        "stop_cap_pct": 2,
+        "stop_confirmation": "next_bar_touch",
+        "stop_confirmation_clock": "execution",
+        "stop_floor_pct": 0.5,
+        "stop_method": 0,
+        "stop_mult": 1.5,
+        "stop_range_lock": true,
+        "stop_reentry": false,
+        "trigger_mult": 0.4,
+        "width_length": 31
+      },
+      "timeframe": "15m",
+      "run_id": "af94b65ebdd74654ae8f02c932923d05",
+      "status": "completed",
+      "progress": 1.0,
+      "report": {
+        "ambiguous_trades": 29,
+        "average_duration_minutes": 267.1227709190672,
+        "average_return_pct": 0.08140051961098502,
+        "breakeven": 1,
+        "execution_close_max_drawdown_pct": 33.17503033292562,
+        "execution_drawdown_basis": "mixed_closes",
+        "final_equity": 4238375.880650204,
+        "initial_cash": 10000.0,
+        "losses": 6322,
+        "max_drawdown_pct": 32.93592750476255,
+        "notes": [
+          "基于所选价格数据、不计成本的多空策略模拟",
+          "最大回撤按每根收盘权益计算",
+          "无亏损时利润因子为空；无交易时胜率为空",
+          "K 线内退出的持仓时间按所属 K 线开盘时间近似",
+          "盘中突破委托仅用前一收盘已知价位；同根入场与止损先后不明的交易已标记，并按保存的 ambiguity_policy 处理",
+          "交易信号保持原周期；匹配的细周期行情逐根成交。细周期缺失或不匹配时回退原周期，已计数。保护仅在选定周期收盘更新，下一根生效。"
+        ],
+        "payoff_ratio": 2.941640964970908,
+        "profit": 4228375.880650204,
+        "profit_factor": 1.1283580101319919,
+        "return_pct": 42283.75880650204,
+        "total_trades": 8748,
+        "win_rate": 27.720621856424327,
+        "wins": 2425
+      },
+      "error": null,
+      "chart_path": "/research/backtests?run=af94b65ebdd74654ae8f02c932923d05&view=chart",
+      "execution_summary": {
+        "signal_timeframe": "15m",
+        "execution_timeframe": "5m",
+        "protection_timeframe": "5m",
+        "execution_gap_policy": "coarse_fallback",
+        "matched_intervals": 211007,
+        "fallback_intervals": 3,
+        "coverage_pct": 99.99857826643287,
+        "drawdown_timeframe": "15m",
+        "execution_drawdown_basis": "mixed_closes",
+        "ambiguity_policy": "stop_first",
+        "provenance": {
+          "status": "complete",
+          "missing": [],
+          "exact_replay": true,
+          "note": "证据缺失表示无法确认一致性，不表示历史计算必然错误。"
+        }
+      },
+      "config": {
+        "data_gap_policy": "observed_bars",
+        "end": "2026-09-18T00:00:00Z",
+        "execution_gap_policy": "coarse_fallback",
+        "execution_timeframe": "5m",
+        "initial_cash": 10000.0,
+        "intrabar_profit_protection": true,
+        "parameters": {
+          "activation_pct": 2,
+          "center_length": 55,
+          "chase_mult": 2,
+          "confirmation_level": 3,
+          "direction_filter": false,
+          "entry_bar_assumption": 0,
+          "giveback_pct": 50,
+          "initial_stop_pct": 1,
+          "max_wait_bars": 2,
+          "price_tick": 0.01,
+          "stop_cap_pct": 2,
+          "stop_confirmation": "next_bar_touch",
+          "stop_confirmation_clock": "execution",
+          "stop_floor_pct": 0.5,
+          "stop_method": 0,
+          "stop_mult": 1.5,
+          "stop_range_lock": true,
+          "stop_reentry": false,
+          "trigger_mult": 0.4,
+          "width_length": 31
+        },
+        "position_pct": 100.0,
+        "start": "2020-09-10T00:00:00Z",
+        "strategy": "trend_cloud_stop_confirmation_v2",
+        "symbol": "ETH/USDT",
+        "timeframe": "15m"
+      }
+    },
+    {
+      "case": "v5",
+      "name": "stop_confirmation=next_bar_touch, stop_range_lock=False",
+      "parameters": {
+        "activation_pct": 2,
+        "center_length": 55,
+        "chase_mult": 2,
+        "confirmation_level": 3,
+        "direction_filter": false,
+        "entry_bar_assumption": 0,
+        "giveback_pct": 50,
+        "initial_stop_pct": 1,
+        "max_wait_bars": 2,
+        "price_tick": 0.01,
+        "stop_cap_pct": 2,
+        "stop_confirmation": "next_bar_touch",
+        "stop_confirmation_clock": "execution",
+        "stop_floor_pct": 0.5,
+        "stop_method": 0,
+        "stop_mult": 1.5,
+        "stop_range_lock": false,
+        "stop_reentry": false,
+        "trigger_mult": 0.4,
+        "width_length": 31
+      },
+      "timeframe": "15m",
+      "run_id": "d0cf0282688b7c9cc75e9e9d289b5502",
+      "status": "completed",
+      "progress": 1.0,
+      "report": {
+        "ambiguous_trades": 28,
+        "average_duration_minutes": 265.65354159887187,
+        "average_return_pct": 0.07744111112300786,
+        "breakeven": 1,
+        "execution_close_max_drawdown_pct": 31.951861760127464,
+        "execution_drawdown_basis": "mixed_closes",
+        "final_equity": 4098863.204544979,
+        "initial_cash": 10000.0,
+        "losses": 6645,
+        "max_drawdown_pct": 31.882895321711175,
+        "notes": [
+          "基于所选价格数据、不计成本的多空策略模拟",
+          "最大回撤按每根收盘权益计算",
+          "无亏损时利润因子为空；无交易时胜率为空",
+          "K 线内退出的持仓时间按所属 K 线开盘时间近似",
+          "盘中突破委托仅用前一收盘已知价位；同根入场与止损先后不明的交易已标记，并按保存的 ambiguity_policy 处理",
+          "交易信号保持原周期；匹配的细周期行情逐根成交。细周期缺失或不匹配时回退原周期，已计数。保护仅在选定周期收盘更新，下一根生效。"
+        ],
+        "payoff_ratio": 2.8871572686120834,
+        "profit": 4088863.204544979,
+        "profit_factor": 1.1179316256040468,
+        "return_pct": 40888.63204544979,
+        "total_trades": 9219,
+        "win_rate": 27.90975159995661,
+        "wins": 2573
+      },
+      "error": null,
+      "chart_path": "/research/backtests?run=d0cf0282688b7c9cc75e9e9d289b5502&view=chart",
+      "execution_summary": {
+        "signal_timeframe": "15m",
+        "execution_timeframe": "5m",
+        "protection_timeframe": "5m",
+        "execution_gap_policy": "coarse_fallback",
+        "matched_intervals": 211007,
+        "fallback_intervals": 3,
+        "coverage_pct": 99.99857826643287,
+        "drawdown_timeframe": "15m",
+        "execution_drawdown_basis": "mixed_closes",
+        "ambiguity_policy": "stop_first",
+        "provenance": {
+          "status": "complete",
+          "missing": [],
+          "exact_replay": true,
+          "note": "证据缺失表示无法确认一致性，不表示历史计算必然错误。"
+        }
+      },
+      "config": {
+        "data_gap_policy": "observed_bars",
+        "end": "2026-09-18T00:00:00Z",
+        "execution_gap_policy": "coarse_fallback",
+        "execution_timeframe": "5m",
+        "initial_cash": 10000.0,
+        "intrabar_profit_protection": true,
+        "parameters": {
+          "activation_pct": 2,
+          "center_length": 55,
+          "chase_mult": 2,
+          "confirmation_level": 3,
+          "direction_filter": false,
+          "entry_bar_assumption": 0,
+          "giveback_pct": 50,
+          "initial_stop_pct": 1,
+          "max_wait_bars": 2,
+          "price_tick": 0.01,
+          "stop_cap_pct": 2,
+          "stop_confirmation": "next_bar_touch",
+          "stop_confirmation_clock": "execution",
+          "stop_floor_pct": 0.5,
+          "stop_method": 0,
+          "stop_mult": 1.5,
+          "stop_range_lock": false,
+          "stop_reentry": false,
+          "trigger_mult": 0.4,
+          "width_length": 31
+        },
+        "position_pct": 100.0,
+        "start": "2020-09-10T00:00:00Z",
+        "strategy": "trend_cloud_stop_confirmation_v2",
+        "symbol": "ETH/USDT",
+        "timeframe": "15m"
+      }
+    },
+    {
+      "case": "v3",
+      "name": "stop_confirmation=next_bar_open, stop_range_lock=False",
+      "parameters": {
+        "activation_pct": 2,
+        "center_length": 55,
+        "chase_mult": 2,
+        "confirmation_level": 3,
+        "direction_filter": false,
+        "entry_bar_assumption": 0,
+        "giveback_pct": 50,
+        "initial_stop_pct": 1,
+        "max_wait_bars": 2,
+        "price_tick": 0.01,
+        "stop_cap_pct": 2,
+        "stop_confirmation": "next_bar_open",
+        "stop_confirmation_clock": "execution",
+        "stop_floor_pct": 0.5,
+        "stop_method": 0,
+        "stop_mult": 1.5,
+        "stop_range_lock": false,
+        "stop_reentry": false,
+        "trigger_mult": 0.4,
+        "width_length": 31
+      },
+      "timeframe": "15m",
+      "run_id": "6339f54ad88d4b120bb2d0acd78d93db",
+      "status": "completed",
+      "progress": 1.0,
+      "report": {
+        "ambiguous_trades": 28,
+        "average_duration_minutes": 267.8138292071109,
+        "average_return_pct": 0.07709775021886602,
+        "breakeven": 1,
+        "execution_close_max_drawdown_pct": 33.11639125629929,
+        "execution_drawdown_basis": "mixed_closes",
+        "final_equity": 3797878.7669519824,
+        "initial_cash": 10000.0,
+        "losses": 6589,
+        "max_drawdown_pct": 33.063052645782214,
+        "notes": [
+          "基于所选价格数据、不计成本的多空策略模拟",
+          "最大回撤按每根收盘权益计算",
+          "无亏损时利润因子为空；无交易时胜率为空",
+          "K 线内退出的持仓时间按所属 K 线开盘时间近似",
+          "盘中突破委托仅用前一收盘已知价位；同根入场与止损先后不明的交易已标记，并按保存的 ambiguity_policy 处理",
+          "交易信号保持原周期；匹配的细周期行情逐根成交。细周期缺失或不匹配时回退原周期，已计数。保护仅在选定周期收盘更新，下一根生效。"
+        ],
+        "payoff_ratio": 2.85371537596757,
+        "profit": 3787878.7669519824,
+        "profit_factor": 1.1169725230870182,
+        "return_pct": 37878.78766951982,
+        "total_trades": 9169,
+        "win_rate": 28.12738575635293,
+        "wins": 2579
+      },
+      "error": null,
+      "chart_path": "/research/backtests?run=6339f54ad88d4b120bb2d0acd78d93db&view=chart",
+      "execution_summary": {
+        "signal_timeframe": "15m",
+        "execution_timeframe": "5m",
+        "protection_timeframe": "5m",
+        "execution_gap_policy": "coarse_fallback",
+        "matched_intervals": 211007,
+        "fallback_intervals": 3,
+        "coverage_pct": 99.99857826643287,
+        "drawdown_timeframe": "15m",
+        "execution_drawdown_basis": "mixed_closes",
+        "ambiguity_policy": "stop_first",
+        "provenance": {
+          "status": "complete",
+          "missing": [],
+          "exact_replay": true,
+          "note": "证据缺失表示无法确认一致性，不表示历史计算必然错误。"
+        }
+      },
+      "config": {
+        "data_gap_policy": "observed_bars",
+        "end": "2026-09-18T00:00:00Z",
+        "execution_gap_policy": "coarse_fallback",
+        "execution_timeframe": "5m",
+        "initial_cash": 10000.0,
+        "intrabar_profit_protection": true,
+        "parameters": {
+          "activation_pct": 2,
+          "center_length": 55,
+          "chase_mult": 2,
+          "confirmation_level": 3,
+          "direction_filter": false,
+          "entry_bar_assumption": 0,
+          "giveback_pct": 50,
+          "initial_stop_pct": 1,
+          "max_wait_bars": 2,
+          "price_tick": 0.01,
+          "stop_cap_pct": 2,
+          "stop_confirmation": "next_bar_open",
+          "stop_confirmation_clock": "execution",
+          "stop_floor_pct": 0.5,
+          "stop_method": 0,
+          "stop_mult": 1.5,
+          "stop_range_lock": false,
+          "stop_reentry": false,
+          "trigger_mult": 0.4,
+          "width_length": 31
+        },
+        "position_pct": 100.0,
+        "start": "2020-09-10T00:00:00Z",
+        "strategy": "trend_cloud_stop_confirmation_v2",
+        "symbol": "ETH/USDT",
+        "timeframe": "15m"
+      }
+    },
+    {
+      "case": "v7",
+      "name": "stop_confirmation=next_bar_close, stop_range_lock=False",
+      "parameters": {
+        "activation_pct": 2,
+        "center_length": 55,
+        "chase_mult": 2,
+        "confirmation_level": 3,
+        "direction_filter": false,
+        "entry_bar_assumption": 0,
+        "giveback_pct": 50,
+        "initial_stop_pct": 1,
+        "max_wait_bars": 2,
+        "price_tick": 0.01,
+        "stop_cap_pct": 2,
+        "stop_confirmation": "next_bar_close",
+        "stop_confirmation_clock": "execution",
+        "stop_floor_pct": 0.5,
+        "stop_method": 0,
+        "stop_mult": 1.5,
+        "stop_range_lock": false,
+        "stop_reentry": false,
+        "trigger_mult": 0.4,
+        "width_length": 31
+      },
+      "timeframe": "15m",
+      "run_id": "90aeb3861603350b04e6dcffe50ed62a",
+      "status": "completed",
+      "progress": 1.0,
+      "report": {
+        "ambiguous_trades": 28,
+        "average_duration_minutes": 270.7382181698341,
+        "average_return_pct": 0.07711755671245263,
+        "breakeven": 1,
+        "execution_close_max_drawdown_pct": 32.9379236294665,
+        "execution_drawdown_basis": "mixed_closes",
+        "final_equity": 3567887.796150812,
+        "initial_cash": 10000.0,
+        "losses": 6517,
+        "max_drawdown_pct": 32.88444269386537,
+        "notes": [
+          "基于所选价格数据、不计成本的多空策略模拟",
+          "最大回撤按每根收盘权益计算",
+          "无亏损时利润因子为空；无交易时胜率为空",
+          "K 线内退出的持仓时间按所属 K 线开盘时间近似",
+          "盘中突破委托仅用前一收盘已知价位；同根入场与止损先后不明的交易已标记，并按保存的 ambiguity_policy 处理",
+          "交易信号保持原周期；匹配的细周期行情逐根成交。细周期缺失或不匹配时回退原周期，已计数。保护仅在选定周期收盘更新，下一根生效。"
+        ],
+        "payoff_ratio": 2.8140878266248075,
+        "profit": 3557887.796150812,
+        "profit_factor": 1.1162217326722612,
+        "return_pct": 35578.877961508115,
+        "total_trades": 9103,
+        "win_rate": 28.397231681863122,
+        "wins": 2585
+      },
+      "error": null,
+      "chart_path": "/research/backtests?run=90aeb3861603350b04e6dcffe50ed62a&view=chart",
+      "execution_summary": {
+        "signal_timeframe": "15m",
+        "execution_timeframe": "5m",
+        "protection_timeframe": "5m",
+        "execution_gap_policy": "coarse_fallback",
+        "matched_intervals": 211007,
+        "fallback_intervals": 3,
+        "coverage_pct": 99.99857826643287,
+        "drawdown_timeframe": "15m",
+        "execution_drawdown_basis": "mixed_closes",
+        "ambiguity_policy": "stop_first",
+        "provenance": {
+          "status": "complete",
+          "missing": [],
+          "exact_replay": true,
+          "note": "证据缺失表示无法确认一致性，不表示历史计算必然错误。"
+        }
+      },
+      "config": {
+        "data_gap_policy": "observed_bars",
+        "end": "2026-09-18T00:00:00Z",
+        "execution_gap_policy": "coarse_fallback",
+        "execution_timeframe": "5m",
+        "initial_cash": 10000.0,
+        "intrabar_profit_protection": true,
+        "parameters": {
+          "activation_pct": 2,
+          "center_length": 55,
+          "chase_mult": 2,
+          "confirmation_level": 3,
+          "direction_filter": false,
+          "entry_bar_assumption": 0,
+          "giveback_pct": 50,
+          "initial_stop_pct": 1,
+          "max_wait_bars": 2,
+          "price_tick": 0.01,
+          "stop_cap_pct": 2,
+          "stop_confirmation": "next_bar_close",
+          "stop_confirmation_clock": "execution",
+          "stop_floor_pct": 0.5,
+          "stop_method": 0,
+          "stop_mult": 1.5,
+          "stop_range_lock": false,
+          "stop_reentry": false,
+          "trigger_mult": 0.4,
+          "width_length": 31
+        },
+        "position_pct": 100.0,
+        "start": "2020-09-10T00:00:00Z",
+        "strategy": "trend_cloud_stop_confirmation_v2",
+        "symbol": "ETH/USDT",
+        "timeframe": "15m"
+      }
+    },
+    {
+      "case": "v2",
+      "name": "stop_confirmation=immediate, stop_range_lock=True",
+      "parameters": {
+        "activation_pct": 2,
+        "center_length": 55,
+        "chase_mult": 2,
+        "confirmation_level": 3,
+        "direction_filter": false,
+        "entry_bar_assumption": 0,
+        "giveback_pct": 50,
+        "initial_stop_pct": 1,
+        "max_wait_bars": 2,
+        "price_tick": 0.01,
+        "stop_cap_pct": 2,
+        "stop_confirmation": "immediate",
+        "stop_confirmation_clock": "execution",
+        "stop_floor_pct": 0.5,
+        "stop_method": 0,
+        "stop_mult": 1.5,
+        "stop_range_lock": true,
+        "stop_reentry": false,
+        "trigger_mult": 0.4,
+        "width_length": 31
+      },
+      "timeframe": "15m",
+      "run_id": "09c51ec901b65ab80d4fc58a98a00260",
+      "status": "completed",
+      "progress": 1.0,
+      "report": {
+        "ambiguous_trades": 26,
+        "average_duration_minutes": 260.82311131491457,
+        "average_return_pct": 0.07117457082208371,
+        "breakeven": 1,
+        "execution_close_max_drawdown_pct": 34.769659673343156,
+        "execution_drawdown_basis": "mixed_closes",
+        "final_equity": 1881260.3445417366,
+        "initial_cash": 10000.0,
+        "losses": 6350,
+        "max_drawdown_pct": 34.577467628011966,
+        "notes": [
+          "基于所选价格数据、不计成本的多空策略模拟",
+          "最大回撤按每根收盘权益计算",
+          "无亏损时利润因子为空；无交易时胜率为空",
+          "K 线内退出的持仓时间按所属 K 线开盘时间近似",
+          "盘中突破委托仅用前一收盘已知价位；同根入场与止损先后不明的交易已标记，并按保存的 ambiguity_policy 处理",
+          "交易信号保持原周期；匹配的细周期行情逐根成交。细周期缺失或不匹配时回退原周期，已计数。保护仅在选定周期收盘更新，下一根生效。"
+        ],
+        "payoff_ratio": 2.929534122074272,
+        "profit": 1871260.3445417366,
+        "profit_factor": 1.0943078641827044,
+        "return_pct": 18712.603445417368,
+        "total_trades": 8723,
+        "win_rate": 27.192479651496043,
+        "wins": 2372
+      },
+      "error": null,
+      "chart_path": "/research/backtests?run=09c51ec901b65ab80d4fc58a98a00260&view=chart",
+      "execution_summary": {
+        "signal_timeframe": "15m",
+        "execution_timeframe": "5m",
+        "protection_timeframe": "5m",
+        "execution_gap_policy": "coarse_fallback",
+        "matched_intervals": 211007,
+        "fallback_intervals": 3,
+        "coverage_pct": 99.99857826643287,
+        "drawdown_timeframe": "15m",
+        "execution_drawdown_basis": "mixed_closes",
+        "ambiguity_policy": "stop_first",
+        "provenance": {
+          "status": "complete",
+          "missing": [],
+          "exact_replay": true,
+          "note": "证据缺失表示无法确认一致性，不表示历史计算必然错误。"
+        }
+      },
+      "config": {
+        "data_gap_policy": "observed_bars",
+        "end": "2026-09-18T00:00:00Z",
+        "execution_gap_policy": "coarse_fallback",
+        "execution_timeframe": "5m",
+        "initial_cash": 10000.0,
+        "intrabar_profit_protection": true,
+        "parameters": {
+          "activation_pct": 2,
+          "center_length": 55,
+          "chase_mult": 2,
+          "confirmation_level": 3,
+          "direction_filter": false,
+          "entry_bar_assumption": 0,
+          "giveback_pct": 50,
+          "initial_stop_pct": 1,
+          "max_wait_bars": 2,
+          "price_tick": 0.01,
+          "stop_cap_pct": 2,
+          "stop_confirmation": "immediate",
+          "stop_confirmation_clock": "execution",
+          "stop_floor_pct": 0.5,
+          "stop_method": 0,
+          "stop_mult": 1.5,
+          "stop_range_lock": true,
+          "stop_reentry": false,
+          "trigger_mult": 0.4,
+          "width_length": 31
+        },
+        "position_pct": 100.0,
+        "start": "2020-09-10T00:00:00Z",
+        "strategy": "trend_cloud_stop_confirmation_v2",
+        "symbol": "ETH/USDT",
+        "timeframe": "15m"
+      }
+    }
+  ],
+  "offset": 0,
+  "filtered_total": 8,
+  "strategy": {
+    "api_version": "1",
+    "description": "15分钟入场信号，初始止损可按成交周期等待下一根确认；利润保护频率在回测配置中选择。",
+    "error": null,
+    "id": "trend_cloud_stop_confirmation_v2",
+    "name": "EMA通道：细周期止损确认 v2",
+    "parameters": {
+      "activation_pct": {
+        "default": 2,
+        "enabled_when": [],
+        "help": "",
+        "label": "利润保护启动 %",
+        "max": 20.0,
+        "min": 0.0,
+        "options": [],
+        "type": "float",
+        "unit": "%"
+      },
+      "center_length": {
+        "default": 55,
+        "enabled_when": [],
+        "help": "",
+        "label": "中心 EMA",
+        "max": 200.0,
+        "min": 2.0,
+        "options": [],
+        "type": "int",
+        "unit": "根"
+      },
+      "chase_mult": {
+        "default": 2,
+        "enabled_when": [],
+        "help": "",
+        "label": "追价上限 / W",
+        "max": 10.0,
+        "min": 0.0,
+        "options": [],
+        "type": "float",
+        "unit": "W"
+      },
+      "confirmation_level": {
+        "default": 3,
+        "enabled_when": [],
+        "help": "",
+        "label": "突破确认价位",
+        "max": 3.0,
+        "min": 1.0,
+        "options": [
+          {
+            "label": "信号收盘价",
+            "value": 1
+          },
+          {
+            "label": "信号最高／最低价",
+            "value": 2
+          },
+          {
+            "label": "信号实体上／下沿",
+            "value": 3
+          }
+        ],
+        "type": "int",
+        "unit": ""
+      },
+      "direction_filter": {
+        "default": false,
+        "enabled_when": [],
+        "help": "",
+        "label": "仅顺过去6根中心线方向开仓",
+        "max": null,
+        "min": null,
+        "options": [],
+        "type": "bool",
+        "unit": ""
+      },
+      "entry_bar_assumption": {
+        "default": 0,
+        "enabled_when": [],
+        "help": "",
+        "label": "入场当根先后顺序",
+        "max": 1.0,
+        "min": 0.0,
+        "options": [
+          {
+            "label": "入场后止损优先",
+            "value": 0
+          },
+          {
+            "label": "不利极值视为发生在入场前",
+            "value": 1
+          }
+        ],
+        "type": "int",
+        "unit": ""
+      },
+      "giveback_pct": {
+        "default": 50,
+        "enabled_when": [
+          {
+            "operator": "gt",
+            "parameter": "activation_pct",
+            "value": 0
+          }
+        ],
+        "help": "",
+        "label": "最高浮盈回吐 %",
+        "max": 99.0,
+        "min": 1.0,
+        "options": [],
+        "type": "float",
+        "unit": "%"
+      },
+      "initial_stop_pct": {
+        "default": 1,
+        "enabled_when": [
+          {
+            "operator": "eq",
+            "parameter": "stop_method",
+            "value": 0
+          }
+        ],
+        "help": "",
+        "label": "初始止损 %，0 关闭",
+        "max": 20.0,
+        "min": 0.0,
+        "options": [],
+        "type": "float",
+        "unit": "%"
+      },
+      "max_wait_bars": {
+        "default": 2,
+        "enabled_when": [],
+        "help": "0 表示不限；2 表示只等待原信号之后两根。",
+        "label": "信号后最多等待根数",
+        "max": 1000.0,
+        "min": 0.0,
+        "options": [],
+        "type": "int",
+        "unit": "根"
+      },
+      "price_tick": {
+        "default": 0.01,
+        "enabled_when": [],
+        "help": "",
+        "label": "突破一个价格单位",
+        "max": 100.0,
+        "min": 1e-06,
+        "options": [],
+        "type": "float",
+        "unit": "报价币"
+      },
+      "stop_cap_pct": {
+        "default": 2,
+        "enabled_when": [
+          {
+            "operator": "in",
+            "parameter": "stop_method",
+            "value": [
+              1,
+              2
+            ]
+          }
+        ],
+        "help": "",
+        "label": "波动止损上限 %",
+        "max": 20.0,
+        "min": 0.01,
+        "options": [],
+        "type": "float",
+        "unit": "%"
+      },
+      "stop_confirmation": {
+        "default": "immediate",
+        "enabled_when": [],
+        "help": "",
+        "label": "初始止损确认",
+        "max": null,
+        "min": null,
+        "options": [
+          {
+            "label": "触及即止损",
+            "value": "immediate"
+          },
+          {
+            "label": "触及后下一根开盘判断",
+            "value": "next_bar_open"
+          },
+          {
+            "label": "触及后下一根开盘及盘中判断",
+            "value": "next_bar_touch"
+          },
+          {
+            "label": "触及后下一根收盘判断",
+            "value": "next_bar_close"
+          }
+        ],
+        "type": "str",
+        "unit": ""
+      },
+      "stop_confirmation_clock": {
+        "default": "signal",
+        "enabled_when": [],
+        "help": "",
+        "label": "止损确认使用的K线周期",
+        "max": null,
+        "min": null,
+        "options": [
+          {
+            "label": "交易信号周期",
+            "value": "signal"
+          },
+          {
+            "label": "细周期成交K线",
+            "value": "execution"
+          }
+        ],
+        "type": "str",
+        "unit": ""
+      },
+      "stop_floor_pct": {
+        "default": 0.5,
+        "enabled_when": [
+          {
+            "operator": "in",
+            "parameter": "stop_method",
+            "value": [
+              1,
+              2
+            ]
+          }
+        ],
+        "help": "",
+        "label": "波动止损下限 %",
+        "max": 10.0,
+        "min": 0.01,
+        "options": [],
+        "type": "float",
+        "unit": "%"
+      },
+      "stop_method": {
+        "default": 0,
+        "enabled_when": [],
+        "help": "",
+        "label": "初始止损方法",
+        "max": 2.0,
+        "min": 0.0,
+        "options": [
+          {
+            "label": "固定百分比",
+            "value": 0
+          },
+          {
+            "label": "高低差 EMA",
+            "value": 1
+          },
+          {
+            "label": "ATR14",
+            "value": 2
+          }
+        ],
+        "type": "int",
+        "unit": ""
+      },
+      "stop_mult": {
+        "default": 1.5,
+        "enabled_when": [
+          {
+            "operator": "in",
+            "parameter": "stop_method",
+            "value": [
+              1,
+              2
+            ]
+          }
+        ],
+        "help": "",
+        "label": "波动止损倍数",
+        "max": 10.0,
+        "min": 0.1,
+        "options": [],
+        "type": "float",
+        "unit": ""
+      },
+      "stop_range_lock": {
+        "default": false,
+        "enabled_when": [],
+        "help": "",
+        "label": "止损后暂停在止损K线范围内重新入场",
+        "max": null,
+        "min": null,
+        "options": [],
+        "type": "bool",
+        "unit": ""
+      },
+      "stop_reentry": {
+        "default": false,
+        "enabled_when": [],
+        "help": "",
+        "label": "止损后突破止损K线极值，最多重进一次",
+        "max": null,
+        "min": null,
+        "options": [],
+        "type": "bool",
+        "unit": ""
+      },
+      "trigger_mult": {
+        "default": 0.4,
+        "enabled_when": [],
+        "help": "",
+        "label": "原突破门槛 / W",
+        "max": 5.0,
+        "min": 0.1,
+        "options": [],
+        "type": "float",
+        "unit": "W"
+      },
+      "width_length": {
+        "default": 31,
+        "enabled_when": [],
+        "help": "",
+        "label": "高低差 EMA",
+        "max": 100.0,
+        "min": 2.0,
+        "options": [],
+        "type": "int",
+        "unit": "根"
+      }
+    },
+    "rules": [
+      "下一根止损确认按明确选定的信号或成交周期；细周期缺失遵守已记录回退约定；延后止损可能亏损超过名义距离。",
+      "反向退出与利润保护不延后；只有初始止损退出才建立禁止入场区。",
+      "止损后等待该信号K线收盘固定高低范围；后续收盘突破范围才重新积累一次同向入场信号，并保留确认及追价限制。",
+      "区域限制仍冻结止损所在信号K线的高低范围，不随5分钟止损确认频率改变。"
+    ],
+    "warmup_bars": 650,
+    "warmup_rule": {
+      "explanation": "按当前参数取各指标所需历史的最大值。EMA／RMA 初始值权重降至 1e-8 以下，再覆盖已声明回看窗口；这是数值初始化标准，不保证价格或信号完全相同。",
+      "minimum_bars": 1,
+      "seed_weight_tolerance": 1e-08,
+      "terms": [
+        {
+          "enabled_when": [],
+          "extra_bars": 7,
+          "kind": "ema",
+          "period": "center_length"
+        },
+        {
+          "enabled_when": [],
+          "extra_bars": 1,
+          "kind": "ema",
+          "period": "width_length"
+        },
+        {
+          "enabled_when": [],
+          "extra_bars": 1,
+          "kind": "rma",
+          "period": 14
+        }
+      ],
+      "version": "1"
+    }
+  }
+}

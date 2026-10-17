@@ -1,0 +1,146 @@
+//@version=6
+//@strategy_alert_message {{strategy.order.alert_message}}
+strategy("Heimdall ETH · EMA55 简洁版 v2", overlay=true,
+     initial_capital=10000, default_qty_type=strategy.percent_of_equity,
+     default_qty_value=100, pyramiding=0, commission_type=strategy.commission.percent,
+     commission_value=0, slippage=0, process_orders_on_close=false,
+     calc_on_every_tick=false, calc_on_order_fills=true,
+     margin_long=0, margin_short=0, max_labels_count=500)
+
+// v2 只修改显示；交易参数、进出场判断、执行时机全部保留 v1。
+// 图上只保留 TradingView 自带成交标记；数字是成交数量，不是盈亏。
+// 原项目：ETH/USDT 15分钟，2020-09-10 至 2026-09-10。
+// 版本 c55_w31_t0p4_d2_a2_g50_s1。W 是 EMA(high-low,31)，不是 ATR。
+// 仓位按当时权益的100%模拟；保证金模型关闭，符合原项目不模拟强平的约定。
+// 手工成交不由此脚本控制，保护价使用的是 TradingView 模拟成交价。
+
+string entryGroup = "入场：原冠军参数"
+int centerLen = input.int(55, "中心线 EMA 周期", minval=2, group=entryGroup)
+int widthLen = input.int(31, "高低差 EMA 周期", minval=2, group=entryGroup)
+float trigger = input.float(0.4, "突破门槛：几倍振幅", minval=0.01, step=0.1, group=entryGroup)
+float chase = input.float(2.0, "离中心超过几倍振幅不追", minval=0.01, step=0.1, group=entryGroup)
+
+string exitGroup = "退出：三项任一触发"
+float initialSL = input.float(1.0, "初始止损 %", minval=0.01, maxval=99, step=0.1, group=exitGroup)
+float activation = input.float(2.0, "最高浮盈达到多少 % 开始保护", minval=0.01, step=0.1, group=exitGroup)
+float giveback = input.float(50.0, "允许回吐最高浮盈的 %", minval=1, maxval=99, step=1, group=exitGroup)
+
+string displayGroup = "显示与历史范围"
+bool showLimits = input.bool(false, "显示不追价边界", group=displayGroup)
+bool showBasis = input.bool(false, "显示中心线", group=displayGroup)
+bool showStatus = input.bool(false, "显示持仓信息表", group=displayGroup)
+int warmup = input.int(650, "首次计算前的预热根数", minval=1, group=displayGroup)
+bool useDates = input.bool(false, "限制历史日期（手工跟踪保持关闭）", group=displayGroup)
+int startDate = input.time(timestamp("10 Sep 2020 00:00 +0000"), "历史开始", group=displayGroup)
+int endDate = input.time(timestamp("10 Sep 2026 00:00 +0000"), "历史结束", group=displayGroup)
+
+if barstate.isfirst and chase <= trigger
+    runtime.error("不追价距离必须大于突破门槛。")
+if barstate.isfirst and useDates and endDate <= startDate
+    runtime.error("历史结束必须晚于开始。")
+
+float basis = ta.ema(hl2, centerLen)
+float width = ta.ema(high - low, widthLen)
+float upper = basis + trigger * width
+float lower = basis - trigger * width
+bool rawLong = ta.crossover(close, upper)
+bool rawShort = ta.crossunder(close, lower)
+bool longNear = width > 0 and close - basis <= chase * width
+bool shortNear = width > 0 and basis - close <= chase * width
+
+// 成交后的附加计算只能装上初始止损，不能偷用该根尚未走完的最高/最低价。
+// varip 保留同根内已观察到的成交状态，区分成交回调与正常收盘计算。
+varip float seenPosition = 0.0
+varip int seenClosedTrades = 0
+varip int lastDecisionBar = -1
+varip float entryPrice = na
+varip float bestPrice = na
+varip float stopPrice = na
+varip bool protectionOn = false
+
+bool fillPass = strategy.position_size != seenPosition or strategy.closedtrades != seenClosedTrades
+if fillPass
+    seenPosition := strategy.position_size
+    seenClosedTrades := strategy.closedtrades
+    if strategy.position_size != 0
+        entryPrice := strategy.position_avg_price
+        bestPrice := entryPrice
+        float side = strategy.position_size > 0 ? 1.0 : -1.0
+        stopPrice := entryPrice * (1.0 - side * initialSL / 100.0)
+        protectionOn := false
+    else
+        entryPrice := na
+        bestPrice := na
+        stopPrice := na
+        protectionOn := false
+
+bool closePass = barstate.isconfirmed and not fillPass and bar_index != lastDecisionBar
+
+if closePass
+    lastDecisionBar := bar_index
+    bool inDates = not useDates or (time >= startDate and time_close < endDate)
+    bool ready = bar_index >= warmup and inDates
+    if ready and rawLong and strategy.position_size <= 0
+        if longNear
+            strategy.entry("Long", strategy.long, comment="开多", alert_message="ETH通道：模拟做多成交；原有空仓应先平仓。", disable_alert=true)
+            alert("收盘确认做多；若持空仓先平空。下一根开盘执行，勿在未收盘时提前入场。", alert.freq_once_per_bar_close)
+        else if strategy.position_size < 0
+            strategy.close("Short", comment="平空", alert_message="反向信号平空；距离过远，不开多仓。", disable_alert=true)
+            alert("收盘反向信号：下一根开盘平空，但距离过远，不追多。", alert.freq_once_per_bar_close)
+    if ready and rawShort and strategy.position_size >= 0
+        if shortNear
+            strategy.entry("Short", strategy.short, comment="开空", alert_message="ETH通道：模拟做空成交；原有多仓应先平仓。", disable_alert=true)
+            alert("收盘确认做空；若持多仓先平多。下一根开盘执行，勿在未收盘时提前入场。", alert.freq_once_per_bar_close)
+        else if strategy.position_size > 0
+            strategy.close("Long", comment="平多", alert_message="反向信号平多；距离过远，不开空仓。", disable_alert=true)
+            alert("收盘反向信号：下一根开盘平多，但距离过远，不追空。", alert.freq_once_per_bar_close)
+
+    // 只在收盘后更新最高浮盈，新的保护价从下一根开始有效。
+    if strategy.position_size != 0 and not na(entryPrice)
+        bool isLong = strategy.position_size > 0
+        bestPrice := isLong ? math.max(bestPrice, high) : math.min(bestPrice, low)
+        float direction = isLong ? 1.0 : -1.0
+        float peakProfit = math.max(0.0, direction * (bestPrice - entryPrice))
+        if peakProfit / entryPrice * 100.0 >= activation
+            protectionOn := true
+            float candidate = entryPrice + direction * peakProfit * (1.0 - giveback / 100.0)
+            stopPrice := isLong ? math.max(stopPrice, candidate) : math.min(stopPrice, candidate)
+
+    if useDates and time_close >= endDate
+        strategy.cancel_all()
+        strategy.close_all(comment="历史范围结束", immediately=true, alert_message="历史测试范围结束。")
+
+// 单一 stop 订单同时承担初始止损与利润保护，无固定止盈上限。
+if strategy.position_size > 0 and not na(stopPrice)
+    strategy.exit("Long exit", from_entry="Long", stop=stopPrice,
+         comment=protectionOn ? "保盈" : "止损",
+         alert_message=protectionOn ? "多仓触发利润保护，模拟平仓。" : "多仓触发初始止损，模拟平仓。")
+if strategy.position_size < 0 and not na(stopPrice)
+    strategy.exit("Short exit", from_entry="Short", stop=stopPrice,
+         comment=protectionOn ? "保盈" : "止损",
+         alert_message=protectionOn ? "空仓触发利润保护，模拟平仓。" : "空仓触发初始止损，模拟平仓。")
+
+plot(showBasis ? basis : na, "中心线 EMA(hl2)", color=color.new(color.gray, 40))
+pUpper = plot(upper, "做多突破线", color=color.new(color.green, 25))
+pLower = plot(lower, "做空突破线", color=color.new(color.red, 25))
+fill(pUpper, pLower, color=close >= basis ? color.new(color.green, 85) : color.new(color.red, 85))
+plot(showLimits ? basis + chase * width : na, "多单不追边界", color=color.new(color.green, 75))
+plot(showLimits ? basis - chase * width : na, "空单不追边界", color=color.new(color.red, 75))
+// 多空止损分开画，反手时不再把两笔交易的价位连成一条竖线。
+plot(strategy.position_size > 0 ? stopPrice : na, "多仓最新止损/保盈价", color=protectionOn ? color.orange : color.red, linewidth=2, style=plot.style_linebr)
+plot(strategy.position_size < 0 ? stopPrice : na, "空仓最新止损/保盈价", color=protectionOn ? color.orange : color.red, linewidth=2, style=plot.style_linebr)
+// 仅在数据窗口提供真实模拟成交价，图上不再叠加第二套文字或数字。
+plot(strategy.position_size != 0 ? entryPrice : na, "当前模拟开仓价", display=display.data_window)
+plot(strategy.closedtrades > 0 ? strategy.closedtrades.entry_price(strategy.closedtrades - 1) : na, "最近平仓交易的开仓价", display=display.data_window)
+plot(strategy.closedtrades > 0 ? strategy.closedtrades.exit_price(strategy.closedtrades - 1) : na, "最近平仓交易的平仓价", display=display.data_window)
+
+var table status = table.new(position.top_right, 2, 4, bgcolor=color.new(color.white, 10), border_width=1)
+if barstate.islast and showStatus
+    table.cell(status, 0, 0, "原研究周期", text_color=color.black)
+    table.cell(status, 1, 0, timeframe.period == "15" ? "15分钟" : "请切换15分钟", text_color=timeframe.period == "15" ? color.black : color.red)
+    table.cell(status, 0, 1, "模拟持仓", text_color=color.black)
+    table.cell(status, 1, 1, strategy.position_size > 0 ? "多仓" : strategy.position_size < 0 ? "空仓" : "无持仓", text_color=color.black)
+    table.cell(status, 0, 2, "最新保护价", text_color=color.black)
+    table.cell(status, 1, 2, na(stopPrice) ? "—" : str.tostring(stopPrice, format.mintick), text_color=protectionOn ? color.orange : color.red)
+    table.cell(status, 0, 3, "保护状态", text_color=color.black)
+    table.cell(status, 1, 3, strategy.position_size == 0 ? "等待信号" : protectionOn ? "保留最高浮盈的 " + str.tostring(100 - giveback) + "%" : "初始止损", text_color=color.black)

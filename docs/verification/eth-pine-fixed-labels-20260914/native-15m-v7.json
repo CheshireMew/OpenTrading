@@ -1,0 +1,28 @@
+{
+  "file": "strategies\\pine\\eth_ema55_manual_15m_v7.pine",
+  "sha256": "2a0f442556be52fcc96533b0b034378a5b6086080cd201e54df0490c2f5a5d3e",
+  "changes": [
+    "Use native 15-minute data only",
+    "Protection updated at 15-minute close",
+    "Retain next two bars body-break confirmation",
+    "Restore old label vocabulary; distinguish reversal colors",
+    "Remove custom event types and methods"
+  ],
+  "checks": {
+    "pine_v6_indicator": true,
+    "no_cross_timeframe_requests": true,
+    "no_custom_types_or_methods": true,
+    "no_reserved_text_declaration": true,
+    "distinct_reversal_colors": true,
+    "no_extra_profit_label": true,
+    "no_native_strategy_orders_or_stop_lines": true,
+    "signal_and_protection_inside_native_close_block": true,
+    "no_tabs": true,
+    "old_versions_retained": true,
+    "balanced_delimiters": true
+  },
+  "tradingview_compilation": "not run",
+  "backtest": "not run; prior return is not assigned to this variant",
+  "history_limit": "15-minute same-bar order ambiguous; history conservatively assumes entry before stop; live quote sequence may differ on reload",
+  "previous_standard": "docs/verification/eth-pine-fixed-labels-20260914/PINE_CODE_STANDARD.before-v7.md"
+}

@@ -1,0 +1,56 @@
+{
+  "label": "090_zec_factorial_before_run",
+  "created_at": "2026-09-13T00:38:11.576681+00:00",
+  "files": [
+    {
+      "path": "app/services/market/symbol_catalog.py",
+      "sha256": "13711b58d65ef6a3298a603956aca72e542f3aef642909a081651dde944990c2",
+      "bytes": 3813
+    },
+    {
+      "path": "docs/verification/zec-intrabar-no-stop-20260913/baseline-parity.json",
+      "sha256": "0f2f37b93ad2b56b6f9ed75ff3babda2e607b90bb82321c3989ae42955d98e6f",
+      "bytes": 1248
+    },
+    {
+      "path": "docs/verification/zec-intrabar-no-stop-20260913/plan.json",
+      "sha256": "ec29a0cd5185924e89653a0569489a967c2e07c8573d2a2c00c200bf1294643d",
+      "bytes": 3501
+    },
+    {
+      "path": "docs/verification/zec-intrabar-no-stop-20260913/RULES.md",
+      "sha256": "f196970b53891f785f24769e45e5e2ad650db34724d1259a1bba591e8dbcb55b",
+      "bytes": 2667
+    },
+    {
+      "path": "docs/verification/zec-intrabar-no-stop-20260913/selection.json",
+      "sha256": "dbd8fbd9ceaa6d69e0b0794424938323e0cfe8fc97a0ae700af88e39cb011a02",
+      "bytes": 2469
+    },
+    {
+      "path": "scripts/zec_intrabar_no_stop_study.py",
+      "sha256": "5cac696c09fb79521482892eb438f9d3f39072421dd8d3577c6ce5b731bd7e22",
+      "bytes": 14581
+    },
+    {
+      "path": "strategies/trend_cloud_intrabar_confirmation_v1.py",
+      "sha256": "ac87957316b93f39a5519d0472b35ca169ba3db8c9e7d4037e5617c1aa66389e",
+      "bytes": 6990
+    },
+    {
+      "path": "strategies/trend_cloud_intrabar_confirmation_v2.py",
+      "sha256": "537f383411e822ff328c4e6c364971da7c88c95b47c3537595ba1248d90eac45",
+      "bytes": 7118
+    },
+    {
+      "path": "strategies/trend_cloud_parameters_v4.py",
+      "sha256": "518ec7480dc4e5b8fd57d6804dd74bde88103f3c4c847a51028d2d5ef309173e",
+      "bytes": 5381
+    },
+    {
+      "path": "test/test_intrabar_no_fixed_stop.py",
+      "sha256": "b59dc117cffaa94bac7646c7be947bab837ab1139d6bbd947e80d59ad9603db5",
+      "bytes": 2848
+    }
+  ]
+}

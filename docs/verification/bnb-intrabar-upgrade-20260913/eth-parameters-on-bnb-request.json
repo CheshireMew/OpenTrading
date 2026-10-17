@@ -1,0 +1,37 @@
+{
+  "title": "BNB 15分钟：完整套用 ETH 最高收益优化参数",
+  "base": {
+    "data_gap_policy": "observed_bars",
+    "end": "2026-09-10T00:00:00Z",
+    "execution_timeframe": "5m",
+    "initial_cash": 10000.0,
+    "intrabar_profit_protection": true,
+    "parameters": {
+      "activation_pct": 2,
+      "center_length": 55,
+      "chase_mult": 2,
+      "confirmation_level": 3,
+      "direction_filter": false,
+      "entry_bar_assumption": 0,
+      "giveback_pct": 50,
+      "initial_stop_pct": 1,
+      "max_wait_bars": 2,
+      "price_tick": 0.01,
+      "stop_cap_pct": 2,
+      "stop_floor_pct": 0.5,
+      "stop_method": 0,
+      "stop_mult": 1.5,
+      "stop_reentry": false,
+      "trigger_mult": 0.4,
+      "width_length": 31
+    },
+    "position_pct": 100.0,
+    "start": "2018-09-10T00:00:00Z",
+    "strategy": "trend_cloud_intrabar_methods_v3",
+    "symbol": "BNB/USDT",
+    "timeframe": "15m"
+  },
+  "axes": {},
+  "max_runs": 1,
+  "source_run": "657b2b8086588a254442b82b128d34df"
+}

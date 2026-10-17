@@ -1,0 +1,11 @@
+{
+  "label": "059-before-exit-report-detail",
+  "created_at": "2026-09-11T14:08:24.250378+00:00",
+  "files": [
+    {
+      "path": "scripts/report_cloud_walkforward.py",
+      "sha256": "4aa3b9fe7045a7180b1c581ae9f49816a295d7e21c9470bdfd5100a52e09b47b",
+      "bytes": 15402
+    }
+  ]
+}

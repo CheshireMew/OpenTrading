@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "url": "http://127.0.0.1:8787/cloud-walkforward.html",
+  "checks": [
+    "Default four-asset table reconciles with audited results.json",
+    "ZEC, original50 protection, ATR3 and two-close confirmation displays -60.25%,1082 trades,623 wins,459 losses",
+    "Switching to the shorter all-five-timeframe period changes ZEC ATR3/two-close result to -11.98%,353 trades",
+    "Fixed and past-selected entry controls switch independently of method and risk",
+    "ETH past-return leader ledger shows all six preselected timeframes and exact parameters with subsequent returns",
+    "Equity SVG has paths and contains no NaN or Infinity coordinates",
+    "Browser reports no JavaScript errors",
+    "Page screenshot checked for readable Chinese text and comparison table layout",
+    "Profit and loss trade counts include a separate breakeven column"
+  ]
+}

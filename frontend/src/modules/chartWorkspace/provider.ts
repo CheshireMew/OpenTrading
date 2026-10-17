@@ -1,6 +1,7 @@
 import type { DataProvider, BarRange, SymbolDescriptor, SymbolInfo } from '@luxalgo/vela'
 import type { OHLCV } from '@luxalgo/vela'
 import { chartApi, type ChartSymbol, BASE } from './api'
+import { cw } from './locale'
 
 export const timeframes:Record<string,string> = {'1':'1m','5':'5m','15':'15m','30':'30m','60':'1h','240':'4h','D':'1d','1D':'1d','W':'1w','1W':'1w','M':'1M','1M':'1M'}
 export const velaSymbol = (id:string) => 'heimdall:' + id
@@ -26,12 +27,12 @@ export class HeimdallProvider implements DataProvider {
     const parts = normalized.split(':')
     const symbol = parts[parts.length-1]!.replace(/\.P$/, '')
     const result = this.catalog.find(s=>s.symbol===symbol && s.exchange===(parts.length>1?parts[0]!.toLowerCase():'binance') && s.market===(normalized.endsWith('.P')?'usdm':'spot'))
-    if (!result) throw new Error(`品种不可用：${ticker}`)
+    if (!result) throw new Error(cw('symbolUnavailable',{symbol:ticker}))
     return result
   }
   async listSymbols():Promise<SymbolDescriptor[]> {
     if (!this.catalog.length) this.catalog = await chartApi.symbols()
-    return this.catalog.map(s=>({ticker:s.id,description:`${s.name} · ${s.exchange.toUpperCase()} · ${s.market==='usdm'?'永续':s.market==='spot'?'现货':'指数'}`,type:s.market==='index'?'index':'crypto',market:s.market}))
+    return this.catalog.map(s=>({ticker:s.id,description:`${s.name} · ${s.exchange.toUpperCase()} · ${cw(s.market==='usdm'?'perpetual':s.market==='spot'?'spot':'index')}`,type:s.market==='index'?'index':'crypto',market:s.market}))
   }
   async getSymbolInfo(ticker:string):Promise<SymbolInfo> {
     const s = await this.resolve(ticker)
@@ -41,7 +42,7 @@ export class HeimdallProvider implements DataProvider {
   async getBars(ticker:string,timeframe:string,range:BarRange):Promise<OHLCV[]> {
     const info = await this.resolve(ticker)
     const tf = timeframes[timeframe] ?? timeframe
-    if (!info.timeframes.includes(tf)) throw new Error(`${info.name} 只支持 ${info.timeframes.join('、')}`)
+    if (!info.timeframes.includes(tf)) throw new Error(cw('onlyTimeframes',{symbol:info.name,timeframes:info.timeframes.join(', ')}))
     const key = JSON.stringify([info.id,tf,range])
     if (this.inFlight.has(key)) return this.inFlight.get(key)!
     const run = this.load(info,tf,range)
@@ -50,7 +51,7 @@ export class HeimdallProvider implements DataProvider {
   }
   async getBarsProgressive(ticker:string,timeframe:string,range:BarRange,onBatch:(bars:OHLCV[])=>void,opts?:{signal?:AbortSignal}) {
     const info=await this.resolve(ticker),tf=timeframes[timeframe]??timeframe
-    if(!info.timeframes.includes(tf))throw new Error(`${info.name} 不支持 ${tf}`)
+    if(!info.timeframes.includes(tf))throw new Error(cw('unsupportedTimeframe',{symbol:info.name,timeframe:tf}))
     return this.load(info,tf,range,opts?.signal,onBatch)
   }
   private async load(info:ChartSymbol,tf:string,range:BarRange,signal?:AbortSignal,onBatch?:(bars:OHLCV[])=>void):Promise<OHLCV[]> {

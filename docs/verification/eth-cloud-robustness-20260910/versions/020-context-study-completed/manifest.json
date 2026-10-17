@@ -1,0 +1,76 @@
+{
+  "label": "020-context-study-completed",
+  "created_at": "2026-09-10T13:57:25.193502+00:00",
+  "files": [
+    {
+      "path": ".heimdall_runtime/cloud-context-20260910/annotated-baseline.json",
+      "sha256": "81265a9089fe426499e8189285f863a40faa1e5a62556e74955dd429a6b00813",
+      "bytes": 2585403
+    },
+    {
+      "path": "docs/verification/eth-cloud-context-20260910/examples.json",
+      "sha256": "abd2e7297798a8acec5debd8af4723c3f04d608ab12ce7903573541b313289ba",
+      "bytes": 2826
+    },
+    {
+      "path": "docs/verification/eth-cloud-context-20260910/plan.json",
+      "sha256": "27ad3405baa5e91643a52fc13eb2b87b19d02939c236417f7e0cc19254fccadf",
+      "bytes": 5649
+    },
+    {
+      "path": "docs/verification/eth-cloud-context-20260910/project-runs.json",
+      "sha256": "b79ad68833918b17e9570b00d25fab59ac7c3cd95c9f73c49ad336b2bcf0c037",
+      "bytes": 2033
+    },
+    {
+      "path": "docs/verification/eth-cloud-context-20260910/report.html",
+      "sha256": "cad573adb762d4b2477a229ff9bdd46d2bc15dd083c4d130fac1a1c6e81ffdce",
+      "bytes": 22246
+    },
+    {
+      "path": "docs/verification/eth-cloud-context-20260910/REPORT.md",
+      "sha256": "8b8bfb7e594157eb409e17f7b3cdcd931fd4ad7efa217d255d1451c028b46b19",
+      "bytes": 14271
+    },
+    {
+      "path": "docs/verification/eth-cloud-context-20260910/results.json",
+      "sha256": "4eac548d78976b74ee8de57337dc5925d5ea5e3532a9120c09eea9ea4edd4db3",
+      "bytes": 980339
+    },
+    {
+      "path": "docs/verification/eth-cloud-context-20260910/selection.json",
+      "sha256": "e870669faf47a5197663a39073915c2ca4dfd2cbfb60bddb22b6ca056aac3382",
+      "bytes": 1298
+    },
+    {
+      "path": "docs/verification/eth-cloud-context-20260910/verification.json",
+      "sha256": "8b66cbd2fa3fdaa4c7cbfc423bd0ff2b330afc7a15b9014387fd7d4603fffc71",
+      "bytes": 1428
+    },
+    {
+      "path": "frontend/src/views/research/LocalBacktests.vue",
+      "sha256": "514920331f4669b8a3695b1af6d61109dbf8e21c041a64434adfbc96306b308a",
+      "bytes": 30095
+    },
+    {
+      "path": "scripts/cloud_context_study.py",
+      "sha256": "aa840fdfa634c485972a4674e8b3887959f12c175253af149fbf387ddf69e630",
+      "bytes": 16217
+    },
+    {
+      "path": "scripts/render_cloud_context_study.py",
+      "sha256": "61991171e047e4889161188588d9d65a23e6ce27c7c2e93feb3b088e3e2c6215",
+      "bytes": 16962
+    },
+    {
+      "path": "strategies/trend_cloud_context_v3.py",
+      "sha256": "38afd3ee65249c766336a69d5bb72af8a0914c510265a16aaa76d1e27c68839b",
+      "bytes": 10940
+    },
+    {
+      "path": "test/test_cloud_context.py",
+      "sha256": "68ffa10373796bdfd1f1e6c69461d724b3044122e432433909239769eae10768",
+      "bytes": 5190
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "label": "004-before-final-report-records",
+  "created_at": "2026-09-10T08:57:02.701644+00:00",
+  "files": [
+    {
+      "path": "docs/verification/eth-cloud-robustness-20260910/report.html",
+      "sha256": "f021f1f1a3be6dd1f9e02ea17c3cfbece8a14674d158eda9fa6c9aa2f370a33d",
+      "bytes": 2814561
+    },
+    {
+      "path": "docs/verification/eth-cloud-robustness-20260910/REPORT.md",
+      "sha256": "6585a4b2ae51aa428721467cc1c677245aff115f2098bcf8a9d9ed3033fd674d",
+      "bytes": 10925
+    },
+    {
+      "path": "scripts/cloud_strategy_versions.py",
+      "sha256": "326aa74ad77b3c345bda12aab7333c683a62db11a5ccbef50eef2c1a4e2cd589",
+      "bytes": 1849
+    },
+    {
+      "path": "scripts/publish_cloud_robustness.py",
+      "sha256": "33d929296884fd1d62dc38f88fd6b2c3dca6d972a2cfe90136b7f60b48376e52",
+      "bytes": 2466
+    },
+    {
+      "path": "scripts/render_cloud_robustness.py",
+      "sha256": "1aa14f3a542a5ed75e36f054f157aa28b3b9b70c18fcf7caa58089e78eb8816f",
+      "bytes": 20920
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "label": "106_paxg_exit_changes_frozen",
+  "created_at": "2026-09-13T09:48:45.227384+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "ccdd04ba62b5e821a556d215da2d129087bbe461835c5aeda83d7e54a8d5d9e2",
+      "bytes": 24654
+    },
+    {
+      "path": "docs/verification/paxg-exit-comparison-20260913/plan.json",
+      "sha256": "9bfd431ff68b2c0d6a7fafe8c97dba845f8079b71ed9a41ea72aa6e3c2e98d75",
+      "bytes": 3219
+    },
+    {
+      "path": "docs/verification/paxg-exit-comparison-20260913/RULES.md",
+      "sha256": "cfd50ce5cd73ca6ddab5edbc2f6e3780b6b38704547bcb4498b07a437a9339ba",
+      "bytes": 1466
+    },
+    {
+      "path": "docs/verification/paxg-exit-comparison-20260913/study.json",
+      "sha256": "24dcae532761f570d7802d3445eb32d7e8a2d42b0aef1ca85900f56f1a4d2c1a",
+      "bytes": 755
+    },
+    {
+      "path": "docs/verification/paxg-exit-comparison-20260913/tests.json",
+      "sha256": "b91627efea035baa8f6c9ccc1745604bf91d72ae3bd5da70ea5a7dc956a52580",
+      "bytes": 592
+    },
+    {
+      "path": "scripts/paxg_exit_comparison_study.py",
+      "sha256": "90c7b514b992f0a574c6ca722d71dc55c05d2dd48fe33ad13ab1363e796812c1",
+      "bytes": 10731
+    },
+    {
+      "path": "strategies/trend_cloud_intrabar_exit_v4.py",
+      "sha256": "7988f9e0d2aaf5f94bcb6536dbab2b419b81fdf5d7dc54669e0ab79fae20987d",
+      "bytes": 10428
+    },
+    {
+      "path": "strategies/trend_cloud_intrabar_methods_v3.py",
+      "sha256": "0ea141561ca6d49e4a77430e3fd3cd3a751fd031ec8a98759439b2e1c7cd2cb0",
+      "bytes": 10190
+    },
+    {
+      "path": "test/test_intrabar_reverse_exit.py",
+      "sha256": "6e5865eee91e2a702a69bb723ab0665db289e29ed4073643b46e851958b75866",
+      "bytes": 2477
+    }
+  ]
+}

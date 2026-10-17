@@ -1,0 +1,66 @@
+{
+  "label": "104_paxg_entry_parameters_completed",
+  "created_at": "2026-09-13T06:14:45.643523+00:00",
+  "files": [
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/paxg/answers.json",
+      "sha256": "dfc7b03823554fb0e991090752d499215e532d4fc53f28011d4d0609cd05a3c7",
+      "bytes": 1505
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/paxg/completion.json",
+      "sha256": "3335b941af78221f059fdfe4f7e87bb3d7dce31deefce62747f9efc394c46bad",
+      "bytes": 2403
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/paxg/data-check.json",
+      "sha256": "b761e6af95920c038dc7705d54082bcc2bd107919beaa3dcf73ffe31a2905291",
+      "bytes": 91085
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/paxg/factor-comparisons.json",
+      "sha256": "427658057a69fb6e1b675e57f99144a09cea19483f076e2a5e0d2e29a76fc1ae",
+      "bytes": 30298
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/paxg/plan.json",
+      "sha256": "2489fb24034babaf8fb77637c09578ce6ab86184dab9ed11ed2650be4c11a3db",
+      "bytes": 45361
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/paxg/ranking.json",
+      "sha256": "7ed3a24ddf9b5af79571c02e525c5bd5436ab4d36c17da8e857d6aa55f408e3b",
+      "bytes": 1117
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/paxg/README.md",
+      "sha256": "11fff2e7d4d0c067749829dac39b66044aefaa86e29a14fe08aa4518e82e2c2f",
+      "bytes": 7398
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/paxg/results.json",
+      "sha256": "8a1065be3be36f681cd5b3ad12eeb0c17b8de3500ff1cca54aa1b215c9fbb166",
+      "bytes": 261404
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/paxg/RULES.md",
+      "sha256": "1c3cec77d2c7adab923fac1f7281a202a19f5c937c32acd470fc3eba39da166a",
+      "bytes": 1378
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/paxg/study.json",
+      "sha256": "fc1773acae4e375e5011240388db6573e920ea3e19d54bcb606f5d19bbc9f7d1",
+      "bytes": 920
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/paxg/verification.json",
+      "sha256": "4c4aa873c10eb1154c1c6e68f7244c423acfa48fe87e1138e3985ccdc70033a4",
+      "bytes": 288
+    },
+    {
+      "path": "scripts/zec_paxg_entry_parameters_study.py",
+      "sha256": "a6aa4506d4732b2c482403b91cf67756f7c3dacf84bd674817f868cbf880bec2",
+      "bytes": 20045
+    }
+  ]
+}

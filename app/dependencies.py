@@ -9,13 +9,13 @@ from app.runtime import AppRuntimeServices
 if TYPE_CHECKING:
     from app.infra.db.database import DatabaseRuntime
     from app.services.currency_service import CurrencyRateService
-    from app.services.fred_api_config_service import FredApiConfigService
     from app.services.llm_config_service import LlmConfigService
     from app.services.market.binance_market_intel_service import BinanceMarketIntelService
     from app.services.market.binance_web3_heat_rank_service import BinanceWeb3HeatRankService
     from app.services.market.binance_web3_rank_gateway import BinanceWeb3RankGateway
     from app.services.market.binance_web3_tokens import BinanceWeb3TokenService
     from app.services.market.index_data_service import IndexDataService
+    from app.services.market.equity_catalog_service import EquityCatalogService
     from app.services.market.insight_app_service import MarketInsightAppService
     from app.services.market.query_app_service import MarketQueryAppService
     from app.services.market.websocket_service import MarketWebSocketService
@@ -49,10 +49,6 @@ def get_currency_rate_service(connection: HTTPConnection) -> "CurrencyRateServic
 
 def get_llm_config_service(connection: HTTPConnection) -> "LlmConfigService":
     return get_runtime_services(connection).require_api().system.llm_config
-
-
-def get_fred_api_config_service(connection: HTTPConnection) -> "FredApiConfigService":
-    return get_runtime_services(connection).require_api().system.fred_config
 
 
 def get_tools_app_service(connection: HTTPConnection) -> "ToolsAppService":
@@ -140,6 +136,13 @@ def get_market_websocket_service(connection: HTTPConnection) -> "MarketWebSocket
 
 def get_index_data_service(connection: HTTPConnection) -> "IndexDataService":
     return get_runtime_services(connection).require_api().market.indexes
+
+
+def get_equity_catalog_service(connection: HTTPConnection) -> "EquityCatalogService":
+    service = get_runtime_services(connection).require_api().market.equity_catalog
+    if service is None:
+        raise RuntimeError("Equity catalog service is not initialized")
+    return service
 
 
 def get_binance_market_intel_service(connection: HTTPConnection) -> "BinanceMarketIntelService":

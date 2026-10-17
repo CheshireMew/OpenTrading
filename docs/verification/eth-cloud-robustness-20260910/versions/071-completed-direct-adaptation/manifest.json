@@ -1,0 +1,611 @@
+{
+  "label": "071-completed-direct-adaptation",
+  "created_at": "2026-09-12T09:07:02.726623+00:00",
+  "files": [
+    {
+      "path": "app/domain/cloud_adaptive_research_v1.py",
+      "sha256": "d402be314a5f55534bd7436f7aca8d6a298183b1ac5568dd1999048e23a3092f",
+      "bytes": 13954
+    },
+    {
+      "path": "app/domain/cloud_adaptive_types_v1.py",
+      "sha256": "67c1d260e5f92c4bfe14b4ffb88dc5d09568d4de4b57f8d4e15cc5071e2a8be4",
+      "bytes": 411
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/cloud-direct-adaptation.html",
+      "sha256": "d98ffd97a0eb53b9ce3d68ffd6a544a9e072b0c6f44bc9125d164f7597f199d2",
+      "bytes": 6633613
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/CONCLUSIONS.md",
+      "sha256": "9d25cf1510b7194649fabeb596bda56f464ef528f8a2732e26adbcfc7441ddcc",
+      "bytes": 4583
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/diagnostics/btc-15m.json",
+      "sha256": "3ca2548ce5d371c94b8befd4cab05ae2bb6a74ef16095fef3e8a7c5dd2d0a7d1",
+      "bytes": 711
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/diagnostics/btc-1h.json",
+      "sha256": "ba0681db86d295ddf8c4f8a6cf928a742d948af4efb1403ff5edc999354705bd",
+      "bytes": 687
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/diagnostics/eth-15m.json",
+      "sha256": "b60c5793881d1776f03233c7c60169fc56ed3403c148087823ba9169bf948202",
+      "bytes": 705
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/diagnostics/eth-1h.json",
+      "sha256": "37d4ad1d10912fb412710e1dd4b686f29ec1168f4398de4ea9528345cf86ea1f",
+      "bytes": 702
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/diagnostics/paxg-15m.json",
+      "sha256": "39d335f26fbd5da56c76ab3a7fe687bc3c8a34fe7ec2be41fc716e61b69e3eeb",
+      "bytes": 709
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/diagnostics/paxg-1h.json",
+      "sha256": "490f99c3e878f36f3301990dc02df492ea68d391c08b4a1b1aa5efb88a3550b5",
+      "bytes": 705
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/diagnostics/zec-15m.json",
+      "sha256": "625c58f0c44b97c16033b5afb8042063c2c33c7cedd264f92744dd12ad250c18",
+      "bytes": 719
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/diagnostics/zec-1h.json",
+      "sha256": "6914365b1101acc59036f55adc8748312a21a6def6c6e3ec75929bc6c42d80ae",
+      "bytes": 703
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/entry-gate-attribution.json",
+      "sha256": "609c7e81303b7b6b5450f3180329133a2451fc871c0c6468836f8d3b0493ce78",
+      "bytes": 53124
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/findings.json",
+      "sha256": "ffcfe80149f92f5724d22a6293fc836297d0bda62ba287c820ae61fd864f3ef0",
+      "bytes": 25604
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/plan.json",
+      "sha256": "49bae7fced86cb165a3ed4ba1713e784bb5e19f488817ebbf7799e1eaf513d7f",
+      "bytes": 9304
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/15m-adaptive_gate.json",
+      "sha256": "1d275e58ac181ab0e018d6c6d600bd1c731ea8606023983bfe9e2845483c53a2",
+      "bytes": 67010
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/15m-base_gate.json",
+      "sha256": "2f6497806fb33ed5684690610e12bb0808f45b1ece2d8c36d64d3f012e9cb81d",
+      "bytes": 67619
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/15m-c0r0t0.json",
+      "sha256": "0343a32f1f845850899f6553f4d491d0c471a83a3c25f5398f905c3ebdfd3796",
+      "bytes": 68216
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/15m-c0r0t1.json",
+      "sha256": "ac02fac0296a9b5474f85277c55225af31575460e8c2c78e215b48593e88cccd",
+      "bytes": 67878
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/15m-c0r1t0.json",
+      "sha256": "f21e442fc2d893a92b4ba446e2c8cff58bd77a3a3769889dab200b89eea5d668",
+      "bytes": 67868
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/15m-c0r1t1.json",
+      "sha256": "a217262ef8eac4291e9f3c57119cf6758a851d9371cdb942e7a4caaefab8b414",
+      "bytes": 67614
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/15m-c1r0t0.json",
+      "sha256": "d318bf605b45ce37ea6d2ff5e89bf998074ae51df88a349803eff015edaf3038",
+      "bytes": 68230
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/15m-c1r0t1.json",
+      "sha256": "da92d921337d4f165e4254a8ea443a8e5227d5187b76b4659ccd7cd19830efdf",
+      "bytes": 68117
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/15m-c1r1t0.json",
+      "sha256": "8084c76da28d98974525369d4996f6544f8f5e6463a2a48405edc9f069041b28",
+      "bytes": 68004
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/15m-c1r1t1.json",
+      "sha256": "0f16bb9a00f1ff17e54b3090cb870df188efd8d2aab8a39db176fd45df6ff18a",
+      "bytes": 67337
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/15m-slow89.json",
+      "sha256": "172f47605a4dcc18549b4c5cfd30b49e48d74fc51afafaa1b27d76557a5b7e32",
+      "bytes": 68333
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/15m-wide12.json",
+      "sha256": "b7548fef582021879d93714e7b8a2ed1f2f4e02974a66f04b4ee6b1ed69d602b",
+      "bytes": 67859
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/1h-adaptive_gate.json",
+      "sha256": "20bdda33fd429c7f83d2115aeb4608652852fc614aa4b0a125cb48c5ff178f86",
+      "bytes": 67218
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/1h-base_gate.json",
+      "sha256": "68917e1f618fa03d2703d979c42f4cc7f548a5c59c9c60664b5414339b9744d2",
+      "bytes": 67857
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/1h-c0r0t0.json",
+      "sha256": "020d544ea7e74784b74307bd1edf45f81416a2fde8319efe7414c7a619c24c47",
+      "bytes": 68338
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/1h-c0r0t1.json",
+      "sha256": "5fdb724aeebf6506710881b978bb2f57d607ee9413d80dcb02669598702a20f2",
+      "bytes": 68391
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/1h-c0r1t0.json",
+      "sha256": "11d5622bd255619206f13472b07b80ac4097fd3f92786137d5e48d63101ed70e",
+      "bytes": 68502
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/1h-c0r1t1.json",
+      "sha256": "feb4c5bd3c44ccd80ff110bd7f3fce3d2e4e3eceeff7fe3b92eb79b544eb61fd",
+      "bytes": 68291
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/1h-c1r0t0.json",
+      "sha256": "4638e1883cf0a62abba2f7698b5e6145e9fe0d41fbcec585acab213493476f27",
+      "bytes": 68277
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/1h-c1r0t1.json",
+      "sha256": "534a5320f7e8a20deeb6832e0705760c99c436f342c220b96d916c2897cad208",
+      "bytes": 68494
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/1h-c1r1t0.json",
+      "sha256": "dfe28b65e19e186bc2b576f9cf633e2b9bae0cae1f1d0d01f70e69faca9bd134",
+      "bytes": 68673
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/1h-c1r1t1.json",
+      "sha256": "35c500f3a8ff170c5d3713146c1123433b287cce6e7abe678a50d8cb6ab24538",
+      "bytes": 68164
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/1h-slow89.json",
+      "sha256": "fe8d4cb498fcfd59f6cde060b69a4d18b3242aadb9d67c4640378ab9c7f9210f",
+      "bytes": 68402
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/btc/1h-wide12.json",
+      "sha256": "0ca7b24a8e0e3fbf54c81d70a6abc87df5de818abe821c5151458da13f3ee391",
+      "bytes": 68491
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/15m-adaptive_gate.json",
+      "sha256": "cf5fe604a520af4d4c73fd6b315903a95e3093f6bd28109236d84278c30e88c5",
+      "bytes": 67661
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/15m-base_gate.json",
+      "sha256": "77b8f378d2a44d85ab07ce926c61860a0ed8f919857e85011a13f6713eac1c73",
+      "bytes": 67578
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/15m-c0r0t0.json",
+      "sha256": "97f15e9e79108c2608a83d7caa07916eb411deb2f52399636468956b4305f52c",
+      "bytes": 68135
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/15m-c0r0t1.json",
+      "sha256": "00b3339e0da8c2b4ab024241c4a0b6ff2a65f2c0e9251214deddc06cc63dc189",
+      "bytes": 68034
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/15m-c0r1t0.json",
+      "sha256": "ab1d136c9bd1d0cc9d0173611952560d7b50f316ccb69add6faa68806d0de6af",
+      "bytes": 67899
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/15m-c0r1t1.json",
+      "sha256": "ae056ac4a6df0346595a15dbb9d578cbc742abafb66af121436c6dd853450edc",
+      "bytes": 68098
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/15m-c1r0t0.json",
+      "sha256": "a4fe7e82e83c940c6aa1e7dcb0e1a16e10c2ed3c688e13d23cb235a43ef0596a",
+      "bytes": 68004
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/15m-c1r0t1.json",
+      "sha256": "b86ed8978e2fb5c9330d74be884651feecf432aaf87e50d1d8dc5fa7a33e8eee",
+      "bytes": 68052
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/15m-c1r1t0.json",
+      "sha256": "31db58bef7e3a5e230dbe43ccb692d11ba5df1375b0e8512890039886582cefa",
+      "bytes": 68132
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/15m-c1r1t1.json",
+      "sha256": "b7da3995d93682805c04483454c1519cff19c45eca49d26a3b97ea475c2957c2",
+      "bytes": 68155
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/15m-slow89.json",
+      "sha256": "196ec701d92723471769bf56b1c4eb7d64c5fd25f7475f1bd6aa32f4483fcb2b",
+      "bytes": 68090
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/15m-wide12.json",
+      "sha256": "7a3efda5d4d4deb6c228a3da745b45a9952c09e7c2ec541f6fec84f2ce36f9d1",
+      "bytes": 68143
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/1h-adaptive_gate.json",
+      "sha256": "b0e49b855388b0f21d2acc7d3d138f212e4af59249b2ed92f30b6b13d0b194d5",
+      "bytes": 67836
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/1h-base_gate.json",
+      "sha256": "1cd2bca60d0fe6d7b5b91a4a31d34ff0f10b4d36f56c60112d86bac49d4b6f13",
+      "bytes": 67979
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/1h-c0r0t0.json",
+      "sha256": "01a1f84b0d951bcbe8b939a9d2d55929ef98ca60ef4d6305262e713e695ffb03",
+      "bytes": 68194
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/1h-c0r0t1.json",
+      "sha256": "4ee6e990cb3c65bdcf84a8ac6710b9aff9321333606b0bf8c1db1651f345c21e",
+      "bytes": 68378
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/1h-c0r1t0.json",
+      "sha256": "d49ddc69ced9cb35245ef5d6bc1698d9302ef2eadbce8426ea24c4c2ad5297d6",
+      "bytes": 68153
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/1h-c0r1t1.json",
+      "sha256": "41c732f205fd0c890dbccb4aa6aac713c9d46bd44ee42cd7d03a3895f9314f6f",
+      "bytes": 68384
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/1h-c1r0t0.json",
+      "sha256": "c7543054c8cfeaa91cc4f8786d85c6429ec639440b16a4b36a2e1e8448e113c2",
+      "bytes": 68119
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/1h-c1r0t1.json",
+      "sha256": "cf2ba1c2c40c64a45b982bb96c3b875cdb3091c4281030ea55811f36d6522110",
+      "bytes": 68518
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/1h-c1r1t0.json",
+      "sha256": "b25f3332d37e020bf9ffa9b033c0b89e532d4684035fe30c7f0ac1f287e12129",
+      "bytes": 68532
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/1h-c1r1t1.json",
+      "sha256": "23e8fdf3ec267d018d5b6ce2fde4bfc4cf6dcb56ee344946a34a66f8c3b1f2ff",
+      "bytes": 68142
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/1h-slow89.json",
+      "sha256": "b5530b3323887093cb61e50c8d8d8e8db051a75c6fdc81d890f99d7c6a0872ec",
+      "bytes": 68230
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/eth/1h-wide12.json",
+      "sha256": "b65a6f273deccd8ced2b2b510ba3af424911632d0518914960dd59bbdb8db213",
+      "bytes": 68399
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/15m-adaptive_gate.json",
+      "sha256": "982cda140013a400017d4ab60f1f445d9b94dab078619a5e0031b2ba7ad9043b",
+      "bytes": 67143
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/15m-base_gate.json",
+      "sha256": "6da6319ff21951098daeb4d22f1e8c42ebbbcb2a50b1d30bc7e2f1781a3d8abd",
+      "bytes": 67198
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/15m-c0r0t0.json",
+      "sha256": "099709767cbad1c1d1190a7ea7857f7fcee5a9a524f23098c69e5b759a49b2b2",
+      "bytes": 68157
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/15m-c0r0t1.json",
+      "sha256": "d05bff32a7286b53ddaf2cf399cfacdacdcbfe7deac5aabc7d7ef260733bf975",
+      "bytes": 68134
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/15m-c0r1t0.json",
+      "sha256": "f9a53b5751d9745b530a905609e97a932e59c1b6622d0ca7a4b2ec0da689cca8",
+      "bytes": 68425
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/15m-c0r1t1.json",
+      "sha256": "b04a3ad4a3346bb67d18ca24bf8c562fc05b6f76b9f0a14b5c383dbb5bfcf88b",
+      "bytes": 68439
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/15m-c1r0t0.json",
+      "sha256": "3f02db5d9ed9de0b22bac5534ea1cec71c05904a2752054175aa8079b80a61bc",
+      "bytes": 68201
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/15m-c1r0t1.json",
+      "sha256": "505bc81374dd4bc109cdf44bc9fd6f808a6d70dbc57b1fff04273d5a46edcbcb",
+      "bytes": 68185
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/15m-c1r1t0.json",
+      "sha256": "bd8ae2ea453c2d4b8feecda033f8996dc8a4c4e7e1860fd8bc4fe31eef5ad4fa",
+      "bytes": 68343
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/15m-c1r1t1.json",
+      "sha256": "7c1157fd8dda09d1b7995ccb6262685a18c4dfb31a4deb94f78937c5f9b9b63d",
+      "bytes": 68311
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/15m-slow89.json",
+      "sha256": "f0d2ada7393b945516abb651f640dc9ebe4363a9fc15899368073aa7562029ef",
+      "bytes": 68180
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/15m-wide12.json",
+      "sha256": "783d89a24d571044b88756ec2cc88d9132f1f283b4114854809555da41c998e9",
+      "bytes": 68196
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/1h-adaptive_gate.json",
+      "sha256": "b6af7d657b0a26d0f963a5d382306e2ae2bed6fbf85316fcb400798ab7d7fd7c",
+      "bytes": 67440
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/1h-base_gate.json",
+      "sha256": "13a98ca668954d566870915855c81a64d2a804d31f3abdfabe5a569241ea2116",
+      "bytes": 67275
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/1h-c0r0t0.json",
+      "sha256": "68018ab1128e52da4646d773c67f3cc9b33da467dbab6a059d973e1e2f382c60",
+      "bytes": 68515
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/1h-c0r0t1.json",
+      "sha256": "5cd2398905e0d8572a1622a49c8f90b6f6e6cb4fa966fa3377bd47524f195ff8",
+      "bytes": 68456
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/1h-c0r1t0.json",
+      "sha256": "6b7a1f0b446326850595ac8a1d8a42dc0c92441637935c239feac8a98f574fe0",
+      "bytes": 68347
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/1h-c0r1t1.json",
+      "sha256": "28d648f5a7b582677bc9a5cf7ebc91bfb22060e19131d54d906a3908a1b4dfb8",
+      "bytes": 68357
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/1h-c1r0t0.json",
+      "sha256": "2ad7654a3f9684da693c459753b134ed5140b093f5e21e534f5320a051b16fa1",
+      "bytes": 68465
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/1h-c1r0t1.json",
+      "sha256": "b3564f65a0f45468afce128a1678af107b426f7d86306f02f07d66c183a35777",
+      "bytes": 68385
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/1h-c1r1t0.json",
+      "sha256": "9c54a04ebe8456eaab6c300df023f463a9fd78669d2b84585776916f54f6cc4c",
+      "bytes": 68467
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/1h-c1r1t1.json",
+      "sha256": "4f50e184137343c8de79666d73a2aaf6cfe125a7a38fdf81742d3e32a422b470",
+      "bytes": 68402
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/1h-slow89.json",
+      "sha256": "7624a50544cadbcf505e6815c11b963eb2acd74ff9e4c5ded11eef903b10f182",
+      "bytes": 68296
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/paxg/1h-wide12.json",
+      "sha256": "acdc65f771d3053f3ea7a7e293108dd292464e0c7a1b8699e495cb84f76d6b93",
+      "bytes": 68392
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/15m-adaptive_gate.json",
+      "sha256": "fa44081226635e2f6d2ea7f266823a12cd35bc169b57e2abb00458173fa2853a",
+      "bytes": 67416
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/15m-base_gate.json",
+      "sha256": "153c461e4c715425e03d0b42e3f2f8258da0e8f77769ef3585e0a6c997120238",
+      "bytes": 67528
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/15m-c0r0t0.json",
+      "sha256": "972902c802566b723dd06d3b325d3248d3cf572cc65477b03d142dd272ed2585",
+      "bytes": 68130
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/15m-c0r0t1.json",
+      "sha256": "e4073566c9fbe8131f5d0191eb14829621065badc48373e9b8f5f8bd3bbe43ec",
+      "bytes": 68059
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/15m-c0r1t0.json",
+      "sha256": "f00a0d9c76ed52ffa57af70e6159ed7de217b6c015b134a93417ecd90ec3748d",
+      "bytes": 68224
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/15m-c0r1t1.json",
+      "sha256": "bab23c168a0165a472e427594e6e0704e8bc616b9f30f68502605377fe1efa3e",
+      "bytes": 68140
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/15m-c1r0t0.json",
+      "sha256": "9196c84ba4975c23659a8b6df837ff4ee45f24d06b6e62eaf65ffd4c2b9fab7f",
+      "bytes": 67517
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/15m-c1r0t1.json",
+      "sha256": "13362926e1e034a24fba0b3d82ea4e3b943cbc8eb40c4e1afad7259164cdb203",
+      "bytes": 67538
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/15m-c1r1t0.json",
+      "sha256": "247ac42aaffdf5b53b831e507eb905c986b39adf336141985bdeff686965c7f6",
+      "bytes": 68277
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/15m-c1r1t1.json",
+      "sha256": "4fe131619006296e172bd4a6b9bf26e757cfa4f76f50d8204058e99a2c626385",
+      "bytes": 68080
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/15m-slow89.json",
+      "sha256": "6e61cc5b1beaee14d510f11edab8da0cf0794e6deeeddfac3fed785ee85fa589",
+      "bytes": 67586
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/15m-wide12.json",
+      "sha256": "4a9ed295e9f8a914ed18a499f35153658523ca744765070b36c5893f7176c98c",
+      "bytes": 68098
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/1h-adaptive_gate.json",
+      "sha256": "14ae60438d3c7d69281480e60661656e67120ce7a513559abd58d6f761cb924e",
+      "bytes": 67485
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/1h-base_gate.json",
+      "sha256": "7ce8a810fb5dcea7e1c2c43070eee844b5bbe6f81ffb141456c614d6a362038d",
+      "bytes": 67481
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/1h-c0r0t0.json",
+      "sha256": "4f2259a04c5763a6afa7fd79336e9c5593946013443487ddeee39ca15cf528f2",
+      "bytes": 67198
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/1h-c0r0t1.json",
+      "sha256": "e8e85c6a506130cc9b01bc1bd3aba191a9491cc49bf40dacf487c86f4aa117c0",
+      "bytes": 67182
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/1h-c0r1t0.json",
+      "sha256": "061b04689f767e50ebfd411a7e4fb9468a573a1393fcc2275493ad45c707ec00",
+      "bytes": 67766
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/1h-c0r1t1.json",
+      "sha256": "76617e345a21ce273190d3f7cb3c1290d2bd69c44f5d77fc3d51382e9c541177",
+      "bytes": 67625
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/1h-c1r0t0.json",
+      "sha256": "24cfb6d34e66626fbd964d32cf605b26e0efd07a293b5927158d87785dc4a46a",
+      "bytes": 67162
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/1h-c1r0t1.json",
+      "sha256": "904b8c79c4a34706c6b50cc7d4648af2beed713684797c5531bb61897e418115",
+      "bytes": 66985
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/1h-c1r1t0.json",
+      "sha256": "23e507a65be040b86318a3b40b65edca163069ac52788a7656e7e421bc10cbbb",
+      "bytes": 67699
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/1h-c1r1t1.json",
+      "sha256": "7f96bf12a985c9bc62d60e815c173068946b61089c93a2d5c3fbfbe40b74f8fc",
+      "bytes": 67574
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/1h-slow89.json",
+      "sha256": "a6252f000a9db33943eed954db08c8dcb375d54eba56d64453ee7ce6c1c12ae1",
+      "bytes": 67623
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/reports/zec/1h-wide12.json",
+      "sha256": "bc75f3b842950293897dae5a8c3e4937f9b86b4d80b4e4abb1cbe5f8b342f6f6",
+      "bytes": 68077
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/results.json",
+      "sha256": "a1e7594c99f4c1e5da087923c10018ce75ca90b0959d73c7dedcb9024e1f04db",
+      "bytes": 6538628
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/RESULTS.md",
+      "sha256": "5c758e25f89df53a5e392a32f6f7b664310f6431140be70d105fd446b3f1b342",
+      "bytes": 8017
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/RUNBOOK.md",
+      "sha256": "c1f414982ebefc58c5b19fb87f5845039fb83f4ad994ba9a481664eb31a3dca0",
+      "bytes": 1858
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/ui-verification.json",
+      "sha256": "295499f29244d79ee6154ae955da9883274d0d967429edaef15f14376258a483",
+      "bytes": 767
+    },
+    {
+      "path": "docs/verification/cloud-direct-adaptation-20260912/verification.json",
+      "sha256": "8b0c76789f5d9bc4473359e233d3478e3ac07b56a8844b2d27b8474834f325dc",
+      "bytes": 272
+    },
+    {
+      "path": "scripts/cloud_direct_adaptation_study.py",
+      "sha256": "153ce5b95aca7073d73bda68c0b88c402957e8fb2afc85ebbbc5c949ebd32eba",
+      "bytes": 12339
+    },
+    {
+      "path": "scripts/diagnose_cloud_direct_entries.py",
+      "sha256": "3e69edcd5c3ff6aef8f362bd671494b4c8823cf8ff4307ee987197ce188a6fa0",
+      "bytes": 1802
+    },
+    {
+      "path": "scripts/report_cloud_direct_adaptation.py",
+      "sha256": "0771ad131972b71bfd475945e08c53db3b3dfb73ce3578cc977a6d1d5f95a07c",
+      "bytes": 19536
+    },
+    {
+      "path": "strategies/trend_cloud_direct_v7.py",
+      "sha256": "b17b73ef92843c450e69372c860ecdfb36e6e14b6a649be66428e1544a6d0fe5",
+      "bytes": 5466
+    },
+    {
+      "path": "test/test_cloud_direct_adaptation.py",
+      "sha256": "f939ae177b70a38a94bc2714752d4b3280291a7da62c00a046087575a75f3d0e",
+      "bytes": 4202
+    }
+  ]
+}

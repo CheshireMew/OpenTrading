@@ -1,0 +1,96 @@
+{
+  "label": "043-completed-paxg-zec-repair",
+  "created_at": "2026-09-11T08:54:29.844923+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "212dc0a791e66fc3754ef01d927ab7d29f8a9e44cae747872ca41a5459ce09b1",
+      "bytes": 16653
+    },
+    {
+      "path": "docs/verification/paxg-zec-repair-20260911/details.json",
+      "sha256": "79ba47e81cffe88223512235a792c72d03cd254f4ba07b70ceecbe0a293e0af9",
+      "bytes": 347671
+    },
+    {
+      "path": "docs/verification/paxg-zec-repair-20260911/final-lock.json",
+      "sha256": "2f73310e410a53ebbe96b2fc4ade207df4035c4b4e0cb4c0ad159e011f464f83",
+      "bytes": 6198
+    },
+    {
+      "path": "docs/verification/paxg-zec-repair-20260911/methods-plan.json",
+      "sha256": "b84a744fa3bf9f407a0b654310b51429da061398df78eb12a33f3dcd13ba9c97",
+      "bytes": 2039
+    },
+    {
+      "path": "docs/verification/paxg-zec-repair-20260911/parameter-lock.json",
+      "sha256": "e5441d10d7186169db245638000c58def02ae05017ff42b69bb0ce05fe954aa6",
+      "bytes": 1454
+    },
+    {
+      "path": "docs/verification/paxg-zec-repair-20260911/paxg-zec-repair.html",
+      "sha256": "c2e88d119f6acf3353618bbf08a12e3883e234d38cc7c2034c6b343802eb91ee",
+      "bytes": 1268707
+    },
+    {
+      "path": "docs/verification/paxg-zec-repair-20260911/plan.json",
+      "sha256": "5fe2161e7bf449cb06af99122d297ced3a16ed3f6bdc197547cd64bfe37b6bb5",
+      "bytes": 46996
+    },
+    {
+      "path": "docs/verification/paxg-zec-repair-20260911/report-data.json",
+      "sha256": "1dab465abf782d1ef0e3002ebac8aa66a4ae31068252699870ca97bf49203a4c",
+      "bytes": 1171940
+    },
+    {
+      "path": "docs/verification/paxg-zec-repair-20260911/REPORT.md",
+      "sha256": "3a3d99dd0ed79859b13798ad8ec04313aadf52fb5412a6cdce60417f1291a992",
+      "bytes": 12189
+    },
+    {
+      "path": "docs/verification/paxg-zec-repair-20260911/results.json",
+      "sha256": "3b10a186d7c2070723a22257d3d25b86e41f74bef05ba81b95e38a28db83ed6e",
+      "bytes": 1271451
+    },
+    {
+      "path": "docs/verification/paxg-zec-repair-20260911/test-results.json",
+      "sha256": "259d4dbdce53b5121d2522eac2e0bc0115345dd402b847acc33a412883ac5b1e",
+      "bytes": 475
+    },
+    {
+      "path": "docs/verification/paxg-zec-repair-20260911/validation-plan.json",
+      "sha256": "86fab62bab8921075126e5ad28c52cb22404a63ef378b9520b1d7736155ba477",
+      "bytes": 1148
+    },
+    {
+      "path": "docs/verification/paxg-zec-repair-20260911/verification.json",
+      "sha256": "bf930809efca71b0ed4e5e241bef9ad042250a0f4703d7f629380e8743d5dc8f",
+      "bytes": 69226
+    },
+    {
+      "path": "scripts/paxg_zec_repair_study.py",
+      "sha256": "d065fe5a61c93fa6801766a143362f06d45a221c47399a306dba7c3a0b377791",
+      "bytes": 16615
+    },
+    {
+      "path": "scripts/report_paxg_zec_repair.py",
+      "sha256": "c21af1cc3971d4e422fc89b7162d2592973dddd99f11146d510916c1b116b405",
+      "bytes": 26299
+    },
+    {
+      "path": "strategies/trend_cloud_atr_confirm_v5.py",
+      "sha256": "e8c0b18de96d22e8fdb528fdc920db036f7bc7a8d78c25aaa05ffec691e87174",
+      "bytes": 4630
+    },
+    {
+      "path": "strategies/trend_cloud_parameters_v4.py",
+      "sha256": "518ec7480dc4e5b8fd57d6804dd74bde88103f3c4c847a51028d2d5ef309173e",
+      "bytes": 5381
+    },
+    {
+      "path": "test/test_cloud_atr_confirmation.py",
+      "sha256": "2662f57ccb12521c23c4e79c2160987b9e056569877ae2b8677bd44c8dc3ad34",
+      "bytes": 4147
+    }
+  ]
+}

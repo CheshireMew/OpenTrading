@@ -1,0 +1,46 @@
+{
+  "label": "103_paxg_entry_parameters_frozen",
+  "created_at": "2026-09-13T05:53:14.504170+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "ccdd04ba62b5e821a556d215da2d129087bbe461835c5aeda83d7e54a8d5d9e2",
+      "bytes": 24654
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/paxg/data-check.json",
+      "sha256": "b761e6af95920c038dc7705d54082bcc2bd107919beaa3dcf73ffe31a2905291",
+      "bytes": 91085
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/paxg/plan.json",
+      "sha256": "2489fb24034babaf8fb77637c09578ce6ab86184dab9ed11ed2650be4c11a3db",
+      "bytes": 45361
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/paxg/RULES.md",
+      "sha256": "1c3cec77d2c7adab923fac1f7281a202a19f5c937c32acd470fc3eba39da166a",
+      "bytes": 1378
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/paxg/study.json",
+      "sha256": "fc1773acae4e375e5011240388db6573e920ea3e19d54bcb606f5d19bbc9f7d1",
+      "bytes": 920
+    },
+    {
+      "path": "scripts/paxg_intrabar_combined_study.py",
+      "sha256": "412e12aebf28cd126f276091e5a269633b77c98bb49e07a4b94abd0dd927fa3d",
+      "bytes": 16626
+    },
+    {
+      "path": "scripts/zec_paxg_entry_parameters_study.py",
+      "sha256": "a6aa4506d4732b2c482403b91cf67756f7c3dacf84bd674817f868cbf880bec2",
+      "bytes": 20045
+    },
+    {
+      "path": "strategies/trend_cloud_intrabar_methods_v3.py",
+      "sha256": "0ea141561ca6d49e4a77430e3fd3cd3a751fd031ec8a98759439b2e1c7cd2cb0",
+      "bytes": 10190
+    }
+  ]
+}

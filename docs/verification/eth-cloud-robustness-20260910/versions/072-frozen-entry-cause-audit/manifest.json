@@ -1,0 +1,26 @@
+{
+  "label": "072-frozen-entry-cause-audit",
+  "created_at": "2026-09-12T09:19:35.160554+00:00",
+  "files": [
+    {
+      "path": "app/domain/cloud_entry_path_audit.py",
+      "sha256": "479f15e855f385981d7ee7c846afffcd7d196eb5ba50c196404f1fafb5b44920",
+      "bytes": 3989
+    },
+    {
+      "path": "docs/verification/cloud-entry-cause-20260912/plan.json",
+      "sha256": "a24bd01af310a2ad1df4a3cafbfec3f2d7ba4bf0a1ed22a28b31d8608f70d17c",
+      "bytes": 5327
+    },
+    {
+      "path": "scripts/cloud_entry_cause_audit.py",
+      "sha256": "7ce286870be3f9f3ed14e3bee81650a85542bcbb94681263e7677ad7373e5c5b",
+      "bytes": 13909
+    },
+    {
+      "path": "test/test_cloud_entry_path_audit.py",
+      "sha256": "ed842d9bafa749ec07400de4624d03085cd6a0e194f9c629287b6e1a787d6c6b",
+      "bytes": 2131
+    }
+  ]
+}

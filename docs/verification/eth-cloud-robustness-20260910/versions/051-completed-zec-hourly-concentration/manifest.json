@@ -1,0 +1,21 @@
+{
+  "label": "051-completed-zec-hourly-concentration",
+  "created_at": "2026-09-11T13:35:23.932819+00:00",
+  "files": [
+    {
+      "path": "docs/verification/zec-hourly-volatility-20260911/analysis.json",
+      "sha256": "38ea4e4aab36d926bc101e6ba83700cd210fde6ffa24a736bb8292e8a43141f8",
+      "bytes": 96113
+    },
+    {
+      "path": "docs/verification/zec-hourly-volatility-20260911/zec-hourly-volatility.html",
+      "sha256": "dbde753bcb33773aa022ff44ec9a7572b5e06d7cbb12c8b68e89b4675d15b1cb",
+      "bytes": 104215
+    },
+    {
+      "path": "scripts/zec_hourly_volatility.py",
+      "sha256": "9f81ac28a9c9aadd8cb311cdf33033047653ab7e95ea5a1ab5b81b3416afe9d8",
+      "bytes": 15497
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "tests": [
+    {
+      "command": "pytest test/test_stop_confirmation.py test/test_local_backtest_engine.py -q",
+      "passed": 50
+    },
+    {
+      "command": "pytest test/test_intrabar_stop_entry.py test/test_profit_protection.py test/test_backtest_provenance.py -q",
+      "passed": 46
+    }
+  ],
+  "pine_modified": false,
+  "new_strategy": "trend_cloud_stop_confirmation_v1",
+  "engine_version": "10"
+}

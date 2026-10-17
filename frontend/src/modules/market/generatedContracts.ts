@@ -22,6 +22,13 @@ export interface ApiStatusResponse {
   timestamp: string
 }
 
+export interface EquityCatalogResponse {
+  updated_at: string
+  complete: boolean
+  items: Array<EquityCatalogItemResponse>
+  sources: Array<EquityCatalogSourceResponse>
+}
+
 export interface RealtimeResponse {
   symbol: string
   timestamp: string
@@ -489,6 +496,41 @@ export interface CurrentPriceBatchItemResponse {
   source: string
 }
 
+export interface EquityCatalogItemResponse {
+  ticker: string
+  name: string
+  name_zh: string
+  logo_url: string | null
+  asset_type: "stock" | "etf" | "index" | "unknown"
+  market: string
+  platforms: Array<string>
+  trading_types: Array<string>
+  offerings: Array<EquityOfferingResponse>
+}
+
+export interface EquityCatalogSourceResponse {
+  id: string
+  platform: "binance" | "okx" | "bitget"
+  label: string
+  trading_type: "spot" | "perpetual" | "metadata"
+  status: "ok" | "stale" | "unavailable"
+  count: number
+  updated_at: string | null
+  error: string | null
+  url: string
+}
+
+export interface EquityOfferingResponse {
+  source_id: string
+  platform: "binance" | "okx" | "bitget"
+  trading_type: "spot" | "perpetual"
+  product: string
+  symbol: string
+  quote: string
+  status: string
+  url: string
+}
+
 export interface IndicatorHistoryPoint {
   date: string
   value: number
@@ -597,6 +639,10 @@ export interface GetCurrentPriceBatchQueryParams {
 export interface GetCurrentPriceQueryParams {
   symbol: string
   timeframe?: string
+}
+
+export interface GetEquityCatalogQueryParams {
+  refresh?: boolean
 }
 
 export interface GetIndexHistoryQueryParams {

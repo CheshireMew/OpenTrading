@@ -1,0 +1,66 @@
+{
+  "label": "029-frozen-cross-asset-representatives",
+  "created_at": "2026-09-10T21:27:51.105183+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "25dbf1e84947ba22b8a5df80ffa49214ee8252632377bb17420f396e9ab1b822",
+      "bytes": 15630
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/history-inventory.json",
+      "sha256": "ad40c5abec94a52c01cdd7b6deacc8ff6ea8c5c2898be73cdfdf58fadf34f04c",
+      "bytes": 131686
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/plan.json",
+      "sha256": "d18c9f72e1c8226146a1f40de190de4522ffa3dbad167de6b829b2a9928f7048",
+      "bytes": 30289
+    },
+    {
+      "path": "docs/verification/strategy-selection-20260911/REVIEW.md",
+      "sha256": "d3bb351f897e4f80760864ad3461f7ce8c95584dd4e7798cf5e7e328530c10cf",
+      "bytes": 3940
+    },
+    {
+      "path": "scripts/cloud_cross_asset_study.py",
+      "sha256": "0400680bfef187b1fdbc36d40a44158966fa00ecab11102a8c7a84f2aef3f478",
+      "bytes": 21837
+    },
+    {
+      "path": "strategies/trend_cloud_comparison.py",
+      "sha256": "aab6ecaab98565ec60b9579c7cd4fe12d8f455784ba36503bd7267a96dc479dd",
+      "bytes": 7272
+    },
+    {
+      "path": "strategies/trend_cloud_context_v3.py",
+      "sha256": "38afd3ee65249c766336a69d5bb72af8a0914c510265a16aaa76d1e27c68839b",
+      "bytes": 10940
+    },
+    {
+      "path": "strategies/trend_cloud_entry_v2.py",
+      "sha256": "f6e03ad6b3e688f5cc2861788d658319ac592e3b47d30905d4c8e780e92c1e0e",
+      "bytes": 6284
+    },
+    {
+      "path": "strategies/trend_cloud_experiments.py",
+      "sha256": "17a595b286f4e94d2a23c4c3e89b7e24590e2a0de8f3e82c9140065f1a8cc9ed",
+      "bytes": 6464
+    },
+    {
+      "path": "strategies/trend_cloud_manual_v1.py",
+      "sha256": "c357811312e1881a86279e246300362945f9d1d4e42a1f872029691bfcc5a87a",
+      "bytes": 5842
+    },
+    {
+      "path": "strategies/trend_cloud_parameters_v4.py",
+      "sha256": "518ec7480dc4e5b8fd57d6804dd74bde88103f3c4c847a51028d2d5ef309173e",
+      "bytes": 5381
+    },
+    {
+      "path": "strategies/trend_cloud_robustness_v1.py",
+      "sha256": "b3bee9a6d3679e5741fa5aa3e46e95418ddc8b4e3c3416ac19d6b496b21aeece",
+      "bytes": 6320
+    }
+  ]
+}

@@ -113,56 +113,6 @@
       </section>
 
       <section class="app-panel p-6">
-        <div v-if="fredLoading" role="status" aria-live="polite" class="py-12 text-center app-muted">{{ $t('settings.loading') }}</div>
-        <div v-else-if="fredLoadError" role="alert" class="flex flex-wrap items-center justify-between gap-3 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200"><span>{{ fredLoadError }}</span><button type="button" class="app-button-secondary app-touch-target" @click="loadFredConfig">{{ $t('common.retry') }}</button></div>
-        <template v-else>
-        <div class="mb-6 flex items-center justify-between gap-4">
-          <div>
-            <h3 class="app-section-title">{{ $t('settings.fredSource') }}</h3>
-            <p class="app-muted mt-1 text-sm">{{ $t('settings.fredDescription') }}</p>
-          </div>
-          <span
-            class="px-3 py-1 text-xs font-semibold"
-            :class="fredForm.apiKeySet ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'"
-          >
-            {{ fredForm.apiKeySet ? $t('settings.apiKeySet') : $t('settings.apiKeyUnset') }}
-          </span>
-        </div>
-
-        <div class="grid gap-5 md:grid-cols-[1fr_auto] md:items-end">
-          <label class="space-y-2">
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">FRED API Key</span>
-            <input
-              v-model.trim="fredApiKeyDraft"
-              class="input"
-              type="password"
-              autocomplete="off"
-              :placeholder="fredForm.apiKeyPreview || $t('settings.fredApiKeyPlaceholder')"
-            />
-          </label>
-
-          <button
-            type="button"
-            class="app-button-primary app-touch-target px-4 py-2"
-            :disabled="fredSaving || !canSaveFred"
-            @click="saveFredConfig"
-          >
-            {{ fredSaving ? $t('settings.saving') : $t('settings.save') }}
-          </button>
-          <button v-if="fredForm.apiKeySet" type="button" class="app-button-secondary app-touch-target px-4 py-2 text-rose-600 dark:text-rose-300" :disabled="fredSaving" @click="clearFredApiKey">
-            {{ $t('settings.clearKey') }}
-          </button>
-        </div>
-
-        <div class="mt-3 flex items-center gap-3 text-sm">
-          <span class="text-gray-500 dark:text-gray-400">{{ $t('settings.source') }}: {{ fredForm.source }}</span>
-          <span v-if="fredMessage" role="status" aria-live="polite" class="text-emerald-600 dark:text-emerald-300">{{ fredMessage }}</span>
-          <span v-if="fredError" role="alert" class="text-rose-600 dark:text-rose-300">{{ fredError }}</span>
-        </div>
-        </template>
-      </section>
-
-      <section class="app-panel p-6">
         <div v-if="systemLoading" role="status" aria-live="polite" class="py-8 text-center app-muted">{{ $t('settings.loading') }}</div>
         <div v-else-if="systemLoadError" role="alert" class="flex flex-wrap items-center justify-between gap-3 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200"><span>{{ systemLoadError }}</span><button type="button" class="app-button-secondary app-touch-target" @click="loadSystemConfig">{{ $t('common.retry') }}</button></div>
         <div v-else class="grid gap-3 text-sm text-stone-600 dark:text-gray-400 md:grid-cols-2">
@@ -192,33 +142,22 @@ const {
   systemConfig,
   presets,
   apiKeyDraft,
-  fredApiKeyDraft,
   saving,
-  fredSaving,
   message,
   error,
-  fredMessage,
-  fredError,
   systemLoading,
   llmLoading,
-  fredLoading,
   systemLoadError,
   llmLoadError,
-  fredLoadError,
   form,
-  fredForm,
   isCustomProvider,
   canSave,
-  canSaveFred,
   applyProviderPreset,
   handleProviderChange,
   saveConfig,
-  saveFredConfig,
   clearLlmApiKey,
-  clearFredApiKey,
   loadSystemConfig,
   loadLlmConfig,
-  loadFredConfig,
 } = useSystemSettingsPage()
 </script>
 

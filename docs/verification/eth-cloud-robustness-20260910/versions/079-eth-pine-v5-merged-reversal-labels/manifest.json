@@ -1,0 +1,16 @@
+{
+  "label": "079-eth-pine-v5-merged-reversal-labels",
+  "created_at": "2026-09-12T14:26:00.505193+00:00",
+  "files": [
+    {
+      "path": "strategies/pine/eth_ema55_six_year_v5.md",
+      "sha256": "0aa221174a961acd9be0164d4bf8a724f1039048172a06247df8080f5f64d909",
+      "bytes": 1223
+    },
+    {
+      "path": "strategies/pine/eth_ema55_six_year_v5.pine",
+      "sha256": "9fc9baadb382e6e4b8ade53c75ac30772d1476303befffb42778467404644048",
+      "bytes": 12214
+    }
+  ]
+}

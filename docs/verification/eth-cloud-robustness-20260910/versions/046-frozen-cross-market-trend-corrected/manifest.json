@@ -1,0 +1,41 @@
+{
+  "label": "046-frozen-cross-market-trend-corrected",
+  "created_at": "2026-09-11T09:39:08.143414+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "212dc0a791e66fc3754ef01d927ab7d29f8a9e44cae747872ca41a5459ce09b1",
+      "bytes": 16653
+    },
+    {
+      "path": "docs/verification/cross-market-trend-20260911-r2/plan.json",
+      "sha256": "100b63c40136f29651f787dfc295c0619228107a9ae2e74cf1774ec41f69beac",
+      "bytes": 16706
+    },
+    {
+      "path": "scripts/cross_market_native_recheck.py",
+      "sha256": "68a781e929da70b3dddd5985d4886ba522dbbf4166d40ade8f2fab31c88134aa",
+      "bytes": 4147
+    },
+    {
+      "path": "scripts/cross_market_trend_study.py",
+      "sha256": "0451ff7c8294bb8851c3c9f799c1d40207b60286816c8fa30f7331a3daa24ca8",
+      "bytes": 23189
+    },
+    {
+      "path": "strategies/cross_market_trend_v1.py",
+      "sha256": "87e71d463f1f138a0b9703038ee2ebd8e048b102afdd39a1f5aa1a9387654b10",
+      "bytes": 5426
+    },
+    {
+      "path": "strategies/trend_cloud_parameters_v4.py",
+      "sha256": "518ec7480dc4e5b8fd57d6804dd74bde88103f3c4c847a51028d2d5ef309173e",
+      "bytes": 5381
+    },
+    {
+      "path": "test/test_cross_market_trend.py",
+      "sha256": "c386cc998cace63758696d78bd2b7cbb8735510e69c69d3f3064cd9dca842694",
+      "bytes": 4823
+    }
+  ]
+}

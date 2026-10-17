@@ -1,0 +1,29 @@
+{
+  "title": "BNB 15分钟：原版规则，同一份5分钟行情对照",
+  "base": {
+    "strategy": "trend_cloud_parameters_v4",
+    "symbol": "BNB/USDT",
+    "timeframe": "15m",
+    "start": "2018-09-10T00:00:00Z",
+    "end": "2026-09-10T00:00:00Z",
+    "initial_cash": 10000,
+    "position_pct": 100,
+    "data_gap_policy": "observed_bars",
+    "execution_timeframe": "5m",
+    "intrabar_profit_protection": false,
+    "parameters": {
+      "center_length": 55,
+      "width_length": 50,
+      "trigger_mult": 0.8,
+      "chase_mult": 1.5,
+      "activation_pct": 2,
+      "giveback_pct": 50,
+      "initial_stop_pct": 2,
+      "initial_stop_width": 0,
+      "record_indicators": true
+    }
+  },
+  "axes": {},
+  "max_runs": 1,
+  "source_run": "657b2b8086588a254442b82b128d34df"
+}

@@ -1,0 +1,36 @@
+{
+  "title": "SOL：原最高收益EMA通道＋实体盘中确认＋5分钟保护",
+  "base": {
+    "strategy": "trend_cloud_intrabar_methods_v3",
+    "symbol": "SOL/USDT",
+    "timeframe": "15m",
+    "start": "2020-09-10T00:00:00Z",
+    "end": "2026-09-10T00:00:00Z",
+    "initial_cash": 10000,
+    "position_pct": 100,
+    "data_gap_policy": "observed_bars",
+    "execution_timeframe": "5m",
+    "intrabar_profit_protection": true,
+    "parameters": {
+      "center_length": 55,
+      "width_length": 50,
+      "trigger_mult": 0.4,
+      "chase_mult": 2,
+      "activation_pct": 2,
+      "giveback_pct": 50,
+      "initial_stop_pct": 1,
+      "stop_method": 0,
+      "confirmation_level": 3,
+      "max_wait_bars": 2,
+      "direction_filter": false,
+      "stop_reentry": false,
+      "entry_bar_assumption": 0,
+      "price_tick": 0.01,
+      "stop_mult": 1.5,
+      "stop_floor_pct": 0.5,
+      "stop_cap_pct": 2
+    }
+  },
+  "axes": {},
+  "max_runs": 1
+}

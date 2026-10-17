@@ -1,0 +1,11 @@
+{
+  "mode": "cross",
+  "source": "hlc3",
+  "ema_length": 31,
+  "atr_length": 14,
+  "cloud_mult": 0.45,
+  "trigger_mult": 0.99,
+  "rsi_length": 14,
+  "volume_mult": 1.8,
+  "cooldown": 10
+}

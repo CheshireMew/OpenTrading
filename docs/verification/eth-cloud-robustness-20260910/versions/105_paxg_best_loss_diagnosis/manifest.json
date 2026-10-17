@@ -1,0 +1,31 @@
+{
+  "label": "105_paxg_best_loss_diagnosis",
+  "created_at": "2026-09-13T06:21:49.808117+00:00",
+  "files": [
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/paxg/best-loss-diagnosis/examples.json",
+      "sha256": "ce2a545175ae2d7e322388f272fdd3cb5b779622312a7dcb42cbb6156a1671d5",
+      "bytes": 16057
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/paxg/best-loss-diagnosis/README.md",
+      "sha256": "0fcd5cd2854d900e12a668481214f573d1c3b322d14c7b6b0eb8eff17d38b513",
+      "bytes": 3651
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/paxg/best-loss-diagnosis/results.json",
+      "sha256": "e358f33703cceca068d08aa6034f926b2769c373960f78d72fd26bc315e6d7ce",
+      "bytes": 33720
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/paxg/best-loss-diagnosis/trades.json",
+      "sha256": "cfb865fab5cfbe559ac9b07373443022b9b5e638fa915515d7968f14f271b1a7",
+      "bytes": 245143
+    },
+    {
+      "path": "scripts/paxg_best_loss_diagnosis.py",
+      "sha256": "337f0ae6e58699e8dd1b410efd37fe13f735bfd81ca38a4f329bda78067bf0c2",
+      "bytes": 13099
+    }
+  ]
+}

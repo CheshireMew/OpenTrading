@@ -1,0 +1,46 @@
+{
+  "label": "066-frozen-short-window-study",
+  "created_at": "2026-09-12T01:20:16.702521+00:00",
+  "files": [
+    {
+      "path": "app/domain/cloud_trade_attribution.py",
+      "sha256": "a83b77f3d0fb20499b7c299c0b767ebc2c5d8c221d1c498fec401d90a25a9301",
+      "bytes": 13376
+    },
+    {
+      "path": "app/domain/cloud_window_research_v1.py",
+      "sha256": "560ed60e150ff01a28fcab153987b843bb82f5b7f5f542668fabe6cc2c027052",
+      "bytes": 13624
+    },
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "212dc0a791e66fc3754ef01d927ab7d29f8a9e44cae747872ca41a5459ce09b1",
+      "bytes": 16653
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/plan.json",
+      "sha256": "13e4c479c084fb777801167db80fd1ff17c8ba451759785aeaa6cd4c240bf724",
+      "bytes": 11165
+    },
+    {
+      "path": "scripts/cloud_short_window_study.py",
+      "sha256": "2065fe2b941e8991f390fce0baa1a5a282fa94ccce7e40ed95fa97f88f28ec8a",
+      "bytes": 20363
+    },
+    {
+      "path": "strategies/trend_cloud_parameters_v4.py",
+      "sha256": "518ec7480dc4e5b8fd57d6804dd74bde88103f3c4c847a51028d2d5ef309173e",
+      "bytes": 5381
+    },
+    {
+      "path": "strategies/trend_cloud_timeframe_v6.py",
+      "sha256": "9db203de4b5eaaba5137529c0cdbc5f1075dc26dc5a8c8b83dc3e6d09dc298ae",
+      "bytes": 5016
+    },
+    {
+      "path": "test/test_cloud_short_window.py",
+      "sha256": "84d073c006206c9d178dd8a2faf978dd1d4aa2ac820330b5b9f1653f565ae6c4",
+      "bytes": 4205
+    }
+  ]
+}

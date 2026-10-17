@@ -1,0 +1,33 @@
+{
+  "verified_at": "2026-09-10T08:34:28.035815+00:00",
+  "variants": 21,
+  "period_runs": 84,
+  "fixed_entry_runs": 12,
+  "related_tests_passed": 68,
+  "frontend_typecheck": "passed",
+  "disabled_protection_exact_legacy_trades_equity": true,
+  "project_runs": {
+    "w31_m99": {
+      "run_id": "39db5fdae92f42e89f7556721a43a1c8",
+      "verified": true
+    },
+    "w31_m80": {
+      "run_id": "c02076bd6ebf4d9b906ea4587df1cae9",
+      "verified": true
+    },
+    "w31_m99_a1_g50": {
+      "run_id": "af82bc68bd1b4f569dd4fecf8412cca7",
+      "verified": true
+    },
+    "w31_m80_a2_g50": {
+      "run_id": "af7dce8bc6014d6ebbdfd56c380ef44b",
+      "verified": true
+    }
+  },
+  "browser": {
+    "report_render": "passed",
+    "period_and_group_switch": "passed",
+    "console_errors": [],
+    "project_metrics_and_profit_protection_exit_labels": "passed"
+  }
+}

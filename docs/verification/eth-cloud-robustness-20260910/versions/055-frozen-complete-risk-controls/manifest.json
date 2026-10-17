@@ -1,0 +1,16 @@
+{
+  "label": "055-frozen-complete-risk-controls",
+  "created_at": "2026-09-11T13:53:14.079402+00:00",
+  "files": [
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/plan.json",
+      "sha256": "320515f3d71b2d9fe5900c769e21d0bf988766e4e27f49812f3dcd9fd4ba431b",
+      "bytes": 11692
+    },
+    {
+      "path": "scripts/cloud_walkforward_study.py",
+      "sha256": "3fc91c10c4b43e8471d73b8be4c23ba402bcc7ce3615e18c64ed1ee702d5854d",
+      "bytes": 27404
+    }
+  ]
+}

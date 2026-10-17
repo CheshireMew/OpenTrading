@@ -1,8 +1,6 @@
 import { apiGet, apiPost, apiPut } from '@/api/request'
 import type {
   CurrencyRatesResponse,
-  FredApiConfigResponse,
-  FredApiConfigUpdateRequest,
   LlmProviderConfigResponse,
   LlmProviderConfigUpdateRequest,
   SystemConfigResponse,
@@ -34,13 +32,6 @@ export const systemApi = {
     return apiPut('update_llm_config', body)
   },
 
-  getFredApiConfig(): Promise<FredApiConfigResponse> {
-    return apiGet('get_fred_api_config')
-  },
-
-  updateFredApiConfig(body: FredApiConfigUpdateRequest): Promise<FredApiConfigResponse> {
-    return apiPut('update_fred_api_config', body)
-  },
 }
 
 

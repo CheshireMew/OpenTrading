@@ -1,0 +1,76 @@
+{
+  "label": "094_zec_methods_frozen",
+  "created_at": "2026-09-13T01:12:06.429087+00:00",
+  "files": [
+    {
+      "path": "app/contracts/local_backtest.py",
+      "sha256": "8d4f425215b3201098da0334578a931530f3c65c87e203b06394fbc18f964b8e",
+      "bytes": 2958
+    },
+    {
+      "path": "app/domain/backtest_history.py",
+      "sha256": "c08eb330648129dcd9dcb800860a089d9efa1bd95cdba60f656a403905bb36fd",
+      "bytes": 3065
+    },
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "ccdd04ba62b5e821a556d215da2d129087bbe461835c5aeda83d7e54a8d5d9e2",
+      "bytes": 24654
+    },
+    {
+      "path": "app/services/local_backtest_service.py",
+      "sha256": "cf0a24b9e95dd6634494d6fba535309387372f4f22a69ee4617351b7e68f9b85",
+      "bytes": 11863
+    },
+    {
+      "path": "app/services/research_study_service.py",
+      "sha256": "fdfdf01f1faf718de3498d45b94ee8b698438073cb8ff8fe2b38773f39474c16",
+      "bytes": 21301
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/baseline-parity.json",
+      "sha256": "78b83c8786cbe2c6893c1c97779e6bbef3bbf62b530824d1ddf920a5937788f9",
+      "bytes": 464
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/fine-data-check.json",
+      "sha256": "bbb940220509322ae5bd3eb6ca7425397af0887a2e5f8b06e74494f6f8137558",
+      "bytes": 39561
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/plan.json",
+      "sha256": "289c39f73d939271e24794efbf4c7de767044fabd7b634c4a98e4f24d2a5dc74",
+      "bytes": 7262
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/preview.json",
+      "sha256": "422110bde6164b4ebc36cf040540bc978dd6629c1ec11582e693da796672eac1",
+      "bytes": 370
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/RULES.md",
+      "sha256": "0bff648fddc9d48e972c53c10276fc3e2becc569d44fc109510beca92969e5e6",
+      "bytes": 3323
+    },
+    {
+      "path": "scripts/local_backtest_worker.py",
+      "sha256": "e50b5bd3fd594818ef0cd129fb4ef8421bd9f06ceb61c795a299269e55903b14",
+      "bytes": 7513
+    },
+    {
+      "path": "scripts/zec_intrabar_methods_study.py",
+      "sha256": "c08a5668bade7ac901ff235a6fc2724c98daf7d94e3a79c6f6ac8c13009e8583",
+      "bytes": 13656
+    },
+    {
+      "path": "strategies/trend_cloud_intrabar_methods_v3.py",
+      "sha256": "0ea141561ca6d49e4a77430e3fd3cd3a751fd031ec8a98759439b2e1c7cd2cb0",
+      "bytes": 10190
+    },
+    {
+      "path": "test/test_zec_intrabar_methods.py",
+      "sha256": "1e609ab1b45351eb978ad98be369b935238f0c59429214128e4b1153f1cb5019",
+      "bytes": 5721
+    }
+  ]
+}

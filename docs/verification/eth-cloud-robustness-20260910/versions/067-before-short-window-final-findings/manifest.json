@@ -1,0 +1,31 @@
+{
+  "label": "067-before-short-window-final-findings",
+  "created_at": "2026-09-12T08:35:57.948284+00:00",
+  "files": [
+    {
+      "path": "docs/verification/cloud-short-window-20260912/cloud-short-window.html",
+      "sha256": "b9c01d89cb82d68f09e4a5362be97082146e11403fd7204dcbb4999b53031b73",
+      "bytes": 3987914
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/method-lock.json",
+      "sha256": "4e71ec7f73886b8fca0e27046afd2819224e7fab72a3fc72beb6fdbb604cf33b",
+      "bytes": 1357
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/results.json",
+      "sha256": "fd0c952836fe0c702b98dc827f238e2ce1c5cf46484f24c2c0a2a20b1e55d510",
+      "bytes": 6154630
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/RESULTS.md",
+      "sha256": "c689c8a2d060d59d79db905a122369081b2434d025eb9cc269d9ce4b9d1094a7",
+      "bytes": 6085
+    },
+    {
+      "path": "scripts/report_cloud_short_window.py",
+      "sha256": "47f2ecb4746da7b52c560c84155112b47d81e6e327d6d5d94c0425a09906a660",
+      "bytes": 21688
+    }
+  ]
+}

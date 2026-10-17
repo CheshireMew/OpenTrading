@@ -1,0 +1,136 @@
+{
+  "label": "064-completed-four-asset-walkforward",
+  "created_at": "2026-09-12T00:54:10.727280+00:00",
+  "files": [
+    {
+      "path": "app/domain/cloud_protection_research_v1.py",
+      "sha256": "fe748a19ee46f9f121bb1c52192c4a633d768967bc0577af2595b96b0aeee8be",
+      "bytes": 13453
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/cloud-walkforward.html",
+      "sha256": "3fdc5fc0eaca09365babb1aee09e8ae39d766c3515312bfa2a3e4a9799fd2caa",
+      "bytes": 4585252
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/data-before-live-correction.json",
+      "sha256": "95420c368049b3d2e3079d631597d9947cbbda822eda400c7009f69392f47da8",
+      "bytes": 33022
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/data-verification.json",
+      "sha256": "84e93b4e76d507df5cffb24819de818f733b3dabdaedb381d10dbc8ad13a72a8",
+      "bytes": 237
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/data.json",
+      "sha256": "50bc4deb1ee52ee9e0c2b992fe2a6857acb7d287b18437c972e7b12b5da3e25c",
+      "bytes": 33647
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/engine-baseline-verification.json",
+      "sha256": "7d342a00cc071a788f8edaabe05967fa6d19a6869b9e247ad7793ad7fd1b5b04",
+      "bytes": 291
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/exit-pair-diagnosis.json",
+      "sha256": "fe81745ae3fac8ec135ab7738cd26e83ad3cf9f8250f68f2597e946a72348268",
+      "bytes": 475198
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/legacy-15m-data-check.json",
+      "sha256": "262a38d27e4e02a20df3f92dbb96334f1fa485760241df5068f43eb621b1e4a0",
+      "bytes": 66
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/methodology-note.json",
+      "sha256": "6c7b4f5e45f830b25faaefe05311cd50450cbec4677a1965e4a88eb84ce09a2b",
+      "bytes": 733
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/native-data-check.json",
+      "sha256": "3258a0a6e2b6c13235d4d447ffbd577863d5836e0789390724182e67cee0a222",
+      "bytes": 819
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/native-live-recheck.json",
+      "sha256": "d06c935d05206d8e8eef4e8044fe3f22a2950389f6cd4d50039cbe68ba97901b",
+      "bytes": 859
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/plan.json",
+      "sha256": "d4322df5db53c91e37118c1ef448b84f783502484fe11b2f37ac006e6aa6f876",
+      "bytes": 11688
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/replays.json",
+      "sha256": "a0cd19e5b408dd812fb4ae7c11a6a5dbc367e280ebd932dcee734ccf7e64e0d7",
+      "bytes": 1803457
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/report-data.json",
+      "sha256": "107dfbbb600ff0a723d50d7343d5f3548a8062a015560f496d7ef4bf30c166a6",
+      "bytes": 4567482
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/REPORT.md",
+      "sha256": "5269815a3718e8206e335cc218bdfdb54a729b4576963bb14f1fbaad27cd3e22",
+      "bytes": 8892
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/results.json",
+      "sha256": "3386fc881c462e1feb963ca36150309ac61d474150a6befaf71440aedf3b3cf7",
+      "bytes": 14155930
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/RUNBOOK.md",
+      "sha256": "da90fe4e81834b7989914096c444bba4597584e0adb3b7339bdad6704b1f6d6a",
+      "bytes": 3846
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/selection-lock.json",
+      "sha256": "742cc5bfc40469b107e6894cf718216ca5969637d02998cd4950a4095ee391b9",
+      "bytes": 6162008
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/training-boundary-score-check.json",
+      "sha256": "087d4c2beb42283877eb7acbb47a80f7c7f9022f7cc0858f57444876eb5c926a",
+      "bytes": 1110
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/training.json",
+      "sha256": "77b6485048d41affd28ca680389bcd8389720941cdfba33bcc2e214490815031",
+      "bytes": 2498412
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/ui-verification.json",
+      "sha256": "f035081d614a8374a1365aa695db04553a6da62ba6486ce12f7a95095c350241",
+      "bytes": 877
+    },
+    {
+      "path": "docs/verification/cloud-walkforward-20260911/verification.json",
+      "sha256": "be9af426e06b047402fb16c37669c523060be110ad3d13d1843c4532a7770c4b",
+      "bytes": 94616
+    },
+    {
+      "path": "scripts/analyze_cloud_walkforward_exits.py",
+      "sha256": "1c9755d5f27b2543a0e754e029eb509e3520fb0ad54b249161fa60766289a255",
+      "bytes": 3290
+    },
+    {
+      "path": "scripts/cloud_walkforward_study.py",
+      "sha256": "3fc91c10c4b43e8471d73b8be4c23ba402bcc7ce3615e18c64ed1ee702d5854d",
+      "bytes": 27404
+    },
+    {
+      "path": "scripts/report_cloud_walkforward.py",
+      "sha256": "b526f2f065a99ab3b7d67aa75af3d7c3e5e64f319458fa6a21dfb6883f37743c",
+      "bytes": 19030
+    },
+    {
+      "path": "test/test_cloud_walkforward.py",
+      "sha256": "e11420568c1535ca05016c90eead244345cf2ef1c2097ab40399f04741ad1771",
+      "bytes": 5120
+    }
+  ]
+}

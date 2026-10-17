@@ -1,0 +1,186 @@
+{
+  "label": "095_zec_methods_completed",
+  "created_at": "2026-09-13T04:45:01.269280+00:00",
+  "files": [
+    {
+      "path": "app/contracts/local_backtest.py",
+      "sha256": "8d4f425215b3201098da0334578a931530f3c65c87e203b06394fbc18f964b8e",
+      "bytes": 2958
+    },
+    {
+      "path": "app/domain/backtest_history.py",
+      "sha256": "c08eb330648129dcd9dcb800860a089d9efa1bd95cdba60f656a403905bb36fd",
+      "bytes": 3065
+    },
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "ccdd04ba62b5e821a556d215da2d129087bbe461835c5aeda83d7e54a8d5d9e2",
+      "bytes": 24654
+    },
+    {
+      "path": "app/infra/persistence/local_backtest_repository.py",
+      "sha256": "01b8f1e1b217abcedd80d51dc7fc2d064e808c393d79d6af2d40571a573affa6",
+      "bytes": 4574
+    },
+    {
+      "path": "app/services/local_backtest_service.py",
+      "sha256": "cf0a24b9e95dd6634494d6fba535309387372f4f22a69ee4617351b7e68f9b85",
+      "bytes": 11863
+    },
+    {
+      "path": "app/services/research_study_service.py",
+      "sha256": "fdfdf01f1faf718de3498d45b94ee8b698438073cb8ff8fe2b38773f39474c16",
+      "bytes": 21301
+    },
+    {
+      "path": "docs/LOCAL_BACKTESTS.md",
+      "sha256": "78711abc67880b65ac15c7d43fecf27df4596289843c05b845ba4b42d0c80062",
+      "bytes": 22793
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/answers.json",
+      "sha256": "e33aafbd526b198aabe5407818d8c52a381bda56e50d1d00a4e4bedbe53fca83",
+      "bytes": 5974
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/atr_stop-lineage.json",
+      "sha256": "99536b444bcdb0ba6fe43d59475aa3c901e76a451018fd963b4ee756c3fd4a35",
+      "bytes": 872528
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/baseline-lineage.json",
+      "sha256": "c017acd92ab067a5a1225eeda9a18a982e86af261386407da6e2ad230bf5a736",
+      "bytes": 945648
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/baseline-parity.json",
+      "sha256": "78b83c8786cbe2c6893c1c97779e6bbef3bbf62b530824d1ddf920a5937788f9",
+      "bytes": 464
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/completion.json",
+      "sha256": "4e34c169f2bc29fd2bedb9da94930b1969d1af32c25fc624b78d2210f5625c79",
+      "bytes": 7157
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/direction-lineage.json",
+      "sha256": "71ec5c99ed05256446ee010855d70e1cce982702709b64fe6ae614fc6159bd15",
+      "bytes": 832303
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/execution-data.json",
+      "sha256": "ee6516e985e1b481ea2b9dc9e5299b7dc0dfce807d23c24a286b94d83766d770",
+      "bytes": 35466989
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/fine-data-check.json",
+      "sha256": "bbb940220509322ae5bd3eb6ca7425397af0887a2e5f8b06e74494f6f8137558",
+      "bytes": 39561
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/fine_control-lineage.json",
+      "sha256": "b7e9e359e70a239eb85feed7ab362869c06d5e4dc2ebc7eb7fc051ddec6517db",
+      "bytes": 943812
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/fine_protect-lineage.json",
+      "sha256": "972749c53f143d383f41c1f5117fca334b36333cbd60605ed12b7d294ae55eff",
+      "bytes": 953391
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/persistence-recovery.json",
+      "sha256": "2d659047b3150b726f74e02a3855474bb0cf7ad123e11545e693af748b2d59d6",
+      "bytes": 295
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/plan.json",
+      "sha256": "289c39f73d939271e24794efbf4c7de767044fabd7b634c4a98e4f24d2a5dc74",
+      "bytes": 7262
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/preview.json",
+      "sha256": "422110bde6164b4ebc36cf040540bc978dd6629c1ec11582e693da796672eac1",
+      "bytes": 370
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/README.md",
+      "sha256": "c15d782843d8951775b45c92aa5d9ee688ed177f61bfbe4f6024e64cefc7e4dd",
+      "bytes": 7331
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/results.json",
+      "sha256": "24b0021a1ddf61d63ebddb61a99095756c9d778860889bd6b9197569338be8fb",
+      "bytes": 35967
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/retry-lineage.json",
+      "sha256": "9a288831e6f656e9e2999835e48ba304d5db2794f426ce68ace4f61d341b6b13",
+      "bytes": 1021667
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/RULES.md",
+      "sha256": "0bff648fddc9d48e972c53c10276fc3e2becc569d44fc109510beca92969e5e6",
+      "bytes": 3323
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/study.json",
+      "sha256": "7e508f03e80943da2b49edc9a4099e9f3df8d18d10a4ec165d6f86073a1825da",
+      "bytes": 1259
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/test-results.json",
+      "sha256": "f726352cb8d763f51b333f82ca0055c94606cc6b9f039999022d8eb82a9e943a",
+      "bytes": 724
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/tests.log",
+      "sha256": "5dff0ae3b56650439c36ca48f8d23541039eb83a93d9e057c13cda81cc97b071",
+      "bytes": 946
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/wick-lineage.json",
+      "sha256": "7e646b2b597c1e31825b4bd8db1e834f92e72f3567e4e763497f1ee56673e769",
+      "bytes": 777378
+    },
+    {
+      "path": "docs/verification/zec-intrabar-methods-20260913/width_stop-lineage.json",
+      "sha256": "442d0ee59f57e501fa48bd7618240bde06015547f74727ef64b0f43bd1bfc8bb",
+      "bytes": 872755
+    },
+    {
+      "path": "frontend/src/modules/research/generatedContracts.ts",
+      "sha256": "4bd6124ef59ae90b2ec777486f90dd258c4035c822fd6967870a97279de49c16",
+      "bytes": 16834
+    },
+    {
+      "path": "scripts/local_backtest_cli.py",
+      "sha256": "15fa975ff051cdffdb0c3304618f0ea121c419a8a7dc8591fd1eafa62285797d",
+      "bytes": 7240
+    },
+    {
+      "path": "scripts/local_backtest_worker.py",
+      "sha256": "e50b5bd3fd594818ef0cd129fb4ef8421bd9f06ceb61c795a299269e55903b14",
+      "bytes": 7513
+    },
+    {
+      "path": "scripts/zec_intrabar_methods_study.py",
+      "sha256": "ca3eb8883114f5b6600bc32134c16638fffd17e41440fb2a06ff728a164f721a",
+      "bytes": 23423
+    },
+    {
+      "path": "strategies/trend_cloud_intrabar_methods_v3.py",
+      "sha256": "0ea141561ca6d49e4a77430e3fd3cd3a751fd031ec8a98759439b2e1c7cd2cb0",
+      "bytes": 10190
+    },
+    {
+      "path": "test/test_local_backtest_service.py",
+      "sha256": "c1e4df5b7fab456696fb865ba619968e4348e842da7da1c45f501169b24ece2b",
+      "bytes": 17666
+    },
+    {
+      "path": "test/test_zec_intrabar_methods.py",
+      "sha256": "1e609ab1b45351eb978ad98be369b935238f0c59429214128e4b1153f1cb5019",
+      "bytes": 5721
+    }
+  ]
+}

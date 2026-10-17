@@ -1,0 +1,1 @@
+{"status":"passed","reference_trace":".heimdall_runtime\\cloud-timeframe-20260911\\traces\\zec\\base-1h-recent.json","fields":["report","trades","signals","equity"],"trades":1154,"note":"Price cap disabled; original known ZEC hourly result reproduced exactly. No original files modified."}

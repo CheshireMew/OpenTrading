@@ -1,0 +1,26 @@
+{
+  "label": "022-frozen-ema55-parameters",
+  "created_at": "2026-09-10T14:25:30.967045+00:00",
+  "files": [
+    {
+      "path": "docs/verification/eth-cloud-parameters-20260910/plan.json",
+      "sha256": "227341dcf4ac89725928ff56a2dd899e4e605526a57d649fc5c33c20f87f8d25",
+      "bytes": 12990
+    },
+    {
+      "path": "scripts/cloud_parameter_study.py",
+      "sha256": "cc1fc65ab94f25d3eafbdcba5fb7374d247bb045c4c46a00bbda605c7a2c08c7",
+      "bytes": 14813
+    },
+    {
+      "path": "strategies/trend_cloud_parameters_v4.py",
+      "sha256": "518ec7480dc4e5b8fd57d6804dd74bde88103f3c4c847a51028d2d5ef309173e",
+      "bytes": 5381
+    },
+    {
+      "path": "test/test_cloud_parameters.py",
+      "sha256": "5d3bc139d089b7f0837aeb1675641ae9746f1b5c3bf2bc6b913ef1e7ea824d69",
+      "bytes": 3967
+    }
+  ]
+}

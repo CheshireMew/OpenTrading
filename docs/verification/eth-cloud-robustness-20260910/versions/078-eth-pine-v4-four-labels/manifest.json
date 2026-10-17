@@ -1,0 +1,16 @@
+{
+  "label": "078-eth-pine-v4-four-labels",
+  "created_at": "2026-09-12T14:17:36.914546+00:00",
+  "files": [
+    {
+      "path": "strategies/pine/eth_ema55_six_year_v4.md",
+      "sha256": "85528f32856ce385f7f94dc6ea90ae739395b8e8ea067b487fc7dcc60f00f04e",
+      "bytes": 1434
+    },
+    {
+      "path": "strategies/pine/eth_ema55_six_year_v4.pine",
+      "sha256": "b2f9b54f1c48e132e939d865561efdd34267dcc50c3f4db479ee73808b84d4e8",
+      "bytes": 11258
+    }
+  ]
+}

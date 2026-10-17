@@ -1,0 +1,131 @@
+{
+  "label": "031-cross-asset-completed",
+  "created_at": "2026-09-10T21:53:00.011440+00:00",
+  "files": [
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/atr-early-check.json",
+      "sha256": "21506dc5dbc978739888bbba4b0067530fc58f213d3a5b98c4f436480f546d98",
+      "bytes": 591
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/btc-gap-recheck.json",
+      "sha256": "d77bc69ab3fe866137bcb352c26f7100eb833a8294015b68bf2172989b7a43d1",
+      "bytes": 1314
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/data.json",
+      "sha256": "80761c860a57ed250a78c59953393519899c5b3c5dc39999efc6e78e7f25d973",
+      "bytes": 2720
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/history-inventory.json",
+      "sha256": "ad40c5abec94a52c01cdd7b6deacc8ff6ea8c5c2898be73cdfdf58fadf34f04c",
+      "bytes": 131686
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/plan.json",
+      "sha256": "d18c9f72e1c8226146a1f40de190de4522ffa3dbad167de6b829b2a9928f7048",
+      "bytes": 30289
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/project-runs.json",
+      "sha256": "9fcd8331d500701945539fbad1cd83d191db2c3b856424752e137ea2b6ec2711",
+      "bytes": 1436
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/report.html",
+      "sha256": "1685a60654c85a9d1260cdb979f39eb04d0e6e711ed8f04b521dc571d9418182",
+      "bytes": 1840903
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/REPORT.md",
+      "sha256": "db111ef980b94649fc1d46f82dc7473c4ab89ff233fc2cd752151c3948cf670b",
+      "bytes": 37626
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/REPRODUCE.md",
+      "sha256": "f302f67d6d8c6a8a474181718770ae433919eb82f9bb0cbfb5a7375f91710f42",
+      "bytes": 2854
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/results.json",
+      "sha256": "d625885b8ecef7a165e8fcf9562646e51fb4502663c94d40f90e4c9299f89387",
+      "bytes": 1708477
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/test-results.json",
+      "sha256": "d0b18868f71f3a82320d09a644c282d99b749dfe78d7187ac0376d4418da6e69",
+      "bytes": 279
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/trace-manifest.json",
+      "sha256": "5d47165d9647ff158ed081dfe10e7b202961e4da060ab5a78771214a2ed3a11c",
+      "bytes": 183896
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/ui-verification.json",
+      "sha256": "7c7b0e5354831a422f1fda45373fa53fe7071a2ea66ff961e7a2d715c5a360f4",
+      "bytes": 883
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/verification.json",
+      "sha256": "34356a8dc640ba0219f479c145efc95481385a62d5b2791cb2cc46175bbd5396",
+      "bytes": 9144
+    },
+    {
+      "path": "scripts/audit_cloud_cross_asset_study.py",
+      "sha256": "b2b43eb048ed7a437a5594eb2588eda658aabde71f9a088b9e33a481c6ae02db",
+      "bytes": 4797
+    },
+    {
+      "path": "scripts/cloud_cross_asset_study.py",
+      "sha256": "0400680bfef187b1fdbc36d40a44158966fa00ecab11102a8c7a84f2aef3f478",
+      "bytes": 21837
+    },
+    {
+      "path": "scripts/publish_cloud_cross_asset_study.py",
+      "sha256": "5a8d8b99ec6b97013a1f5cc9a321da77c05adf33347083fb09540a8777c1cea7",
+      "bytes": 3565
+    },
+    {
+      "path": "scripts/render_cloud_cross_asset_study.py",
+      "sha256": "1047f12daee87baaf80121e49bb36e4ad7798c7e2498e4fbc72d8eec29324bbb",
+      "bytes": 20506
+    },
+    {
+      "path": "strategies/trend_cloud_comparison.py",
+      "sha256": "aab6ecaab98565ec60b9579c7cd4fe12d8f455784ba36503bd7267a96dc479dd",
+      "bytes": 7272
+    },
+    {
+      "path": "strategies/trend_cloud_context_v3.py",
+      "sha256": "38afd3ee65249c766336a69d5bb72af8a0914c510265a16aaa76d1e27c68839b",
+      "bytes": 10940
+    },
+    {
+      "path": "strategies/trend_cloud_entry_v2.py",
+      "sha256": "f6e03ad6b3e688f5cc2861788d658319ac592e3b47d30905d4c8e780e92c1e0e",
+      "bytes": 6284
+    },
+    {
+      "path": "strategies/trend_cloud_experiments.py",
+      "sha256": "17a595b286f4e94d2a23c4c3e89b7e24590e2a0de8f3e82c9140065f1a8cc9ed",
+      "bytes": 6464
+    },
+    {
+      "path": "strategies/trend_cloud_manual_v1.py",
+      "sha256": "c357811312e1881a86279e246300362945f9d1d4e42a1f872029691bfcc5a87a",
+      "bytes": 5842
+    },
+    {
+      "path": "strategies/trend_cloud_parameters_v4.py",
+      "sha256": "518ec7480dc4e5b8fd57d6804dd74bde88103f3c4c847a51028d2d5ef309173e",
+      "bytes": 5381
+    },
+    {
+      "path": "strategies/trend_cloud_robustness_v1.py",
+      "sha256": "b3bee9a6d3679e5741fa5aa3e46e95418ddc8b4e3c3416ac19d6b496b21aeece",
+      "bytes": 6320
+    }
+  ]
+}

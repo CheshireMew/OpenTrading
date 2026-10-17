@@ -1,0 +1,81 @@
+{
+  "label": "101_paxg_combination_frozen",
+  "created_at": "2026-09-13T05:25:36.570647+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "ccdd04ba62b5e821a556d215da2d129087bbe461835c5aeda83d7e54a8d5d9e2",
+      "bytes": 24654
+    },
+    {
+      "path": "docs/verification/paxg-intrabar-combined-20260913/baseline-origin.json",
+      "sha256": "01d13261fb04238acb01c53346901494e9793857f46c3f321ec42b16f9ad58f7",
+      "bytes": 4346
+    },
+    {
+      "path": "docs/verification/paxg-intrabar-combined-20260913/baseline-trace.json",
+      "sha256": "f036c00352cc534123d2049328b6e1e25e3ed61aaea9078dfe8f6450e98f127e",
+      "bytes": 4251200
+    },
+    {
+      "path": "docs/verification/paxg-intrabar-combined-20260913/data.json",
+      "sha256": "a1164946e81929c79ca7f9b4ad64345cc25b2bb8d0af2fb1533ecb39e92db573",
+      "bytes": 2835627
+    },
+    {
+      "path": "docs/verification/paxg-intrabar-combined-20260913/execution-data.json",
+      "sha256": "d35c14a45ff398907712f0a11399d37851a7c0bb7a77a008510b7c3f4a436018",
+      "bytes": 32938302
+    },
+    {
+      "path": "docs/verification/paxg-intrabar-combined-20260913/fine-data-check.json",
+      "sha256": "6d0c48d1ef72f0f82f1dd47a57e86ab0c0b3bf4d31afce3875aa209e1d59a2cb",
+      "bytes": 98680
+    },
+    {
+      "path": "docs/verification/paxg-intrabar-combined-20260913/plan.json",
+      "sha256": "58a782cf3d0f3d7b3136bfee49293d1ed9201f3caa4d1e5f36990b2cf2585532",
+      "bytes": 2327
+    },
+    {
+      "path": "docs/verification/paxg-intrabar-combined-20260913/RULES.md",
+      "sha256": "edeb0646e0830d87c174923b6e23ed5068fd7f28a6b2901ca0c21dea44601ec1",
+      "bytes": 2049
+    },
+    {
+      "path": "docs/verification/paxg-intrabar-combined-20260913/study.json",
+      "sha256": "ad665f590864f9d7bf95a2f88ad9829a1799d2d8af565de22759414efb736624",
+      "bytes": 738
+    },
+    {
+      "path": "scripts/intrabar_requested_followups.py",
+      "sha256": "4925d58e4bb81721a76649beb3d1081046f4f7e9dbb2ade1c99c9397766eebd6",
+      "bytes": 15789
+    },
+    {
+      "path": "scripts/paxg_intrabar_combined_study.py",
+      "sha256": "412e12aebf28cd126f276091e5a269633b77c98bb49e07a4b94abd0dd927fa3d",
+      "bytes": 16626
+    },
+    {
+      "path": "scripts/zec_intrabar_methods_study.py",
+      "sha256": "fba8ddda8b75792357813214362925f0f6cb395dfa735e92cea43951f2471003",
+      "bytes": 23452
+    },
+    {
+      "path": "strategies/trend_cloud_intrabar_methods_v3.py",
+      "sha256": "0ea141561ca6d49e4a77430e3fd3cd3a751fd031ec8a98759439b2e1c7cd2cb0",
+      "bytes": 10190
+    },
+    {
+      "path": "strategies/trend_cloud_parameters_v4.py",
+      "sha256": "518ec7480dc4e5b8fd57d6804dd74bde88103f3c4c847a51028d2d5ef309173e",
+      "bytes": 5381
+    },
+    {
+      "path": "strategies/trend_cloud_timeframe_v6.py",
+      "sha256": "9db203de4b5eaaba5137529c0cdbc5f1075dc26dc5a8c8b83dc3e6d09dc298ae",
+      "bytes": 5016
+    }
+  ]
+}

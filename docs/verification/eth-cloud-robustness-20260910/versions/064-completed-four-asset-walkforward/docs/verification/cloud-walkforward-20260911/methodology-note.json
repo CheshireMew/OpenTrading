@@ -1,0 +1,9 @@
+{
+  "classification": "Retrospective chronological walk-forward, not untouched holdout",
+  "selection_cutoff": "Each fold uses only prior closed-candle equity and closed trades before the cutoff",
+  "daily_comparison": "Daily and intraday compare on same last two test segments; never compare two-segment total to six-segment total",
+  "risk_comparison": "ATR/confirmation choices frozen before test, evaluated as paired controls; their hindsight winners are not retroactively selected",
+  "no_automatic_future_execution": true,
+  "original_engine_sha256": "212dc0a791e66fc3754ef01d927ab7d29f8a9e44cae747872ca41a5459ce09b1",
+  "data_verification_sha256": "84e93b4e76d507df5cffb24819de818f733b3dabdaedb381d10dbc8ad13a72a8"
+}

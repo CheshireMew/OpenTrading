@@ -1,0 +1,17 @@
+{
+  "scope": "Diagnose screenshot only, not optimize. Two short project runs: native15m and5m execution with protection remaining15m. Pine file unchanged.",
+  "focus_timezone": "Asia/Shanghai",
+  "focus_period": [
+    "2026-09-16T12:00:00+08:00",
+    "2026-09-17T21:00:00+08:00"
+  ],
+  "screenshot_reference": {
+    "time": "2026-09-17T01:15:00+08:00",
+    "open": 2391.01,
+    "high": 2394.02,
+    "low": 2386.93,
+    "close": 2389.06
+  },
+  "pine_path": "strategies/pine/eth_ema55_manual_chart_v7_2.pine",
+  "pine_sha256": "df212d1411acd55bfcefe996399720df6aaceb3ac2341cfcaa67efa7c1c0f2ed"
+}

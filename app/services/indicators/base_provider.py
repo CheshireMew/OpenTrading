@@ -19,7 +19,7 @@ class BaseIndicatorProvider:
         必须返回标准格式的字典列表：
         [
             {
-                "indicator_id": "US10Y",  # 与 MarketIndicatorMeta.id 对应
+                "indicator_id": "FEAR_GREED",  # 与 MarketIndicatorMeta.id 对应
                 "timestamp": datetime对象,
                 "value": float数值
             },

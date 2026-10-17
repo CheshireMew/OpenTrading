@@ -1,0 +1,26 @@
+{
+  "label": "024-before-joint-parameters",
+  "created_at": "2026-09-10T16:10:44.611570+00:00",
+  "files": [
+    {
+      "path": "docs/verification/eth-cloud-parameters-20260910/project-runs.json",
+      "sha256": "10907b6ea829a684a9e620872359fab22fc842298fa41363c5d837f5f9e6486d",
+      "bytes": 4316
+    },
+    {
+      "path": "docs/verification/eth-cloud-parameters-20260910/results.json",
+      "sha256": "baab46d243dfae8676364cce520a51479588ac4a4ec32aa3254d88417fe88cac",
+      "bytes": 3422590
+    },
+    {
+      "path": "scripts/cloud_parameter_study.py",
+      "sha256": "cc1fc65ab94f25d3eafbdcba5fb7374d247bb045c4c46a00bbda605c7a2c08c7",
+      "bytes": 14813
+    },
+    {
+      "path": "strategies/trend_cloud_parameters_v4.py",
+      "sha256": "518ec7480dc4e5b8fd57d6804dd74bde88103f3c4c847a51028d2d5ef309173e",
+      "bytes": 5381
+    }
+  ]
+}

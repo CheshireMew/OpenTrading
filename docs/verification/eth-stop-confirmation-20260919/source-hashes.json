@@ -1,0 +1,5 @@
+{
+  "app\\domain\\local_backtest.py": "1dbf149535f8faae91cf74dc97820ee0ed1df90427907fc34e1fee965edc60e4",
+  "strategies\\trend_cloud_stop_confirmation_v1.py": "75e6d8d5f68025f24842526808d27a951535766fbbc84ccce0f9e1a4de198319",
+  "strategies\\pine\\eth_ema55_manual_chart_v7_2.pine": "df212d1411acd55bfcefe996399720df6aaceb3ac2341cfcaa67efa7c1c0f2ed"
+}

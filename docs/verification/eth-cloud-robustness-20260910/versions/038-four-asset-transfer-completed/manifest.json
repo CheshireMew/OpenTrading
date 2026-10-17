@@ -1,0 +1,81 @@
+{
+  "label": "038-four-asset-transfer-completed",
+  "created_at": "2026-09-11T04:31:02.936000+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "25dbf1e84947ba22b8a5df80ffa49214ee8252632377bb17420f396e9ab1b822",
+      "bytes": 15630
+    },
+    {
+      "path": "docs/verification/alt-cloud-transfer-20260911/data.json",
+      "sha256": "4b3cbf6b1b861710d038c0105729fddfc6f91cca05606bf018e09218901de49a",
+      "bytes": 5165
+    },
+    {
+      "path": "docs/verification/alt-cloud-transfer-20260911/plan.json",
+      "sha256": "821610f13b2ec2be1aba35e82bba5efc7fc38cabbf8eaf756450d27a14c8e4f1",
+      "bytes": 18181
+    },
+    {
+      "path": "docs/verification/alt-cloud-transfer-20260911/report.html",
+      "sha256": "56b43d22b48a186ec53db907dca312540a078b95213ed468259bc1b2945ea31b",
+      "bytes": 1549447
+    },
+    {
+      "path": "docs/verification/alt-cloud-transfer-20260911/REPORT.md",
+      "sha256": "4e4f5204660462eefd2d29a35dccfc01059fbad912730ce4dd06c53ba2a6e430",
+      "bytes": 6941
+    },
+    {
+      "path": "docs/verification/alt-cloud-transfer-20260911/results.json",
+      "sha256": "5011a7c9b677ec9a96c41ddcbd3135d65e4f1a51dd40e6ff603bd25f267da3cb",
+      "bytes": 1450037
+    },
+    {
+      "path": "docs/verification/alt-cloud-transfer-20260911/selection-lock.json",
+      "sha256": "574a20bd0f6b0a663864a6b41d8374baa2d877938e39657f0c57ddc42e9761e7",
+      "bytes": 9358
+    },
+    {
+      "path": "docs/verification/alt-cloud-transfer-20260911/test-results.json",
+      "sha256": "44384d29a0b27dd1421547b8f2f11a4d506f28e29471c7912767b09529daef3b",
+      "bytes": 285
+    },
+    {
+      "path": "docs/verification/alt-cloud-transfer-20260911/transfer-results.json",
+      "sha256": "b32f95f4e0201a731cf5234607104ed45f938abd6e33751fb3f60f150cf6aae4",
+      "bytes": 29528
+    },
+    {
+      "path": "docs/verification/alt-cloud-transfer-20260911/verification.json",
+      "sha256": "449cec2ef255adedfce2c0cc514f4883f837ca349ae0a20c66e20bfd5203cc12",
+      "bytes": 193669
+    },
+    {
+      "path": "docs/verification/eth-cloud-two-year-20260910/alt-transfer.html",
+      "sha256": "56b43d22b48a186ec53db907dca312540a078b95213ed468259bc1b2945ea31b",
+      "bytes": 1549447
+    },
+    {
+      "path": "scripts/alt_cloud_parameter_study.py",
+      "sha256": "9a6a9043f7dee00b53dd320816825c764c441fcefcbe4fa2e576cd1d7aa74174",
+      "bytes": 15077
+    },
+    {
+      "path": "scripts/report_alt_cloud_transfer.py",
+      "sha256": "71dcc9e2818a8098c06e056dce73986d039d7475d02b4736830aacf8cfad3ce2",
+      "bytes": 18403
+    },
+    {
+      "path": "strategies/trend_cloud_parameters_v4.py",
+      "sha256": "518ec7480dc4e5b8fd57d6804dd74bde88103f3c4c847a51028d2d5ef309173e",
+      "bytes": 5381
+    },
+    {
+      "path": "test/test_alt_cloud_transfer_study.py",
+      "sha256": "3c991038435c2d4d46ef8cd8ff6010435966eca8b7140f382371c0f40bb4391e",
+      "bytes": 1367
+    }
+  ]
+}

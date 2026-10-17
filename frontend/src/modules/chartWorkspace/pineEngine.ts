@@ -2,13 +2,14 @@ import type { ScriptingEngine, PreparedScript, ExecutionRequest, ExecutionHandle
 import PineWorker from './pine.worker?worker'
 import { checkPine, pineError, PINE_ENGINE_VERSION } from './pineCompatibility.mjs'
 import type { ChartSymbol } from './api'
+import { cw,messageText } from './locale'
 
 type Prepared = PreparedScript & { token:{source:string;instanceId:string} }
 export function readPineMetadata(source:string):{result:Promise<{kind:string;inputs:any[];props:Record<string,any>}>;cancel:()=>void} {
   const worker=new PineWorker()
   let stop:()=>void=()=>{}
   const result=new Promise<{kind:string;inputs:any[];props:Record<string,any>}>((resolve,reject)=>{
-    const timer=setTimeout(()=>{stop();reject(new Error('脚本解析超时'))},60000)
+    const timer=setTimeout(()=>{stop();reject(new Error(cw('parseTimeout')))},60000)
     stop=()=>{clearTimeout(timer);worker.terminate()}
     worker.onerror=e=>{stop();reject(new Error(e.message))}
     worker.onmessage=({data})=>{if(data.type==='metadata'){stop();resolve(data)}else if(data.type==='error'){stop();reject(pineError(data))}}
@@ -30,24 +31,24 @@ class WorkerSession {
     if(data.type==='model'){this.done();this.handlers?.onModel(data.model)}
     else if(data.type==='error')this.fail(pineError(data))
     else if(data.type==='warning'){
-      if(/not (implemented|supported)|unsupported/i.test(data.warning.message))this.fail(new Error('脚本使用了尚未支持的功能：'+data.warning.message))
+      if(/not (implemented|supported)|unsupported/i.test(data.warning.message))this.fail(new Error(cw('unsupportedFunction',{detail:data.warning.message})))
       else this.handlers?.onWarning?.(data.warning)
     }
     else if(data.type==='alert')this.handlers?.onAlert?.(data.alert)
     else if(data.type==='done'){this.done();this.handlers?.onDone?.()}
     else if(data.type==='context'){this.contexts.get(data.id)?.(data.value);this.contexts.delete(data.id)}
     else if(data.type==='fetch'){
-      try{if(!this.request?.fetchSeries)throw new Error('没有可用的多周期数据接口');const [symbol,timeframe,range]=data.args;const bars=await this.request.fetchSeries(symbol,timeframe,range);this.post({type:'fetchResult',id:data.id,bars})}
+      try{if(!this.request?.fetchSeries)throw new Error(cw('noMultiframe'));const [symbol,timeframe,range]=data.args;const bars=await this.request.fetchSeries(symbol,timeframe,range);this.post({type:'fetchResult',id:data.id,bars})}
       catch(e){this.post({type:'fetchResult',id:data.id,error:String(e)})}
     }
   }}
   post(message:unknown){if(!this.stopped)this.worker.postMessage(message)}
-  arm(){if(this.timer)return;this.timer=setTimeout(()=>this.fail(new Error('Pine 计算超过 60 秒，已停止。可缩短历史范围或检查循环。')),60000)}
+  arm(){if(this.timer)return;this.timer=setTimeout(()=>this.fail(new Error(cw('computeTimeout'))),60000)}
   done(){clearTimeout(this.timer);this.timer=undefined}
-  fail(error:Error){this.rejectPrepare?.(error);this.handlers?.onError?.(error);this.stop()}
+  fail(error:Error){error.message=messageText(error.message);this.rejectPrepare?.(error);this.handlers?.onError?.(error);this.stop()}
   prepare(source:string,instanceId:string):Promise<PreparedScript>{this.arm();return new Promise((resolve,reject)=>{
     this.rejectPrepare=reject
-    const listener=({data}:MessageEvent)=>{if(data.type!=='prepared')return;this.worker.removeEventListener('message',listener);this.done();this.rejectPrepare=undefined;if(data.version!==PINE_ENGINE_VERSION){reject(new Error('Pine 运行版本不一致'));this.stop();return}resolve(data.prepared)}
+    const listener=({data}:MessageEvent)=>{if(data.type!=='prepared')return;this.worker.removeEventListener('message',listener);this.done();this.rejectPrepare=undefined;if(data.version!==PINE_ENGINE_VERSION){reject(new Error(cw('versionMismatch')));this.stop();return}resolve(data.prepared)}
     this.worker.addEventListener('message',listener);this.post({type:'prepare',source,instanceId})
   })}
   stop(){if(this.stopped)return;this.stopped=true;this.done();this.worker.terminate();for(const done of this.contexts.values())done(null);this.contexts.clear()}

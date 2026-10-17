@@ -1,0 +1,38 @@
+{
+  "title": "BNB：最高收益EMA通道＋支撑阻力位置检查",
+  "base": {
+    "strategy": "trend_cloud_intrabar_support_v1",
+    "symbol": "BNB/USDT",
+    "timeframe": "15m",
+    "start": "2018-09-10T00:00:00Z",
+    "end": "2026-09-10T00:00:00Z",
+    "initial_cash": 10000,
+    "position_pct": 100,
+    "data_gap_policy": "observed_bars",
+    "execution_timeframe": "5m",
+    "intrabar_profit_protection": true,
+    "parameters": {
+      "center_length": 55,
+      "width_length": 50,
+      "trigger_mult": 0.8,
+      "chase_mult": 1.5,
+      "activation_pct": 2,
+      "giveback_pct": 50,
+      "initial_stop_pct": 2,
+      "stop_method": 0,
+      "confirmation_level": 3,
+      "max_wait_bars": 2,
+      "direction_filter": false,
+      "stop_reentry": false,
+      "entry_bar_assumption": 0,
+      "price_tick": 0.01,
+      "stop_mult": 1.5,
+      "stop_floor_pct": 0.5,
+      "stop_cap_pct": 2,
+      "support_gate": true
+    }
+  },
+  "axes": {},
+  "max_runs": 1,
+  "source_run": "657b2b8086588a254442b82b128d34df"
+}

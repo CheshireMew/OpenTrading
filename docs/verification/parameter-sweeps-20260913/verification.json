@@ -1,0 +1,49 @@
+{
+  "created_at": "2026-09-13T15:26:56.660578+00:00",
+  "scope": "软件批量参数输入、自动计算、排序、持久记录；原策略计算逻辑不变",
+  "backend_verification": {
+    "command": ".\\venv\\Scripts\\python.exe -m pytest test/test_parameter_sweeps.py test/test_local_backtest_service.py test/test_research_studies.py -q --basetemp D:/Tools/heimdall-sweep-11",
+    "passed": 38,
+    "elapsed_seconds": 25.5,
+    "checks": [
+      "相同输入与单次引擎结果完全一致",
+      "共享行情只准备一次",
+      "小周期行情纳入配对检查",
+      "取消保留旧记录，恢复只重试未完成项",
+      "Windows两个独立工作进程及退出清理",
+      "CLI与API访问同一持久批次",
+      "分段行情中断恢复、拒绝不完整边界",
+      "细行情失败后保留已完成的信号行情"
+    ]
+  },
+  "frontend_verification": {
+    "typecheck": "passed",
+    "production_build": "passed before wording-only percentage-point correction; final typecheck passed",
+    "ui_batch": "0cfd87d2eaba4732aed919bdfe2077c4",
+    "ui_completed_cases": 4,
+    "ui_checks": [
+      "输入EMA34/55与门槛0.4/0.8并自动运行4组",
+      "已完成结果正确排序",
+      "参数影响按两两相同条件配对",
+      "点击排名中的K线链接显示真实K线和通道",
+      "刷新页面保留旧记录"
+    ]
+  },
+  "files": {
+    "app/contracts/parameter_sweep.py": "f009e38d4ba3f680c75e4b7a8d9f4b5fdab367e3114b329cac0049f63e37dee7",
+    "app/services/parameter_sweep_service.py": "704d1f39c341fe1c10197afa31cbdfb174d000e36acd8214558e1dfcb0ae3292",
+    "app/services/backtest_batch_data.py": "e819c3e362a45913a4dedc17754f7fff59f85d332713e87a56a20ecba5029eca",
+    "app/services/backtest_history_loader.py": "6bb12e54859e192c526c7d9c17252bf8ac4cbfbc1a075a9ff188f04b4c719cd9",
+    "app/services/local_backtest_runtime.py": "92bf655bf708fc7c402818208f70f9e7dc1b9cccc5d851f73ba8d2ef8d8a47a4",
+    "app/infra/research_files.py": "faf39ef8a0fbaed2457388b468301db22e9b5701ed824480dd515b9ea90a2d27",
+    "app/services/research_comparison.py": "8fdc1edbaea283810644487e7cb7c2dfe112772a95ec971912d88034b86395e6",
+    "app/routers/local_backtests.py": "0ca454344d162318e5e28156cc5bb3227291f27642a45dc489a9aa68dbb62149",
+    "scripts/local_backtest_worker.py": "f25d16c5d225daa1cee38749c60e29626076f49cbe230f754b647ea70180be62",
+    "scripts/parameter_sweep_cli.py": "db49e24b4fa0143754bbafee9f0dd520d08c270f7fa2ee0968f533154fb33cc8",
+    "scripts/research_cli.py": "c22bd2e1f72dd54952278b9e7368a7bb4312c5f6c2259fc82d32454f67a7234e",
+    "frontend/src/modules/research/parameterSweepApi.ts": "08f63a369f05f76b1a6784b6504b5d224bd3fb1b2378a13fa818d76c3291d8c8",
+    "frontend/src/views/research/ParameterSweeps.vue": "5a1681cbbb5b61af270c00560dc222c3cf97f6a784eda657ac42bff0989caf64",
+    "frontend/src/views/research/LocalBacktests.vue": "3b87de3bd75e767ef07cf2a176481c9d334c639a30f0afaba34cee0d14096214",
+    "test/test_parameter_sweeps.py": "c817086def08c2cac0b08234c143b213a951611f9bc0a5ac6fbc3a2ca98295e2"
+  }
+}

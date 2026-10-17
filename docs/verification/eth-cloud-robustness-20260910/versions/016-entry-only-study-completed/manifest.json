@@ -1,0 +1,71 @@
+{
+  "label": "016-entry-only-study-completed",
+  "created_at": "2026-09-10T13:31:29.863965+00:00",
+  "files": [
+    {
+      "path": "docs/verification/eth-cloud-entry-20260910/examples.json",
+      "sha256": "c8e5d6b9bbd951b15884371cc3fec9ebc571ce72c86a4c12b3a5427f784801e2",
+      "bytes": 3492
+    },
+    {
+      "path": "docs/verification/eth-cloud-entry-20260910/plan.json",
+      "sha256": "2722fc6e00d6ad84453c6f13b057b41a7ca84f6267413a3ad419c2473263cced",
+      "bytes": 4780
+    },
+    {
+      "path": "docs/verification/eth-cloud-entry-20260910/project-runs.json",
+      "sha256": "e893781266e009be9ea60efb29843aca470c887f44640ed072d4dcb22c368867",
+      "bytes": 1962
+    },
+    {
+      "path": "docs/verification/eth-cloud-entry-20260910/report.html",
+      "sha256": "17a77b991649da64df68d877cdef40edcf7cef80571adcffe3f02bf0bd448368",
+      "bytes": 17113
+    },
+    {
+      "path": "docs/verification/eth-cloud-entry-20260910/REPORT.md",
+      "sha256": "2ddc851af90cb9ecc2881bf05e8544df374088fde85e1be168926e632fe7a371",
+      "bytes": 12146
+    },
+    {
+      "path": "docs/verification/eth-cloud-entry-20260910/results.json",
+      "sha256": "daee7280584e97798ab872ecf51c4226ff6ed66d6a3bd03ffb352194ac4fae3b",
+      "bytes": 820573
+    },
+    {
+      "path": "docs/verification/eth-cloud-entry-20260910/selection.json",
+      "sha256": "ce124387baeb66c9d5d6225e43c180476b23fc96bd1ea86604f3660d720541b0",
+      "bytes": 1292
+    },
+    {
+      "path": "docs/verification/eth-cloud-entry-20260910/verification.json",
+      "sha256": "030f8573ba252777f60bac2968ea3b6cc69f96b2156f4a68f4131a5ad31238ac",
+      "bytes": 663
+    },
+    {
+      "path": "frontend/src/views/research/LocalBacktests.vue",
+      "sha256": "0b3167c6a5e8959f5cd413bf6c15322282b773e9d1a74269772c7ca5c3452437",
+      "bytes": 29359
+    },
+    {
+      "path": "scripts/cloud_entry_study.py",
+      "sha256": "70a9c6b6c5c11f8e193935e913b5e7e5820bac6a44117bdfbc3ce104a29c3906",
+      "bytes": 13943
+    },
+    {
+      "path": "scripts/render_cloud_entry_study.py",
+      "sha256": "44e20294c20794acc6b9a0b6465f8681e26de7cb81c88bea8bc099b283111466",
+      "bytes": 15894
+    },
+    {
+      "path": "strategies/trend_cloud_entry_v2.py",
+      "sha256": "f6e03ad6b3e688f5cc2861788d658319ac592e3b47d30905d4c8e780e92c1e0e",
+      "bytes": 6284
+    },
+    {
+      "path": "test/test_cloud_entry.py",
+      "sha256": "dd631dd4724c949be4be455c87bab59858bea280ca3cb202787c47b12ca1f34e",
+      "bytes": 3312
+    }
+  ]
+}

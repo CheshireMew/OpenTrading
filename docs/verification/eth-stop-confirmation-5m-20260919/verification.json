@@ -1,0 +1,11 @@
+{
+  "engine_version": "11",
+  "pine_modified": false,
+  "tests": {
+    "existing_engine_stop_protection_intrabar_tests_passed": 89,
+    "execution_clock_tests_passed": 14,
+    "frozen_execution_tests_passed": 7
+  },
+  "initial_test_failure": "Three assertions used the wrong array index for an equity mark. Switched to exact close timestamp; all new tests then passed.",
+  "old_version_retained": "trend_cloud_stop_confirmation_v1"
+}

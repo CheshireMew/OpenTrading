@@ -1,0 +1,14 @@
+{
+  "status": "passed",
+  "date": "2026-09-12",
+  "url": "http://127.0.0.1:8787/cloud-direct-adaptation.html",
+  "checks": [
+    "All eight overview rows match generated results.",
+    "ZEC15m base_gate displays 1.5-hour median holding, 29.78% drawdown and 363 of1222 trades activating protection.",
+    "ZEC15m entry attribution displays 861 common entries and361 new entries with -23.45% and69.10% group compounded returns.",
+    "Timeframe switch to ZEC1h updates holding and drawdown.",
+    "Asset switch to PAXG1h shows correct annual returns, including2021-2024 losses.",
+    "No browser console errors; extracted embedded JavaScript passes Node syntax check.",
+    "Screenshot inspected: Chinese narrative is readable within the normal in-app viewport."
+  ]
+}

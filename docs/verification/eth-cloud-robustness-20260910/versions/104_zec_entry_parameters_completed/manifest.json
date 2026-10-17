@@ -1,0 +1,51 @@
+{
+  "label": "104_zec_entry_parameters_completed",
+  "created_at": "2026-09-13T05:53:41.318147+00:00",
+  "files": [
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/zec/answers.json",
+      "sha256": "1e31ff8f6fa107014dc8bb91b3889a41a8e8e026d06ffab60bd80296c4ac323c",
+      "bytes": 358
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/zec/completion.json",
+      "sha256": "167ca029f9c9fac84fd981e993dad806ed9d5156585411694fb86b22e04f96ea",
+      "bytes": 1002
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/zec/plan.json",
+      "sha256": "54556c1cc95c9989288587c83beb7305c3abbc204382ce47dc1375b0294762ce",
+      "bytes": 2214
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/zec/README.md",
+      "sha256": "c22601bf3f8c125ca4a16a5d3439355687d1bab1f1fa0f0ecd15341ac41f18e0",
+      "bytes": 1866
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/zec/results.json",
+      "sha256": "15010881f2061c2b1234e08828f6472da53380b391298db21b38e42f92c7abaf",
+      "bytes": 10804
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/zec/RULES.md",
+      "sha256": "fdcd78463a2a960ea8a71f266f3e5e15d123a14c759a5ce12adb611671490461",
+      "bytes": 769
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/zec/study.json",
+      "sha256": "8830f801e78a0029bda4dc703e096bfce305364dc358eeb03c737022a2933063",
+      "bytes": 666
+    },
+    {
+      "path": "docs/verification/zec-paxg-entry-parameters-20260913/zec/verification.json",
+      "sha256": "8ef42054528ffe02ddd4c14a7f4b973e88ae064e40967c7e146c5e438318bd7a",
+      "bytes": 286
+    },
+    {
+      "path": "scripts/zec_paxg_entry_parameters_study.py",
+      "sha256": "a6aa4506d4732b2c482403b91cf67756f7c3dacf84bd674817f868cbf880bec2",
+      "bytes": 20045
+    }
+  ]
+}

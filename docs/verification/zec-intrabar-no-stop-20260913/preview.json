@@ -1,0 +1,1 @@
+{"cases":4,"data_check":"复用结果校验快照；新数据由项目回测工作进程在计算前检查，预览不下载行情","max_warmup_calendar_hours":325.0,"new_runs":4,"periods":[["2019-09-10T00:00:00Z","2026-09-10T00:00:00Z","exploration"]],"reused_cases":0,"title":"ZEC七年EMA144：盘中确认与取消固定止损的四组对照","warnings":[]}

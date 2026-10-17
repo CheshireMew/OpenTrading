@@ -3,6 +3,7 @@ from __future__ import annotations
 from sqlalchemy import func, select, text
 
 from app.infra.db.database import DatabaseRuntime
+from app.domain.market.indicator_catalog import MARKET_INDICATOR_META
 from app.infra.db.schema import (
     BinanceMarketResearchSeries,
     Kline,
@@ -42,7 +43,8 @@ class DataHealthRepository:
                         func.count(),
                         func.min(MarketIndicatorData.timestamp),
                         func.max(MarketIndicatorData.timestamp),
-                    ).group_by(MarketIndicatorData.indicator_id)
+                    ).where(MarketIndicatorData.indicator_id.in_(MARKET_INDICATOR_META))
+                    .group_by(MarketIndicatorData.indicator_id)
                 )
             ]
             research_series = [

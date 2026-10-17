@@ -1,0 +1,1 @@
+{"cases":5,"data_check":"复用结果校验快照；新数据由项目回测工作进程在计算前检查，预览不下载行情","max_warmup_calendar_hours":162.5,"new_runs":4,"periods":[["2020-09-10T00:00:00Z","2026-09-10T00:00:00Z","exploration"]],"reused_cases":1,"title":"ETH六年：将ZEC的波动止损和更快利润保护迁移到指定策略","warnings":[]}

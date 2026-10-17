@@ -1,0 +1,46 @@
+{
+  "label": "036-entry-chart-explanation",
+  "created_at": "2026-09-11T03:48:33.544979+00:00",
+  "files": [
+    {
+      "path": "docs/verification/cloud-entry-explanation-20260911/entry-explained.png",
+      "sha256": "aa04b4fbd9a80e4e63bf4ccc1859145db212eb577956ccab877d98b9022a0212",
+      "bytes": 195092
+    },
+    {
+      "path": "docs/verification/cloud-entry-explanation-20260911/examples.json",
+      "sha256": "db00122dd8bcb298dd1b435a088aea6f285c1db4f61639956128d8c95f0e5c12",
+      "bytes": 62587
+    },
+    {
+      "path": "docs/verification/cloud-entry-explanation-20260911/index.html",
+      "sha256": "a8d53ec1cb45160dc06ca14081ee9aec6e12b677f471c81036f346c847021338",
+      "bytes": 55453
+    },
+    {
+      "path": "docs/verification/cloud-entry-explanation-20260911/README.md",
+      "sha256": "ef51aa0b4f3399df1b62247bd21def51b7a9a88711b18174632bf73932aa7cd7",
+      "bytes": 555
+    },
+    {
+      "path": "docs/verification/cloud-entry-explanation-20260911/verification.json",
+      "sha256": "7582d0fcff8078b1238a9263b5a3ddc2a25e359dc1768192652218b5a494518d",
+      "bytes": 1429
+    },
+    {
+      "path": "docs/verification/eth-cloud-two-year-20260910/entry-explained.html",
+      "sha256": "a8d53ec1cb45160dc06ca14081ee9aec6e12b677f471c81036f346c847021338",
+      "bytes": 55453
+    },
+    {
+      "path": "scripts/cloud_entry_explanation.html",
+      "sha256": "9be47c9e24790aaa14242d245fa2fe22d856ee052b8705317814eee9d8f289fd",
+      "bytes": 10558
+    },
+    {
+      "path": "scripts/explain_cloud_entry.py",
+      "sha256": "64630f436f3957bb1ca88a58bacfcb0b5fcb9e7e046b735f8616073a92827f94",
+      "bytes": 11283
+    }
+  ]
+}

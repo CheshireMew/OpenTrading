@@ -1,0 +1,1 @@
+{"cases":8,"data_check":"复用结果校验快照；新数据由项目回测工作进程在计算前检查，预览不下载行情","max_warmup_calendar_hours":325.0,"new_runs":7,"periods":[["2019-09-10T00:00:00Z","2026-09-10T00:00:00Z","exploration"]],"reused_cases":1,"title":"ZEC七年：逐项检验入场过滤、波动止损、重进与盘中保护","warnings":[]}

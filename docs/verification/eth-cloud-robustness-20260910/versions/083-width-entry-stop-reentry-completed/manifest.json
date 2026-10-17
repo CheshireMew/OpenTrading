@@ -1,0 +1,136 @@
+{
+  "label": "083-width-entry-stop-reentry-completed",
+  "created_at": "2026-09-12T15:20:13.112981+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "26ca6ade398a9ebe0e43edcf9f318f766803dc98324b3dcd658768528f9f5731",
+      "bytes": 17159
+    },
+    {
+      "path": "docs/LOCAL_BACKTESTS.md",
+      "sha256": "00fec4754933e76cff28d2347a1260ba33ea04e9673526623e6faa21ea852d43",
+      "bytes": 20506
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/all_combined-trade-comparison.json",
+      "sha256": "eefcbe6e63ddfb71d34f5eea8e047c5633a5c34610dc57d12066fb26d1b3da6f",
+      "bytes": 98797
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/answers.json",
+      "sha256": "f32621698690188b082872b64de32312c7b1ce5e782689d30a7357c5601325df",
+      "bytes": 4481
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/baseline-parity.json",
+      "sha256": "983059c63519b55fb830b2623352323ca9e49e105ae417bf5f215876764b2738",
+      "bytes": 1138
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/baseline-trade-comparison.json",
+      "sha256": "a4ac63eb226c491f540d9cbe9d9387dc098a6d7e9ad74be27e892f0f432375f0",
+      "bytes": 1502
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/bb_switch-trade-comparison.json",
+      "sha256": "f6ee3a6738b8748dfcdce5f3ddc6a5c9659b22bd109a1ad70b855115c3579b4d",
+      "bytes": 48550
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/cloud_switch-trade-comparison.json",
+      "sha256": "95f99c1813365a690f571a6eb5b7b65a29a665026ea74a9a05de1199274c2c6d",
+      "bytes": 37822
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/completion.json",
+      "sha256": "f76ac15f2f8b2feee4c35a67db0ca1635f0a49b72620d362df53a68fba8dd734",
+      "bytes": 5294
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/no_chase-trade-comparison.json",
+      "sha256": "efceaea9fd24e6d920043a907926462cc8791edeea824f30165abb5a14ba2447",
+      "bytes": 3620
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/outer-trade-comparison.json",
+      "sha256": "505d9f7f279497d973fd5534537664b25b5d52fc2967e042a6cc9c749b3d04bb",
+      "bytes": 70713
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/plan.json",
+      "sha256": "e12bac27a287b35be6857025acff585b25693adcd3e40622d92f45d64f499b7e",
+      "bytes": 7690
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/preview.json",
+      "sha256": "718c4ece57af915e7c4f280cbde943664d3eb7a6a75afcbacbf2658010d8a1d2",
+      "bytes": 359
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/README.md",
+      "sha256": "e55cda1b39d9e071381e3698cfcaf1aaf6125fc0459cd728f9e655847cc62b8c",
+      "bytes": 8292
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/results.json",
+      "sha256": "1d5286c8e9ca116991e8e0a85d3cd684e5675e8422f81fa49c67c778ac69f324",
+      "bytes": 47226
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/retry-trade-comparison.json",
+      "sha256": "a6f0dcbe028f4a0b7490bdfc250b0f756874cf6351a57d95b79ec37361f76578",
+      "bytes": 6926
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/RULES.md",
+      "sha256": "2b91a95b54d364e6dc6a4cef29835e5e8e7e94556095a41d6a2afad20bc33a08",
+      "bytes": 4071
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/sept11-reentry-example.json",
+      "sha256": "c651de076f9d9ab46cbd8f0839e562b7838606bdc5c92a1d1184f1cdf6dc9718",
+      "bytes": 2627
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/study.json",
+      "sha256": "40d283ef41761816490d2074653d248ef897ae157391df85d8494ca86a39ae37",
+      "bytes": 1140
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/width_stop-trade-comparison.json",
+      "sha256": "5d35d95a853802b8e00471438a9384ef1fb31f548aaa84a525c72fc628cb1c05",
+      "bytes": 2726
+    },
+    {
+      "path": "docs/verification/eth-cloud-width-reentry-20260912/width_stop_retry-trade-comparison.json",
+      "sha256": "fced1c314eab2649f6493fee5c961598600686c4608c32615a320b1b771c99ef",
+      "bytes": 7975
+    },
+    {
+      "path": "scripts/audit_cloud_reentry_case.py",
+      "sha256": "8accd768c2c23728ef470afa54471626731ea757ff54422a77a6d60ee9561bdb",
+      "bytes": 2705
+    },
+    {
+      "path": "scripts/cloud_width_reentry_study.py",
+      "sha256": "4e70500fa136729a83bdd6fe75802f284cb9bd990cff84bcb19e14d464cb7574",
+      "bytes": 14155
+    },
+    {
+      "path": "scripts/report_cloud_width_reentry.py",
+      "sha256": "691ef270ae2ead925512fda2f2569b346a951e38cb5bca29c73998f74c4598cc",
+      "bytes": 6273
+    },
+    {
+      "path": "strategies/trend_cloud_width_reentry_v1.py",
+      "sha256": "a75d225dfe5a1af6e4ca20a2ada267aa42147254a698ffd2975ec98713d2b577",
+      "bytes": 9354
+    },
+    {
+      "path": "test/test_cloud_width_reentry.py",
+      "sha256": "584b85cab0b939a7dacf60fdaf63c5127a4da2764c9c7b8dccc2ad804ab35a7a",
+      "bytes": 5477
+    }
+  ]
+}

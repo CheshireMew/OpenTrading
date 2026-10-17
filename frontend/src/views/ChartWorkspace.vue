@@ -1,46 +1,46 @@
 <template>
   <section class="chart-workspace" :class="{ 'cw-dark':theme==='dark' }">
     <header class="cw-header">
-      <button class="cw-menu" aria-label="打开应用菜单" @click="openNavigation">☰</button><strong class="cw-brand">Heimdall</strong>
-      <button class="cw-symbol" @click="searchOpen=true;searchMode='chart'">{{ activeSymbol?.name??'选择品种' }} <small>{{ activeSymbol?.market==='usdm'?'永续':activeSymbol?.market==='index'?'指数':'现货' }}</small> ⌕</button>
+      <button class="cw-menu" :aria-label="cw('openMenu')" @click="openNavigation">☰</button><strong class="cw-brand">Heimdall</strong>
+      <button class="cw-symbol" @click="searchOpen=true;searchMode='chart'">{{ activeSymbol?.name??cw('selectSymbol') }} <small>{{ cw(activeSymbol?.market==='usdm'?'perpetual':activeSymbol?.market==='index'?'index':'spot') }}</small> ⌕</button>
       <div class="cw-periods"><button v-for="tf in availablePeriods" :key="tf.value" :class="{active:activeTimeframe===tf.value}" @click="setPeriod(tf.value)">{{ tf.label }}</button></div>
-      <button @click="indicatorsOpen=!indicatorsOpen">⌁ 指标</button>
-      <details class="cw-sync"><summary>设置</summary><div><label>历史根数 <select aria-label="历史根数" :value="historyDepth" @change="setHistoryDepth(Number(($event.target as HTMLSelectElement).value))"><option :value="1000">1,000</option><option :value="5000">5,000</option><option :value="10000">10,000</option></select></label><button @click="workspace?.chart.renderer.set('logScale',!workspace.chart.renderer.get('logScale'))">线性／对数价格轴</button></div></details>
-      <select aria-label="图表布局" :value="layout" @change="setLayout(($event.target as HTMLSelectElement).value)"><option value="1">单图</option><option value="2h">左右双图</option><option value="2v">上下双图</option><option value="4">四图</option></select>
-      <details class="cw-sync"><summary>同步</summary><div><label v-for="link in syncOptions" :key="link.key"><input type="checkbox" :checked="sync[link.key]" @change="setSync(link.key,($event.target as HTMLInputElement).checked)" />{{ link.label }}</label></div></details>
-      <span class="cw-spacer" /><button @click="saveNow">{{ saveStatus }}</button><button @click="saveAsLayout">另存布局</button>
-      <select v-if="layouts.length>1" aria-label="已保存布局" :value="layoutId" @change="switchLayout(($event.target as HTMLSelectElement).value)"><option v-for="item in layouts" :key="item.id" :value="item.id">{{ item.name }}</option></select>
-      <button @click="toggleTheme" aria-label="切换深浅主题">{{ theme==='dark'?'☀':'☾' }}</button><button @click="rightOpen=!rightOpen" :aria-pressed="rightOpen">自选</button>
+      <button @click="indicatorsOpen=!indicatorsOpen">⌁ {{ cw('indicators') }}</button>
+      <details class="cw-sync"><summary>{{ cw('settings') }}</summary><div><label>{{ cw('historyDepth') }} <select :aria-label="cw('historyDepth')" :value="historyDepth" @change="setHistoryDepth(Number(($event.target as HTMLSelectElement).value))"><option :value="1000">1,000</option><option :value="5000">5,000</option><option :value="10000">10,000</option></select></label><button @click="workspace?.chart.renderer.set('logScale',!workspace.chart.renderer.get('logScale'))">{{ cw('priceScale') }}</button></div></details>
+      <select :aria-label="cw('layout')" :value="layout" @change="setLayout(($event.target as HTMLSelectElement).value)"><option value="1">{{ cw('single') }}</option><option value="2h">{{ cw('horizontal') }}</option><option value="2v">{{ cw('vertical') }}</option><option value="4">{{ cw('four') }}</option></select>
+      <details class="cw-sync"><summary>{{ cw('sync') }}</summary><div><label v-for="link in syncOptions" :key="link.key"><input type="checkbox" :checked="sync[link.key]" @change="setSync(link.key,($event.target as HTMLInputElement).checked)" />{{ link.label }}</label></div></details>
+      <span class="cw-spacer" /><button @click="saveNow">{{ cw(saveStatus) }}</button><button @click="saveAsLayout">{{ cw('saveLayoutAs') }}</button>
+      <select v-if="layouts.length>1" :aria-label="cw('savedLayouts')" :value="layoutId" @change="switchLayout(($event.target as HTMLSelectElement).value)"><option v-for="item in layouts" :key="item.id" :value="item.id">{{ item.name }}</option></select>
+      <button @click="toggleTheme" :aria-label="cw('toggleTheme')">{{ theme==='dark'?'☀':'☾' }}</button><button @click="rightOpen=!rightOpen" :aria-pressed="rightOpen">{{ cw('watchlist') }}</button>
     </header>
-    <div v-if="error" class="cw-notice" role="alert"><span>{{ error }}</span><button v-if="conflictDraft" @click="recoverDraft">恢复本地布局并另存</button><button @click="error=''">关闭</button><button v-if="!workspace" @click="initialize">重新加载</button></div>
-    <div v-if="snapshotRun" class="cw-notice"><span>正在查看回测 {{ snapshotRun.slice(0,8) }} 的原始行情快照</span><button @click="returnLive">返回实时行情</button></div>
+    <div v-if="error" class="cw-notice" role="alert"><span>{{ messageText(error) }}</span><button v-if="conflictDraft" @click="recoverDraft">{{ cw('recoverLayout') }}</button><button @click="error=''">{{ cw('close') }}</button><button v-if="!workspace" @click="initialize">{{ cw('reload') }}</button></div>
+    <div v-if="snapshotRun" class="cw-notice"><span>{{ cw('viewingSnapshot',{run:snapshotRun.slice(0,8)}) }}</span><button @click="returnLive">{{ cw('returnLive') }}</button></div>
     <div class="cw-body">
       <div class="cw-center">
         <div ref="chartHost" class="cw-chart" />
-        <div v-if="loading" class="cw-loading">正在加载图表与品种…</div>
-        <div v-if="indicatorsOpen" class="cw-indicator-picker"><header><strong>指标</strong><button @click="indicatorsOpen=false">×</button></header><input v-model="indicatorQuery" placeholder="搜索指标" /><label><input type="checkbox" v-model="favoritesOnly" />只看收藏</label><div v-for="item in filteredIndicators" :key="item.type" class="cw-indicator-row"><button @click="toggleFavorite(item.type)">{{ favoriteIndicators.includes(item.type)?'★':'☆' }}</button><button @click="addNative(item.type)">{{ item.name }}</button></div><button @click="bottomTab='editor';indicatorsOpen=false">打开 Pine 脚本库</button></div>
+        <div v-if="loading" class="cw-loading">{{ cw('loadingChart') }}</div>
+        <div v-if="indicatorsOpen" class="cw-indicator-picker"><header><strong>{{ cw('indicators') }}</strong><button @click="indicatorsOpen=false">×</button></header><input v-model="indicatorQuery" :placeholder="cw('searchIndicators')" /><label><input type="checkbox" v-model="favoritesOnly" />{{ cw('favoritesOnly') }}</label><div v-for="item in filteredIndicators" :key="item.type" class="cw-indicator-row"><button @click="toggleFavorite(item.type)">{{ favoriteIndicators.includes(item.type)?'★':'☆' }}</button><button @click="addNative(item.type)">{{ item.name }}</button></div><button @click="bottomTab='editor';indicatorsOpen=false">{{ cw('scriptLibrary') }}</button></div>
         <div class="cw-bottom" :style="{height:bottomTab?bottomHeight+'px':'34px'}">
-          <div v-if="bottomTab" class="cw-horizontal-resizer" role="separator" aria-label="调整底部高度" @pointerdown="resizeBottom" />
-          <nav class="cw-bottom-tabs"><button :class="{active:bottomTab==='editor'}" @click="toggleBottom('editor')">Pine 编辑器</button><button :class="{active:bottomTab==='tester'}" @click="toggleBottom('tester')">策略测试器</button><button :class="{active:bottomTab==='logs'}" @click="toggleBottom('logs')">运行日志 <small>{{ logs.length||'' }}</small></button><span class="cw-spacer" /><span class="cw-feed" :title="feedError">● {{ feedText }}</span><small>活动图 {{ activeCell }} · {{ activeSymbol?.currency }} · {{ historyText }}</small><button v-if="bottomTab" @click="bottomTab=''">⌄</button></nav>
+          <div v-if="bottomTab" class="cw-horizontal-resizer" role="separator" :aria-label="cw('resizeBottom')" @pointerdown="resizeBottom" />
+          <nav class="cw-bottom-tabs"><button :class="{active:bottomTab==='editor'}" @click="toggleBottom('editor')">{{ cw('pineEditor') }}</button><button :class="{active:bottomTab==='tester'}" @click="toggleBottom('tester')">{{ cw('strategyTester') }}</button><button :class="{active:bottomTab==='logs'}" @click="toggleBottom('logs')">{{ cw('runLogs') }} <small>{{ logs.length||'' }}</small></button><span class="cw-spacer" /><span class="cw-feed" :title="messageText(feedError)">● {{ feedText }}</span><small>{{ cw('activeChart',{cell:activeCell}) }} · {{ activeSymbol?.currency }} · {{ historyText }}</small><button v-if="bottomTab" @click="bottomTab=''">⌄</button></nav>
           <div v-show="bottomTab==='editor'" class="cw-editor-panel">
-            <div class="cw-editor-tools"><select v-model="scriptId" aria-label="我的脚本" @change="openScript"><option v-for="item in scripts" :key="item.id" :value="item.id">{{ item.name }}{{ item.readonly?' · 原版':'' }}</option></select><button @click="newScript('indicator')">新建指标</button><button @click="newScript('strategy')">新建策略</button><button @click="saveScript(false)">保存</button><button @click="saveScript(true)">另存</button><button @click="importFile?.click()">导入</button><button @click="exportScript">导出</button><button @click="showCapabilities">兼容范围</button><input ref="importFile" type="file" accept=".pine,text/plain" hidden @change="importScript" /><span class="cw-spacer" /><span class="cw-version">{{ scriptDirty?'未保存草稿':selectedScript?'版本 '+selectedScript.version:'' }} {{ scriptRunning?'· '+scriptRunning:'' }}</span><button class="cw-primary" :disabled="executing" @click="addPine">{{ executing?'计算中…':'添加到活动图' }}</button><button v-if="executing" @click="cancelPine">停止</button></div>
+            <div class="cw-editor-tools"><select v-model="scriptId" :aria-label="cw('myScript')" @change="openScript"><option v-for="item in scripts" :key="item.id" :value="item.id">{{ item.name }}{{ item.readonly?' · '+cw('original'):'' }}</option></select><button @click="newScript('indicator')">{{ cw('newIndicator') }}</button><button @click="newScript('strategy')">{{ cw('newStrategy') }}</button><button @click="saveScript(false)">{{ cw('save') }}</button><button @click="saveScript(true)">{{ cw('saveAs') }}</button><button @click="importFile?.click()">{{ cw('import') }}</button><button @click="exportScript">{{ cw('export') }}</button><button @click="showCapabilities">{{ cw('compatibility') }}</button><input ref="importFile" type="file" accept=".pine,text/plain" hidden @change="importScript" /><span class="cw-spacer" /><span class="cw-version">{{ scriptDirty?cw('draft'):selectedScript?cw('version',{version:selectedScript.version}):'' }} {{ scriptRunning?'· '+messageText(scriptRunning):'' }}</span><button class="cw-primary" :disabled="executing" @click="addPine">{{ cw(executing?'calculating':'addToActive') }}</button><button v-if="executing" @click="cancelPine">{{ cw('stop') }}</button></div>
             <PineEditor v-if="editorMounted" v-model="source" :dark="theme==='dark'" :error="pineError" @run="addPine" @save="saveScript(false)" />
           </div>
           <StrategyTester v-if="testerMounted" v-show="bottomTab==='tester'" :symbol="activeSymbol" :timeframe="backendPeriod" :script="selectedScript" :dark="theme==='dark'" @locate="locateTrade" @log="addLog" />
-          <div v-if="bottomTab==='logs'" class="cw-log"><p v-if="!logs.length">暂无运行日志。</p><p v-for="(item,index) in logs" :key="index">{{ item }}</p></div>
+          <div v-if="bottomTab==='logs'" class="cw-log"><p v-if="!logs.length">{{ cw('noLogs') }}</p><p v-for="(item,index) in logs" :key="index">{{ formatDate(item.time,true) }}  {{ messageText(item.message) }}</p></div>
         </div>
       </div>
-      <div v-if="rightOpen" class="cw-vertical-resizer" role="separator" aria-label="调整自选宽度" @pointerdown="resizeRight" />
+      <div v-if="rightOpen" class="cw-vertical-resizer" role="separator" :aria-label="cw('resizeWatchlist')" @pointerdown="resizeRight" />
       <aside v-if="rightOpen" class="cw-watchlist" :style="{width:rightWidth+'px'}">
-        <header><select v-model="watchlistId" aria-label="自选列表"><option v-for="item in watchlists" :key="item.id" :value="item.id">{{ item.name }}</option></select><button @click="newWatchlist">＋列表</button><button @click="renameWatchlist" aria-label="重命名自选列表">✎</button><button @click="searchMode='watchlist';searchOpen=true" aria-label="添加自选品种">＋</button></header>
-        <div v-if="pendingWatch.includes(watchlistId)" class="cw-notice"><span>自选更改未同步</span><button @click="persistWatch(watchSymbols)">重试保存</button></div>
-        <div class="cw-watch-scroll"><table><thead><tr><th>品种</th><th>最新价／涨跌额</th><th>涨跌幅</th><th /></tr></thead><tbody><tr v-for="(key,index) in watchSymbols" :key="key" :class="{selected:activeSymbol?.id===key}" draggable="true" @dragstart="dragIndex=index" @dragover.prevent @drop.prevent="moveWatch(index)" @click="selectSymbol(key)"><td><strong>{{ displaySymbol(key) }}</strong><small>{{ marketLabel(key) }}</small></td><td :class="quoteClass(key)">{{ priceText(quotes[key]?.price) }}<small :class="quoteClass(key)">{{ priceText(quotes[key]?.change) }}</small></td><td :class="quoteClass(key)" :title="quotes[key]?.error??quotes[key]?.basis">{{ quotes[key]?.change_pct==null?'—':quotes[key]!.change_pct!.toFixed(2)+'%' }}<small>{{ quotes[key]?.basis==='交易日'?'交易日':'24h' }}</small></td><td><button class="cw-remove" @click.stop="removeWatch(key)" :aria-label="'移除 '+displaySymbol(key)">×</button></td></tr></tbody></table></div>
-        <div class="cw-instrument"><strong>{{ activeSymbol?.name }}</strong><small>{{ activeSymbol?.exchange.toUpperCase() }} · {{ marketLabel(activeSymbol?.id??'') }}</small><div class="cw-last" :class="quoteClass(activeSymbol?.id??'')">{{ priceText(activeQuote?.price) }} <small>{{ activeSymbol?.currency }}</small></div><p v-if="activeQuote?.error" class="cw-error">{{ activeQuote.error }}</p><dl><dt>交易单位</dt><dd>{{ activeSymbol?.metadata?.basecurrency??'来源未提供' }}</dd><dt>报价币种</dt><dd>{{ activeSymbol?.currency }}</dd><dt>涨跌额</dt><dd>{{ priceText(activeQuote?.change) }}</dd><dt>最小报价变动</dt><dd>{{ activeSymbol?.metadata?.mintick??'来源未提供' }}</dd><dt>更新时间</dt><dd>{{ activeQuote?.updated_at?new Date(activeQuote.updated_at).toLocaleTimeString():'—' }}</dd></dl><button @click="workspace?.context().togglePanel('objects')">对象列表</button><button @click="workspace?.context().togglePanel('dataWindow')">数据窗口</button></div>
+        <header><select v-model="watchlistId" :aria-label="cw('watchlists')"><option v-for="item in watchlists" :key="item.id" :value="item.id">{{ item.name }}</option></select><button @click="newWatchlist">{{ cw('newList') }}</button><button @click="renameWatchlist" :aria-label="cw('renameList')">✎</button><button @click="searchMode='watchlist';searchOpen=true" :aria-label="cw('addWatchSymbol')">＋</button></header>
+        <div v-if="pendingWatch.includes(watchlistId)" class="cw-notice"><span>{{ cw('pendingWatch') }}</span><button @click="persistWatch(watchSymbols)">{{ cw('retrySave') }}</button></div>
+        <div class="cw-watch-scroll"><table><thead><tr><th>{{ cw('symbol') }}</th><th>{{ cw('lastAndChange') }}</th><th>{{ cw('changePercent') }}</th><th /></tr></thead><tbody><tr v-for="(key,index) in watchSymbols" :key="key" :class="{selected:activeSymbol?.id===key}" draggable="true" @dragstart="dragIndex=index" @dragover.prevent @drop.prevent="moveWatch(index)" @click="selectSymbol(key)"><td><strong>{{ displaySymbol(key) }}</strong><small>{{ marketLabel(key) }}</small></td><td :class="quoteClass(key)">{{ priceText(quotes[key]?.price) }}<small :class="quoteClass(key)">{{ priceText(quotes[key]?.change) }}</small></td><td :class="quoteClass(key)" :title="messageText(quotes[key]?.error??quotes[key]?.basis)">{{ quotes[key]?.change_pct==null?'—':quotes[key]!.change_pct!.toFixed(2)+'%' }}<small>{{ quotes[key]?.basis==='交易日'?cw('tradingDay'):'24h' }}</small></td><td><button class="cw-remove" @click.stop="removeWatch(key)" :aria-label="cw('removeSymbol',{symbol:displaySymbol(key)??key})">×</button></td></tr></tbody></table></div>
+        <div class="cw-instrument"><strong>{{ activeSymbol?.name }}</strong><small>{{ activeSymbol?.exchange.toUpperCase() }} · {{ marketLabel(activeSymbol?.id??'') }}</small><div class="cw-last" :class="quoteClass(activeSymbol?.id??'')">{{ priceText(activeQuote?.price) }} <small>{{ activeSymbol?.currency }}</small></div><p v-if="activeQuote?.error" class="cw-error">{{ messageText(activeQuote.error) }}</p><dl><dt>{{ cw('unit') }}</dt><dd>{{ activeSymbol?.metadata?.basecurrency??cw('notProvided') }}</dd><dt>{{ cw('quoteCurrency') }}</dt><dd>{{ activeSymbol?.currency }}</dd><dt>{{ cw('change') }}</dt><dd>{{ priceText(activeQuote?.change) }}</dd><dt>{{ cw('minimumTick') }}</dt><dd>{{ activeSymbol?.metadata?.mintick??cw('notProvided') }}</dd><dt>{{ cw('updatedAt') }}</dt><dd>{{ activeQuote?.updated_at?formatDate(activeQuote.updated_at,true):'—' }}</dd></dl><button @click="workspace?.context().togglePanel('objects')">{{ cw('objects') }}</button><button @click="workspace?.context().togglePanel('dataWindow')">{{ cw('dataWindow') }}</button></div>
       </aside>
     </div>
-    <div v-if="nameRequest" class="cw-modal-backdrop" @click.self="finishName(false)"><form class="cw-name-dialog" role="dialog" aria-modal="true" :aria-label="nameRequest.title" @submit.prevent="finishName(true)" @keydown.esc="finishName(false)"><label>{{ nameRequest.title }}<input ref="nameInput" v-model="nameRequest.value" maxlength="160" required /></label><footer><button type="button" @click="finishName(false)">取消</button><button class="cw-primary" type="submit" :disabled="!nameRequest.value.trim()">确定</button></footer></form></div>
-    <div v-if="capabilitiesOpen" class="cw-modal-backdrop" @click.self="capabilitiesOpen=false"><section class="cw-search cw-capabilities" role="dialog" aria-modal="true" aria-label="Pine 兼容范围"><header><strong>Pine v5/v6 · PineTS {{ capabilities?.version }}</strong><button @click="capabilitiesOpen=false">关闭</button></header><div><h3>已支持</h3><p v-for="item in capabilities?.supported" :key="item">{{ item }}</p><h3>有限支持</h3><p v-for="item in capabilities?.limited" :key="item">{{ item }}</p><h3>暂不支持</h3><p v-for="item in capabilities?.unsupported" :key="item">{{ item }}</p><p>这里只执行图表分析与模拟订单，不连接真实下单。原版 v7.2 为指标，只显示通道与标记。</p></div></section></div>
-    <div v-if="searchOpen" class="cw-modal-backdrop" @click.self="searchOpen=false"><section class="cw-search" role="dialog" aria-modal="true" aria-label="搜索品种"><header><strong>{{ searchMode==='watchlist'?'添加自选':'切换品种' }}</strong><button @click="searchOpen=false">×</button></header><input v-model="symbolQuery" placeholder="搜索品种、交易所或市场" autofocus /><div class="cw-market-filter"><button v-for="filter in marketFilters" :key="filter.value" :class="{active:marketFilter===filter.value}" @click="marketFilter=filter.value">{{ filter.label }}</button></div><div class="cw-search-results"><button v-for="item in searchResults" :key="item.id" @click="pickSearch(item.id)"><strong>{{ item.name }}</strong><span>{{ item.exchange.toUpperCase() }}</span><small>{{ marketLabel(item.id) }}</small></button><p v-if="!searchResults.length">没有匹配的可用品种。</p></div></section></div>
+    <div v-if="nameRequest" class="cw-modal-backdrop" @click.self="finishName(false)"><form class="cw-name-dialog" role="dialog" aria-modal="true" :aria-label="messageText(nameRequest.title)" @submit.prevent="finishName(true)" @keydown.esc="finishName(false)"><label>{{ messageText(nameRequest.title) }}<input ref="nameInput" v-model="nameRequest.value" maxlength="160" required /></label><footer><button type="button" @click="finishName(false)">{{ cw('cancel') }}</button><button class="cw-primary" type="submit" :disabled="!nameRequest.value.trim()">{{ cw('confirm') }}</button></footer></form></div>
+    <div v-if="capabilitiesOpen" class="cw-modal-backdrop" @click.self="capabilitiesOpen=false"><section class="cw-search cw-capabilities" role="dialog" aria-modal="true" :aria-label="cw('pineCompatibility')"><header><strong>Pine v5/v6 · PineTS {{ capabilities?.version }}</strong><button @click="capabilitiesOpen=false">{{ cw('close') }}</button></header><div><h3>{{ cw('supported') }}</h3><p v-for="item in capabilities?.supported" :key="item">{{ messageText(item) }}</p><h3>{{ cw('limited') }}</h3><p v-for="item in capabilities?.limited" :key="item">{{ messageText(item) }}</p><h3>{{ cw('unsupported') }}</h3><p v-for="item in capabilities?.unsupported" :key="item">{{ messageText(item) }}</p><p>{{ cw('analysisOnly') }}</p></div></section></div>
+    <div v-if="searchOpen" class="cw-modal-backdrop" @click.self="searchOpen=false"><section class="cw-search" role="dialog" aria-modal="true" :aria-label="cw('searchSymbol')"><header><strong>{{ cw(searchMode==='watchlist'?'addWatch':'switchSymbol') }}</strong><button @click="searchOpen=false">×</button></header><input v-model="symbolQuery" :placeholder="cw('searchSymbolHint')" autofocus /><div class="cw-market-filter"><button v-for="filter in marketFilters" :key="filter.value" :class="{active:marketFilter===filter.value}" @click="marketFilter=filter.value">{{ filter.label }}</button></div><div class="cw-search-results"><button v-for="item in searchResults" :key="item.id" @click="pickSearch(item.id)"><strong>{{ item.name }}</strong><span>{{ item.exchange.toUpperCase() }}</span><small>{{ marketLabel(item.id) }}</small></button><p v-if="!searchResults.length">{{ cw('noSymbols') }}</p></div></section></div>
   </section>
 </template>
 
@@ -55,6 +55,7 @@ import { HeimdallProvider,fromVela,velaSymbol,timeframes } from '@/modules/chart
 import { writeDraft,readDraft } from '@/modules/chartWorkspace/drafts'
 import { installMarketDrawings,markScript } from '@/modules/chartWorkspace/persistence'
 import { checkPine } from '@/modules/chartWorkspace/pineCompatibility.mjs'
+import { cw,messageText,formatNumber,formatDate } from '@/modules/chartWorkspace/locale'
 import { localizeChart } from '@/modules/chartWorkspace/localize'
 import StrategyTester from '@/components/chartWorkspace/StrategyTester.vue'
 const PineEditor=defineAsyncComponent(()=>import('@/components/chartWorkspace/PineEditor.vue'))
@@ -67,13 +68,13 @@ async function requestName(title:string,value:string):Promise<string|null>{retur
 function finishName(accept:boolean){const item=nameRequest.value;if(!item)return;nameRequest.value=null;item.resolve(accept?item.value.trim():null)}
 const capabilities=ref<PineCapabilities>(),capabilitiesOpen=ref(false)
 async function showCapabilities(){try{capabilities.value=await chartApi.capabilities();capabilitiesOpen.value=true}catch(e){fail(e)}}
-const loading=ref(true),error=ref(''),saveStatus=ref('已保存'),layout=ref('1'),layoutId=ref('default'),layouts=ref<WorkspaceDocument[]>([])
+const loading=ref(true),error=ref(''),saveStatus=ref('saved'),layout=ref('1'),layoutId=ref('default'),layouts=ref<WorkspaceDocument[]>([])
 const symbols=ref<ChartSymbol[]>([]),watchlists=ref<WorkspaceDocument[]>([]),watchlistId=ref('default'),quotes=ref<Record<string,ChartQuote>>({})
 const scripts=ref<WorkspaceDocument[]>([]),scriptId=ref('heimdall-v7-2'),source=ref(''),scriptDirty=ref(false),scriptRunning=ref('')
 const executing=ref(false),pineError=ref<{message:string;line?:number;column?:number}|null>(null)
 const activeCell=ref('c1'),activeSymbolId=ref('binance:spot:BTCUSDT'),activeTimeframe=ref('60')
 const historyByCell=ref<Record<string,{loaded:number;state:string}>>({})
-const historyText=computed(()=>{const h=historyByCell.value[activeCell.value];return h?`历史 ${h.loaded.toLocaleString()} 根${h.state==='loading'?' · 加载中':h.state==='aborted'?' · 未完整加载':''}`:'正在加载历史'})
+const historyText=computed(()=>{const h=historyByCell.value[activeCell.value];return h?cw('historyBars',{count:formatNumber(h.loaded,0)})+(h.state==='loading'?' · '+cw('loading'):h.state==='aborted'?' · '+cw('incomplete'):''):cw('loadingHistory')})
 const historyDepth=ref(1000),conflictDraft=ref<Record<string,any>|null>(null),snapshotRun=ref('')
 let snapshotChart:import('@luxalgo/vela').Vela|undefined
 function returnLive(){if(snapshotChart)void snapshotChart.setMarket({data:undefined});snapshotChart=undefined;snapshotRun.value=''}
@@ -85,19 +86,19 @@ const pendingWatch=ref<string[]>([])
 let watchSave=Promise.resolve()
 const watchSymbols=computed<string[]>(()=>(watchlist.value?.data.symbols as string[]|undefined)??[])
 const searchOpen=ref(false),symbolQuery=ref(''),searchMode=ref('chart'),marketFilter=ref('all')
-const marketFilters=[{value:'all',label:'全部'},{value:'spot',label:'现货'},{value:'usdm',label:'永续'},{value:'index',label:'指数'}]
+const marketFilters=computed(()=>[{value:'all',label:cw('all')},{value:'spot',label:cw('spot')},{value:'usdm',label:cw('perpetual')},{value:'index',label:cw('index')}])
 const searchResults=computed(()=>symbols.value.filter(s=>(marketFilter.value==='all'||s.market===marketFilter.value)&&`${s.id} ${s.name}`.toLowerCase().includes(symbolQuery.value.toLowerCase())).slice(0,100))
 const rightOpen=ref(true),rightWidth=ref(300),bottomHeight=ref(340),bottomTab=ref(''),editorMounted=ref(false),testerMounted=ref(false)
-const logs=ref<string[]>([]),feedStatus=ref('connecting'),feedError=ref('')
-const feedText=computed(()=>({connecting:'连接中',live:'实时行情',polling:'定时更新',offline:'连接中断',error:'数据异常'}[feedStatus.value]??feedStatus.value))
+const logs=ref<{time:number;message:string}[]>([]),feedStatus=ref('connecting'),feedError=ref('')
+const feedText=computed(()=>({connecting:cw('connecting'),live:cw('live'),polling:cw('polling'),offline:cw('offline'),error:cw('dataError')}[feedStatus.value]??feedStatus.value))
 const sync=ref<Record<string,boolean>>({viewport:true,crosshair:true,symbol:false,timeframe:false})
-const syncOptions=[{key:'crosshair',label:'十字线'},{key:'viewport',label:'时间范围'},{key:'symbol',label:'品种'},{key:'timeframe',label:'周期'}]
-const periods=[{value:'1',label:'1分'},{value:'5',label:'5分'},{value:'15',label:'15分'},{value:'30',label:'30分'},{value:'60',label:'1小时'},{value:'240',label:'4小时'},{value:'D',label:'日'},{value:'W',label:'周'},{value:'M',label:'月'}]
-const availablePeriods=computed(()=>periods.filter(p=>activeSymbol.value?.timeframes.includes(timeframes[p.value]!)))
+const syncOptions=computed(()=>[{key:'crosshair',label:cw('crosshair')},{key:'viewport',label:cw('timeRange')},{key:'symbol',label:cw('symbol')},{key:'timeframe',label:cw('timeframe')}])
+const periods=computed(()=>[{value:'1',label:cw('minute1')},{value:'5',label:cw('minute5')},{value:'15',label:cw('minute15')},{value:'30',label:cw('minute30')},{value:'60',label:cw('hour1')},{value:'240',label:cw('hour4')},{value:'D',label:cw('day')},{value:'W',label:cw('week')},{value:'M',label:cw('month')}])
+const availablePeriods=computed(()=>periods.value.filter(p=>activeSymbol.value?.timeframes.includes(timeframes[p.value]!)))
 const backendPeriod=computed(()=>timeframes[activeTimeframe.value]??activeTimeframe.value)
 const indicatorsOpen=ref(false),indicatorQuery=ref(''),favoriteIndicators=ref<string[]>([]),favoritesOnly=ref(false)
-const indicators=[{type:'sma',name:'MA · 简单移动平均'},{type:'ema',name:'EMA · 指数移动平均'},{type:'bollinger-bands',name:'BOLL · 布林带'},{type:'rsi',name:'RSI · 相对强弱'},{type:'macd',name:'MACD'},{type:'average-true-range',name:'ATR · 平均真实波幅'},{type:'vwap',name:'VWAP · 成交量加权均价'},{type:'volume',name:'成交量'}]
-const filteredIndicators=computed(()=>indicators.filter(i=>i.name.toLowerCase().includes(indicatorQuery.value.toLowerCase())&&(!favoritesOnly.value||favoriteIndicators.value.includes(i.type))))
+const indicators=computed(()=>[{type:'sma',name:cw('sma')},{type:'ema',name:cw('ema')},{type:'bollinger-bands',name:cw('boll')},{type:'rsi',name:cw('rsi')},{type:'macd',name:'MACD'},{type:'average-true-range',name:cw('atr')},{type:'vwap',name:cw('vwap')},{type:'volume',name:cw('volume')}])
+const filteredIndicators=computed(()=>indicators.value.filter(i=>i.name.toLowerCase().includes(indicatorQuery.value.toLowerCase())&&(!favoritesOnly.value||favoriteIndicators.value.includes(i.type))))
 let quoteTimer:ReturnType<typeof setTimeout>|undefined,saveTimer:ReturnType<typeof setTimeout>|undefined,localTimer:ReturnType<typeof setTimeout>|undefined
 let layoutVersion=0,restoring=false,disposed=false,dragIndex=-1,runEpoch=0
 let layoutWrites:Promise<void>=Promise.resolve()
@@ -108,7 +109,7 @@ const engines=new Set<HeimdallPineEngine>()
 let editorReady=false
 const pendingIndicators=new Set<IndicatorHandle>()
 const pendingCancels=new Set<()=>void>()
-const addLog=(message:string)=>{logs.value=[`${new Date().toLocaleTimeString()}  ${message}`,...logs.value].slice(0,200)}
+const addLog=(message:string)=>{logs.value=[{time:Date.now(),message},...logs.value].slice(0,200)}
 function fail(e:unknown){error.value=e instanceof Error?e.message:String(e);addLog(error.value)}
 function openNavigation(){window.dispatchEvent(new Event('heimdall:open-navigation'))}
 function projectActive(){const cell=workspace.value?.active;if(!cell)return;activeCell.value=cell.id;activeSymbolId.value=fromVela(cell.symbol);activeTimeframe.value=cell.timeframe;historyDepth.value=cell.chart.market.bars??1000;layout.value=workspace.value!.getState().layout;const status=provider.value?.statuses.get(activeSymbolId.value);feedStatus.value=status?.status??'connecting';feedError.value=status?.error??''}
@@ -122,10 +123,10 @@ function trackHistory(){
 }
 const historyCharts=new WeakSet<import('@luxalgo/vela').Vela>()
 function setHistoryDepth(depth:number){const ws=workspace.value;if(!ws)return;for(const cell of ws.cells())void cell.chart.setMarket({bars:depth});historyDepth.value=depth;dirty()}
-async function recoverDraft(){if(!conflictDraft.value)return;restore(conflictDraft.value);await saveAsLayout();if(saveStatus.value==='已保存'){conflictDraft.value=null;error.value=''}}
+async function recoverDraft(){if(!conflictDraft.value)return;restore(conflictDraft.value);await saveAsLayout();if(saveStatus.value==='saved'){conflictDraft.value=null;error.value=''}}
 function displaySymbol(key:string){return symbols.value.find(s=>s.id===key)?.name??key.split(':').slice(-1)[0]}
-function marketLabel(key:string){return key.includes(':usdm:')?'Binance 永续':key.startsWith('index:')?'指数':key.startsWith('okx:')?'OKX 现货':'Binance 现货'}
-function priceText(value:unknown){return typeof value==='number'?value.toLocaleString(undefined,{maximumFractionDigits:8}):'—'}
+function marketLabel(key:string){return key.includes(':usdm:')?cw('binancePerpetual'):key.startsWith('index:')?cw('index'):key.startsWith('okx:')?cw('okxSpot'):cw('binanceSpot')}
+function priceText(value:unknown){return formatNumber(value,8)}
 function quoteClass(key:string){return (quotes.value[key]?.change??0)<0?'cw-down':'cw-up'}
 function setPeriod(tf:string){if(snapshotRun.value)returnLive();workspace.value?.context().setTimeframe(tf);projectActive()}
 function applyChartTheme(){
@@ -168,24 +169,24 @@ async function persistWatch(items:string[]){
 }
 function removeWatch(id:string){void persistWatch(watchSymbols.value.filter(k=>k!==id))}
 function moveWatch(index:number){if(dragIndex<0)return;const list=[...watchSymbols.value];const item=list.splice(dragIndex,1)[0];if(item)list.splice(index,0,item);dragIndex=-1;void persistWatch(list)}
-async function newWatchlist(){const name=await requestName('自选列表名称','新的自选');if(!name)return;try{const d=await chartApi.save('watchlists',crypto.randomUUID(),{name,data:{symbols:[]},expected_version:0});watchlists.value.push(d);watchlistId.value=d.id}catch(e){fail(e)}}
-async function renameWatchlist(){if(!watchlist.value)return;const name=await requestName('自选列表名称',watchlist.value.name);if(!name)return;try{const d=watchlist.value;const saved=await chartApi.save('watchlists',d.id,{name,data:d.data,expected_version:d.version});watchlists.value=watchlists.value.map(w=>w.id===d.id?saved:w)}catch(e){fail(e)}}
+async function newWatchlist(){const name=await requestName(cw('watchlistName'),cw('newWatchlist'));if(!name)return;try{const d=await chartApi.save('watchlists',crypto.randomUUID(),{name,data:{symbols:[]},expected_version:0});watchlists.value.push(d);watchlistId.value=d.id}catch(e){fail(e)}}
+async function renameWatchlist(){if(!watchlist.value)return;const name=await requestName(cw('watchlistName'),watchlist.value.name);if(!name)return;try{const d=watchlist.value;const saved=await chartApi.save('watchlists',d.id,{name,data:d.data,expected_version:d.version});watchlists.value=watchlists.value.map(w=>w.id===d.id?saved:w)}catch(e){fail(e)}}
 async function refreshQuotes(){clearTimeout(quoteTimer);if(disposed)return;try{const keys=[...new Set([...watchSymbols.value,activeSymbolId.value])];for(let i=0;i<keys.length;i+=100){const data=await chartApi.quotes(keys.slice(i,i+100));for(const q of data)quotes.value[q.id]=q}}catch(e){addLog(String(e))}finally{if(!disposed)quoteTimer=setTimeout(refreshQuotes,5000)}}
 function snapshot(){const state=workspace.value?.getState();if(state)for(const saved of state.charts){const live=workspace.value?.cells().find(c=>c.id===saved.id);if(live)saved.bars=live.chart.market.bars??saved.bars}return {state,rightWidth:rightWidth.value,rightOpen:rightOpen.value,bottomHeight:bottomHeight.value,watchlistId:watchlistId.value,favoriteIndicators:favoriteIndicators.value}}
-function dirty(){if(restoring||!workspace.value)return;saveStatus.value='保存中';clearTimeout(saveTimer);const data=snapshot();pendingLayoutData.set(layoutId.value,data);void writeDraft('layout:'+layoutId.value,{version:layoutVersion,data,pending:true}).catch(fail);saveTimer=setTimeout(saveNow,700)}
+function dirty(){if(restoring||!workspace.value)return;saveStatus.value='saving';clearTimeout(saveTimer);const data=snapshot();pendingLayoutData.set(layoutId.value,data);void writeDraft('layout:'+layoutId.value,{version:layoutVersion,data,pending:true}).catch(fail);saveTimer=setTimeout(saveNow,700)}
 async function saveNow(){
   clearTimeout(saveTimer);if(!workspace.value||restoring)return
   const id=layoutId.value,data=snapshot()
-  pendingLayoutData.set(id,data);saveStatus.value='保存中'
+  pendingLayoutData.set(id,data);saveStatus.value='saving'
   layoutWrites=layoutWrites.then(async()=>{
     try{
       const previous=layouts.value.find(l=>l.id===id)
-      const doc=await chartApi.save('layouts',id,{name:previous?.name??'默认布局',data,expected_version:previous?.version??0})
+      const doc=await chartApi.save('layouts',id,{name:previous?.name??cw('defaultLayout'),data,expected_version:previous?.version??0})
       layouts.value=[doc,...layouts.value.filter(l=>l.id!==id)]
       const latest=pendingLayoutData.get(id)??data,pending=JSON.stringify(latest)!==JSON.stringify(data)
       await writeDraft('layout:'+id,{version:doc.version,data:latest,pending})
-      if(layoutId.value===id){layoutVersion=doc.version;saveStatus.value=pending?'保存中':'已保存'}
-    }catch(e){if(layoutId.value===id)saveStatus.value='未保存';fail(e)}
+      if(layoutId.value===id){layoutVersion=doc.version;saveStatus.value=pending?'saving':'saved'}
+    }catch(e){if(layoutId.value===id)saveStatus.value='unsaved';fail(e)}
   })
   await layoutWrites
 }
@@ -198,7 +199,7 @@ async function switchLayout(id:string){
     restore(doc.data);await writeDraft('last-layout',id)
   }catch(e){fail(e)}
 }
-async function saveAsLayout(){await saveNow();const name=await requestName('布局名称','我的布局');if(!name)return;try{const doc=await chartApi.save('layouts',crypto.randomUUID(),{name,data:snapshot(),expected_version:0});layouts.value.push(doc);layoutId.value=doc.id;layoutVersion=doc.version;await writeDraft('last-layout',doc.id);saveStatus.value='已保存'}catch(e){fail(e)}}
+async function saveAsLayout(){await saveNow();const name=await requestName(cw('layoutName'),cw('myLayout'));if(!name)return;try{const doc=await chartApi.save('layouts',crypto.randomUUID(),{name,data:snapshot(),expected_version:0});layouts.value.push(doc);layoutId.value=doc.id;layoutVersion=doc.version;await writeDraft('last-layout',doc.id);saveStatus.value='saved'}catch(e){fail(e)}}
 function restore(data:Record<string,any>){restoring=true;try{if(data.state)workspace.value?.applyState(data.state);applyChartTheme();rightWidth.value=data.rightWidth??300;rightOpen.value=data.rightOpen??true;bottomHeight.value=data.bottomHeight??340;watchlistId.value=data.watchlistId??watchlists.value[0]?.id??'default';favoriteIndicators.value=data.favoriteIndicators??[];const state=workspace.value?.getState();if(state){layout.value=state.layout;for(const k of Object.keys(sync.value))sync.value[k]=!!state.sync?.[k as 'symbol']}projectActive()}finally{restoring=false}}
 function toggleBottom(tab:string){bottomTab.value=bottomTab.value===tab?'':tab}
 function resize(start:PointerEvent,update:(dx:number,dy:number)=>void){const x=start.clientX,y=start.clientY;const move=(e:PointerEvent)=>update(e.clientX-x,e.clientY-y);const stop=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',stop);dirty()};window.addEventListener('pointermove',move);window.addEventListener('pointerup',stop,{once:true});start.preventDefault()}
@@ -207,9 +208,9 @@ function resizeBottom(e:PointerEvent){const height=bottomHeight.value;resize(e,(
 function toggleFavorite(type:string){favoriteIndicators.value=favoriteIndicators.value.includes(type)?favoriteIndicators.value.filter(t=>t!==type):[...favoriteIndicators.value,type];dirty()}
 function addNative(type:string){try{workspace.value?.context().addNativeIndicator(type);indicatorsOpen.value=false}catch(e){fail(e)}}
 async function openScript(){const script=selectedScript.value;if(!script)return;const draft=await readDraft<{source:string}>('script:'+script.id);source.value=script.readonly&&!draft?.source?.trim()?String(script.data.source):draft?.source??String(script.data.source);editorReady=true;scriptDirty.value=source.value!==script.data.source;pineError.value=null}
-function newScript(kind:string){editorReady=true;scriptId.value='';source.value=kind==='indicator'?'//@version=6\nindicator("我的指标", overlay=true)\nlength = input.int(20, "周期")\nplot(ta.ema(close, length), color=color.orange)\n':'//@version=6\nstrategy("EMA 交叉策略", overlay=true, initial_capital=10000)\nfast = ta.ema(close, input.int(10, "快线"))\nslow = ta.ema(close, input.int(30, "慢线"))\nplot(fast, color=color.orange)\nplot(slow, color=color.blue)\nif ta.crossover(fast, slow)\n    strategy.entry("Long", strategy.long)\nif ta.crossunder(fast, slow)\n    strategy.close("Long")\n';scriptDirty.value=true;bottomTab.value='editor'}
+function newScript(kind:string){editorReady=true;scriptId.value='';source.value=kind==='indicator'?'//@version=6\nindicator("'+cw('myIndicator')+'", overlay=true)\nlength = input.int(20, "'+cw('timeframe')+'")\nplot(ta.ema(close, length), color=color.orange)\n':'//@version=6\nstrategy("'+cw('crossStrategy')+'", overlay=true, initial_capital=10000)\nfast = ta.ema(close, input.int(10, "'+cw('fast')+'"))\nslow = ta.ema(close, input.int(30, "'+cw('slow')+'"))\nplot(fast, color=color.orange)\nplot(slow, color=color.blue)\nif ta.crossover(fast, slow)\n    strategy.entry("Long", strategy.long)\nif ta.crossunder(fast, slow)\n    strategy.close("Long")\n';scriptDirty.value=true;bottomTab.value='editor'}
 async function saveScript(asNew:boolean):Promise<WorkspaceDocument|undefined>{
-  try{const old=selectedScript.value;const needsName=asNew||!old||old.readonly;const name=needsName?await requestName('脚本名称',old?old.name+' · 副本':'我的脚本'):old.name;if(!name)return;const id=needsName?crypto.randomUUID():old!.id;const saved=await chartApi.save('scripts',id,{name,data:{source:source.value,language:'pine'},expected_version:needsName?0:old!.version});scripts.value=[saved,...scripts.value.filter(s=>s.id!==id)];scriptId.value=id;scriptDirty.value=false;await writeDraft('script:'+id,{source:source.value});return saved}catch(e){fail(e)}
+  try{const old=selectedScript.value;const needsName=asNew||!old||old.readonly;const name=needsName?await requestName(cw('scriptName'),old?cw('copyName',{name:old.name}):cw('myScript')):old.name;if(!name)return;const id=needsName?crypto.randomUUID():old!.id;const saved=await chartApi.save('scripts',id,{name,data:{source:source.value,language:'pine'},expected_version:needsName?0:old!.version});scripts.value=[saved,...scripts.value.filter(s=>s.id!==id)];scriptId.value=id;scriptDirty.value=false;await writeDraft('script:'+id,{source:source.value});return saved}catch(e){fail(e)}
 }
 async function addPine(){
   const cell=workspace.value?.active;if(!cell)return
@@ -221,25 +222,25 @@ async function addPine(){
     const id=crypto.randomUUID()
     workspace.value!.context().addIndicator({script:code,name:script.name,id,language:'pine'})
     const handle=cell.chart.indicators().find(h=>h.id===id)
-    if(!handle)throw new Error('无法创建图表指标')
+    if(!handle)throw new Error(cw('cannotCreateIndicator'))
     pendingIndicators.add(handle)
     const result=await new Promise<{ok:boolean;handle:IndicatorHandle|null;error:Error|null}>(resolve=>{
       const finish=(error:Error|null)=>{clearTimeout(timer);ready();failed();pendingCancels.delete(cancel);if(error)handle.remove();resolve({ok:!error,handle:error?null:handle,error})}
-      const cancel=()=>finish(new Error('已取消本次运行'))
-      const timer=setTimeout(()=>finish(new Error('脚本运行超时，已停止')),65000)
+      const cancel=()=>finish(new Error(cw('runCancelled')))
+      const timer=setTimeout(()=>finish(new Error(cw('scriptTimeout'))),65000)
       const ready=handle.on('ready',()=>finish(null))
       const failed=handle.on('error',({error})=>finish(error))
       pendingCancels.add(cancel)
     })
     pendingIndicators.delete(handle)
     if(epoch!==runEpoch){result.handle?.remove();return}
-    if(!result.ok||!result.handle)throw result.error??new Error('脚本运行失败')
+    if(!result.ok||!result.handle)throw result.error??new Error(cw('scriptFailed'))
     markScript(cell.chart,id,script.id,script.version)
-    scriptRunning.value=`已添加 v${script.version} → ${cell.id}`
-    addLog(`${script.name} v${script.version} 已在 ${cell.id} 运行`);dirty()
-  }catch(e){const value=e as Error&{line?:number;column?:number};pineError.value={message:value.message??String(e),line:value.line,column:value.column};scriptRunning.value='本次运行失败，已保留图表上原有版本';fail(e)}finally{if(epoch===runEpoch)executing.value=false}
+    scriptRunning.value=cw('scriptAdded',{version:script.version,cell:cell.id})
+    addLog(cw('scriptRunLog',{name:script.name,version:script.version,cell:cell.id}));dirty()
+  }catch(e){const value=e as Error&{line?:number;column?:number};pineError.value={message:value.message??String(e),line:value.line,column:value.column};scriptRunning.value=cw('keptPrevious');fail(e)}finally{if(epoch===runEpoch)executing.value=false}
 }
-function cancelPine(){runEpoch++;executing.value=false;for(const cancel of pendingCancels)cancel();pendingCancels.clear();pendingIndicators.clear();addLog('已停止本次脚本添加')}
+function cancelPine(){runEpoch++;executing.value=false;for(const cancel of pendingCancels)cancel();pendingCancels.clear();pendingIndicators.clear();addLog(cw('stoppedAdding'))}
 async function importScript(event:Event){const file=(event.target as HTMLInputElement).files?.[0];if(file){editorReady=true;scriptId.value='';source.value=await file.text();scriptDirty.value=true;bottomTab.value='editor';(event.target as HTMLInputElement).value=''}}
 function exportScript(){const url=URL.createObjectURL(new Blob([source.value],{type:'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=(selectedScript.value?.name??'indicator')+'.pine';a.click();URL.revokeObjectURL(url)}
 async function locateTrade({time,run}:{time:number;run:PineRun}){
@@ -253,7 +254,7 @@ async function locateTrade({time,run}:{time:number;run:PineRun}){
   await cell.chart.setMarket({symbol:velaSymbol(run.request.symbol),timeframe:cell.timeframe,data:bars as unknown as import('@luxalgo/vela').OHLCV[]})
   snapshotChart=cell.chart;snapshotRun.value=run.id
   cell.chart.setVisibleRange({from:time-12*3600000,to:time+12*3600000})
-  addLog(`已定位 ${run.id.slice(0,8)} 的成交时间 ${new Date(time).toLocaleString()}`)
+  addLog(cw('locatedTrade',{run:run.id.slice(0,8),time:formatDate(time)}))
 }
 async function initialize(){
   if(workspace.value)return;loading.value=true;error.value=''
@@ -261,7 +262,7 @@ async function initialize(){
     const results=await Promise.all([chartApi.symbols(),chartApi.documents('watchlists'),chartApi.documents('scripts'),chartApi.documents('layouts')])
     if(disposed)return
     ;[symbols.value,watchlists.value,scripts.value,layouts.value]=results
-    for(const list of watchlists.value){const local=await readDraft<{version:number;data:Record<string,any>;pending:boolean}>('watch:'+list.id);if(local?.pending){if(local.version===list.version){list.data=local.data;pendingWatch.value.push(list.id)}else error.value='自选列表在其他窗口已更新，本地更改保留在草稿中。'}}
+    for(const list of watchlists.value){const local=await readDraft<{version:number;data:Record<string,any>;pending:boolean}>('watch:'+list.id);if(local?.pending){if(local.version===list.version){list.data=local.data;pendingWatch.value.push(list.id)}else error.value=cw('watchConflict')}}
     const last=await readDraft<string>('last-layout');const doc=layouts.value.find(l=>l.id===last)??layouts.value[0]
     layoutId.value=doc?.id??'default';layoutVersion=doc?.version??0
     const local=await readDraft<{version:number;data:Record<string,any>;pending:boolean}>('layout:'+layoutId.value)
@@ -276,7 +277,7 @@ async function initialize(){
     workspace.value=ws;trackHistory();ws.on('cell:created',trackHistory);disposeDrawings=installMarketDrawings(ws,dirty);disposeLocale=localizeChart(chartHost.value!)
     if(doc)restore(doc.data)
     ws.sync.set('drawings',false)
-    if(local?.pending){if(local.version===layoutVersion){restore(local.data);saveStatus.value='未保存';dirty()}else{conflictDraft.value=local.data;saveStatus.value='未保存';error.value='有未同步的本地布局，服务器版本已更新。可以恢复本地布局并另存副本。'}}
+    if(local?.pending){if(local.version===layoutVersion){restore(local.data);saveStatus.value='unsaved';dirty()}else{conflictDraft.value=local.data;saveStatus.value='unsaved';error.value=cw('layoutConflict')}}
     ws.on('state:changed',()=>{projectActive();dirty()});ws.on('cell:active',projectActive);ws.on('layout:changed',projectActive)
     ws.on('script:run',event=>{if(event.first)for(const warning of event.warnings)addLog(String(warning.message))})
     const lastScript=await readDraft<string>('last-script')

@@ -1,0 +1,26 @@
+{
+  "label": "011-frozen-manual-study",
+  "created_at": "2026-09-10T11:15:18.474936+00:00",
+  "files": [
+    {
+      "path": "docs/verification/eth-cloud-manual-20260910/plan.json",
+      "sha256": "cd6709a44c3ddd5e96fb659662bd1c068a22b840cbd93c32db0b92926543ad71",
+      "bytes": 6358
+    },
+    {
+      "path": "scripts/cloud_manual_study.py",
+      "sha256": "2adf307b2aaf543ac27dca0a0ddc0bc3bdb1cc0810595b3c65ac177d9db38b0f",
+      "bytes": 15272
+    },
+    {
+      "path": "strategies/trend_cloud_manual_v1.py",
+      "sha256": "c357811312e1881a86279e246300362945f9d1d4e42a1f872029691bfcc5a87a",
+      "bytes": 5842
+    },
+    {
+      "path": "test/test_cloud_manual.py",
+      "sha256": "89e0df99c0be744760e1f5924379073653b79ced28aa8c84ade505cc11bad7f0",
+      "bytes": 3654
+    }
+  ]
+}

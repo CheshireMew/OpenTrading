@@ -1,0 +1,91 @@
+{
+  "label": "045-before-native-cache-correction",
+  "created_at": "2026-09-11T09:38:46.561992+00:00",
+  "files": [
+    {
+      "path": "docs/verification/cross-market-trend-20260911/choices-2023.json",
+      "sha256": "a574e33e6d5a1191b81ac0b5fdaaf70f4e7129b5adf92899aeec729cf3e803e7",
+      "bytes": 7597
+    },
+    {
+      "path": "docs/verification/cross-market-trend-20260911/choices-2024.json",
+      "sha256": "4db97fc9770eb46d0982d21d5cc287d7432728dff9ba503a7d2d44a943acb660",
+      "bytes": 7545
+    },
+    {
+      "path": "docs/verification/cross-market-trend-20260911/choices-2025.json",
+      "sha256": "990a1c4969c306d420d5bb478404af0e662444ed058a2543c176ad6d43faff60",
+      "bytes": 7546
+    },
+    {
+      "path": "docs/verification/cross-market-trend-20260911/data.json",
+      "sha256": "56162dc7d386223f9397b602b7763051750b409c5cc7c9966696ac108f64d82b",
+      "bytes": 10906
+    },
+    {
+      "path": "docs/verification/cross-market-trend-20260911/details.json",
+      "sha256": "c8385261b847f08f87b814482833183452a62a0989d84102b4ace4562a906316",
+      "bytes": 1398985
+    },
+    {
+      "path": "docs/verification/cross-market-trend-20260911/native-daily-live-recheck.json",
+      "sha256": "7f0ee7d90a9b990b3b893c1c6090709f04f41afdd921493700362536dc26fd9b",
+      "bytes": 2110
+    },
+    {
+      "path": "docs/verification/cross-market-trend-20260911/native-live-recheck-complete.json",
+      "sha256": "6cd3c0aad7f0d6e85029b3b6204dcd9da6d1c6500e69576f38fce4a5c429b262",
+      "bytes": 15101
+    },
+    {
+      "path": "docs/verification/cross-market-trend-20260911/native-vs-15m-data-check.json",
+      "sha256": "9ebbf6c976d82f5c29c9eedf22491826b1da6814bfd4f9dc68c3e84948c1de22",
+      "bytes": 1056
+    },
+    {
+      "path": "docs/verification/cross-market-trend-20260911/native4h-vs-15m-data-check.json",
+      "sha256": "4d1c96d29bec54ea1f5807679b7764077de3eca7fd6be5b9094a292b7190c113",
+      "bytes": 9063
+    },
+    {
+      "path": "docs/verification/cross-market-trend-20260911/plan.json",
+      "sha256": "6147711e257a92f554b3610425d21790d46623b1eeeb513b38f6f656b40feb60",
+      "bytes": 15339
+    },
+    {
+      "path": "docs/verification/cross-market-trend-20260911/results.json",
+      "sha256": "faf06b80a4f56b4aa3c35afdd96d5be82ae1378462df9072eb5f36d58f07688c",
+      "bytes": 2790765
+    },
+    {
+      "path": "docs/verification/cross-market-trend-20260911/verification.json",
+      "sha256": "7ed79af40563c553ab15a74aeadcf80b81c6ea16e06f4527ad243d66a171fdfb",
+      "bytes": 131250
+    },
+    {
+      "path": "scripts/cross_market_native_recheck.py",
+      "sha256": "68a781e929da70b3dddd5985d4886ba522dbbf4166d40ade8f2fab31c88134aa",
+      "bytes": 4147
+    },
+    {
+      "path": "scripts/cross_market_trend_study.py",
+      "sha256": "b10e1228cc99ba6f1c8f53203a93bc409d5c4566a5379608190dd79fb814bb02",
+      "bytes": 22490
+    },
+    {
+      "path": "scripts/report_cross_market_trend.py",
+      "sha256": "e91a54440ef6a80f3bcc488a6ff81648bccdd5d885bee9af02fbca46a5975eee",
+      "bytes": 24950
+    },
+    {
+      "path": "strategies/cross_market_trend_v1.py",
+      "sha256": "87e71d463f1f138a0b9703038ee2ebd8e048b102afdd39a1f5aa1a9387654b10",
+      "bytes": 5426
+    },
+    {
+      "path": "test/test_cross_market_trend.py",
+      "sha256": "c386cc998cace63758696d78bd2b7cbb8735510e69c69d3f3064cd9dca842694",
+      "bytes": 4823
+    }
+  ]
+}

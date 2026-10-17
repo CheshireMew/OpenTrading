@@ -1,0 +1,11 @@
+{
+  "label": "006-before-run-interval-unit",
+  "created_at": "2026-09-10T08:59:38.916214+00:00",
+  "files": [
+    {
+      "path": "frontend/src/views/research/LocalBacktests.vue",
+      "sha256": "d77e16f1f8c1b7e37cb7c4acc4455e8a2628a20afffaa47607c6e974e844079e",
+      "bytes": 28017
+    }
+  ]
+}

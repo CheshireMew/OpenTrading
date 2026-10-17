@@ -1,0 +1,46 @@
+{
+  "baseline_run": "657b2b8086588a254442b82b128d34df",
+  "period": [
+    "2018-09-10T00:00:00Z",
+    "2026-09-10T00:00:00Z"
+  ],
+  "experiments": [
+    "15m:只在利润保护已启动后接受新的反向退出信号",
+    "30m:原退出规则",
+    "1h:原退出规则"
+  ],
+  "unchanged": {
+    "strategy": "trend_cloud_intrabar_methods_v3",
+    "symbol": "BNB/USDT",
+    "timeframe": "15m",
+    "start": "2018-09-10T00:00:00Z",
+    "end": "2026-09-10T00:00:00Z",
+    "initial_cash": 10000,
+    "position_pct": 100,
+    "data_gap_policy": "observed_bars",
+    "execution_timeframe": "5m",
+    "intrabar_profit_protection": true,
+    "parameters": {
+      "center_length": 55,
+      "width_length": 50,
+      "trigger_mult": 0.8,
+      "chase_mult": 1.5,
+      "activation_pct": 2,
+      "giveback_pct": 50,
+      "initial_stop_pct": 2,
+      "stop_method": 0,
+      "confirmation_level": 3,
+      "max_wait_bars": 2,
+      "direction_filter": false,
+      "stop_reentry": false,
+      "entry_bar_assumption": 0,
+      "price_tick": 0.01,
+      "stop_mult": 1.5,
+      "stop_floor_pct": 0.5,
+      "stop_cap_pct": 2
+    }
+  },
+  "evaluation": "比较总收益、胜负次数、最大回撤及恢复时间、2023年表现；新退出条件按同入场对照获救或扩大亏损。只跑这三组，不做组合交叉或额外参数搜索。",
+  "execution": "全部用5分钟数据模拟成交和更新利润保护。新退出条件在原信号周期收盘判定，达标前不退出也不开反向仓；保护启动后保持有效。达到2%指引擎已记录最高浮盈达到门槛并激活保护，不要求此后始终站在2%以上。",
+  "retention": "新策略另存，原版不变；请求、源码、数据、逐笔交易和结果本地留存。"
+}

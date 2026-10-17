@@ -1,0 +1,66 @@
+{
+  "label": "097_eth_methods_frozen",
+  "created_at": "2026-09-13T04:52:52.390927+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "ccdd04ba62b5e821a556d215da2d129087bbe461835c5aeda83d7e54a8d5d9e2",
+      "bytes": 24654
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/baseline-parity.json",
+      "sha256": "dd5a755bef9cc3e89aced554b804f666260207cf3cf489afce1a3127db4a9d4f",
+      "bytes": 464
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/execution-data.json",
+      "sha256": "28899fc6e25b1ef0e6e04a39f4731e81b82eec5cc4a144415a9a8ce5413c77d8",
+      "bytes": 35776146
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/execution-prefix.json",
+      "sha256": "3fb8cb3a0166e3bae2eb019a048bb59524b0d2ba7a1cdf44fc4da0ff9bb0a803",
+      "bytes": 293012
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/fine-data-check.json",
+      "sha256": "3d2217e68e95a68c202b90a8869b6c807b20a7f221b36ad603daffac8a08227c",
+      "bytes": 1243
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/plan.json",
+      "sha256": "e3e8cc7a1e25dff49b7a1a3f0f1417f1e14bf6afe3b1f4fa48591852d5cca16c",
+      "bytes": 4836
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/preview.json",
+      "sha256": "db9e4e98d793795fc409269d3291cb11556674dae11d3f64845cbae976d4be76",
+      "bytes": 370
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/RULES.md",
+      "sha256": "3581bf81d40846cf4582fee539fcd81dee7974671c7eabb5a48c388453a2fe73",
+      "bytes": 1955
+    },
+    {
+      "path": "docs/verification/eth-intrabar-methods-20260913/study.json",
+      "sha256": "0fc5093569168f50f7700261b5e3121d5bf515686c48a6e2c7602fd7ce22f3ea",
+      "bytes": 1031
+    },
+    {
+      "path": "scripts/eth_intrabar_methods_study.py",
+      "sha256": "dbfb0beb8f068f51e9704258ce5465fc18b7ff469005c8c1047b98dc396c9482",
+      "bytes": 15784
+    },
+    {
+      "path": "scripts/zec_intrabar_methods_study.py",
+      "sha256": "df56afa5494687047bdbb906502f7ec5bacc07e74628f39dfa77217badb1e72c",
+      "bytes": 23435
+    },
+    {
+      "path": "strategies/trend_cloud_intrabar_methods_v3.py",
+      "sha256": "0ea141561ca6d49e4a77430e3fd3cd3a751fd031ec8a98759439b2e1c7cd2cb0",
+      "bytes": 10190
+    }
+  ]
+}

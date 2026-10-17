@@ -1,0 +1,51 @@
+{
+  "label": "002-frozen-round-v1",
+  "created_at": "2026-09-10T08:46:03.605087+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "25dbf1e84947ba22b8a5df80ffa49214ee8252632377bb17420f396e9ab1b822",
+      "bytes": 15630
+    },
+    {
+      "path": "app/services/local_backtest_strategies.py",
+      "sha256": "4452ec9182d3d7ad65581c8509ab4c4841c715e6fd35062c5abfd3baa81768c9",
+      "bytes": 4651
+    },
+    {
+      "path": "docs/verification/eth-cloud-robustness-20260910/plan.json",
+      "sha256": "8ded31447288c8c2f2c45fc2e365d9846709c0c20cddc9e3fee62eb3a2fe01fd",
+      "bytes": 8996
+    },
+    {
+      "path": "scripts/cloud_robustness_study.py",
+      "sha256": "73bd36f99ff5f04c975aeaf59766894aafaaa796eff7691227484dd52658988f",
+      "bytes": 18087
+    },
+    {
+      "path": "scripts/cloud_strategy_versions.py",
+      "sha256": "2fb53341c30300af9618313f4d33ca4c610be27877183ab39b2e05d77e3bfa77",
+      "bytes": 1684
+    },
+    {
+      "path": "scripts/profit_protection_study.py",
+      "sha256": "a156b444bb291ec54998b0456d83006af1ffe0a32eb3db6b951a98b2520eda35",
+      "bytes": 14924
+    },
+    {
+      "path": "scripts/trend_cloud_study.py",
+      "sha256": "9bfd88992beeb2bd60b8cf8780d2bb8b3f58d0d88d5fd7297510d39d7de9327a",
+      "bytes": 10538
+    },
+    {
+      "path": "strategies/trend_cloud_robustness_v1.py",
+      "sha256": "b3bee9a6d3679e5741fa5aa3e46e95418ddc8b4e3c3416ac19d6b496b21aeece",
+      "bytes": 6320
+    },
+    {
+      "path": "test/test_cloud_robustness.py",
+      "sha256": "903f4ba250055b134870669a5871821d571bc9885b06d801292c71e87f2666cb",
+      "bytes": 4642
+    }
+  ]
+}

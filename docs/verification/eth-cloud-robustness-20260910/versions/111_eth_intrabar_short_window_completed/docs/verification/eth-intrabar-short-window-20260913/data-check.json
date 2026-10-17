@@ -1,0 +1,1 @@
+{"fallback":3,"matched":210239,"rejected":[{"observed":1,"reason":"missing_fine_bars","timestamp":1608558300000},{"observed":1,"reason":"missing_fine_bars","timestamp":1619323200000},{"observed":2,"reason":"missing_fine_bars","timestamp":1679661000000}],"signal_candles":210242}

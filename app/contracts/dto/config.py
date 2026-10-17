@@ -30,17 +30,6 @@ class LlmProviderConfigUpdateRequest(BaseModel):
     reasoningEnabled: bool = False
 
 
-class FredApiConfigResponse(BaseModel):
-    apiKey: str = ""
-    apiKeySet: bool = False
-    apiKeyPreview: str = ""
-    source: str = "unset"
-
-
-class FredApiConfigUpdateRequest(BaseModel):
-    apiKey: str | None = None
-
-
 class SystemIndicatorConfigResponse(BaseModel):
     ema_period: int
     rsi_period: int

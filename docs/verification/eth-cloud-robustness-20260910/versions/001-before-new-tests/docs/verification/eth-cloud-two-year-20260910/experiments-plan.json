@@ -1,0 +1,156 @@
+{
+  "created_at": "2026-09-10T07:56:00.800942+00:00",
+  "scope": "ETH/USDT 15m, existing two-year project snapshot, no fees or slippage",
+  "inference_limit": "Exploratory follow-up on already inspected history. First-year selection is frozen before new later-period outcomes, but neither the later period nor recent 18 days are untouched data.",
+  "periods": {
+    "selection": [
+      "2024-09-10T00:00:00Z",
+      "2025-09-10T00:00:00Z"
+    ],
+    "validation": [
+      "2025-09-10T00:00:00Z",
+      "2026-08-18T00:00:00Z"
+    ],
+    "recent": [
+      "2026-08-23T00:00:00Z",
+      "2026-09-10T00:00:00Z"
+    ],
+    "full": [
+      "2024-09-10T00:00:00Z",
+      "2026-09-10T00:00:00Z"
+    ]
+  },
+  "selection_rule": "Within each original baseline, eligible changes must beat first-year baseline return, not increase maximum drawdown, have at least 50 trades and profit factor > 1. Rank eligible changes by return / drawdown; no later reselection.",
+  "ablation": {
+    "ema31_atr": {
+      "name": "原候选：EMA31 hlc3＋ATR14",
+      "parameters": {
+        "source": "hlc3",
+        "width": "atr",
+        "width_period": 14
+      }
+    },
+    "ema31_range": {
+      "name": "只将 ATR14 换成平滑高低差14",
+      "parameters": {
+        "source": "hlc3",
+        "width": "range",
+        "width_period": 14
+      }
+    },
+    "ema31_cross": {
+      "name": "只去掉宽度，穿越中心线即换仓",
+      "parameters": {
+        "source": "hlc3",
+        "width": "none",
+        "width_period": 14
+      }
+    },
+    "fixed_band": {
+      "name": "宽度固定为首年波动比例的中位数",
+      "parameters": {
+        "source": "hlc3",
+        "width": "fixed",
+        "width_period": 14
+      }
+    },
+    "hlc3_atr16": {
+      "name": "只将 ATR14 改为 ATR16",
+      "parameters": {
+        "source": "hlc3",
+        "width": "atr",
+        "width_period": 16
+      }
+    },
+    "hl2_atr14": {
+      "name": "只将中心价格 hlc3 改为 hl2",
+      "parameters": {
+        "source": "hl2",
+        "width": "atr",
+        "width_period": 14
+      }
+    },
+    "hl2_atr16": {
+      "name": "EMA31 hl2＋ATR16",
+      "parameters": {
+        "source": "hl2",
+        "width": "atr",
+        "width_period": 16
+      }
+    },
+    "high_low_ema": {
+      "name": "高低价 EMA31 通道",
+      "parameters": {
+        "source": "hl2",
+        "width": "range_ema",
+        "width_period": 16
+      }
+    }
+  },
+  "changes": {
+    "distance2": {
+      "name": "离中心线超过两倍宽度时不追单",
+      "parameters": {
+        "entry_filter": "distance2"
+      }
+    },
+    "slope8": {
+      "name": "中心线近两小时也向同方向走才入场",
+      "parameters": {
+        "entry_filter": "slope8"
+      }
+    },
+    "efficiency25": {
+      "name": "近五小时方向较一致才入场",
+      "parameters": {
+        "entry_filter": "efficiency25"
+      }
+    },
+    "confirm2": {
+      "name": "突破后下一根仍在门槛外才确认",
+      "parameters": {
+        "confirmation": 2
+      }
+    },
+    "stop2": {
+      "name": "增加约两倍 ATR 的固定止损",
+      "parameters": {
+        "stop_atr": 2
+      }
+    },
+    "stop3": {
+      "name": "增加约三倍 ATR 的固定止损",
+      "parameters": {
+        "stop_atr": 3
+      }
+    },
+    "target4": {
+      "name": "增加约四倍 ATR 的固定止盈",
+      "parameters": {
+        "target_atr": 4
+      }
+    },
+    "stop2_target4": {
+      "name": "约两倍 ATR 止损、四倍 ATR 止盈",
+      "parameters": {
+        "stop_atr": 2,
+        "target_atr": 4
+      }
+    },
+    "trail3": {
+      "name": "增加约三倍 ATR 距离的跟随止损",
+      "parameters": {
+        "trail_atr": 3
+      }
+    }
+  },
+  "execution_details": [
+    "All centers EMA31, signal width coefficient 0.99. Only the listed factor changes.",
+    "Entry filters cannot block an opposite signal closing the held side; a denied new entry leaves the account flat. No delayed entry unless a new crossing occurs.",
+    "Two-close confirmation applies to both exits and entries. Second close must still be outside its current corresponding band; next open execution.",
+    "Stop/target/trail percent = multiplier * signal-close ATR / signal close * 100. The simulator anchors this at actual next-open entry, so absolute distance approximates signal ATR if the open gaps.",
+    "ATR for new exits is 14 on the old ATR candidate and 16 on the high-low candidate. No changing ATR distance after entry.",
+    "Trail is active from entry, moves using completed candle extrema and becomes effective next candle. If stop and target both hit within one candle, stop wins and the ambiguity is counted.",
+    "The fixed-width percentage uses only first-year median ATR14 / center, no outcome optimization. All other coefficients are fixed here; no parameter grid or retuning."
+  ]
+}

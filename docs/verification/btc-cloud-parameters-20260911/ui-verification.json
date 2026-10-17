@@ -1,0 +1,13 @@
+{
+  "checked_at": "2026-09-11T02:54:54.228534+00:00",
+  "url": "http://127.0.0.1:8787/btc-parameters.html",
+  "method": "CUA browser accessibility state and rendered screenshots",
+  "checks": [
+    "379 configurations and 463 period results visible",
+    "locked candidate -17.49%, original -2.67%, training leader +47.98% visible",
+    "original and selected parameter table matches saved plan",
+    "annual table rendered",
+    "funds-curve selector changed to training leader and SVG container updated",
+    "page retained as deliverable"
+  ]
+}

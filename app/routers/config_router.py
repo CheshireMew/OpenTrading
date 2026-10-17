@@ -10,7 +10,6 @@ from app.contracts.frontend import FrontendContractRouter
 from app.dependencies import (
     get_currency_rate_service,
     get_database_runtime,
-    get_fred_api_config_service,
     get_llm_config_service,
     get_runtime_services,
     get_data_health_service,
@@ -19,8 +18,6 @@ from app.exceptions import AppError
 from app.infra.executor import run_external_io
 from app.services.market.symbol_catalog import get_supported_market_symbols
 from app.contracts.dto.config import (
-    FredApiConfigResponse,
-    FredApiConfigUpdateRequest,
     LlmProviderConfigResponse,
     LlmProviderConfigUpdateRequest,
     SystemConfigResponse,
@@ -116,18 +113,3 @@ async def update_llm_config(
     return await run_external_io(lambda: _save_local_config(request, service, payload))
 
 
-@router.get("/fred-api-config", response_model=FredApiConfigResponse)
-async def get_fred_api_config(
-    request: Request,
-    service = Depends(get_fred_api_config_service),
-):
-    return await run_external_io(lambda: _read_local_config(request, service))
-
-
-@router.put("/fred-api-config", response_model=FredApiConfigResponse)
-async def update_fred_api_config(
-    request: Request,
-    payload: FredApiConfigUpdateRequest,
-    service = Depends(get_fred_api_config_service),
-):
-    return await run_external_io(lambda: _save_local_config(request, service, payload))

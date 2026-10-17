@@ -1,0 +1,31 @@
+{
+  "label": "039-frozen-transfer-diagnosis",
+  "created_at": "2026-09-11T08:06:08.755790+00:00",
+  "files": [
+    {
+      "path": "app/domain/cloud_trade_attribution.py",
+      "sha256": "a83b77f3d0fb20499b7c299c0b767ebc2c5d8c221d1c498fec401d90a25a9301",
+      "bytes": 13376
+    },
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "25dbf1e84947ba22b8a5df80ffa49214ee8252632377bb17420f396e9ab1b822",
+      "bytes": 15630
+    },
+    {
+      "path": "docs/verification/cloud-transfer-diagnosis-20260911/plan.json",
+      "sha256": "70e838143dbc6e9bb4a13702a5749ffea0179be62e3ee750d4ba54105c77f31b",
+      "bytes": 21557
+    },
+    {
+      "path": "scripts/cloud_transfer_diagnosis.py",
+      "sha256": "9e052fefca243af8c7d7b580568249f7852c6b1f423b5e1b50268e70407905d5",
+      "bytes": 12586
+    },
+    {
+      "path": "strategies/trend_cloud_parameters_v4.py",
+      "sha256": "518ec7480dc4e5b8fd57d6804dd74bde88103f3c4c847a51028d2d5ef309173e",
+      "bytes": 5381
+    }
+  ]
+}

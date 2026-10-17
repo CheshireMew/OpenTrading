@@ -1,0 +1,293 @@
+{
+  "scope": "This conversation research records: six assets, full variant backtest intervals. Annual/train/selection fragments and testing fixtures not ranked as new strategies. No new simulations.",
+  "capital": "100% current equity each trade; compounding; no leverage; no fees or slippage",
+  "drawdown": "Equity at strategy timeframe bar closes; observation granularity differs",
+  "primary": [
+    {
+      "asset": "ETH",
+      "name": "EMA55：第2/3根盘中突破实体，每5分钟更新保护",
+      "source": "docs/verification/eth-intrabar-short-window-20260913/policies/fixed.json",
+      "pointer": "/report",
+      "period": [
+        "2020-12-28",
+        "2026-09-10"
+      ],
+      "timeframe": "15m",
+      "strategy": "trend_cloud_intrabar_methods_v3 (fixed selection wrapper)",
+      "parameters": {
+        "center_length": 55,
+        "width_length": 31,
+        "trigger_mult": 0.4,
+        "chase_mult": 2,
+        "initial_stop_pct": 1,
+        "activation_pct": 2,
+        "giveback_pct": 50,
+        "confirmation_level": 3,
+        "max_wait_bars": 2,
+        "entry_bar_assumption": 0,
+        "price_tick": 0.01,
+        "reverse_exit": true,
+        "stop_reentry": false,
+        "protection_update": "5m close; next interval effective"
+      },
+      "metrics": {
+        "return_pct": 64338.15700231341,
+        "total_trades": 8811,
+        "wins": 2426,
+        "losses": 6385,
+        "breakeven": 0,
+        "win_rate": 27.5337646124163,
+        "max_drawdown_pct": 29.023644595242676
+      },
+      "source_sha256": "a1b39660c15194677bc60fa790dcab1fb8997d8a54b110456a114317ba91409e"
+    },
+    {
+      "asset": "SOL",
+      "name": "EMA55通道：收盘突破，下一根开盘入场",
+      "source": "docs/verification/alt-cloud-transfer-20260911/results.json",
+      "pointer": "/results/sol/c55_w50_t0p4_d2_a2_g50_s1/full",
+      "period": [
+        "2020-09-10",
+        "2026-09-10"
+      ],
+      "timeframe": "15m",
+      "strategy": "trend_cloud_parameters_v4",
+      "parameters": {
+        "center_length": 55,
+        "width_length": 50,
+        "trigger_mult": 0.4,
+        "chase_mult": 2.0,
+        "activation_pct": 2.0,
+        "giveback_pct": 50.0,
+        "initial_stop_pct": 1.0,
+        "initial_stop_width": 0,
+        "record_indicators": false,
+        "reverse_exit": true,
+        "entry": "close crossover; next open",
+        "protection_update": "15m close; next interval effective"
+      },
+      "metrics": {
+        "return_pct": 56444.51300060773,
+        "total_trades": 10690,
+        "wins": 3360,
+        "losses": 7315,
+        "breakeven": 15,
+        "win_rate": 31.431244153414404,
+        "max_drawdown_pct": 47.5515174849379
+      },
+      "source_sha256": "5011a7c9b677ec9a96c41ddcbd3135d65e4f1a51dd40e6ff603bd25f267da3cb"
+    },
+    {
+      "asset": "BNB",
+      "name": "涨跌方向30根",
+      "source": "docs/verification/cross-market-trend-20260911-r2/results.json",
+      "pointer": "/results/bnb/momentum_fast_1d/full",
+      "period": [
+        "2018-09-10",
+        "2026-09-10"
+      ],
+      "timeframe": "1d",
+      "strategy": "cross_market_trend_v1",
+      "parameters": {
+        "family": "momentum",
+        "entry_length": 30,
+        "atr_length": 14,
+        "atr_mult": 3,
+        "reverse_exit": true,
+        "profit_protection": false,
+        "entry": "close direction change; next open",
+        "reentry_after_stop": "wait for new direction change"
+      },
+      "metrics": {
+        "return_pct": 40653.35508390205,
+        "total_trades": 250,
+        "wins": 98,
+        "losses": 151,
+        "breakeven": 1,
+        "win_rate": 39.2,
+        "max_drawdown_pct": 61.975599749361066
+      },
+      "source_sha256": "e270b2fb69cb429dea234fd3dad18ce6b43abcb5a1f3463b28b25fb6cba4be8d"
+    },
+    {
+      "asset": "ZEC",
+      "name": "涨跌方向90根",
+      "source": "docs/verification/cross-market-trend-20260911-r2/results.json",
+      "pointer": "/results/zec/momentum_slow_4h/full",
+      "period": [
+        "2019-09-18",
+        "2026-09-10"
+      ],
+      "timeframe": "4h",
+      "strategy": "cross_market_trend_v1",
+      "parameters": {
+        "family": "momentum",
+        "entry_length": 90,
+        "atr_length": 14,
+        "atr_mult": 3,
+        "reverse_exit": true,
+        "profit_protection": false,
+        "entry": "close direction change; next open",
+        "reentry_after_stop": "wait for new direction change"
+      },
+      "metrics": {
+        "return_pct": 3810.327235943948,
+        "total_trades": 621,
+        "wins": 217,
+        "losses": 397,
+        "breakeven": 7,
+        "win_rate": 34.94363929146538,
+        "max_drawdown_pct": 87.11395910000887
+      },
+      "source_sha256": "e270b2fb69cb429dea234fd3dad18ce6b43abcb5a1f3463b28b25fb6cba4be8d"
+    },
+    {
+      "asset": "BTC",
+      "name": "涨跌方向30根",
+      "source": "docs/verification/cross-market-trend-20260911-r2/results.json",
+      "pointer": "/results/btc/momentum_fast_1d/full",
+      "period": [
+        "2018-09-10",
+        "2026-09-10"
+      ],
+      "timeframe": "1d",
+      "strategy": "cross_market_trend_v1",
+      "parameters": {
+        "family": "momentum",
+        "entry_length": 30,
+        "atr_length": 14,
+        "atr_mult": 3,
+        "reverse_exit": true,
+        "profit_protection": false,
+        "entry": "close direction change; next open",
+        "reentry_after_stop": "wait for new direction change"
+      },
+      "metrics": {
+        "return_pct": 3299.3540637149827,
+        "total_trades": 249,
+        "wins": 97,
+        "losses": 152,
+        "breakeven": 0,
+        "win_rate": 38.95582329317269,
+        "max_drawdown_pct": 55.78428870710063
+      },
+      "source_sha256": "e270b2fb69cb429dea234fd3dad18ce6b43abcb5a1f3463b28b25fb6cba4be8d"
+    },
+    {
+      "asset": "PAXG",
+      "name": "EMA55通道：盘中确认＋固定4%止损＋5分钟保护",
+      "source": "docs/verification/paxg-exit-comparison-20260913/results.json",
+      "pointer": "/results/stop4/report",
+      "period": [
+        "2021-01-22",
+        "2026-09-10"
+      ],
+      "timeframe": "4h",
+      "strategy": "trend_cloud_intrabar_methods_v3",
+      "parameters": {
+        "activation_pct": 2.0,
+        "center_length": 55,
+        "chase_mult": 1.5,
+        "confirmation_level": 3,
+        "direction_filter": false,
+        "entry_bar_assumption": 0,
+        "giveback_pct": 50.0,
+        "initial_stop_pct": 4,
+        "max_wait_bars": 2,
+        "price_tick": 0.01,
+        "stop_cap_pct": 2,
+        "stop_floor_pct": 0.5,
+        "stop_method": 0,
+        "stop_mult": 1.5,
+        "stop_reentry": false,
+        "trigger_mult": 1.2,
+        "width_length": 50,
+        "reverse_exit": true,
+        "protection_update": "5m close; next interval effective"
+      },
+      "config": {
+        "data_gap_policy": "observed_bars",
+        "end": "2026-09-10T00:00:00Z",
+        "execution_timeframe": "5m",
+        "initial_cash": 10000.0,
+        "intrabar_profit_protection": true,
+        "parameters": {
+          "activation_pct": 2.0,
+          "center_length": 55,
+          "chase_mult": 1.5,
+          "confirmation_level": 3,
+          "direction_filter": false,
+          "entry_bar_assumption": 0,
+          "giveback_pct": 50.0,
+          "initial_stop_pct": 4,
+          "max_wait_bars": 2,
+          "price_tick": 0.01,
+          "stop_cap_pct": 2,
+          "stop_floor_pct": 0.5,
+          "stop_method": 0,
+          "stop_mult": 1.5,
+          "stop_reentry": false,
+          "trigger_mult": 1.2,
+          "width_length": 50
+        },
+        "position_pct": 100.0,
+        "start": "2021-01-22T00:00:00Z",
+        "strategy": "trend_cloud_intrabar_methods_v3",
+        "symbol": "PAXG/USDT",
+        "timeframe": "4h"
+      },
+      "run_id": "12f938fa9f949f0180651109a335e032",
+      "metrics": {
+        "return_pct": 245.47590174996685,
+        "total_trades": 178,
+        "wins": 101,
+        "losses": 77,
+        "breakeven": 0,
+        "win_rate": 56.74157303370787,
+        "max_drawdown_pct": 15.39027311917601
+      },
+      "source_sha256": "1c8679a6775403dd7f21ec8417ebc4bc4983439dfb1fba140be6fc4b8db676a9"
+    }
+  ],
+  "higher_execution_assumption_case": {
+    "asset": "ETH",
+    "name": "突破信号收盘价：不利极值假设发生于入场前",
+    "source": "docs/verification/eth-intrabar-confirmation-20260913/results.json",
+    "pointer": "/results/close_touch_1/report",
+    "period": [
+      "2020-09-10",
+      "2026-09-10"
+    ],
+    "timeframe": "15m",
+    "strategy": "trend_cloud_intrabar_confirmation_v1",
+    "parameters": {
+      "activation_pct": 2,
+      "center_length": 55,
+      "chase_mult": 2,
+      "confirmation_level": 1,
+      "entry_bar_assumption": 1,
+      "giveback_pct": 50,
+      "initial_stop_pct": 1,
+      "max_wait_bars": 0,
+      "price_tick": 0.01,
+      "trigger_mult": 0.4,
+      "width_length": 31,
+      "reverse_exit": true,
+      "protection_update": "15m close; next interval effective"
+    },
+    "run_id": "2ec8d198b50e0416978cdcb6510031cd",
+    "metrics": {
+      "return_pct": 79500.53694194573,
+      "total_trades": 9277,
+      "wins": 2547,
+      "losses": 6729,
+      "breakeven": 1,
+      "win_rate": 27.45499622722863,
+      "max_drawdown_pct": 28.707656784075247
+    },
+    "classification": "execution_assumption_sensitivity; not the later conservative baseline",
+    "source_sha256": "772b37d620446c5b2f22e12664aeb629d028e30a12d39c4d4aeda69dfdc8a033"
+  },
+  "raw_candidate_scan": "scan-candidates.json",
+  "checks": "All selected counts and win-rate denominators checked against saved metrics; cross-market results use r2 final native data revision."
+}

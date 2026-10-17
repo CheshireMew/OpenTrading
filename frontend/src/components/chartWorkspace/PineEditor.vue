@@ -5,6 +5,8 @@
 import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import * as monaco from 'monaco-editor/editor/editor.api.js'
 import EditorWorker from 'monaco-editor/editor/editor.worker.js?worker'
+import i18n from '@/i18n'
+import { messageText } from '@/modules/chartWorkspace/locale'
 const props=defineProps<{modelValue:string;dark:boolean;error?:{message:string;line?:number;column?:number}|null}>()
 const emit=defineEmits<{ 'update:modelValue':[string]; run:[]; save:[] }>()
 const host=ref<HTMLElement>()
@@ -31,8 +33,8 @@ onMounted(()=>{
 })
 watch(()=>props.modelValue,value=>{if(editor&&editor.getValue()!==value){changing=true;editor.setValue(value);changing=false}})
 watch(()=>props.dark,value=>monaco.editor.setTheme(value?'vs-dark':'vs'))
-watch(()=>props.error,error=>{
-  if(model)monaco.editor.setModelMarkers(model,'pine',error?[{severity:monaco.MarkerSeverity.Error,message:error.message,
+watch(()=>[props.error,i18n.global.locale.value] as const,([error])=>{
+  if(model)monaco.editor.setModelMarkers(model,'pine',error?[{severity:monaco.MarkerSeverity.Error,message:messageText(error.message),
     startLineNumber:error.line??1,endLineNumber:error.line??1,startColumn:error.column??1,endColumn:(error.column??1)+1}]:[])
 })
 onBeforeUnmount(()=>{editor?.dispose();model?.dispose()})

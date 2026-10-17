@@ -1,0 +1,26 @@
+{
+  "label": "087-before-intrabar-entry",
+  "created_at": "2026-09-13T00:00:15.150212+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "26ca6ade398a9ebe0e43edcf9f318f766803dc98324b3dcd658768528f9f5731",
+      "bytes": 17159
+    },
+    {
+      "path": "strategies/trend_cloud_signal_confirmation_v1.py",
+      "sha256": "66424217f7b9a02aef5c79a4704a8c2351ceeecf802278bbac279a4b5146ee03",
+      "bytes": 7078
+    },
+    {
+      "path": "test/test_cloud_signal_confirmation.py",
+      "sha256": "74d8df950c519d718b01746bd6813cac6086faf3d30968b8478789e56102355b",
+      "bytes": 4516
+    },
+    {
+      "path": "test/test_local_backtest_engine.py",
+      "sha256": "cc86be5af88d7fd27344acdcb65f30a32cf8a4cac85aa3465d2b6f5dcf571bc1",
+      "bytes": 8282
+    }
+  ]
+}

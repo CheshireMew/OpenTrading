@@ -1,0 +1,101 @@
+{
+  "label": "075-research-workflow-complete",
+  "created_at": "2026-09-12T10:13:40.854135+00:00",
+  "files": [
+    {
+      "path": ".heimdall_runtime/research-workflow-audit-20260912/smoke-verification.json",
+      "sha256": "ece9aa557e8c3d6b4ad5557e1eec27daa98d72156d56e86a87d414c936afa0e7",
+      "bytes": 378
+    },
+    {
+      "path": ".heimdall_runtime/research-workflow-audit-20260912/verification.json",
+      "sha256": "a57e6cd867620c0549e0cfd684040572764a178947aea8580536af45719490b1",
+      "bytes": 2904
+    },
+    {
+      "path": "app/contracts/research_study.py",
+      "sha256": "3f8f75f057de5835b0c765e1a04073f011e44e6e659c57a4e4cb304c9b932739",
+      "bytes": 5061
+    },
+    {
+      "path": "app/infra/research_files.py",
+      "sha256": "a8685b5c57dbb229e6c191fadb5ffe97a49c34aa0f18d60b8882edcb4620a67f",
+      "bytes": 1946
+    },
+    {
+      "path": "app/services/local_backtest_service.py",
+      "sha256": "36014f53f648c90fafce392a16f319288b7d0d8c82f034f849241f26ba2867f5",
+      "bytes": 11107
+    },
+    {
+      "path": "app/services/research_catalog.py",
+      "sha256": "24672f251cedc1cc8dea7c1c4525c27268964c2f2f5dc0256bee6f56f16a6e20",
+      "bytes": 7631
+    },
+    {
+      "path": "app/services/research_comparison.py",
+      "sha256": "bc52aee122125c04f84936660dcc683df2202b1e686d0f99991eaaf83123fa16",
+      "bytes": 5693
+    },
+    {
+      "path": "app/services/research_study_service.py",
+      "sha256": "dd63937e33a8a17b83b7caacc9bf65a20c33bf65b45fa8cc90697c57c663f1c8",
+      "bytes": 20988
+    },
+    {
+      "path": "docs/LOCAL_BACKTESTS.md",
+      "sha256": "a28e6eb62a2bf102272b38034d3b7b3a0eefd0d773084aca6011fa80f91652a9",
+      "bytes": 20110
+    },
+    {
+      "path": "docs/RESEARCH_WORKFLOWS.md",
+      "sha256": "05695fc3edf5473f0fe74115c1ad677367e6e61cb3afdb8afa10389967123e37",
+      "bytes": 7670
+    },
+    {
+      "path": "docs/STRATEGY_RESEARCH.md",
+      "sha256": "6925f367faaf4815bc4bb70d74ea4bead12e15798fe09406dd150d82ac4730f3",
+      "bytes": 10704
+    },
+    {
+      "path": "docs/STRATEGY_RESEARCH_RETROSPECTIVE_20260912.md",
+      "sha256": "c3d1dcdb9c1b4482a045316bc328b36794839a2f6ebbf27bb676c0a7751929e7",
+      "bytes": 8360
+    },
+    {
+      "path": "README.md",
+      "sha256": "787fc7c681f35611491ebc266d25b6f61c889b19081e30c384dde180a6ff0819",
+      "bytes": 8037
+    },
+    {
+      "path": "scripts/local_backtest_cli.py",
+      "sha256": "f0be99288de22b9d912cd19145dafb4618d212612dd6a3e62b3cf7dcfc22f05f",
+      "bytes": 6820
+    },
+    {
+      "path": "scripts/local_backtest_worker.py",
+      "sha256": "5764063a97c7bd7756ef8945807e41800a783d85147784222cbba1ae98a37f60",
+      "bytes": 5795
+    },
+    {
+      "path": "scripts/research_catalog_cli.py",
+      "sha256": "b94425ad69777cc1acd708328f32b8dadd5004a4f43923d987fefb434ae51866",
+      "bytes": 1110
+    },
+    {
+      "path": "scripts/research_cli.py",
+      "sha256": "ec9db5a68d2ecc3011cd1cb673078b3d610a107786ff8f0caa2a192be11dec7f",
+      "bytes": 7757
+    },
+    {
+      "path": "scripts/research_study_cli.py",
+      "sha256": "6b54a2ddb172429c1f4ad88646ff63ca66fa3e198293727d464921fdc701a2ab",
+      "bytes": 4442
+    },
+    {
+      "path": "test/test_research_studies.py",
+      "sha256": "e2ce853fdacf01217e239fb847d2d5d581f62c154aea666b35b38e8657570549",
+      "bytes": 15029
+    }
+  ]
+}

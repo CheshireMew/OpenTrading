@@ -16,7 +16,6 @@ if TYPE_CHECKING:
     from app.infra.persistence.runtime_status_repository import RuntimeStatusRepository
     from app.infra.llm_client import LLMClientFactory
     from app.services.currency_service import CurrencyRateService
-    from app.services.fred_api_config_service import FredApiConfigService
     from app.services.llm_config_service import LlmConfigService
     from app.services.market.binance_market_intel_service import BinanceMarketIntelService
     from app.services.market.binance_market_snapshot_service import BinanceMarketSnapshotService
@@ -25,6 +24,7 @@ if TYPE_CHECKING:
     from app.services.market.binance_web3_tokens import BinanceWeb3TokenService
     from app.services.market.exchange_gateway import ExchangeGateway
     from app.services.market.index_data_service import IndexDataService
+    from app.services.market.equity_catalog_service import EquityCatalogService
     from app.services.market.indicator_service import IndicatorService
     from app.services.market.insight_app_service import MarketInsightAppService
     from app.services.market.market_data_service import MarketDataService
@@ -84,7 +84,6 @@ class IndicatorRuntimeServices:
 class SystemRuntimeServices:
     currency_rates: "CurrencyRateService"
     llm_config: "LlmConfigService"
-    fred_config: "FredApiConfigService"
     llm_clients: "LLMClientFactory | None" = None
 
 
@@ -107,6 +106,7 @@ class MarketRuntimeServices:
     sentiment_client: "SentimentApiClient"
     sentiment_repository: "SentimentRepository"
     sentiment: "SentimentService"
+    equity_catalog: "EquityCatalogService | None" = None
 
 
 @dataclass(slots=True)
@@ -167,6 +167,8 @@ class AppRuntimeServices:
         close_actions = []
         if self.api is not None:
             close_actions.append(self.api.market.binance_intel.shutdown())
+            if self.api.market.equity_catalog is not None:
+                close_actions.append(self.api.market.equity_catalog.aclose())
             if self.api.research_alerts is not None:
                 close_actions.append(self.api.research_alerts.shutdown())
             if self.api.trade_signal_evaluations is not None:
@@ -238,7 +240,6 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
         from app.infra.db.schema_runtime import verify_database_schema
         from app.infra.llm_client import LLMClientFactory
         from app.services.currency_service import CurrencyRateService
-        from app.services.fred_api_config_service import FredApiConfigService
         from app.services.llm_config_service import LlmConfigService
         from app.services.market.binance_api_support import BinanceApiSupport
         from app.services.market.binance_market_intel_service import BinanceMarketIntelService
@@ -247,6 +248,7 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
         from app.services.market.binance_web3_tokens import BinanceWeb3TokenService
         from app.services.market.exchange_gateway import ExchangeGateway
         from app.services.market.index_data_service import IndexDataService
+        from app.services.market.equity_catalog_service import EquityCatalogService
         from app.services.market.insight_app_service import MarketInsightAppService
         from app.services.market.market_data_service import MarketDataService
         from app.services.market.query_app_service import MarketQueryAppService
@@ -279,7 +281,6 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
         currency_rates = CurrencyRateService()
         llm_config = LlmConfigService()
         llm_clients = LLMClientFactory(llm_config)
-        fred_config = FredApiConfigService()
         binance_research_store = BinanceMarketResearchStore(database_runtime=database_runtime)
         binance_intel = BinanceMarketIntelService(
             research_store=binance_research_store,
@@ -393,7 +394,6 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
             system=SystemRuntimeServices(
                 currency_rates=currency_rates,
                 llm_config=llm_config,
-                fred_config=fred_config,
                 llm_clients=llm_clients,
             ),
             market=MarketRuntimeServices(
@@ -414,6 +414,7 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
                 sentiment_client=sentiment_client,
                 sentiment_repository=sentiment_repository,
                 sentiment=sentiment,
+                equity_catalog=EquityCatalogService(cache_service=cache_service),
             ),
             tools=ToolRuntimeServices(
                 dca=dca,

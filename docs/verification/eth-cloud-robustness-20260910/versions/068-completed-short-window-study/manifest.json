@@ -1,0 +1,116 @@
+{
+  "label": "068-completed-short-window-study",
+  "created_at": "2026-09-12T08:39:41.190767+00:00",
+  "files": [
+    {
+      "path": "app/domain/cloud_window_research_v1.py",
+      "sha256": "560ed60e150ff01a28fcab153987b843bb82f5b7f5f542668fabe6cc2c027052",
+      "bytes": 13624
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/cloud-short-window.html",
+      "sha256": "1b90e74d832bb2e1a2d445cfa7bf09521ed2d94cb99500a7e195a93945081181",
+      "bytes": 3990239
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/CONCLUSIONS.md",
+      "sha256": "050b07b48eb71f7a334fdb68307d791ccfb13c85302e38716349bf41258c3830",
+      "bytes": 4022
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/data.json",
+      "sha256": "bcc020d95adf4554056a6d7fad212770c16a842c65e20c0e377cb1aa106b3b2b",
+      "bytes": 3286
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/early-results.json",
+      "sha256": "821f115a25d5426b0a6704c7b6f8d07dd9479f6aff825989fb216e4e262007bc",
+      "bytes": 8300
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/findings.json",
+      "sha256": "97ce7257c84b4c16afb59e913ce8bdd8f371d98fe4beddb71c3f5d5a4948a777",
+      "bytes": 6039
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/method-lock.json",
+      "sha256": "4e71ec7f73886b8fca0e27046afd2819224e7fab72a3fc72beb6fdbb604cf33b",
+      "bytes": 1357
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/original-engine-comparison.json",
+      "sha256": "f4a9ac0128ffa389ffc4fada8bdb81315f55727c6181d62962a9de54d88351a4",
+      "bytes": 302
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/past-scores-btc.json",
+      "sha256": "16069b401b34a5174200ecf53b77bc5a9fea37d712fecd42ea2ddf53c18e4b29",
+      "bytes": 3300556
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/past-scores-eth.json",
+      "sha256": "11aed5d88aa77094027ea4f4da464887a6802d22bbd5232542e1b6faa26f1d00",
+      "bytes": 3289059
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/past-scores-paxg.json",
+      "sha256": "01b75e4c86c3c9b285ed658651f8b9fee2a87be6da597147dfbff51b484d6ce1",
+      "bytes": 3312618
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/past-scores-zec.json",
+      "sha256": "7225ea242811eca67a71f8dbbcd36dc245195de05a9ac4a0222f487b37fa192d",
+      "bytes": 3302813
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/plan.json",
+      "sha256": "13e4c479c084fb777801167db80fd1ff17c8ba451759785aeaa6cd4c240bf724",
+      "bytes": 11165
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/results.json",
+      "sha256": "fd0c952836fe0c702b98dc827f238e2ce1c5cf46484f24c2c0a2a20b1e55d510",
+      "bytes": 6154630
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/RESULTS.md",
+      "sha256": "c689c8a2d060d59d79db905a122369081b2434d025eb9cc269d9ce4b9d1094a7",
+      "bytes": 6085
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/RUNBOOK.md",
+      "sha256": "9fa6f97d82433796cde47b0f3cc71a2ef3a1fafba6f2311955c1cf289e6d5bd3",
+      "bytes": 2931
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/selection-lock.json",
+      "sha256": "d9905e4c86fed498d34d03d97c9ee7ff5b712cc17338dbd01861dd23fab74439",
+      "bytes": 1578034
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/ui-verification.json",
+      "sha256": "f51a1689b83de171714cf27d9189aa137bcb06ceaedd487c0a38bd95540375ab",
+      "bytes": 807
+    },
+    {
+      "path": "docs/verification/cloud-short-window-20260912/verification.json",
+      "sha256": "0adc447d7459cba01bf073cdf8951bdd6669942b3a1dc6921c4483dc78b75334",
+      "bytes": 9026
+    },
+    {
+      "path": "scripts/cloud_short_window_study.py",
+      "sha256": "2065fe2b941e8991f390fce0baa1a5a282fa94ccce7e40ed95fa97f88f28ec8a",
+      "bytes": 20363
+    },
+    {
+      "path": "scripts/report_cloud_short_window.py",
+      "sha256": "02c35c7171200d5e3ac13c8e32140dee07d7cb5021a64ad7e586e4e222949a09",
+      "bytes": 24012
+    },
+    {
+      "path": "test/test_cloud_short_window.py",
+      "sha256": "84d073c006206c9d178dd8a2faf978dd1d4aa2ac820330b5b9f1653f565ae6c4",
+      "bytes": 4205
+    }
+  ]
+}

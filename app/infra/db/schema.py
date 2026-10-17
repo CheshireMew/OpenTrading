@@ -116,9 +116,9 @@ class MarketIndicatorMeta(Base):
     """市场指标元数据配置表"""
     __tablename__ = 'market_indicator_meta'
     
-    id = Column(String(50), primary_key=True)  # 指标唯一标识，如 'US10Y', 'FearGreedIndex'
+    id = Column(String(50), primary_key=True)  # 指标唯一标识，如 'FEAR_GREED'
     name = Column(String(100), nullable=False)  # 展示名称
-    category = Column(String(50), nullable=False)  # 所属维度: Macro, Onchain, Sentiment, Tech
+    category = Column(String(50), nullable=False)  # 所属维度: Onchain, Sentiment, Tech
     unit = Column(String(20), nullable=True)  # 单位: %, USD, EH/s等
     frequency = Column(String(20), default='daily')  # 更新频率: daily, hourly
     description = Column(Text, nullable=True)  # 指标描述说明

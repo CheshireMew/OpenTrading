@@ -1,0 +1,51 @@
+{
+  "label": "109_eth_no_reverse_completed",
+  "created_at": "2026-09-13T10:05:55.965723+00:00",
+  "files": [
+    {
+      "path": "docs/verification/eth-no-reverse-20260913/answers.json",
+      "sha256": "2774e6ec2d78ea12b961cc6003ca908182753d303f25dba0192dbcc8805e8729",
+      "bytes": 413
+    },
+    {
+      "path": "docs/verification/eth-no-reverse-20260913/checks-reused.json",
+      "sha256": "97d6d7511793f984ce97a06f7b58644502606c32124dcf73291e925c62391364",
+      "bytes": 683
+    },
+    {
+      "path": "docs/verification/eth-no-reverse-20260913/completion.json",
+      "sha256": "1e75a7ce3cfaf9e897e415847a96bfb8ff80b360f979d24d4d06d0737ede9dc2",
+      "bytes": 1014
+    },
+    {
+      "path": "docs/verification/eth-no-reverse-20260913/plan.json",
+      "sha256": "f23e0663f447e06ffcebebc1278d0e11b05e729008d55be4d94cfa462764124b",
+      "bytes": 2226
+    },
+    {
+      "path": "docs/verification/eth-no-reverse-20260913/README.md",
+      "sha256": "10b6561d3427f1ebedfcd5bbd8e0f11d6adde7e543c0c22c72fdfcd96a7bbc54",
+      "bytes": 1844
+    },
+    {
+      "path": "docs/verification/eth-no-reverse-20260913/results.json",
+      "sha256": "ed090f2ae3cb6fc02306c4faaf3258059c518bf22950666c700823399c0319f7",
+      "bytes": 10222
+    },
+    {
+      "path": "docs/verification/eth-no-reverse-20260913/study.json",
+      "sha256": "c61a5764715cc5678ad46d39ec2676a5698076dfc9cb907e78d09bf5b8259f53",
+      "bytes": 626
+    },
+    {
+      "path": "docs/verification/eth-no-reverse-20260913/verification.json",
+      "sha256": "0e49a006efaed81c9180a3113b8426009b171aa87a619ff733af70f0dfe202ec",
+      "bytes": 292
+    },
+    {
+      "path": "scripts/eth_no_reverse_study.py",
+      "sha256": "b77b35647b2e0d35cdf3d04d2c36c47c794b4d69fa97f79401090cb4ddf392b4",
+      "bytes": 9917
+    }
+  ]
+}

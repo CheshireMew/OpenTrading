@@ -1,0 +1,1384 @@
+{
+  "created_at": "2026-09-13T15:28:46.173208+00:00",
+  "question": "BNB指定旧参数加最近优化是否改善；同时比较ETH优化参数在BNB及ETH上的表现",
+  "scope": "只计算指定三组，不重新搜索最优参数；ETH六年已有结果直接复用",
+  "rows": [
+    {
+      "name": "BNB 原版，同一5分钟行情重算",
+      "run_id": "655a8f81a53e038d5e994b4e504e5683",
+      "batch_id": "c03dce947e2747e4887e9560518a2cc8",
+      "config": {
+        "data_gap_policy": "observed_bars",
+        "end": "2026-09-10T00:00:00Z",
+        "execution_timeframe": "5m",
+        "initial_cash": 10000.0,
+        "intrabar_profit_protection": false,
+        "parameters": {
+          "activation_pct": 2,
+          "center_length": 55,
+          "chase_mult": 1.5,
+          "giveback_pct": 50,
+          "initial_stop_pct": 2,
+          "initial_stop_width": 0,
+          "record_indicators": true,
+          "trigger_mult": 0.8,
+          "width_length": 50
+        },
+        "position_pct": 100.0,
+        "start": "2018-09-10T00:00:00Z",
+        "strategy": "trend_cloud_parameters_v4",
+        "symbol": "BNB/USDT",
+        "timeframe": "15m"
+      },
+      "report": {
+        "initial_cash": 10000.0,
+        "final_equity": 290279.0088846119,
+        "profit": 280279.0088846119,
+        "return_pct": 2802.790088846119,
+        "max_drawdown_pct": 69.04194576648408,
+        "total_trades": 8216,
+        "wins": 2842,
+        "losses": 5355,
+        "breakeven": 19,
+        "win_rate": 34.59104186952288,
+        "average_return_pct": 0.0615295876719817,
+        "payoff_ratio": 1.9639392386117225,
+        "profit_factor": 1.0422997789233455,
+        "average_duration_minutes": 385.66699123661147,
+        "ambiguous_trades": 0,
+        "notes": [
+          "基于所选价格数据、不计成本的多空策略模拟",
+          "最大回撤按每根收盘权益计算",
+          "无亏损时利润因子为空；无交易时胜率为空",
+          "K 线内退出的持仓时间按所属 K 线开盘时间近似",
+          "交易信号保持原周期；匹配的细周期行情逐根成交。细周期缺失或不匹配时回退原周期，已计数。保护仅在选定周期收盘更新，下一根生效。"
+        ]
+      },
+      "metadata": {
+        "batch_seed_run": "657b2b8086588a254442b82b128d34df",
+        "batch_snapshot_group": "09cf62e047cc667c771fda88887b72a5b3fad50e59231f327607c895d83358ef",
+        "disclaimer": "基于所选价格数据、不计成本的多空策略模拟",
+        "engine_code_hash": "ccdd04ba62b5e821a556d215da2d129087bbe461835c5aeda83d7e54a8d5d9e2",
+        "environment": {
+          "dependencies": {
+            "TA-Lib": "0.6.8",
+            "numpy": "2.4.4",
+            "pandas": "2.3.3"
+          },
+          "engine": "8",
+          "python": "3.12.10"
+        },
+        "parameter_sweep_id": "c03dce947e2747e4887e9560518a2cc8",
+        "source": {
+          "exchange": "binance",
+          "price_type": "spot",
+          "storage_symbol": "BNB/USDT",
+          "symbol": "BNB/USDT"
+        },
+        "strategy": {
+          "api_version": "1",
+          "description": "逐项比较中心周期、宽度、突破门槛、追价距离、利润保护和初始止损；默认值复现此前收益第一名。",
+          "error": null,
+          "id": "trend_cloud_parameters_v4",
+          "name": "EMA55 通道参数研究 v4（研究用）",
+          "parameters": {
+            "activation_pct": {
+              "default": 2,
+              "label": "浮盈多少 % 启动保护，0 关闭",
+              "max": 20.0,
+              "min": 0.0,
+              "type": "float"
+            },
+            "center_length": {
+              "default": 55,
+              "label": "中心线 EMA 周期",
+              "max": 200.0,
+              "min": 2.0,
+              "type": "int"
+            },
+            "chase_mult": {
+              "default": 2,
+              "label": "离中心最多几倍 W 可入场，0 不限制",
+              "max": 10.0,
+              "min": 0.0,
+              "type": "float"
+            },
+            "giveback_pct": {
+              "default": 50,
+              "label": "最高浮盈允许回吐 %",
+              "max": 99.0,
+              "min": 1.0,
+              "type": "float"
+            },
+            "initial_stop_pct": {
+              "default": 0,
+              "label": "初始固定止损 %，0 关闭",
+              "max": 20.0,
+              "min": 0.0,
+              "type": "float"
+            },
+            "initial_stop_width": {
+              "default": 0,
+              "label": "初始振幅止损 / W，0 关闭；与固定止损二选一",
+              "max": 10.0,
+              "min": 0.0,
+              "type": "float"
+            },
+            "record_indicators": {
+              "default": true,
+              "label": "保存云带和入场条件",
+              "max": null,
+              "min": null,
+              "type": "bool"
+            },
+            "trigger_mult": {
+              "default": 0.8,
+              "label": "突破门槛 / 宽度 W",
+              "max": 5.0,
+              "min": 0.1,
+              "type": "float"
+            },
+            "width_length": {
+              "default": 31,
+              "label": "高低差 EMA 周期",
+              "max": 100.0,
+              "min": 2.0,
+              "type": "int"
+            }
+          },
+          "warmup_bars": 650
+        },
+        "strategy_hash": "518ec7480dc4e5b8fd57d6804dd74bde88103f3c4c847a51028d2d5ef309173e",
+        "data_hash": "9b901188a0d1711d2943b2158788e5be0029248f555c2361418c3e42dcaa0f9a",
+        "execution_data_hash": "e908026480f1ef76e66d0dd4ad99257fb87da2f741fe1bcec18c7d272906f95c",
+        "data_start": 1535952600000,
+        "data_end": 1788998400000,
+        "candle_count": 280850,
+        "warmup_bars": 650,
+        "data_gap_policy": "observed_bars",
+        "history_gaps": [
+          {
+            "start": 1539928800000,
+            "end": 1539941400000,
+            "missing_bars": 14
+          },
+          {
+            "start": 1542160800000,
+            "end": 1542186000000,
+            "missing_bars": 28
+          },
+          {
+            "start": 1552356000000,
+            "end": 1552377600000,
+            "missing_bars": 24
+          },
+          {
+            "start": 1557889200000,
+            "end": 1557925200000,
+            "missing_bars": 40
+          },
+          {
+            "start": 1559942100000,
+            "end": 1559945700000,
+            "missing_bars": 4
+          },
+          {
+            "start": 1565834400000,
+            "end": 1565863200000,
+            "missing_bars": 32
+          },
+          {
+            "start": 1573610400000,
+            "end": 1573618500000,
+            "missing_bars": 9
+          },
+          {
+            "start": 1574647200000,
+            "end": 1574654400000,
+            "missing_bars": 8
+          },
+          {
+            "start": 1581213600000,
+            "end": 1581217200000,
+            "missing_bars": 4
+          },
+          {
+            "start": 1582112700000,
+            "end": 1582133400000,
+            "missing_bars": 23
+          },
+          {
+            "start": 1583314200000,
+            "end": 1583321400000,
+            "missing_bars": 8
+          },
+          {
+            "start": 1587780000000,
+            "end": 1587789000000,
+            "missing_bars": 10
+          },
+          {
+            "start": 1593309600000,
+            "end": 1593322200000,
+            "missing_bars": 14
+          },
+          {
+            "start": 1606716000000,
+            "end": 1606719600000,
+            "missing_bars": 4
+          },
+          {
+            "start": 1608559200000,
+            "end": 1608573600000,
+            "missing_bars": 16
+          },
+          {
+            "start": 1608861600000,
+            "end": 1608865200000,
+            "missing_bars": 4
+          },
+          {
+            "start": 1613015100000,
+            "end": 1613019600000,
+            "missing_bars": 5
+          },
+          {
+            "start": 1614996000000,
+            "end": 1615001400000,
+            "missing_bars": 6
+          },
+          {
+            "start": 1618884000000,
+            "end": 1618893000000,
+            "missing_bars": 10
+          },
+          {
+            "start": 1619324100000,
+            "end": 1619340300000,
+            "missing_bars": 18
+          },
+          {
+            "start": 1628820000000,
+            "end": 1628836200000,
+            "missing_bars": 18
+          },
+          {
+            "start": 1632898800000,
+            "end": 1632906000000,
+            "missing_bars": 8
+          },
+          {
+            "start": 1679661900000,
+            "end": 1679666400000,
+            "missing_bars": 5
+          }
+        ],
+        "history_gap_note": "保留原始时间空档，不补造K线。指标按实际观测的K线更新；未成交信号和持仓延续至下一条实际行情，止损跳价按下一开盘处理。无法判断空档内部价格与止损触发。",
+        "execution_alignment_hash": "dc2fa2c77495813fcffd04e5663a2ee0f8ca1059d746ba40a7ed75b1c3d6b8ac",
+        "execution_matched_candles": 280193,
+        "execution_fallback_candles": 7,
+        "result_hash": "f515dbe87738b9bbbd5ff9a1966dab4d902816af80a7b1c8ddf53f7ade9df870"
+      },
+      "path": "D:\\Code\\Heimdall\\.heimdall_runtime\\local_backtests\\655a8f81a53e038d5e994b4e504e5683",
+      "chart": "http://127.0.0.1:4173/research/backtests?run=655a8f81a53e038d5e994b4e504e5683&view=chart"
+    },
+    {
+      "name": "BNB 原参数＋盘中确认＋更快利润保护",
+      "run_id": "657b2b8086588a254442b82b128d34df",
+      "batch_id": "dc72b9d54865409d8688e51ddd258f16",
+      "config": {
+        "data_gap_policy": "observed_bars",
+        "end": "2026-09-10T00:00:00Z",
+        "execution_timeframe": "5m",
+        "initial_cash": 10000.0,
+        "intrabar_profit_protection": true,
+        "parameters": {
+          "activation_pct": 2,
+          "center_length": 55,
+          "chase_mult": 1.5,
+          "confirmation_level": 3,
+          "direction_filter": false,
+          "entry_bar_assumption": 0,
+          "giveback_pct": 50,
+          "initial_stop_pct": 2,
+          "max_wait_bars": 2,
+          "price_tick": 0.01,
+          "stop_cap_pct": 2,
+          "stop_floor_pct": 0.5,
+          "stop_method": 0,
+          "stop_mult": 1.5,
+          "stop_reentry": false,
+          "trigger_mult": 0.8,
+          "width_length": 50
+        },
+        "position_pct": 100.0,
+        "start": "2018-09-10T00:00:00Z",
+        "strategy": "trend_cloud_intrabar_methods_v3",
+        "symbol": "BNB/USDT",
+        "timeframe": "15m"
+      },
+      "report": {
+        "initial_cash": 10000.0,
+        "final_equity": 419955.10153515864,
+        "profit": 409955.10153515864,
+        "return_pct": 4099.551015351587,
+        "max_drawdown_pct": 68.1863518343389,
+        "total_trades": 7903,
+        "wins": 2777,
+        "losses": 5123,
+        "breakeven": 3,
+        "win_rate": 35.13855497912185,
+        "average_return_pct": 0.06760890637814376,
+        "payoff_ratio": 1.9441770916287406,
+        "profit_factor": 1.053870736570957,
+        "average_duration_minutes": 387.97418701758824,
+        "ambiguous_trades": 5,
+        "notes": [
+          "基于所选价格数据、不计成本的多空策略模拟",
+          "最大回撤按每根收盘权益计算",
+          "无亏损时利润因子为空；无交易时胜率为空",
+          "K 线内退出的持仓时间按所属 K 线开盘时间近似",
+          "盘中突破委托仅用前一收盘已知价位；同根入场与止损先后不明的交易已标记，并按保存的 ambiguity_policy 处理",
+          "交易信号保持原周期；匹配的细周期行情逐根成交。细周期缺失或不匹配时回退原周期，已计数。保护仅在选定周期收盘更新，下一根生效。"
+        ]
+      },
+      "metadata": {
+        "batch_snapshot_group": "27283c45dc14976d41f40e433daf19e2f7eb3e3c073327f6e41b63b1a55c61e3",
+        "disclaimer": "基于所选价格数据、不计成本的多空策略模拟",
+        "engine_code_hash": "ccdd04ba62b5e821a556d215da2d129087bbe461835c5aeda83d7e54a8d5d9e2",
+        "environment": {
+          "dependencies": {
+            "TA-Lib": "0.6.8",
+            "numpy": "2.4.4",
+            "pandas": "2.3.3"
+          },
+          "engine": "8",
+          "python": "3.12.10"
+        },
+        "parameter_sweep_id": "dc72b9d54865409d8688e51ddd258f16",
+        "source": {
+          "exchange": "binance",
+          "price_type": "spot",
+          "storage_symbol": "BNB/USDT",
+          "symbol": "BNB/USDT"
+        },
+        "strategy": {
+          "api_version": "1",
+          "description": "原信号收盘后记录价位，从下一根开始盘中突破即入场；反向重置，一次消费。",
+          "error": null,
+          "id": "trend_cloud_intrabar_methods_v3",
+          "name": "EMA通道盘中确认改法 v3",
+          "parameters": {
+            "activation_pct": {
+              "default": 2,
+              "label": "利润保护启动 %",
+              "max": 20.0,
+              "min": 0.0,
+              "type": "float"
+            },
+            "center_length": {
+              "default": 55,
+              "label": "中心 EMA",
+              "max": 200.0,
+              "min": 2.0,
+              "type": "int"
+            },
+            "chase_mult": {
+              "default": 2,
+              "label": "追价上限 / W",
+              "max": 10.0,
+              "min": 0.0,
+              "type": "float"
+            },
+            "confirmation_level": {
+              "default": 1,
+              "label": "1 信号收盘；2 最高最低；3 实体",
+              "max": 3.0,
+              "min": 1.0,
+              "type": "int"
+            },
+            "direction_filter": {
+              "default": false,
+              "label": "仅顺过去6根中心线方向开仓",
+              "max": null,
+              "min": null,
+              "type": "bool"
+            },
+            "entry_bar_assumption": {
+              "default": 0,
+              "label": "先后不明：0 算入场后止损；1 算不利极值发生在入场前",
+              "max": 1.0,
+              "min": 0.0,
+              "type": "int"
+            },
+            "giveback_pct": {
+              "default": 50,
+              "label": "最高浮盈回吐 %",
+              "max": 99.0,
+              "min": 1.0,
+              "type": "float"
+            },
+            "initial_stop_pct": {
+              "default": 1,
+              "label": "初始止损 %，0 关闭",
+              "max": 20.0,
+              "min": 0.0,
+              "type": "float"
+            },
+            "max_wait_bars": {
+              "default": 0,
+              "label": "0 不限；2 仅信号后两根",
+              "max": 1000.0,
+              "min": 0.0,
+              "type": "int"
+            },
+            "price_tick": {
+              "default": 0.01,
+              "label": "突破一个价格单位",
+              "max": 100.0,
+              "min": 1e-06,
+              "type": "float"
+            },
+            "stop_cap_pct": {
+              "default": 2,
+              "label": "波动止损上限 %",
+              "max": 20.0,
+              "min": 0.01,
+              "type": "float"
+            },
+            "stop_floor_pct": {
+              "default": 0.5,
+              "label": "波动止损下限 %",
+              "max": 10.0,
+              "min": 0.01,
+              "type": "float"
+            },
+            "stop_method": {
+              "default": 0,
+              "label": "0固定；1振幅EMA；2 ATR14",
+              "max": 2.0,
+              "min": 0.0,
+              "type": "int"
+            },
+            "stop_mult": {
+              "default": 1.5,
+              "label": "波动止损倍数",
+              "max": 10.0,
+              "min": 0.1,
+              "type": "float"
+            },
+            "stop_reentry": {
+              "default": false,
+              "label": "止损后突破止损K线极值，最多重进一次",
+              "max": null,
+              "min": null,
+              "type": "bool"
+            },
+            "trigger_mult": {
+              "default": 0.4,
+              "label": "原突破门槛 / W",
+              "max": 5.0,
+              "min": 0.1,
+              "type": "float"
+            },
+            "width_length": {
+              "default": 31,
+              "label": "高低差 EMA",
+              "max": 100.0,
+              "min": 2.0,
+              "type": "int"
+            }
+          },
+          "warmup_bars": 650
+        },
+        "strategy_hash": "0ea141561ca6d49e4a77430e3fd3cd3a751fd031ec8a98759439b2e1c7cd2cb0",
+        "data_hash": "9b901188a0d1711d2943b2158788e5be0029248f555c2361418c3e42dcaa0f9a",
+        "data_start": 1535952600000,
+        "data_end": 1788998400000,
+        "candle_count": 280850,
+        "warmup_bars": 650,
+        "data_gap_policy": "observed_bars",
+        "history_gaps": [
+          {
+            "start": 1539928800000,
+            "end": 1539941400000,
+            "missing_bars": 14
+          },
+          {
+            "start": 1542160800000,
+            "end": 1542186000000,
+            "missing_bars": 28
+          },
+          {
+            "start": 1552356000000,
+            "end": 1552377600000,
+            "missing_bars": 24
+          },
+          {
+            "start": 1557889200000,
+            "end": 1557925200000,
+            "missing_bars": 40
+          },
+          {
+            "start": 1559942100000,
+            "end": 1559945700000,
+            "missing_bars": 4
+          },
+          {
+            "start": 1565834400000,
+            "end": 1565863200000,
+            "missing_bars": 32
+          },
+          {
+            "start": 1573610400000,
+            "end": 1573618500000,
+            "missing_bars": 9
+          },
+          {
+            "start": 1574647200000,
+            "end": 1574654400000,
+            "missing_bars": 8
+          },
+          {
+            "start": 1581213600000,
+            "end": 1581217200000,
+            "missing_bars": 4
+          },
+          {
+            "start": 1582112700000,
+            "end": 1582133400000,
+            "missing_bars": 23
+          },
+          {
+            "start": 1583314200000,
+            "end": 1583321400000,
+            "missing_bars": 8
+          },
+          {
+            "start": 1587780000000,
+            "end": 1587789000000,
+            "missing_bars": 10
+          },
+          {
+            "start": 1593309600000,
+            "end": 1593322200000,
+            "missing_bars": 14
+          },
+          {
+            "start": 1606716000000,
+            "end": 1606719600000,
+            "missing_bars": 4
+          },
+          {
+            "start": 1608559200000,
+            "end": 1608573600000,
+            "missing_bars": 16
+          },
+          {
+            "start": 1608861600000,
+            "end": 1608865200000,
+            "missing_bars": 4
+          },
+          {
+            "start": 1613015100000,
+            "end": 1613019600000,
+            "missing_bars": 5
+          },
+          {
+            "start": 1614996000000,
+            "end": 1615001400000,
+            "missing_bars": 6
+          },
+          {
+            "start": 1618884000000,
+            "end": 1618893000000,
+            "missing_bars": 10
+          },
+          {
+            "start": 1619324100000,
+            "end": 1619340300000,
+            "missing_bars": 18
+          },
+          {
+            "start": 1628820000000,
+            "end": 1628836200000,
+            "missing_bars": 18
+          },
+          {
+            "start": 1632898800000,
+            "end": 1632906000000,
+            "missing_bars": 8
+          },
+          {
+            "start": 1679661900000,
+            "end": 1679666400000,
+            "missing_bars": 5
+          }
+        ],
+        "history_gap_note": "保留原始时间空档，不补造K线。指标按实际观测的K线更新；未成交信号和持仓延续至下一条实际行情，止损跳价按下一开盘处理。无法判断空档内部价格与止损触发。",
+        "execution_data_hash": "e908026480f1ef76e66d0dd4ad99257fb87da2f741fe1bcec18c7d272906f95c",
+        "execution_alignment_hash": "dc2fa2c77495813fcffd04e5663a2ee0f8ca1059d746ba40a7ed75b1c3d6b8ac",
+        "execution_matched_candles": 280193,
+        "execution_fallback_candles": 7,
+        "result_hash": "17353bbe0f8ab0760b1e2fa1d91569924dc00206f9f266e131a4d490ad3ed5d2"
+      },
+      "path": "D:\\Code\\Heimdall\\.heimdall_runtime\\local_backtests\\657b2b8086588a254442b82b128d34df",
+      "chart": "http://127.0.0.1:4173/research/backtests?run=657b2b8086588a254442b82b128d34df&view=chart"
+    },
+    {
+      "name": "ETH 优化参数用于 BNB",
+      "run_id": "97b1c416191f1d5a4b5671edc055d7ec",
+      "batch_id": "25dd4b10b8ad4b2eb09318833eb2f692",
+      "config": {
+        "data_gap_policy": "observed_bars",
+        "end": "2026-09-10T00:00:00Z",
+        "execution_timeframe": "5m",
+        "initial_cash": 10000.0,
+        "intrabar_profit_protection": true,
+        "parameters": {
+          "activation_pct": 2,
+          "center_length": 55,
+          "chase_mult": 2,
+          "confirmation_level": 3,
+          "direction_filter": false,
+          "entry_bar_assumption": 0,
+          "giveback_pct": 50,
+          "initial_stop_pct": 1,
+          "max_wait_bars": 2,
+          "price_tick": 0.01,
+          "stop_cap_pct": 2,
+          "stop_floor_pct": 0.5,
+          "stop_method": 0,
+          "stop_mult": 1.5,
+          "stop_reentry": false,
+          "trigger_mult": 0.4,
+          "width_length": 31
+        },
+        "position_pct": 100.0,
+        "start": "2018-09-10T00:00:00Z",
+        "strategy": "trend_cloud_intrabar_methods_v3",
+        "symbol": "BNB/USDT",
+        "timeframe": "15m"
+      },
+      "report": {
+        "initial_cash": 10000.0,
+        "final_equity": 94859.85380729398,
+        "profit": 84859.85380729398,
+        "return_pct": 848.5985380729397,
+        "max_drawdown_pct": 73.15675659489959,
+        "total_trades": 12724,
+        "wins": 3472,
+        "losses": 9238,
+        "breakeven": 14,
+        "win_rate": 27.28701666142722,
+        "average_return_pct": 0.030125204957153803,
+        "payoff_ratio": 2.8457329610106545,
+        "profit_factor": 1.069537220245615,
+        "average_duration_minutes": 254.08047783715813,
+        "ambiguous_trades": 59,
+        "notes": [
+          "基于所选价格数据、不计成本的多空策略模拟",
+          "最大回撤按每根收盘权益计算",
+          "无亏损时利润因子为空；无交易时胜率为空",
+          "K 线内退出的持仓时间按所属 K 线开盘时间近似",
+          "盘中突破委托仅用前一收盘已知价位；同根入场与止损先后不明的交易已标记，并按保存的 ambiguity_policy 处理",
+          "交易信号保持原周期；匹配的细周期行情逐根成交。细周期缺失或不匹配时回退原周期，已计数。保护仅在选定周期收盘更新，下一根生效。"
+        ]
+      },
+      "metadata": {
+        "batch_seed_run": "657b2b8086588a254442b82b128d34df",
+        "batch_snapshot_group": "09cf62e047cc667c771fda88887b72a5b3fad50e59231f327607c895d83358ef",
+        "disclaimer": "基于所选价格数据、不计成本的多空策略模拟",
+        "engine_code_hash": "ccdd04ba62b5e821a556d215da2d129087bbe461835c5aeda83d7e54a8d5d9e2",
+        "environment": {
+          "dependencies": {
+            "TA-Lib": "0.6.8",
+            "numpy": "2.4.4",
+            "pandas": "2.3.3"
+          },
+          "engine": "8",
+          "python": "3.12.10"
+        },
+        "parameter_sweep_id": "25dd4b10b8ad4b2eb09318833eb2f692",
+        "source": {
+          "exchange": "binance",
+          "price_type": "spot",
+          "storage_symbol": "BNB/USDT",
+          "symbol": "BNB/USDT"
+        },
+        "strategy": {
+          "api_version": "1",
+          "description": "原信号收盘后记录价位，从下一根开始盘中突破即入场；反向重置，一次消费。",
+          "error": null,
+          "id": "trend_cloud_intrabar_methods_v3",
+          "name": "EMA通道盘中确认改法 v3",
+          "parameters": {
+            "activation_pct": {
+              "default": 2,
+              "label": "利润保护启动 %",
+              "max": 20.0,
+              "min": 0.0,
+              "type": "float"
+            },
+            "center_length": {
+              "default": 55,
+              "label": "中心 EMA",
+              "max": 200.0,
+              "min": 2.0,
+              "type": "int"
+            },
+            "chase_mult": {
+              "default": 2,
+              "label": "追价上限 / W",
+              "max": 10.0,
+              "min": 0.0,
+              "type": "float"
+            },
+            "confirmation_level": {
+              "default": 1,
+              "label": "1 信号收盘；2 最高最低；3 实体",
+              "max": 3.0,
+              "min": 1.0,
+              "type": "int"
+            },
+            "direction_filter": {
+              "default": false,
+              "label": "仅顺过去6根中心线方向开仓",
+              "max": null,
+              "min": null,
+              "type": "bool"
+            },
+            "entry_bar_assumption": {
+              "default": 0,
+              "label": "先后不明：0 算入场后止损；1 算不利极值发生在入场前",
+              "max": 1.0,
+              "min": 0.0,
+              "type": "int"
+            },
+            "giveback_pct": {
+              "default": 50,
+              "label": "最高浮盈回吐 %",
+              "max": 99.0,
+              "min": 1.0,
+              "type": "float"
+            },
+            "initial_stop_pct": {
+              "default": 1,
+              "label": "初始止损 %，0 关闭",
+              "max": 20.0,
+              "min": 0.0,
+              "type": "float"
+            },
+            "max_wait_bars": {
+              "default": 0,
+              "label": "0 不限；2 仅信号后两根",
+              "max": 1000.0,
+              "min": 0.0,
+              "type": "int"
+            },
+            "price_tick": {
+              "default": 0.01,
+              "label": "突破一个价格单位",
+              "max": 100.0,
+              "min": 1e-06,
+              "type": "float"
+            },
+            "stop_cap_pct": {
+              "default": 2,
+              "label": "波动止损上限 %",
+              "max": 20.0,
+              "min": 0.01,
+              "type": "float"
+            },
+            "stop_floor_pct": {
+              "default": 0.5,
+              "label": "波动止损下限 %",
+              "max": 10.0,
+              "min": 0.01,
+              "type": "float"
+            },
+            "stop_method": {
+              "default": 0,
+              "label": "0固定；1振幅EMA；2 ATR14",
+              "max": 2.0,
+              "min": 0.0,
+              "type": "int"
+            },
+            "stop_mult": {
+              "default": 1.5,
+              "label": "波动止损倍数",
+              "max": 10.0,
+              "min": 0.1,
+              "type": "float"
+            },
+            "stop_reentry": {
+              "default": false,
+              "label": "止损后突破止损K线极值，最多重进一次",
+              "max": null,
+              "min": null,
+              "type": "bool"
+            },
+            "trigger_mult": {
+              "default": 0.4,
+              "label": "原突破门槛 / W",
+              "max": 5.0,
+              "min": 0.1,
+              "type": "float"
+            },
+            "width_length": {
+              "default": 31,
+              "label": "高低差 EMA",
+              "max": 100.0,
+              "min": 2.0,
+              "type": "int"
+            }
+          },
+          "warmup_bars": 650
+        },
+        "strategy_hash": "0ea141561ca6d49e4a77430e3fd3cd3a751fd031ec8a98759439b2e1c7cd2cb0",
+        "data_hash": "9b901188a0d1711d2943b2158788e5be0029248f555c2361418c3e42dcaa0f9a",
+        "execution_data_hash": "e908026480f1ef76e66d0dd4ad99257fb87da2f741fe1bcec18c7d272906f95c",
+        "data_start": 1535952600000,
+        "data_end": 1788998400000,
+        "candle_count": 280850,
+        "warmup_bars": 650,
+        "data_gap_policy": "observed_bars",
+        "history_gaps": [
+          {
+            "start": 1539928800000,
+            "end": 1539941400000,
+            "missing_bars": 14
+          },
+          {
+            "start": 1542160800000,
+            "end": 1542186000000,
+            "missing_bars": 28
+          },
+          {
+            "start": 1552356000000,
+            "end": 1552377600000,
+            "missing_bars": 24
+          },
+          {
+            "start": 1557889200000,
+            "end": 1557925200000,
+            "missing_bars": 40
+          },
+          {
+            "start": 1559942100000,
+            "end": 1559945700000,
+            "missing_bars": 4
+          },
+          {
+            "start": 1565834400000,
+            "end": 1565863200000,
+            "missing_bars": 32
+          },
+          {
+            "start": 1573610400000,
+            "end": 1573618500000,
+            "missing_bars": 9
+          },
+          {
+            "start": 1574647200000,
+            "end": 1574654400000,
+            "missing_bars": 8
+          },
+          {
+            "start": 1581213600000,
+            "end": 1581217200000,
+            "missing_bars": 4
+          },
+          {
+            "start": 1582112700000,
+            "end": 1582133400000,
+            "missing_bars": 23
+          },
+          {
+            "start": 1583314200000,
+            "end": 1583321400000,
+            "missing_bars": 8
+          },
+          {
+            "start": 1587780000000,
+            "end": 1587789000000,
+            "missing_bars": 10
+          },
+          {
+            "start": 1593309600000,
+            "end": 1593322200000,
+            "missing_bars": 14
+          },
+          {
+            "start": 1606716000000,
+            "end": 1606719600000,
+            "missing_bars": 4
+          },
+          {
+            "start": 1608559200000,
+            "end": 1608573600000,
+            "missing_bars": 16
+          },
+          {
+            "start": 1608861600000,
+            "end": 1608865200000,
+            "missing_bars": 4
+          },
+          {
+            "start": 1613015100000,
+            "end": 1613019600000,
+            "missing_bars": 5
+          },
+          {
+            "start": 1614996000000,
+            "end": 1615001400000,
+            "missing_bars": 6
+          },
+          {
+            "start": 1618884000000,
+            "end": 1618893000000,
+            "missing_bars": 10
+          },
+          {
+            "start": 1619324100000,
+            "end": 1619340300000,
+            "missing_bars": 18
+          },
+          {
+            "start": 1628820000000,
+            "end": 1628836200000,
+            "missing_bars": 18
+          },
+          {
+            "start": 1632898800000,
+            "end": 1632906000000,
+            "missing_bars": 8
+          },
+          {
+            "start": 1679661900000,
+            "end": 1679666400000,
+            "missing_bars": 5
+          }
+        ],
+        "history_gap_note": "保留原始时间空档，不补造K线。指标按实际观测的K线更新；未成交信号和持仓延续至下一条实际行情，止损跳价按下一开盘处理。无法判断空档内部价格与止损触发。",
+        "execution_alignment_hash": "dc2fa2c77495813fcffd04e5663a2ee0f8ca1059d746ba40a7ed75b1c3d6b8ac",
+        "execution_matched_candles": 280193,
+        "execution_fallback_candles": 7,
+        "result_hash": "745a05b32d1520178bc79d3bc3bb7f170c6abe83e0527f4e6c5598c407966be6"
+      },
+      "path": "D:\\Code\\Heimdall\\.heimdall_runtime\\local_backtests\\97b1c416191f1d5a4b5671edc055d7ec",
+      "chart": "http://127.0.0.1:4173/research/backtests?run=97b1c416191f1d5a4b5671edc055d7ec&view=chart"
+    },
+    {
+      "name": "ETH 优化版用于 ETH，已有六年记录",
+      "run_id": "3f31380c7267449f53743dc1fe5bcebd",
+      "batch_id": null,
+      "config": {
+        "data_gap_policy": "observed_bars",
+        "end": "2026-09-10T00:00:00Z",
+        "execution_timeframe": "5m",
+        "initial_cash": 10000.0,
+        "intrabar_profit_protection": true,
+        "parameters": {
+          "activation_pct": 2,
+          "center_length": 55,
+          "chase_mult": 2,
+          "confirmation_level": 3,
+          "direction_filter": false,
+          "entry_bar_assumption": 0,
+          "giveback_pct": 50,
+          "initial_stop_pct": 1,
+          "max_wait_bars": 2,
+          "price_tick": 0.01,
+          "stop_cap_pct": 2,
+          "stop_floor_pct": 0.5,
+          "stop_method": 0,
+          "stop_mult": 1.5,
+          "stop_reentry": false,
+          "trigger_mult": 0.4,
+          "width_length": 31
+        },
+        "position_pct": 100.0,
+        "start": "2020-09-10T00:00:00Z",
+        "strategy": "trend_cloud_intrabar_methods_v3",
+        "symbol": "ETH/USDT",
+        "timeframe": "15m"
+      },
+      "report": {
+        "initial_cash": 10000.0,
+        "final_equity": 6144961.333026043,
+        "profit": 6134961.333026043,
+        "return_pct": 61349.613330260436,
+        "max_drawdown_pct": 29.459086428111963,
+        "total_trades": 9289,
+        "wins": 2544,
+        "losses": 6744,
+        "breakeven": 1,
+        "win_rate": 27.387232210141025,
+        "average_return_pct": 0.08098437848912408,
+        "payoff_ratio": 2.957410768836555,
+        "profit_factor": 1.1156069092408356,
+        "average_duration_minutes": 260.57487350629776,
+        "ambiguous_trades": 27,
+        "notes": [
+          "基于所选价格数据、不计成本的多空策略模拟",
+          "最大回撤按每根收盘权益计算",
+          "无亏损时利润因子为空；无交易时胜率为空",
+          "K 线内退出的持仓时间按所属 K 线开盘时间近似",
+          "盘中突破委托仅用前一收盘已知价位；同根入场与止损先后不明的交易已标记，并按保存的 ambiguity_policy 处理",
+          "交易信号保持原周期；匹配的细周期行情逐根成交。细周期缺失或不匹配时回退原周期，已计数。保护仅在选定周期收盘更新，下一根生效。"
+        ]
+      },
+      "metadata": {
+        "data_hash": "d795c4fc017a9337d6e2cffcd21db9836fb9fb9666eac558a5b29b04e92fdb97",
+        "disclaimer": "基于所选价格数据、不计成本的多空策略模拟",
+        "engine_code_hash": "ccdd04ba62b5e821a556d215da2d129087bbe461835c5aeda83d7e54a8d5d9e2",
+        "environment": {
+          "dependencies": {
+            "TA-Lib": "0.6.8",
+            "numpy": "2.4.4",
+            "pandas": "2.3.3"
+          },
+          "engine": "8",
+          "python": "3.12.10"
+        },
+        "execution_data_hash": "28899fc6e25b1ef0e6e04a39f4731e81b82eec5cc4a144415a9a8ce5413c77d8",
+        "execution_source": "docs\\verification\\eth-intrabar-methods-20260913\\execution-data.json",
+        "input_data_run": "af38948806a3f2144ad51ef04ddc8a94",
+        "source": {
+          "exchange": "binance",
+          "price_type": "spot",
+          "storage_symbol": "ETH/USDT",
+          "symbol": "ETH/USDT"
+        },
+        "strategy": {
+          "api_version": "1",
+          "description": "原信号收盘后记录价位，从下一根开始盘中突破即入场；反向重置，一次消费。",
+          "error": null,
+          "id": "trend_cloud_intrabar_methods_v3",
+          "name": "EMA通道盘中确认改法 v3",
+          "parameters": {
+            "activation_pct": {
+              "default": 2,
+              "label": "利润保护启动 %",
+              "max": 20.0,
+              "min": 0.0,
+              "type": "float"
+            },
+            "center_length": {
+              "default": 55,
+              "label": "中心 EMA",
+              "max": 200.0,
+              "min": 2.0,
+              "type": "int"
+            },
+            "chase_mult": {
+              "default": 2,
+              "label": "追价上限 / W",
+              "max": 10.0,
+              "min": 0.0,
+              "type": "float"
+            },
+            "confirmation_level": {
+              "default": 1,
+              "label": "1 信号收盘；2 最高最低；3 实体",
+              "max": 3.0,
+              "min": 1.0,
+              "type": "int"
+            },
+            "direction_filter": {
+              "default": false,
+              "label": "仅顺过去6根中心线方向开仓",
+              "max": null,
+              "min": null,
+              "type": "bool"
+            },
+            "entry_bar_assumption": {
+              "default": 0,
+              "label": "先后不明：0 算入场后止损；1 算不利极值发生在入场前",
+              "max": 1.0,
+              "min": 0.0,
+              "type": "int"
+            },
+            "giveback_pct": {
+              "default": 50,
+              "label": "最高浮盈回吐 %",
+              "max": 99.0,
+              "min": 1.0,
+              "type": "float"
+            },
+            "initial_stop_pct": {
+              "default": 1,
+              "label": "初始止损 %，0 关闭",
+              "max": 20.0,
+              "min": 0.0,
+              "type": "float"
+            },
+            "max_wait_bars": {
+              "default": 0,
+              "label": "0 不限；2 仅信号后两根",
+              "max": 1000.0,
+              "min": 0.0,
+              "type": "int"
+            },
+            "price_tick": {
+              "default": 0.01,
+              "label": "突破一个价格单位",
+              "max": 100.0,
+              "min": 1e-06,
+              "type": "float"
+            },
+            "stop_cap_pct": {
+              "default": 2,
+              "label": "波动止损上限 %",
+              "max": 20.0,
+              "min": 0.01,
+              "type": "float"
+            },
+            "stop_floor_pct": {
+              "default": 0.5,
+              "label": "波动止损下限 %",
+              "max": 10.0,
+              "min": 0.01,
+              "type": "float"
+            },
+            "stop_method": {
+              "default": 0,
+              "label": "0固定；1振幅EMA；2 ATR14",
+              "max": 2.0,
+              "min": 0.0,
+              "type": "int"
+            },
+            "stop_mult": {
+              "default": 1.5,
+              "label": "波动止损倍数",
+              "max": 10.0,
+              "min": 0.1,
+              "type": "float"
+            },
+            "stop_reentry": {
+              "default": false,
+              "label": "止损后突破止损K线极值，最多重进一次",
+              "max": null,
+              "min": null,
+              "type": "bool"
+            },
+            "trigger_mult": {
+              "default": 0.4,
+              "label": "原突破门槛 / W",
+              "max": 5.0,
+              "min": 0.1,
+              "type": "float"
+            },
+            "width_length": {
+              "default": 31,
+              "label": "高低差 EMA",
+              "max": 100.0,
+              "min": 2.0,
+              "type": "int"
+            }
+          },
+          "warmup_bars": 650
+        },
+        "strategy_hash": "0ea141561ca6d49e4a77430e3fd3cd3a751fd031ec8a98759439b2e1c7cd2cb0",
+        "data_start": 1599111000000,
+        "data_end": 1788998400000,
+        "candle_count": 210892,
+        "warmup_bars": 650,
+        "data_gap_policy": "observed_bars",
+        "history_gaps": [
+          {
+            "start": 1606716000000,
+            "end": 1606719600000,
+            "missing_bars": 4
+          },
+          {
+            "start": 1608559200000,
+            "end": 1608573600000,
+            "missing_bars": 16
+          },
+          {
+            "start": 1608861600000,
+            "end": 1608865200000,
+            "missing_bars": 4
+          },
+          {
+            "start": 1613015100000,
+            "end": 1613019600000,
+            "missing_bars": 5
+          },
+          {
+            "start": 1614996000000,
+            "end": 1615001400000,
+            "missing_bars": 6
+          },
+          {
+            "start": 1618884000000,
+            "end": 1618893000000,
+            "missing_bars": 10
+          },
+          {
+            "start": 1619324100000,
+            "end": 1619340300000,
+            "missing_bars": 18
+          },
+          {
+            "start": 1628820000000,
+            "end": 1628836200000,
+            "missing_bars": 18
+          },
+          {
+            "start": 1632898800000,
+            "end": 1632906000000,
+            "missing_bars": 8
+          },
+          {
+            "start": 1679661900000,
+            "end": 1679666400000,
+            "missing_bars": 5
+          }
+        ],
+        "history_gap_note": "保留原始时间空档，不补造K线。指标按实际观测的K线更新；未成交信号和持仓延续至下一条实际行情，止损跳价按下一开盘处理。无法判断空档内部价格与止损触发。",
+        "execution_alignment_hash": "a8397bdbc4f8d5d28d9d2b0e01ad89d2247d7391f0d423cf95fb86732bdabb04",
+        "execution_matched_candles": 210239,
+        "execution_fallback_candles": 3,
+        "result_hash": "f19d8160f468501c96ff6401c74615f6a6c1537ff278e5c9f84976271b219a52"
+      },
+      "path": "D:\\Code\\Heimdall\\.heimdall_runtime\\local_backtests\\3f31380c7267449f53743dc1fe5bcebd",
+      "chart": "http://127.0.0.1:4173/research/backtests?run=3f31380c7267449f53743dc1fe5bcebd&view=chart"
+    }
+  ],
+  "old_bnb": {
+    "source": "docs/verification/alt-cloud-transfer-20260911/results.json",
+    "key": "c55_w50_t0p8_d1p5_a2_g50_s2",
+    "parameters": {
+      "center_length": 55,
+      "width_length": 50,
+      "trigger_mult": 0.8,
+      "chase_mult": 1.5,
+      "activation_pct": 2.0,
+      "giveback_pct": 50.0,
+      "initial_stop_pct": 2.0,
+      "initial_stop_width": 0,
+      "record_indicators": false
+    },
+    "report": {
+      "initial_cash": 10000,
+      "final_equity": 290434.31363554765,
+      "profit": 280434.31363554765,
+      "return_pct": 2804.3431363554764,
+      "max_drawdown_pct": 69.04194576648412,
+      "total_trades": 8216,
+      "wins": 2842,
+      "losses": 5355,
+      "breakeven": 19,
+      "win_rate": 34.59104186952288,
+      "average_return_pct": 0.06153621306883746,
+      "payoff_ratio": 1.9639410111475888,
+      "profit_factor": 1.0423007196417269,
+      "average_duration_minutes": 384.1833008763389,
+      "ambiguous_trades": 0,
+      "notes": [
+        "基于所选价格数据、不计成本的多空策略模拟",
+        "最大回撤按每根收盘权益计算",
+        "无亏损时利润因子为空；无交易时胜率为空",
+        "K 线内退出的持仓时间按所属 K 线开盘时间近似"
+      ],
+      "return_to_drawdown": 40.61796209858302,
+      "long": {
+        "trades": 4090,
+        "profit": 227299.77850479522,
+        "wins": 1405
+      },
+      "short": {
+        "trades": 4126,
+        "profit": 53134.53513075158,
+        "wins": 1437
+      },
+      "positive_months": 54,
+      "month_count": 97,
+      "average_win_amount": 2431.377315684389,
+      "average_win_return_pct": 1.856837565864984,
+      "average_loss_amount": 1238.0093403435083,
+      "average_loss_return_pct": 0.8910459076778182,
+      "exit_reasons": {
+        "end_of_backtest": {
+          "count": 1,
+          "wins": 1,
+          "losses": 0,
+          "profit": 10623.828525659006
+        },
+        "profit_protection": {
+          "count": 2232,
+          "wins": 2221,
+          "losses": 11,
+          "profit": 4651206.505194012
+        },
+        "reversal": {
+          "count": 4498,
+          "wins": 541,
+          "losses": 3940,
+          "profit": -2410758.300469976
+        },
+        "signal": {
+          "count": 869,
+          "wins": 79,
+          "losses": 788,
+          "profit": -901243.7794253414
+        },
+        "stop_loss": {
+          "count": 616,
+          "wins": 0,
+          "losses": 616,
+          "profit": -1069393.940188807
+        }
+      },
+      "signal_status": {
+        "executed": 9085,
+        "ignored_same_side": 10841,
+        "ignored_flat": 1
+      },
+      "max_consecutive_losses": 19,
+      "gap_sensitivity": {
+        "affected_trades": 14,
+        "affected_trade_ids": [
+          117,
+          179,
+          534,
+          774,
+          970,
+          1444,
+          1476,
+          1522,
+          1678,
+          2657,
+          2847,
+          3230,
+          3376,
+          4848
+        ],
+        "affected_wins": 9,
+        "affected_losses": 5,
+        "return_with_affected_set_to_zero_pct": 1914.7416525855388,
+        "note": "Accounting stress only. Does not recreate a tradable strategy; indicators after a gap can also be affected."
+      }
+    }
+  },
+  "comparability": {
+    "bnb_same_dates": true,
+    "bnb_signal_data_hashes_equal": true,
+    "bnb_execution_hashes_equal": true,
+    "old_new_bnb_signal_rows_numerically_equal": true,
+    "eth_own_history_years": 6,
+    "bnb_history_years": 8,
+    "notes": [
+      "BNB三组使用相同8年15分钟信号和5分钟成交行情。",
+      "旧BNB记录只有15分钟成交模拟，新原版加入5分钟成交模拟，利润保护仍每15分钟更新。",
+      "ETH自身结果是6年；它与BNB的8年总收益只能作不同历史区间参考，不是同区间排名。",
+      "每笔投入当时全部资金，盈亏复利，不计手续费和滑点。",
+      "信号K线280200根中7根细行情无法对齐，已回退15分钟；原始空档不补造。",
+      "5分钟内仍可能先后不明：BNB优化5笔，ETH参数用于BNB59笔，沿用记录的保守成交约定。"
+    ]
+  },
+  "software": "research_cli sweep：输入请求由软件排队、冻结数据并执行，未编写本次专用回测算法"
+}

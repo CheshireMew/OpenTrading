@@ -2,7 +2,6 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import type {
-  FredApiConfigResponse,
   LlmProviderConfigResponse,
   LlmProviderPresetResponse,
   SystemConfigResponse,
@@ -18,30 +17,18 @@ interface LlmConfigForm {
   reasoningEnabled: boolean
 }
 
-interface FredApiConfigForm {
-  apiKeySet: boolean
-  apiKeyPreview: string
-  source: string
-}
-
 export const useSystemSettingsPage = () => {
   const { t } = useI18n()
   const systemConfig = ref<SystemConfigResponse | null>(null)
   const presets = ref<LlmProviderPresetResponse[]>([])
   const apiKeyDraft = ref('')
-  const fredApiKeyDraft = ref('')
   const saving = ref(false)
-  const fredSaving = ref(false)
   const message = ref('')
   const error = ref('')
-  const fredMessage = ref('')
-  const fredError = ref('')
   const systemLoading = ref(true)
   const llmLoading = ref(true)
-  const fredLoading = ref(true)
   const systemLoadError = ref('')
   const llmLoadError = ref('')
-  const fredLoadError = ref('')
   const form = reactive<LlmConfigForm>({
     provider: 'deepseek',
     apiKeySet: false,
@@ -49,11 +36,6 @@ export const useSystemSettingsPage = () => {
     baseUrl: '',
     modelId: '',
     reasoningEnabled: false,
-  })
-  const fredForm = reactive<FredApiConfigForm>({
-    apiKeySet: false,
-    apiKeyPreview: '',
-    source: 'unset',
   })
 
   const selectedPreset = computed(() => presets.value.find((item) => item.id === form.provider) || null)
@@ -64,7 +46,6 @@ export const useSystemSettingsPage = () => {
     if (isCustomProvider.value) return Boolean(form.baseUrl && form.modelId)
     return true
   })
-  const canSaveFred = computed(() => Boolean(fredApiKeyDraft.value))
 
   const applyConfig = (config: LlmProviderConfigResponse) => {
     presets.value = config.presets || []
@@ -75,13 +56,6 @@ export const useSystemSettingsPage = () => {
     form.modelId = config.modelId || ''
     form.reasoningEnabled = Boolean(config.reasoningEnabled)
     apiKeyDraft.value = ''
-  }
-
-  const applyFredConfig = (config: FredApiConfigResponse) => {
-    fredForm.apiKeySet = Boolean(config.apiKeySet)
-    fredForm.apiKeyPreview = config.apiKeyPreview || ''
-    fredForm.source = config.source || 'unset'
-    fredApiKeyDraft.value = ''
   }
 
   const applyProviderPreset = () => {
@@ -127,19 +101,6 @@ export const useSystemSettingsPage = () => {
     }
   }
 
-  const loadFredConfig = async () => {
-    fredLoading.value = true
-    fredLoadError.value = ''
-    try {
-      applyFredConfig(await systemApi.getFredApiConfig())
-    } catch (err) {
-      console.error('Load FRED config failed', err)
-      fredLoadError.value = t('settings.loadFailed')
-    } finally {
-      fredLoading.value = false
-    }
-  }
-
   const saveConfig = async () => {
     if (!canSave.value) return
     saving.value = true
@@ -160,25 +121,6 @@ export const useSystemSettingsPage = () => {
       error.value = t('settings.saveFailed')
     } finally {
       saving.value = false
-    }
-  }
-
-  const saveFredConfig = async () => {
-    if (!canSaveFred.value) return
-    fredSaving.value = true
-    fredMessage.value = ''
-    fredError.value = ''
-    try {
-      const response = await systemApi.updateFredApiConfig({
-        apiKey: fredApiKeyDraft.value,
-      })
-      applyFredConfig(response)
-      fredMessage.value = t('settings.fredSaved')
-    } catch (err) {
-      console.error('Save FRED API config failed', err)
-      fredError.value = t('settings.fredSaveFailed')
-    } finally {
-      fredSaving.value = false
     }
   }
 
@@ -204,58 +146,31 @@ export const useSystemSettingsPage = () => {
     }
   }
 
-  const clearFredApiKey = async () => {
-    if (!fredForm.apiKeySet || !window.confirm(t('settings.clearFredConfirm'))) return
-    fredSaving.value = true
-    fredMessage.value = ''
-    fredError.value = ''
-    try {
-      applyFredConfig(await systemApi.updateFredApiConfig({ apiKey: '' }))
-      fredMessage.value = t('settings.keyCleared')
-    } catch (err) {
-      console.error('Clear FRED API key failed', err)
-      fredError.value = t('settings.clearFailed')
-    } finally {
-      fredSaving.value = false
-    }
-  }
-
   onMounted(() => {
-    void Promise.all([loadSystemConfig(), loadLlmConfig(), loadFredConfig()])
+    void Promise.all([loadSystemConfig(), loadLlmConfig()])
   })
 
   return {
     systemConfig,
     presets,
     apiKeyDraft,
-    fredApiKeyDraft,
     saving,
-    fredSaving,
     message,
     error,
-    fredMessage,
-    fredError,
     systemLoading,
     llmLoading,
-    fredLoading,
     systemLoadError,
     llmLoadError,
-    fredLoadError,
     form,
-    fredForm,
     selectedPreset,
     isCustomProvider,
     canSave,
-    canSaveFred,
     applyProviderPreset,
     handleProviderChange,
     saveConfig,
-    saveFredConfig,
     clearLlmApiKey,
-    clearFredApiKey,
     loadSystemConfig,
     loadLlmConfig,
-    loadFredConfig,
   }
 }
 

@@ -1,0 +1,34 @@
+[
+  {
+    "question": "close",
+    "conclusion": "不限根数、等收盘突破信号收盘价：六年收益 +3,322.27%，低于原版 +25,829.05%；交易从 9,427 降到 6,983，胜率从 26.94% 升到 28.03%。少做了交易，但收益没有改善。原版 2,541 个亏损信号和 125 个盈利信号没有被用于新版本入场；在双方都交易的同一信号中，580 笔由赚变亏，58 笔由亏变赚。可见确认避开了一批旧亏损，但延后入场的代价抵消了这个好处。",
+    "evidence": ["case:baseline", "case:close_unlimited", "artifact:results", "artifact:entry-prices"],
+    "scope": "ETH/USDT 15 分钟，同一六年数据，保留原退出规则及追价限制，全仓复利，零成本。",
+    "limitation": "配对用于描述同一信号入场后的变化；未使用信号也受持仓状态影响，不能全归因于确认价位。已见历史，不是新的样本外验证。",
+    "decision": "reject"
+  },
+  {
+    "question": "wick",
+    "conclusion": "不限根数、等收盘突破信号最高／最低价：六年收益 +899.38%，6,224 笔，胜率 28.25%。平均等待 4.26 根 K 线；同一信号原本盈利、改后亏损有 752 笔，反过来只有 63 笔。确认更严格没有带来更高收益，最大回撤也从原版 33.05% 增到 43.72%。",
+    "evidence": ["case:baseline", "case:wick_unlimited", "artifact:results", "artifact:entry-prices"],
+    "scope": "收盘越过信号上影线顶端或下影线底端才算确认，不把盘中触碰当作确认。",
+    "limitation": "测试的是这一套完整入场条件，不代表所有确认方法都无效。",
+    "decision": "reject"
+  },
+  {
+    "question": "limited",
+    "conclusion": "只允许第 2 或第 3 根收盘突破信号实体：六年收益 +1,617.56%，6,133 笔，胜率 27.31%。交易最少，但收益仍远低于原版。该版本有 4,086 次等待到期；没用于入场的原版信号中，802 个原本赚钱、3,660 个原本亏损。它没有实现少交易同时提高总收益。",
+    "evidence": ["case:baseline", "case:body_two_bars", "artifact:results", "artifact:rules"],
+    "scope": "信号 K 线算第 1 根，只检查后续两根，之后过期。",
+    "limitation": "同时改变了确认价位和等待期限，不能将与另外两个版本的全部差异归因于期限。",
+    "decision": "reject"
+  },
+  {
+    "question": "mechanics",
+    "conclusion": "已按要求实现记住首次信号、反向信号取消并重记、后续收盘确认、一次信号仅开一次仓、持仓不重复同向入场。三个版本的 19,340 笔交易逐笔检查通过。不限根数的收盘价版平均等 2.81 根、最长 95 根；最高最低价版平均等 4.26 根、最长 103 根。确认收盘仍须满足原 2 倍振幅的追价上限，反向平旧仓不延后。三个版本都没有超过原版，本轮保留原版，不再扩展参数搜索。",
+    "evidence": ["case:close_unlimited", "case:wick_unlimited", "case:body_two_bars", "artifact:results", "artifact:parity", "artifact:rules"],
+    "scope": "原模式逐笔重放一致，16 项专项测试通过；实际交易检查了信号未重复消费、未跨相反信号、确认价位及下一开盘成交。",
+    "limitation": "此轮没有加入宽窄切换或止损后重新入场；沿用原行情中的实际 K 线及时间缺口。",
+    "decision": "keep"
+  }
+]

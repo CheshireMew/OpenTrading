@@ -1,5 +1,6 @@
 import { watch } from 'vue'
 import i18n from '@/i18n'
+import { messageText } from './locale'
 
 // Vela 0.7.6 exposes English chrome but no locale option. Keep the translation
 // boundary outside its renderer; scripts, prices and the attribution stay intact.
@@ -42,7 +43,7 @@ export function localizeChart(host:HTMLElement){
     const key=keys.get(reverse.get(value)??value)
     if(key)return i18n.global.t('chartNative.'+key.key)
     if(value.startsWith('Chart style — '))return i18n.global.t('chartNative.'+keys.get('Chart style')!.key)+' — '+translate(value.slice(14))
-    return value
+    return messageText(value)
   }
   const scan=(root:Node)=>{
     if(root.nodeType===Node.TEXT_NODE){

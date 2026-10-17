@@ -1,0 +1,7 @@
+{
+  "reason": "用户追加原版固定止损改为1%",
+  "scope": "只新增15分钟原退出规则、固定1%止损一组；不叠加2%反向门槛或更大周期",
+  "base_run": "657b2b8086588a254442b82b128d34df",
+  "request": "stop1-request.json",
+  "total_new_runs": 4
+}

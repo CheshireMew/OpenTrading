@@ -1,0 +1,81 @@
+{
+  "label": "023-ema55-parameters-completed",
+  "created_at": "2026-09-10T16:06:03.792239+00:00",
+  "files": [
+    {
+      "path": "docs/verification/eth-cloud-parameters-20260910/factor-selection.json",
+      "sha256": "1b62c3e0ce6866659a42bc09bf5a1d2ba348a26de39860d3a8723a050853fa31",
+      "bytes": 2179
+    },
+    {
+      "path": "docs/verification/eth-cloud-parameters-20260910/plan.json",
+      "sha256": "227341dcf4ac89725928ff56a2dd899e4e605526a57d649fc5c33c20f87f8d25",
+      "bytes": 12990
+    },
+    {
+      "path": "docs/verification/eth-cloud-parameters-20260910/project-runs-before-recovery.json",
+      "sha256": "7e8b8bb2df7933013ba32db7738ea7cbc4cf54416e40a1a7b3ffffddcc51d04e",
+      "bytes": 4130
+    },
+    {
+      "path": "docs/verification/eth-cloud-parameters-20260910/project-runs.json",
+      "sha256": "10907b6ea829a684a9e620872359fab22fc842298fa41363c5d837f5f9e6486d",
+      "bytes": 4316
+    },
+    {
+      "path": "docs/verification/eth-cloud-parameters-20260910/report.html",
+      "sha256": "27545583c800aa6547a94bd8b8e8a15b3aa3434d5bba14a25d7830606468c529",
+      "bytes": 102455
+    },
+    {
+      "path": "docs/verification/eth-cloud-parameters-20260910/REPORT.md",
+      "sha256": "acda918328b058fac5a26d0e0fd31202fab7b509afc69bf16c7010595a9ad6fd",
+      "bytes": 21248
+    },
+    {
+      "path": "docs/verification/eth-cloud-parameters-20260910/results.json",
+      "sha256": "baab46d243dfae8676364cce520a51479588ac4a4ec32aa3254d88417fe88cac",
+      "bytes": 3422590
+    },
+    {
+      "path": "docs/verification/eth-cloud-parameters-20260910/selection.json",
+      "sha256": "14f24129ba8e34a96b6e6029ca9de4bd4628802eadcf953044b20d99b6d5f218",
+      "bytes": 1672
+    },
+    {
+      "path": "docs/verification/eth-cloud-parameters-20260910/verification.json",
+      "sha256": "15778a09538725fca2096c261459754e2d712cd0abea2447e0676637b4665157",
+      "bytes": 1019
+    },
+    {
+      "path": "docs/verification/eth-cloud-two-year-20260910/parameters.html",
+      "sha256": "27545583c800aa6547a94bd8b8e8a15b3aa3434d5bba14a25d7830606468c529",
+      "bytes": 102455
+    },
+    {
+      "path": "frontend/src/views/research/LocalBacktests.vue",
+      "sha256": "2069c467fc392ef8b73470673fd9606bef6647cbab3260d4ea0e82caa205980f",
+      "bytes": 30749
+    },
+    {
+      "path": "scripts/cloud_parameter_study.py",
+      "sha256": "cc1fc65ab94f25d3eafbdcba5fb7374d247bb045c4c46a00bbda605c7a2c08c7",
+      "bytes": 14813
+    },
+    {
+      "path": "scripts/render_cloud_parameter_study.py",
+      "sha256": "81fc3b64bc78fc8ddc9e0a8cc49e69f4abebaa007674b86da27aafb50a0dba87",
+      "bytes": 20850
+    },
+    {
+      "path": "strategies/trend_cloud_parameters_v4.py",
+      "sha256": "518ec7480dc4e5b8fd57d6804dd74bde88103f3c4c847a51028d2d5ef309173e",
+      "bytes": 5381
+    },
+    {
+      "path": "test/test_cloud_parameters.py",
+      "sha256": "5d3bc139d089b7f0837aeb1675641ae9746f1b5c3bf2bc6b913ef1e7ea824d69",
+      "bytes": 3967
+    }
+  ]
+}

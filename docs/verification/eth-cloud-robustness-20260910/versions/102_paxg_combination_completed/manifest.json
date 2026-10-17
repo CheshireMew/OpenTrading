@@ -1,0 +1,71 @@
+{
+  "label": "102_paxg_combination_completed",
+  "created_at": "2026-09-13T05:27:26.525290+00:00",
+  "files": [
+    {
+      "path": "docs/verification/paxg-intrabar-combined-20260913/answers.json",
+      "sha256": "915651cd0b83eda5eaac5f130cece481ed2429cea629e8cb06863ee451b676f6",
+      "bytes": 814
+    },
+    {
+      "path": "docs/verification/paxg-intrabar-combined-20260913/baseline-origin.json",
+      "sha256": "01d13261fb04238acb01c53346901494e9793857f46c3f321ec42b16f9ad58f7",
+      "bytes": 4346
+    },
+    {
+      "path": "docs/verification/paxg-intrabar-combined-20260913/completion.json",
+      "sha256": "b39674f99001f92c2bf89bff51498a81448de7c53253f4f8de37ffa93e9bbf38",
+      "bytes": 1538
+    },
+    {
+      "path": "docs/verification/paxg-intrabar-combined-20260913/fine-data-check.json",
+      "sha256": "6d0c48d1ef72f0f82f1dd47a57e86ab0c0b3bf4d31afce3875aa209e1d59a2cb",
+      "bytes": 98680
+    },
+    {
+      "path": "docs/verification/paxg-intrabar-combined-20260913/fine_fixed-lineage.json",
+      "sha256": "5b411e4dbb3dc7e8cc245efef323478c1579dcc495d0cbdcf60daab6c84b3bf8",
+      "bytes": 166343
+    },
+    {
+      "path": "docs/verification/paxg-intrabar-combined-20260913/fine_width-lineage.json",
+      "sha256": "e8a3cf419cb5372015ae95c3f9fb7d8a60920a37a828f83636378c9265027a74",
+      "bytes": 196808
+    },
+    {
+      "path": "docs/verification/paxg-intrabar-combined-20260913/plan.json",
+      "sha256": "58a782cf3d0f3d7b3136bfee49293d1ed9201f3caa4d1e5f36990b2cf2585532",
+      "bytes": 2327
+    },
+    {
+      "path": "docs/verification/paxg-intrabar-combined-20260913/README.md",
+      "sha256": "eb5c8ce6429522fea8b4ebcb0fc1090bb714b739d71f9a321b066e37126826f7",
+      "bytes": 2267
+    },
+    {
+      "path": "docs/verification/paxg-intrabar-combined-20260913/results.json",
+      "sha256": "91d0219bd119456ddee245674bbe18c056752d37cff1c4e72d12892c99b0b936",
+      "bytes": 11821
+    },
+    {
+      "path": "docs/verification/paxg-intrabar-combined-20260913/RULES.md",
+      "sha256": "edeb0646e0830d87c174923b6e23ed5068fd7f28a6b2901ca0c21dea44601ec1",
+      "bytes": 2049
+    },
+    {
+      "path": "docs/verification/paxg-intrabar-combined-20260913/study.json",
+      "sha256": "ad665f590864f9d7bf95a2f88ad9829a1799d2d8af565de22759414efb736624",
+      "bytes": 738
+    },
+    {
+      "path": "docs/verification/paxg-intrabar-combined-20260913/verification.json",
+      "sha256": "753b12621a07baa5f4f82e4dac2c701832af6cfac3335c509f77b3159174b23d",
+      "bytes": 647
+    },
+    {
+      "path": "scripts/paxg_intrabar_combined_study.py",
+      "sha256": "412e12aebf28cd126f276091e5a269633b77c98bb49e07a4b94abd0dd927fa3d",
+      "bytes": 16626
+    }
+  ]
+}

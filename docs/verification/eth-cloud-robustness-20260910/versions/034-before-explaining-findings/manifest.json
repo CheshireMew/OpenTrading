@@ -1,0 +1,46 @@
+{
+  "label": "034-before-explaining-findings",
+  "created_at": "2026-09-11T02:58:55.035063+00:00",
+  "files": [
+    {
+      "path": "docs/verification/btc-cloud-parameters-20260911/report.html",
+      "sha256": "97b7e3e651afc8d45945f3b4e1664fc12475246a55b266686edc68f393f7da73",
+      "bytes": 219627
+    },
+    {
+      "path": "docs/verification/btc-cloud-parameters-20260911/REPORT.md",
+      "sha256": "62da2eef0d1fa5dc21f6bf5cebf9da11a3063ccd541b5fcd3962a0aaa3897c34",
+      "bytes": 4008
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/report.html",
+      "sha256": "1685a60654c85a9d1260cdb979f39eb04d0e6e711ed8f04b521dc571d9418182",
+      "bytes": 1840903
+    },
+    {
+      "path": "docs/verification/cloud-cross-asset-20260911/REPORT.md",
+      "sha256": "db111ef980b94649fc1d46f82dc7473c4ab89ff233fc2cd752151c3948cf670b",
+      "bytes": 37626
+    },
+    {
+      "path": "docs/verification/eth-cloud-two-year-20260910/btc-parameters.html",
+      "sha256": "97b7e3e651afc8d45945f3b4e1664fc12475246a55b266686edc68f393f7da73",
+      "bytes": 219627
+    },
+    {
+      "path": "docs/verification/eth-cloud-two-year-20260910/cross-asset.html",
+      "sha256": "1685a60654c85a9d1260cdb979f39eb04d0e6e711ed8f04b521dc571d9418182",
+      "bytes": 1840903
+    },
+    {
+      "path": "scripts/render_cloud_cross_asset_study.py",
+      "sha256": "1047f12daee87baaf80121e49bb36e4ad7798c7e2498e4fbc72d8eec29324bbb",
+      "bytes": 20506
+    },
+    {
+      "path": "scripts/report_btc_cloud_parameters.py",
+      "sha256": "4fa8fed6de9cdc116adbdb063120d44a9cb87b4921a96d88a9dc6a52d5b6c49d",
+      "bytes": 17753
+    }
+  ]
+}

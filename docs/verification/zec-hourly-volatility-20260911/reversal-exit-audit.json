@@ -1,0 +1,239 @@
+{
+  "analysis": "Existing trade records only; no parameters or strategy changes",
+  "trace_path": ".heimdall_runtime\\cloud-timeframe-20260911\\traces\\zec\\base-1h-recent.json",
+  "trace_sha256": "4c143b5f5ba37f79f1860903c89195a033ffdbd2b0795a02aa3bc9d81642d227",
+  "top_three_exit_audit": [
+    {
+      "original_trade": {
+        "trade_id": 618,
+        "side": "long",
+        "direction": 1,
+        "entry_time": 1759237200000,
+        "entry_price": 66.17,
+        "principal": 12820.096895015593,
+        "quantity": 193.74485257693203,
+        "stop": 113.005,
+        "target": null,
+        "trailing_pct": null,
+        "best": 159.84,
+        "profit_protection": {
+          "activation_pct": 2.0,
+          "giveback_pct": 50.0
+        },
+        "profit_peak_pct": 141.55961916276257,
+        "protection_active": true,
+        "stop_source": "profit_protection",
+        "exit_price": 125.75,
+        "exit_time": 1759546800000,
+        "exit_phase": "open",
+        "exit_reason": "reversal",
+        "ambiguous": false,
+        "profit": 11543.31831653361,
+        "return_pct": 90.04080398972344,
+        "duration_minutes": 5160.0
+      },
+      "profit_given_back_pct": 36.39372264332229,
+      "price_drop_from_recorded_peak_pct": 21.327577577577582,
+      "exit_signal": [
+        {
+          "timestamp": 1759543200000,
+          "decision_time": 1759546800000,
+          "action": "short",
+          "stop_loss_pct": 1.0,
+          "take_profit_pct": null,
+          "trailing_stop_pct": null,
+          "reason": "反向信号或通道突破",
+          "profit_protection": {
+            "activation_pct": 2.0,
+            "giveback_pct": 50.0
+          },
+          "status": "executed"
+        }
+      ],
+      "immediate_reverse_trade": [
+        {
+          "trade_id": 619,
+          "side": "short",
+          "direction": -1,
+          "entry_time": 1759546800000,
+          "entry_price": 125.75,
+          "principal": 24363.415211549207,
+          "quantity": 193.74485257693206,
+          "stop": 127.00750000000001,
+          "target": null,
+          "trailing_pct": null,
+          "best": 125.75,
+          "profit_protection": {
+            "activation_pct": 2.0,
+            "giveback_pct": 50.0
+          },
+          "profit_peak_pct": 0.0,
+          "protection_active": false,
+          "exit_price": 127.00750000000001,
+          "exit_time": 1759546800000,
+          "exit_phase": "intrabar",
+          "exit_reason": "stop_loss",
+          "ambiguous": false,
+          "profit": -243.6341521154935,
+          "return_pct": -1.000000000000006,
+          "duration_minutes": 0.0
+        }
+      ]
+    },
+    {
+      "original_trade": {
+        "trade_id": 1125,
+        "side": "long",
+        "direction": 1,
+        "entry_time": 1787130000000,
+        "entry_price": 507.87,
+        "principal": 27026.517175841545,
+        "quantity": 53.215423584463636,
+        "stop": 697.935,
+        "target": null,
+        "trailing_pct": null,
+        "best": 888.0,
+        "profit_protection": {
+          "activation_pct": 2.0,
+          "giveback_pct": 50.0
+        },
+        "profit_peak_pct": 74.84789414613977,
+        "protection_active": true,
+        "stop_source": "profit_protection",
+        "exit_price": 816.81,
+        "exit_time": 1787673600000,
+        "exit_phase": "open",
+        "exit_reason": "reversal",
+        "ambiguous": false,
+        "profit": 16440.372962184192,
+        "return_pct": 60.830527497194154,
+        "duration_minutes": 9060.0
+      },
+      "profit_given_back_pct": 18.72780364612108,
+      "price_drop_from_recorded_peak_pct": 8.016891891891898,
+      "exit_signal": [
+        {
+          "timestamp": 1787670000000,
+          "decision_time": 1787673600000,
+          "action": "short",
+          "stop_loss_pct": 1.0,
+          "take_profit_pct": null,
+          "trailing_stop_pct": null,
+          "reason": "反向信号或通道突破",
+          "profit_protection": {
+            "activation_pct": 2.0,
+            "giveback_pct": 50.0
+          },
+          "status": "executed"
+        }
+      ],
+      "immediate_reverse_trade": [
+        {
+          "trade_id": 1126,
+          "side": "short",
+          "direction": -1,
+          "entry_time": 1787673600000,
+          "entry_price": 816.81,
+          "principal": 43466.89013802574,
+          "quantity": 53.215423584463636,
+          "stop": 784.17,
+          "target": null,
+          "trailing_pct": null,
+          "best": 751.53,
+          "profit_protection": {
+            "activation_pct": 2.0,
+            "giveback_pct": 50.0
+          },
+          "profit_peak_pct": 7.992066698497811,
+          "protection_active": true,
+          "stop_source": "profit_protection",
+          "exit_price": 784.17,
+          "exit_time": 1787695200000,
+          "exit_phase": "intrabar",
+          "exit_reason": "profit_protection",
+          "ambiguous": false,
+          "profit": 1736.9514257968924,
+          "return_pct": 3.9960333492489064,
+          "duration_minutes": 360.0
+        }
+      ]
+    },
+    {
+      "original_trade": {
+        "trade_id": 1148,
+        "side": "long",
+        "direction": 1,
+        "entry_time": 1788418800000,
+        "entry_price": 831.36,
+        "principal": 40329.425691436554,
+        "quantity": 48.51018294293273,
+        "stop": 1044.17,
+        "target": null,
+        "trailing_pct": null,
+        "best": 1256.98,
+        "profit_protection": {
+          "activation_pct": 2.0,
+          "giveback_pct": 50.0
+        },
+        "profit_peak_pct": 51.19563125481139,
+        "protection_active": true,
+        "stop_source": "profit_protection",
+        "exit_price": 1129.91,
+        "exit_time": 1788822000000,
+        "exit_phase": "open",
+        "exit_reason": "reversal",
+        "ambiguous": false,
+        "profit": 14482.71511761257,
+        "return_pct": 35.91103733641263,
+        "duration_minutes": 6720.0
+      },
+      "profit_given_back_pct": 29.855269959118438,
+      "price_drop_from_recorded_peak_pct": 10.10915050358796,
+      "exit_signal": [
+        {
+          "timestamp": 1788818400000,
+          "decision_time": 1788822000000,
+          "action": "short",
+          "stop_loss_pct": 1.0,
+          "take_profit_pct": null,
+          "trailing_stop_pct": null,
+          "reason": "反向信号或通道突破",
+          "profit_protection": {
+            "activation_pct": 2.0,
+            "giveback_pct": 50.0
+          },
+          "status": "executed"
+        }
+      ],
+      "immediate_reverse_trade": [
+        {
+          "trade_id": 1149,
+          "side": "short",
+          "direction": -1,
+          "entry_time": 1788822000000,
+          "entry_price": 1129.91,
+          "principal": 54812.140809049124,
+          "quantity": 48.51018294293273,
+          "stop": 1141.2091,
+          "target": null,
+          "trailing_pct": null,
+          "best": 1129.91,
+          "profit_protection": {
+            "activation_pct": 2.0,
+            "giveback_pct": 50.0
+          },
+          "profit_peak_pct": 0.0,
+          "protection_active": false,
+          "exit_price": 1141.2091,
+          "exit_time": 1788822000000,
+          "exit_phase": "intrabar",
+          "exit_reason": "stop_loss",
+          "ambiguous": false,
+          "profit": -548.1214080904889,
+          "return_pct": -0.9999999999999957,
+          "duration_minutes": 0.0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "previous": "strategies\\pine\\eth_ema55_manual_15m_v7.pine",
+  "current": "strategies\\pine\\eth_ema55_manual_15m_v7_1.pine",
+  "changes": [
+    [
+      "15分钟 v7\"",
+      "15分钟 v7.1\""
+    ],
+    [
+      "plotshape(reverseLong, \"平仓做多\", shape.labelup, location.belowbar, #E91E63,",
+      "plotshape(reverseLong, \"平仓做多\", shape.labelup, location.belowbar, #F23645,"
+    ],
+    [
+      "plotshape(reverseShort, \"平仓做空\", shape.labeldown, location.abovebar, #00897B,",
+      "plotshape(reverseShort, \"平仓做空\", shape.labeldown, location.abovebar, #4CAF50,"
+    ]
+  ],
+  "only_title_and_two_label_colors_changed": true,
+  "sha256": "154ef897e9de33f9579ade4d30f85d0970e77d542f1c1e4a5446c1a8231d5033",
+  "tradingview_compilation": "not run; colors only"
+}

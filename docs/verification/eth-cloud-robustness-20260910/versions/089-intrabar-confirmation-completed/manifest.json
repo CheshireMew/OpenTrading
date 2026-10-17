@@ -1,0 +1,116 @@
+{
+  "label": "089-intrabar-confirmation-completed",
+  "created_at": "2026-09-13T00:20:38.801692+00:00",
+  "files": [
+    {
+      "path": "app/domain/local_backtest.py",
+      "sha256": "c94c64e35c373ef390c87e5474fce0317a097116b435d9e1f4a24f2436f48486",
+      "bytes": 23153
+    },
+    {
+      "path": "docs/LOCAL_BACKTESTS.md",
+      "sha256": "92dfb00166602dd9a0a3491bf89aec8a3de38aa33f15ce4eb2c79003bff491b4",
+      "bytes": 21841
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/answers.json",
+      "sha256": "09a5bfcb5ec5104f48c1545cc45825e3db6bf536a3efe7f8e9212fae5ada4c53",
+      "bytes": 4377
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/attribution.json",
+      "sha256": "1334795c378589da87878774d8a62bc56ee65b011b222fe51e9379f482ae2bb3",
+      "bytes": 11744
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/baseline-parity.json",
+      "sha256": "62ea15c6c9df568c42c80989410cbba89402fb3e4039a357cb5f10c51fded796",
+      "bytes": 967
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/body_touch_0-lineage.json",
+      "sha256": "183eb71a9c2f4e13d625fa873fd84a2b111e2b2468e67198239394bff9d7070b",
+      "bytes": 3873876
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/body_touch_1-lineage.json",
+      "sha256": "282f8aba4102103865bc743fccafe9989a894263c7a900a6326a4ef942f5dfb6",
+      "bytes": 3869357
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/close_touch_0-lineage.json",
+      "sha256": "d77e28e5d157161baa7cc7b03fa116fe1ce2efacdbb59404622b783f16a933df",
+      "bytes": 3874867
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/close_touch_1-lineage.json",
+      "sha256": "4e0257e2138502b7aa258724aa7b34ec397b940ca62175d1f82bbb87824f9b38",
+      "bytes": 3870211
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/completion.json",
+      "sha256": "480a067fb3abe67c6d2239ad921532c4430a2f2d6c5cda411f8428d165fd60a7",
+      "bytes": 5215
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/plan.json",
+      "sha256": "242e0cf486402b8299aab946325767963148920cbb4d219d0a7afd8ffdbfcfe3",
+      "bytes": 7625
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/preview.json",
+      "sha256": "e4514dca221e7adebf65bf13a65d528d014683b2d4b65cc4d50f07f8b1143f22",
+      "bytes": 345
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/README.md",
+      "sha256": "e143d463bafb8c70bab0a37817774b3d0ca2cbcab5939eac922032bc8ccddc00",
+      "bytes": 4594
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/results.json",
+      "sha256": "772b37d620446c5b2f22e12664aeb629d028e30a12d39c4d4aeda69dfdc8a033",
+      "bytes": 38559
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/RULES.md",
+      "sha256": "364355b805d5daeab2fea49dd554a88a816dc12fd1d59b169541e56764d62d49",
+      "bytes": 3451
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/study.json",
+      "sha256": "c9d918fc7637d88f6da485c6475759a14262d69cd83c024d2d7cd71367fb57fe",
+      "bytes": 1070
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/wick_touch_0-lineage.json",
+      "sha256": "c7d58612fbe032cf145d9ba762f6155b61b400825b856a040bd0920a4016ceb3",
+      "bytes": 3322859
+    },
+    {
+      "path": "docs/verification/eth-intrabar-confirmation-20260913/wick_touch_1-lineage.json",
+      "sha256": "e110a9c25874adbb361c526cc206d2fbe37ee0426b143fbebe28f129b1f0cd43",
+      "bytes": 3308405
+    },
+    {
+      "path": "scripts/cloud_intrabar_confirmation_study.py",
+      "sha256": "3f613d9668a4a406462f26fd9bc9089075a91225e44b0a3b544b67a9b33226b1",
+      "bytes": 12355
+    },
+    {
+      "path": "scripts/report_cloud_intrabar_confirmation.py",
+      "sha256": "d399d53f37aaf33abe5875d68b00d988dec2c9b0a8c3e8b5399b650d5854b021",
+      "bytes": 3122
+    },
+    {
+      "path": "strategies/trend_cloud_intrabar_confirmation_v1.py",
+      "sha256": "ac87957316b93f39a5519d0472b35ca169ba3db8c9e7d4037e5617c1aa66389e",
+      "bytes": 6990
+    },
+    {
+      "path": "test/test_intrabar_stop_entry.py",
+      "sha256": "fd7935123d8b379b6d71bec3872ee326bc1ef7b8b711aaa5f491f1974bcddec0",
+      "bytes": 6842
+    }
+  ]
+}

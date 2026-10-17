@@ -1,0 +1,16 @@
+{
+  "label": "052-before-atr-walkforward-extension",
+  "created_at": "2026-09-11T13:50:00.432649+00:00",
+  "files": [
+    {
+      "path": "app/domain/cloud_protection_research_v1.py",
+      "sha256": "fe748a19ee46f9f121bb1c52192c4a633d768967bc0577af2595b96b0aeee8be",
+      "bytes": 13453
+    },
+    {
+      "path": "scripts/cloud_walkforward_study.py",
+      "sha256": "c538f7fe45bd118534cb4bc2867fc2d3211a647d10ed6d06c27248cee726bf0a",
+      "bytes": 25610
+    }
+  ]
+}

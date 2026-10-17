@@ -1,0 +1,1 @@
+{"command":"venv/Scripts/python.exe -m pytest test/test_cloud_timeframe.py -q","passed":11,"failed":0,"seconds":4.29,"platform":"Windows","created_at":"2026-09-11T13:06:58.240925+00:00"}

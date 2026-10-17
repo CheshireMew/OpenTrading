@@ -1,0 +1,41 @@
+{
+  "label": "074-before-research-workflow",
+  "created_at": "2026-09-12T09:48:50.570066+00:00",
+  "files": [
+    {
+      "path": "app/services/local_backtest_service.py",
+      "sha256": "5c6fae1bed6b8251d3060db1aa830b73a92d2f60ba5a7c11d7c304630925b4dc",
+      "bytes": 9086
+    },
+    {
+      "path": "docs/LOCAL_BACKTESTS.md",
+      "sha256": "ba0ef0d58a3b2cd399b9427e17e7fb8460589bd77a024bebd0e43ac4596c1afe",
+      "bytes": 19661
+    },
+    {
+      "path": "docs/RESEARCH_WORKFLOWS.md",
+      "sha256": "3674c9a28d1cd2a6b702eceee22b7e1bcf3734c9a8576bdcb9930cd1a6e879f7",
+      "bytes": 7467
+    },
+    {
+      "path": "README.md",
+      "sha256": "093fd3b280fd2a07e6804bfaf793d45dd230256346cb3f99ce52582a2af43f2d",
+      "bytes": 7706
+    },
+    {
+      "path": "scripts/local_backtest_cli.py",
+      "sha256": "f6dbc5811d4900d2fd59429f9bb3adf362910513ef362ef5c935949e7043cd12",
+      "bytes": 5612
+    },
+    {
+      "path": "scripts/local_backtest_worker.py",
+      "sha256": "45a7d4fd220c61b1a5a202ef78b42f5487942e797aaa18ad344a05fc6e8c489c",
+      "bytes": 5378
+    },
+    {
+      "path": "scripts/research_cli.py",
+      "sha256": "61639fc4e87851b84bb438836950b4d9418c856b0e7bf1f0ac376dc473db9c15",
+      "bytes": 6417
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "label": "111_eth_intrabar_short_window_completed",
+  "created_at": "2026-09-13T10:36:05.041875+00:00",
+  "files": [
+    {
+      "path": "docs/verification/eth-intrabar-short-window-20260913/data-check.json",
+      "sha256": "a8397bdbc4f8d5d28d9d2b0e01ad89d2247d7391f0d423cf95fb86732bdabb04",
+      "bytes": 278
+    },
+    {
+      "path": "docs/verification/eth-intrabar-short-window-20260913/past-scores.json",
+      "sha256": "a44488a51dad1aef708c7cddc29f2c8287385692c960fb79ba36ebd97dfe8f10",
+      "bytes": 90167
+    },
+    {
+      "path": "docs/verification/eth-intrabar-short-window-20260913/plan.json",
+      "sha256": "76730b618875d33e5884da3cdecad6c71b6e0bcfa05bd5f8c271a9f077905df8",
+      "bytes": 6659
+    },
+    {
+      "path": "docs/verification/eth-intrabar-short-window-20260913/README.md",
+      "sha256": "20b360d3a28a12b0cf9e0631b669d7cfb8aa14403f8567ece605c757389c383e",
+      "bytes": 1484
+    },
+    {
+      "path": "docs/verification/eth-intrabar-short-window-20260913/recovery.json",
+      "sha256": "3e52cb65fd1a9aa6fa0fc7c28ecb26acc80d0de001a28b6198f20c8b0b27f9d8",
+      "bytes": 237
+    },
+    {
+      "path": "docs/verification/eth-intrabar-short-window-20260913/results.json",
+      "sha256": "e10aa58e0fbd5e6b308a5760e3fe0b3884a105bb02ec8afe7a3529863fe726da",
+      "bytes": 14589
+    },
+    {
+      "path": "docs/verification/eth-intrabar-short-window-20260913/selection-lock.json",
+      "sha256": "e0f2214b763b662f6769b9d52d9623f7ce5b56839a8f2de12223e971021e10fe",
+      "bytes": 12655
+    },
+    {
+      "path": "docs/verification/eth-intrabar-short-window-20260913/verification.json",
+      "sha256": "368641042fd7a5fa26ff533a85cf042ce374daca7658f578fbb095aa853dc584",
+      "bytes": 383
+    },
+    {
+      "path": "scripts/eth_intrabar_short_window_study.py",
+      "sha256": "9909855554ea53e4afbd0d2d7c505422f137dc52413d205ee2cc9592ecf36a6f",
+      "bytes": 15256
+    }
+  ]
+}

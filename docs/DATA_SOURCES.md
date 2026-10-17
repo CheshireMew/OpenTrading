@@ -7,17 +7,14 @@ Heimdall uses a small set of public data sources. Runtime configuration lives in
 - `DATABASE_URL`: the only database entrypoint. Use PostgreSQL for normal use; SQLite is used by tests.
 - Binance public APIs: spot, USD-M futures, and Web3 endpoints are configured by the `BINANCE_*` settings.
 
-## Optional
-
-- `FRED_API_KEY`: preferred source for US macro indicators such as Treasury yields, federal funds rate, M2, CPI, and credit spreads.
-
 ## Fallbacks
 
-- YFinance is used as a fallback for selected market and macro series.
+- YFinance is used as a fallback for selected index price series.
 - BaoStock and AkShare are used for China and Hong Kong index history where configured.
 - Alternative.me provides Fear & Greed data.
 - Mempool.space and DefiLlama provide selected on-chain and stablecoin liquidity inputs.
-- Binance PAXG is used as the crypto-native gold proxy.
+
+Market signals collect on-chain, sentiment, and Bitcoin technical data. Macro indicator collection and FRED integration were retired on 2026-10-17. Existing macro history remains stored for reference, but is excluded from indicator responses and data-health freshness checks. Stock catalogs, index price history and benchmark currency conversion remain available without a FRED API key. Archived sources are in `archived/macro_indicators/`.
 
 ## Diagnostics
 

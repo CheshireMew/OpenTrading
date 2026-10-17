@@ -1,0 +1,1 @@
+[{"case":"fine_control","reason":"修复持久层将execution_detail汇总字典误当成逐笔列表；仅补存已完整计算且哈希一致的结果，无重算。","result_hash":"9fc8f6fd86c6cb8da56ed1c04101240ad55778ee9a8c09e9bddbf98e42011358","run_id":"8887be64a2469e80a471b24bf935171c"}]

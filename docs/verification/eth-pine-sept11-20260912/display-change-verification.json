@@ -1,0 +1,12 @@
+{
+  "created_at": "2026-09-12T14:09:36.305570+00:00",
+  "version": "v2",
+  "changes": "display only: one set of native trade labels; short comments; hidden auxiliary lines/table by default; separate long/short stop plots; execution prices in data window",
+  "trading_logic_normalized_equal": true,
+  "pine_compilation": "not run; browser interaction excluded by user",
+  "same_bar_case_run": "67f07fcba58e4ceead15917e326d8c4d",
+  "files": {
+    "strategies\\pine\\eth_ema55_six_year_v1.pine": "c0578ca1e9767236753f052bced1425e065d2898fdc178af6436cb4238a85b68",
+    "strategies\\pine\\eth_ema55_six_year_v2.pine": "a9259187611347ce5c5e296c0fc5c39ee8f83ec88c1429fdfafda8b1a1bf6478"
+  }
+}

@@ -1,31 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-
-
-@dataclass(frozen=True)
-class MacroIndicatorSource:
-    fred_id: str | None
-    yf_ticker: str | None
-    indicator_id: str
-
-
-MACRO_INDICATOR_SOURCES: tuple[MacroIndicatorSource, ...] = (
-    MacroIndicatorSource("DGS10", "^TNX", "US10Y"),
-    MacroIndicatorSource("DGS2", None, "US02Y"),
-    MacroIndicatorSource("NASDAQCOM", "^IXIC", "NASDAQ"),
-    MacroIndicatorSource("FEDFUNDS", None, "FED_RATE"),
-    MacroIndicatorSource("DCOILWTICO", "CL=F", "WTI"),
-)
-
-
 MARKET_INDICATOR_META: dict[str, tuple[str, str, str]] = {
-    "US10Y": ("US 10Y Treasury Yield", "Macro", "%"),
-    "NASDAQ": ("NASDAQ Composite", "Macro", ""),
-    "GOLD": ("Gold Spot Price", "Macro", "USD"),
-    "FED_RATE": ("Fed Funds Rate", "Macro", "%"),
-    "US02Y": ("US 2Y Treasury Yield", "Macro", "%"),
-    "WTI": ("WTI Crude Oil", "Macro", "USD"),
     "HASHRATE": ("BTC Hashrate", "Onchain", "EH/s"),
     "DIFFICULTY": ("Mining Difficulty", "Onchain", "T"),
     "STABLECOIN_CAP": ("Stablecoin Market Cap", "Onchain", "USD"),

@@ -78,7 +78,7 @@ const routeTemplates = {
   get_current_price: "/price/current",
   get_current_price_batch: "/price/current/batch",
   get_data_health: "/data-health",
-  get_fred_api_config: "/fred-api-config",
+  get_equity_catalog: "/equities/catalog",
   get_index_history: "/indexes/history",
   get_index_pricing_history: "/indexes/pricing/history",
   get_kline_tail: "/klines/tail",
@@ -139,7 +139,6 @@ const routeTemplates = {
   run_market_screener: "/research/screeners/{screener_id}/run",
   save_portfolio_collection: "/tools/portfolios",
   save_portfolio_simulation: "/tools/portfolios/{portfolio_id}/simulation",
-  update_fred_api_config: "/fred-api-config",
   update_llm_config: "/llm-config",
   update_market_screener: "/research/screeners/{screener_id}",
   update_portfolio_transaction: "/tools/portfolios/{portfolio_id}/transactions/{transaction_id}",
@@ -241,7 +240,7 @@ const endpointQueryContracts = {
   get_current_price: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   get_current_price_batch: {"repeatedKeys": ["symbols"], "aliases": {}} as EndpointQueryContract,
   get_data_health: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
-  get_fred_api_config: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
+  get_equity_catalog: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   get_index_history: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   get_index_pricing_history: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   get_kline_tail: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
@@ -302,7 +301,6 @@ const endpointQueryContracts = {
   run_market_screener: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   save_portfolio_collection: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   save_portfolio_simulation: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
-  update_fred_api_config: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   update_llm_config: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   update_market_screener: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   update_portfolio_transaction: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
@@ -372,7 +370,7 @@ export type ApiRouteResponseMap = {
   get_current_price: MarketTypes.CurrentPriceResponse
   get_current_price_batch: MarketTypes.CurrentPriceBatchResponse
   get_data_health: ConfigTypes.DataHealthResponse
-  get_fred_api_config: ConfigTypes.FredApiConfigResponse
+  get_equity_catalog: MarketTypes.EquityCatalogResponse
   get_index_history: MarketTypes.MarketIndexHistoryResponse
   get_index_pricing_history: MarketTypes.MarketIndexHistoryResponse
   get_kline_tail: MarketTypes.KlineTailResponse
@@ -433,7 +431,6 @@ export type ApiRouteResponseMap = {
   run_market_screener: ResearchTypes.MarketScreenerRunResponse
   save_portfolio_collection: ToolsTypes.PortfolioCollectionResponse
   save_portfolio_simulation: ToolsTypes.PortfolioSimulationResultResponse
-  update_fred_api_config: ConfigTypes.FredApiConfigResponse
   update_llm_config: ConfigTypes.LlmProviderConfigResponse
   update_market_screener: ResearchTypes.SavedMarketScreenerResponse
   update_portfolio_transaction: ToolsTypes.PortfolioTransactionResponse
@@ -503,7 +500,7 @@ export type ApiRouteBodyMap = {
   get_current_price: never
   get_current_price_batch: never
   get_data_health: never
-  get_fred_api_config: never
+  get_equity_catalog: never
   get_index_history: never
   get_index_pricing_history: never
   get_kline_tail: never
@@ -564,7 +561,6 @@ export type ApiRouteBodyMap = {
   run_market_screener: ResearchTypes.MarketScreenerRunCommand
   save_portfolio_collection: ToolsTypes.PortfolioCollectionSaveCommand
   save_portfolio_simulation: ToolsTypes.PortfolioSimulationResultCommand
-  update_fred_api_config: ConfigTypes.FredApiConfigUpdateRequest
   update_llm_config: ConfigTypes.LlmProviderConfigUpdateRequest
   update_market_screener: ResearchTypes.SavedMarketScreenerUpdateCommand
   update_portfolio_transaction: ToolsTypes.PortfolioTransactionUpdateCommand
@@ -634,7 +630,7 @@ export type ApiRoutePathMap = {
   get_current_price: never
   get_current_price_batch: never
   get_data_health: never
-  get_fred_api_config: never
+  get_equity_catalog: never
   get_index_history: never
   get_index_pricing_history: never
   get_kline_tail: never
@@ -695,7 +691,6 @@ export type ApiRoutePathMap = {
   run_market_screener: { screener_id: string | number }
   save_portfolio_collection: never
   save_portfolio_simulation: { portfolio_id: string | number }
-  update_fred_api_config: never
   update_llm_config: never
   update_market_screener: { screener_id: string | number }
   update_portfolio_transaction: { portfolio_id: string | number; transaction_id: string | number }
@@ -765,7 +760,7 @@ export type ApiRouteQueryMap = {
   get_current_price: MarketTypes.GetCurrentPriceQueryParams
   get_current_price_batch: MarketTypes.GetCurrentPriceBatchQueryParams
   get_data_health: never
-  get_fred_api_config: never
+  get_equity_catalog: MarketTypes.GetEquityCatalogQueryParams
   get_index_history: MarketTypes.GetIndexHistoryQueryParams
   get_index_pricing_history: MarketTypes.GetIndexPricingHistoryQueryParams
   get_kline_tail: MarketTypes.GetKlineTailQueryParams
@@ -826,7 +821,6 @@ export type ApiRouteQueryMap = {
   run_market_screener: never
   save_portfolio_collection: never
   save_portfolio_simulation: never
-  update_fred_api_config: never
   update_llm_config: never
   update_market_screener: never
   update_portfolio_transaction: never

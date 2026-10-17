@@ -188,7 +188,7 @@ class DataHealthService:
         status = "empty" if not rows else "stale" if age is not None and age > 48 * 3600 else "ready"
         return DataSourceHealthResponse(
             id="market_indicators",
-            name="宏观与市场指标",
+            name="市场信号指标",
             status=status,
             recordCount=count,
             coverageStart=first,

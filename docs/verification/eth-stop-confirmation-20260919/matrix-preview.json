@@ -1,0 +1,1628 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "sweep",
+  "data": {
+    "count": 8,
+    "new_runs": 8,
+    "reused_runs": 0,
+    "axes": {
+      "parameters.stop_confirmation": [
+        "immediate",
+        "next_bar_open",
+        "next_bar_touch",
+        "next_bar_close"
+      ],
+      "parameters.stop_range_lock": [
+        false,
+        true
+      ]
+    },
+    "fixed_parameters": {
+      "center_length": 55,
+      "width_length": 31,
+      "trigger_mult": 0.4,
+      "chase_mult": 2,
+      "confirmation_level": 3,
+      "max_wait_bars": 2,
+      "price_tick": 0.01,
+      "entry_bar_assumption": 0,
+      "activation_pct": 2,
+      "giveback_pct": 50,
+      "initial_stop_pct": 1,
+      "direction_filter": false,
+      "stop_method": 0,
+      "stop_mult": 1.5,
+      "stop_floor_pct": 0.5,
+      "stop_cap_pct": 2,
+      "stop_reentry": false
+    },
+    "data_previews": [
+      {
+        "config": {
+          "strategy": "trend_cloud_stop_confirmation_v1",
+          "parameters": {
+            "center_length": 55,
+            "width_length": 31,
+            "trigger_mult": 0.4,
+            "chase_mult": 2,
+            "confirmation_level": 3,
+            "max_wait_bars": 2,
+            "price_tick": 0.01,
+            "entry_bar_assumption": 0,
+            "activation_pct": 2,
+            "giveback_pct": 50,
+            "initial_stop_pct": 1,
+            "direction_filter": false,
+            "stop_method": 0,
+            "stop_mult": 1.5,
+            "stop_floor_pct": 0.5,
+            "stop_cap_pct": 2,
+            "stop_reentry": false,
+            "stop_confirmation": "immediate",
+            "stop_range_lock": false
+          },
+          "symbol": "ETH/USDT",
+          "timeframe": "15m",
+          "start": "2020-09-10T00:00:00Z",
+          "end": "2026-09-18T00:00:00Z",
+          "initial_cash": 10000.0,
+          "position_pct": 100.0,
+          "data_gap_policy": "observed_bars",
+          "execution_timeframe": "5m",
+          "intrabar_profit_protection": false,
+          "execution_gap_policy": "coarse_fallback"
+        },
+        "warmup_bars": 515,
+        "warmup_explanation": "按当前参数取各指标所需历史的最大值。EMA／RMA 初始值权重降至 1e-8 以下，再覆盖已声明回看窗口；这是数值初始化标准，不保证价格或信号完全相同。 同源同周期组合统一使用本批最大值 515 根，本组单独需要 515 根。",
+        "rules_summary": [
+          "下一根均指信号周期，细周期只用于成交；延后止损可能亏损超过名义距离。",
+          "反向退出与利润保护不延后；只有初始止损退出才建立禁止入场区。",
+          "止损后等待该信号K线收盘固定高低范围；后续收盘突破范围才重新积累一次同向入场信号，并保留确认及追价限制。",
+          "中心 EMA：55 根；高低差 EMA：31 根；原突破门槛 / W：0.4 W；追价上限 / W：2 W；突破确认价位：信号实体上／下沿；信号后最多等待根数：2 根；突破一个价格单位：0.01 报价币；入场当根先后顺序：入场后止损优先；利润保护启动 %：2 %；最高浮盈回吐 %：50 %；初始止损 %，0 关闭：1 %；仅顺过去6根中心线方向开仓：关闭；初始止损方法：固定百分比；止损后突破止损K线极值，最多重进一次：关闭；初始止损确认：触及即止损；止损后暂停在止损K线范围内重新入场：关闭"
+        ],
+        "signal_data": {
+          "timeframe": "15m",
+          "required_start_ms": 1599232500000,
+          "required_end_ms": 1789689600000,
+          "first_cached_ms": 1599111000000,
+          "last_cached_close_ms": 1789689600000,
+          "expected_bars": 211619,
+          "cached_bars": 211525,
+          "missing_bars": 94,
+          "complete_intervals": [
+            {
+              "start_ms": 1599696000000,
+              "end_ms": 1606716000000
+            },
+            {
+              "start_ms": 1607183100000,
+              "end_ms": 1608559200000
+            },
+            {
+              "start_ms": 1609328700000,
+              "end_ms": 1613015100000
+            },
+            {
+              "start_ms": 1613483100000,
+              "end_ms": 1614996000000
+            },
+            {
+              "start_ms": 1615464900000,
+              "end_ms": 1618884000000
+            },
+            {
+              "start_ms": 1619803800000,
+              "end_ms": 1628820000000
+            },
+            {
+              "start_ms": 1629299700000,
+              "end_ms": 1632898800000
+            },
+            {
+              "start_ms": 1633369500000,
+              "end_ms": 1679661900000
+            },
+            {
+              "start_ms": 1680129900000,
+              "end_ms": 1789689600000
+            }
+          ]
+        },
+        "execution_data": {
+          "timeframe": "5m",
+          "required_start_ms": 1599696000000,
+          "required_end_ms": 1789689600000,
+          "first_cached_ms": 1599696000000,
+          "last_cached_close_ms": 1789689600000,
+          "expected_bars": 633312,
+          "cached_bars": 633025,
+          "missing_bars": 287,
+          "complete_intervals": [
+            {
+              "start_ms": 1599696000000,
+              "end_ms": 1606716000000
+            },
+            {
+              "start_ms": 1606719600000,
+              "end_ms": 1608558600000
+            },
+            {
+              "start_ms": 1608573600000,
+              "end_ms": 1608861600000
+            },
+            {
+              "start_ms": 1608865200000,
+              "end_ms": 1613015100000
+            },
+            {
+              "start_ms": 1613019600000,
+              "end_ms": 1614996000000
+            },
+            {
+              "start_ms": 1615001400000,
+              "end_ms": 1618884000000
+            },
+            {
+              "start_ms": 1618893000000,
+              "end_ms": 1619323500000
+            },
+            {
+              "start_ms": 1619340300000,
+              "end_ms": 1628820000000
+            },
+            {
+              "start_ms": 1628836200000,
+              "end_ms": 1632898800000
+            },
+            {
+              "start_ms": 1632906000000,
+              "end_ms": 1679661600000
+            },
+            {
+              "start_ms": 1679666400000,
+              "end_ms": 1789689600000
+            }
+          ]
+        },
+        "comparable_intervals": [
+          {
+            "start_ms": 1599696000000,
+            "end_ms": 1606716000000
+          },
+          {
+            "start_ms": 1607183100000,
+            "end_ms": 1608558300000
+          },
+          {
+            "start_ms": 1609328700000,
+            "end_ms": 1613015100000
+          },
+          {
+            "start_ms": 1613483100000,
+            "end_ms": 1614996000000
+          },
+          {
+            "start_ms": 1615464900000,
+            "end_ms": 1618884000000
+          },
+          {
+            "start_ms": 1619803800000,
+            "end_ms": 1628820000000
+          },
+          {
+            "start_ms": 1629299700000,
+            "end_ms": 1632898800000
+          },
+          {
+            "start_ms": 1633369500000,
+            "end_ms": 1679661000000
+          },
+          {
+            "start_ms": 1680129900000,
+            "end_ms": 1789689600000
+          }
+        ],
+        "warnings": [
+          "只检查本地缓存时间戳；缓存最早时间不等于交易所上市时间。缺失数据由运行时获取，预览不下载行情、不提交任务。",
+          "共同可比区间表示本地连续数据及完整预热覆盖；不会自动替换请求区间。行情值、细周期 OHLC 对齐和最终快照仍由运行时校验。",
+          "信号周期含预热尚缺 94 根本地行情。",
+          "细周期尚缺 287 根本地行情；实际获取后按已选缺口政策处理。"
+        ],
+        "case": "v1"
+      },
+      {
+        "config": {
+          "strategy": "trend_cloud_stop_confirmation_v1",
+          "parameters": {
+            "center_length": 55,
+            "width_length": 31,
+            "trigger_mult": 0.4,
+            "chase_mult": 2,
+            "confirmation_level": 3,
+            "max_wait_bars": 2,
+            "price_tick": 0.01,
+            "entry_bar_assumption": 0,
+            "activation_pct": 2,
+            "giveback_pct": 50,
+            "initial_stop_pct": 1,
+            "direction_filter": false,
+            "stop_method": 0,
+            "stop_mult": 1.5,
+            "stop_floor_pct": 0.5,
+            "stop_cap_pct": 2,
+            "stop_reentry": false,
+            "stop_confirmation": "immediate",
+            "stop_range_lock": true
+          },
+          "symbol": "ETH/USDT",
+          "timeframe": "15m",
+          "start": "2020-09-10T00:00:00Z",
+          "end": "2026-09-18T00:00:00Z",
+          "initial_cash": 10000.0,
+          "position_pct": 100.0,
+          "data_gap_policy": "observed_bars",
+          "execution_timeframe": "5m",
+          "intrabar_profit_protection": false,
+          "execution_gap_policy": "coarse_fallback"
+        },
+        "warmup_bars": 515,
+        "warmup_explanation": "按当前参数取各指标所需历史的最大值。EMA／RMA 初始值权重降至 1e-8 以下，再覆盖已声明回看窗口；这是数值初始化标准，不保证价格或信号完全相同。 同源同周期组合统一使用本批最大值 515 根，本组单独需要 515 根。",
+        "rules_summary": [
+          "下一根均指信号周期，细周期只用于成交；延后止损可能亏损超过名义距离。",
+          "反向退出与利润保护不延后；只有初始止损退出才建立禁止入场区。",
+          "止损后等待该信号K线收盘固定高低范围；后续收盘突破范围才重新积累一次同向入场信号，并保留确认及追价限制。",
+          "中心 EMA：55 根；高低差 EMA：31 根；原突破门槛 / W：0.4 W；追价上限 / W：2 W；突破确认价位：信号实体上／下沿；信号后最多等待根数：2 根；突破一个价格单位：0.01 报价币；入场当根先后顺序：入场后止损优先；利润保护启动 %：2 %；最高浮盈回吐 %：50 %；初始止损 %，0 关闭：1 %；仅顺过去6根中心线方向开仓：关闭；初始止损方法：固定百分比；止损后突破止损K线极值，最多重进一次：关闭；初始止损确认：触及即止损；止损后暂停在止损K线范围内重新入场：开启"
+        ],
+        "signal_data": {
+          "timeframe": "15m",
+          "required_start_ms": 1599232500000,
+          "required_end_ms": 1789689600000,
+          "first_cached_ms": 1599111000000,
+          "last_cached_close_ms": 1789689600000,
+          "expected_bars": 211619,
+          "cached_bars": 211525,
+          "missing_bars": 94,
+          "complete_intervals": [
+            {
+              "start_ms": 1599696000000,
+              "end_ms": 1606716000000
+            },
+            {
+              "start_ms": 1607183100000,
+              "end_ms": 1608559200000
+            },
+            {
+              "start_ms": 1609328700000,
+              "end_ms": 1613015100000
+            },
+            {
+              "start_ms": 1613483100000,
+              "end_ms": 1614996000000
+            },
+            {
+              "start_ms": 1615464900000,
+              "end_ms": 1618884000000
+            },
+            {
+              "start_ms": 1619803800000,
+              "end_ms": 1628820000000
+            },
+            {
+              "start_ms": 1629299700000,
+              "end_ms": 1632898800000
+            },
+            {
+              "start_ms": 1633369500000,
+              "end_ms": 1679661900000
+            },
+            {
+              "start_ms": 1680129900000,
+              "end_ms": 1789689600000
+            }
+          ]
+        },
+        "execution_data": {
+          "timeframe": "5m",
+          "required_start_ms": 1599696000000,
+          "required_end_ms": 1789689600000,
+          "first_cached_ms": 1599696000000,
+          "last_cached_close_ms": 1789689600000,
+          "expected_bars": 633312,
+          "cached_bars": 633025,
+          "missing_bars": 287,
+          "complete_intervals": [
+            {
+              "start_ms": 1599696000000,
+              "end_ms": 1606716000000
+            },
+            {
+              "start_ms": 1606719600000,
+              "end_ms": 1608558600000
+            },
+            {
+              "start_ms": 1608573600000,
+              "end_ms": 1608861600000
+            },
+            {
+              "start_ms": 1608865200000,
+              "end_ms": 1613015100000
+            },
+            {
+              "start_ms": 1613019600000,
+              "end_ms": 1614996000000
+            },
+            {
+              "start_ms": 1615001400000,
+              "end_ms": 1618884000000
+            },
+            {
+              "start_ms": 1618893000000,
+              "end_ms": 1619323500000
+            },
+            {
+              "start_ms": 1619340300000,
+              "end_ms": 1628820000000
+            },
+            {
+              "start_ms": 1628836200000,
+              "end_ms": 1632898800000
+            },
+            {
+              "start_ms": 1632906000000,
+              "end_ms": 1679661600000
+            },
+            {
+              "start_ms": 1679666400000,
+              "end_ms": 1789689600000
+            }
+          ]
+        },
+        "comparable_intervals": [
+          {
+            "start_ms": 1599696000000,
+            "end_ms": 1606716000000
+          },
+          {
+            "start_ms": 1607183100000,
+            "end_ms": 1608558300000
+          },
+          {
+            "start_ms": 1609328700000,
+            "end_ms": 1613015100000
+          },
+          {
+            "start_ms": 1613483100000,
+            "end_ms": 1614996000000
+          },
+          {
+            "start_ms": 1615464900000,
+            "end_ms": 1618884000000
+          },
+          {
+            "start_ms": 1619803800000,
+            "end_ms": 1628820000000
+          },
+          {
+            "start_ms": 1629299700000,
+            "end_ms": 1632898800000
+          },
+          {
+            "start_ms": 1633369500000,
+            "end_ms": 1679661000000
+          },
+          {
+            "start_ms": 1680129900000,
+            "end_ms": 1789689600000
+          }
+        ],
+        "warnings": [
+          "只检查本地缓存时间戳；缓存最早时间不等于交易所上市时间。缺失数据由运行时获取，预览不下载行情、不提交任务。",
+          "共同可比区间表示本地连续数据及完整预热覆盖；不会自动替换请求区间。行情值、细周期 OHLC 对齐和最终快照仍由运行时校验。",
+          "信号周期含预热尚缺 94 根本地行情。",
+          "细周期尚缺 287 根本地行情；实际获取后按已选缺口政策处理。"
+        ],
+        "case": "v2"
+      },
+      {
+        "config": {
+          "strategy": "trend_cloud_stop_confirmation_v1",
+          "parameters": {
+            "center_length": 55,
+            "width_length": 31,
+            "trigger_mult": 0.4,
+            "chase_mult": 2,
+            "confirmation_level": 3,
+            "max_wait_bars": 2,
+            "price_tick": 0.01,
+            "entry_bar_assumption": 0,
+            "activation_pct": 2,
+            "giveback_pct": 50,
+            "initial_stop_pct": 1,
+            "direction_filter": false,
+            "stop_method": 0,
+            "stop_mult": 1.5,
+            "stop_floor_pct": 0.5,
+            "stop_cap_pct": 2,
+            "stop_reentry": false,
+            "stop_confirmation": "next_bar_open",
+            "stop_range_lock": false
+          },
+          "symbol": "ETH/USDT",
+          "timeframe": "15m",
+          "start": "2020-09-10T00:00:00Z",
+          "end": "2026-09-18T00:00:00Z",
+          "initial_cash": 10000.0,
+          "position_pct": 100.0,
+          "data_gap_policy": "observed_bars",
+          "execution_timeframe": "5m",
+          "intrabar_profit_protection": false,
+          "execution_gap_policy": "coarse_fallback"
+        },
+        "warmup_bars": 515,
+        "warmup_explanation": "按当前参数取各指标所需历史的最大值。EMA／RMA 初始值权重降至 1e-8 以下，再覆盖已声明回看窗口；这是数值初始化标准，不保证价格或信号完全相同。 同源同周期组合统一使用本批最大值 515 根，本组单独需要 515 根。",
+        "rules_summary": [
+          "下一根均指信号周期，细周期只用于成交；延后止损可能亏损超过名义距离。",
+          "反向退出与利润保护不延后；只有初始止损退出才建立禁止入场区。",
+          "止损后等待该信号K线收盘固定高低范围；后续收盘突破范围才重新积累一次同向入场信号，并保留确认及追价限制。",
+          "中心 EMA：55 根；高低差 EMA：31 根；原突破门槛 / W：0.4 W；追价上限 / W：2 W；突破确认价位：信号实体上／下沿；信号后最多等待根数：2 根；突破一个价格单位：0.01 报价币；入场当根先后顺序：入场后止损优先；利润保护启动 %：2 %；最高浮盈回吐 %：50 %；初始止损 %，0 关闭：1 %；仅顺过去6根中心线方向开仓：关闭；初始止损方法：固定百分比；止损后突破止损K线极值，最多重进一次：关闭；初始止损确认：触及后下一根开盘判断；止损后暂停在止损K线范围内重新入场：关闭"
+        ],
+        "signal_data": {
+          "timeframe": "15m",
+          "required_start_ms": 1599232500000,
+          "required_end_ms": 1789689600000,
+          "first_cached_ms": 1599111000000,
+          "last_cached_close_ms": 1789689600000,
+          "expected_bars": 211619,
+          "cached_bars": 211525,
+          "missing_bars": 94,
+          "complete_intervals": [
+            {
+              "start_ms": 1599696000000,
+              "end_ms": 1606716000000
+            },
+            {
+              "start_ms": 1607183100000,
+              "end_ms": 1608559200000
+            },
+            {
+              "start_ms": 1609328700000,
+              "end_ms": 1613015100000
+            },
+            {
+              "start_ms": 1613483100000,
+              "end_ms": 1614996000000
+            },
+            {
+              "start_ms": 1615464900000,
+              "end_ms": 1618884000000
+            },
+            {
+              "start_ms": 1619803800000,
+              "end_ms": 1628820000000
+            },
+            {
+              "start_ms": 1629299700000,
+              "end_ms": 1632898800000
+            },
+            {
+              "start_ms": 1633369500000,
+              "end_ms": 1679661900000
+            },
+            {
+              "start_ms": 1680129900000,
+              "end_ms": 1789689600000
+            }
+          ]
+        },
+        "execution_data": {
+          "timeframe": "5m",
+          "required_start_ms": 1599696000000,
+          "required_end_ms": 1789689600000,
+          "first_cached_ms": 1599696000000,
+          "last_cached_close_ms": 1789689600000,
+          "expected_bars": 633312,
+          "cached_bars": 633025,
+          "missing_bars": 287,
+          "complete_intervals": [
+            {
+              "start_ms": 1599696000000,
+              "end_ms": 1606716000000
+            },
+            {
+              "start_ms": 1606719600000,
+              "end_ms": 1608558600000
+            },
+            {
+              "start_ms": 1608573600000,
+              "end_ms": 1608861600000
+            },
+            {
+              "start_ms": 1608865200000,
+              "end_ms": 1613015100000
+            },
+            {
+              "start_ms": 1613019600000,
+              "end_ms": 1614996000000
+            },
+            {
+              "start_ms": 1615001400000,
+              "end_ms": 1618884000000
+            },
+            {
+              "start_ms": 1618893000000,
+              "end_ms": 1619323500000
+            },
+            {
+              "start_ms": 1619340300000,
+              "end_ms": 1628820000000
+            },
+            {
+              "start_ms": 1628836200000,
+              "end_ms": 1632898800000
+            },
+            {
+              "start_ms": 1632906000000,
+              "end_ms": 1679661600000
+            },
+            {
+              "start_ms": 1679666400000,
+              "end_ms": 1789689600000
+            }
+          ]
+        },
+        "comparable_intervals": [
+          {
+            "start_ms": 1599696000000,
+            "end_ms": 1606716000000
+          },
+          {
+            "start_ms": 1607183100000,
+            "end_ms": 1608558300000
+          },
+          {
+            "start_ms": 1609328700000,
+            "end_ms": 1613015100000
+          },
+          {
+            "start_ms": 1613483100000,
+            "end_ms": 1614996000000
+          },
+          {
+            "start_ms": 1615464900000,
+            "end_ms": 1618884000000
+          },
+          {
+            "start_ms": 1619803800000,
+            "end_ms": 1628820000000
+          },
+          {
+            "start_ms": 1629299700000,
+            "end_ms": 1632898800000
+          },
+          {
+            "start_ms": 1633369500000,
+            "end_ms": 1679661000000
+          },
+          {
+            "start_ms": 1680129900000,
+            "end_ms": 1789689600000
+          }
+        ],
+        "warnings": [
+          "只检查本地缓存时间戳；缓存最早时间不等于交易所上市时间。缺失数据由运行时获取，预览不下载行情、不提交任务。",
+          "共同可比区间表示本地连续数据及完整预热覆盖；不会自动替换请求区间。行情值、细周期 OHLC 对齐和最终快照仍由运行时校验。",
+          "信号周期含预热尚缺 94 根本地行情。",
+          "细周期尚缺 287 根本地行情；实际获取后按已选缺口政策处理。"
+        ],
+        "case": "v3"
+      },
+      {
+        "config": {
+          "strategy": "trend_cloud_stop_confirmation_v1",
+          "parameters": {
+            "center_length": 55,
+            "width_length": 31,
+            "trigger_mult": 0.4,
+            "chase_mult": 2,
+            "confirmation_level": 3,
+            "max_wait_bars": 2,
+            "price_tick": 0.01,
+            "entry_bar_assumption": 0,
+            "activation_pct": 2,
+            "giveback_pct": 50,
+            "initial_stop_pct": 1,
+            "direction_filter": false,
+            "stop_method": 0,
+            "stop_mult": 1.5,
+            "stop_floor_pct": 0.5,
+            "stop_cap_pct": 2,
+            "stop_reentry": false,
+            "stop_confirmation": "next_bar_open",
+            "stop_range_lock": true
+          },
+          "symbol": "ETH/USDT",
+          "timeframe": "15m",
+          "start": "2020-09-10T00:00:00Z",
+          "end": "2026-09-18T00:00:00Z",
+          "initial_cash": 10000.0,
+          "position_pct": 100.0,
+          "data_gap_policy": "observed_bars",
+          "execution_timeframe": "5m",
+          "intrabar_profit_protection": false,
+          "execution_gap_policy": "coarse_fallback"
+        },
+        "warmup_bars": 515,
+        "warmup_explanation": "按当前参数取各指标所需历史的最大值。EMA／RMA 初始值权重降至 1e-8 以下，再覆盖已声明回看窗口；这是数值初始化标准，不保证价格或信号完全相同。 同源同周期组合统一使用本批最大值 515 根，本组单独需要 515 根。",
+        "rules_summary": [
+          "下一根均指信号周期，细周期只用于成交；延后止损可能亏损超过名义距离。",
+          "反向退出与利润保护不延后；只有初始止损退出才建立禁止入场区。",
+          "止损后等待该信号K线收盘固定高低范围；后续收盘突破范围才重新积累一次同向入场信号，并保留确认及追价限制。",
+          "中心 EMA：55 根；高低差 EMA：31 根；原突破门槛 / W：0.4 W；追价上限 / W：2 W；突破确认价位：信号实体上／下沿；信号后最多等待根数：2 根；突破一个价格单位：0.01 报价币；入场当根先后顺序：入场后止损优先；利润保护启动 %：2 %；最高浮盈回吐 %：50 %；初始止损 %，0 关闭：1 %；仅顺过去6根中心线方向开仓：关闭；初始止损方法：固定百分比；止损后突破止损K线极值，最多重进一次：关闭；初始止损确认：触及后下一根开盘判断；止损后暂停在止损K线范围内重新入场：开启"
+        ],
+        "signal_data": {
+          "timeframe": "15m",
+          "required_start_ms": 1599232500000,
+          "required_end_ms": 1789689600000,
+          "first_cached_ms": 1599111000000,
+          "last_cached_close_ms": 1789689600000,
+          "expected_bars": 211619,
+          "cached_bars": 211525,
+          "missing_bars": 94,
+          "complete_intervals": [
+            {
+              "start_ms": 1599696000000,
+              "end_ms": 1606716000000
+            },
+            {
+              "start_ms": 1607183100000,
+              "end_ms": 1608559200000
+            },
+            {
+              "start_ms": 1609328700000,
+              "end_ms": 1613015100000
+            },
+            {
+              "start_ms": 1613483100000,
+              "end_ms": 1614996000000
+            },
+            {
+              "start_ms": 1615464900000,
+              "end_ms": 1618884000000
+            },
+            {
+              "start_ms": 1619803800000,
+              "end_ms": 1628820000000
+            },
+            {
+              "start_ms": 1629299700000,
+              "end_ms": 1632898800000
+            },
+            {
+              "start_ms": 1633369500000,
+              "end_ms": 1679661900000
+            },
+            {
+              "start_ms": 1680129900000,
+              "end_ms": 1789689600000
+            }
+          ]
+        },
+        "execution_data": {
+          "timeframe": "5m",
+          "required_start_ms": 1599696000000,
+          "required_end_ms": 1789689600000,
+          "first_cached_ms": 1599696000000,
+          "last_cached_close_ms": 1789689600000,
+          "expected_bars": 633312,
+          "cached_bars": 633025,
+          "missing_bars": 287,
+          "complete_intervals": [
+            {
+              "start_ms": 1599696000000,
+              "end_ms": 1606716000000
+            },
+            {
+              "start_ms": 1606719600000,
+              "end_ms": 1608558600000
+            },
+            {
+              "start_ms": 1608573600000,
+              "end_ms": 1608861600000
+            },
+            {
+              "start_ms": 1608865200000,
+              "end_ms": 1613015100000
+            },
+            {
+              "start_ms": 1613019600000,
+              "end_ms": 1614996000000
+            },
+            {
+              "start_ms": 1615001400000,
+              "end_ms": 1618884000000
+            },
+            {
+              "start_ms": 1618893000000,
+              "end_ms": 1619323500000
+            },
+            {
+              "start_ms": 1619340300000,
+              "end_ms": 1628820000000
+            },
+            {
+              "start_ms": 1628836200000,
+              "end_ms": 1632898800000
+            },
+            {
+              "start_ms": 1632906000000,
+              "end_ms": 1679661600000
+            },
+            {
+              "start_ms": 1679666400000,
+              "end_ms": 1789689600000
+            }
+          ]
+        },
+        "comparable_intervals": [
+          {
+            "start_ms": 1599696000000,
+            "end_ms": 1606716000000
+          },
+          {
+            "start_ms": 1607183100000,
+            "end_ms": 1608558300000
+          },
+          {
+            "start_ms": 1609328700000,
+            "end_ms": 1613015100000
+          },
+          {
+            "start_ms": 1613483100000,
+            "end_ms": 1614996000000
+          },
+          {
+            "start_ms": 1615464900000,
+            "end_ms": 1618884000000
+          },
+          {
+            "start_ms": 1619803800000,
+            "end_ms": 1628820000000
+          },
+          {
+            "start_ms": 1629299700000,
+            "end_ms": 1632898800000
+          },
+          {
+            "start_ms": 1633369500000,
+            "end_ms": 1679661000000
+          },
+          {
+            "start_ms": 1680129900000,
+            "end_ms": 1789689600000
+          }
+        ],
+        "warnings": [
+          "只检查本地缓存时间戳；缓存最早时间不等于交易所上市时间。缺失数据由运行时获取，预览不下载行情、不提交任务。",
+          "共同可比区间表示本地连续数据及完整预热覆盖；不会自动替换请求区间。行情值、细周期 OHLC 对齐和最终快照仍由运行时校验。",
+          "信号周期含预热尚缺 94 根本地行情。",
+          "细周期尚缺 287 根本地行情；实际获取后按已选缺口政策处理。"
+        ],
+        "case": "v4"
+      },
+      {
+        "config": {
+          "strategy": "trend_cloud_stop_confirmation_v1",
+          "parameters": {
+            "center_length": 55,
+            "width_length": 31,
+            "trigger_mult": 0.4,
+            "chase_mult": 2,
+            "confirmation_level": 3,
+            "max_wait_bars": 2,
+            "price_tick": 0.01,
+            "entry_bar_assumption": 0,
+            "activation_pct": 2,
+            "giveback_pct": 50,
+            "initial_stop_pct": 1,
+            "direction_filter": false,
+            "stop_method": 0,
+            "stop_mult": 1.5,
+            "stop_floor_pct": 0.5,
+            "stop_cap_pct": 2,
+            "stop_reentry": false,
+            "stop_confirmation": "next_bar_touch",
+            "stop_range_lock": false
+          },
+          "symbol": "ETH/USDT",
+          "timeframe": "15m",
+          "start": "2020-09-10T00:00:00Z",
+          "end": "2026-09-18T00:00:00Z",
+          "initial_cash": 10000.0,
+          "position_pct": 100.0,
+          "data_gap_policy": "observed_bars",
+          "execution_timeframe": "5m",
+          "intrabar_profit_protection": false,
+          "execution_gap_policy": "coarse_fallback"
+        },
+        "warmup_bars": 515,
+        "warmup_explanation": "按当前参数取各指标所需历史的最大值。EMA／RMA 初始值权重降至 1e-8 以下，再覆盖已声明回看窗口；这是数值初始化标准，不保证价格或信号完全相同。 同源同周期组合统一使用本批最大值 515 根，本组单独需要 515 根。",
+        "rules_summary": [
+          "下一根均指信号周期，细周期只用于成交；延后止损可能亏损超过名义距离。",
+          "反向退出与利润保护不延后；只有初始止损退出才建立禁止入场区。",
+          "止损后等待该信号K线收盘固定高低范围；后续收盘突破范围才重新积累一次同向入场信号，并保留确认及追价限制。",
+          "中心 EMA：55 根；高低差 EMA：31 根；原突破门槛 / W：0.4 W；追价上限 / W：2 W；突破确认价位：信号实体上／下沿；信号后最多等待根数：2 根；突破一个价格单位：0.01 报价币；入场当根先后顺序：入场后止损优先；利润保护启动 %：2 %；最高浮盈回吐 %：50 %；初始止损 %，0 关闭：1 %；仅顺过去6根中心线方向开仓：关闭；初始止损方法：固定百分比；止损后突破止损K线极值，最多重进一次：关闭；初始止损确认：触及后下一根开盘及盘中判断；止损后暂停在止损K线范围内重新入场：关闭"
+        ],
+        "signal_data": {
+          "timeframe": "15m",
+          "required_start_ms": 1599232500000,
+          "required_end_ms": 1789689600000,
+          "first_cached_ms": 1599111000000,
+          "last_cached_close_ms": 1789689600000,
+          "expected_bars": 211619,
+          "cached_bars": 211525,
+          "missing_bars": 94,
+          "complete_intervals": [
+            {
+              "start_ms": 1599696000000,
+              "end_ms": 1606716000000
+            },
+            {
+              "start_ms": 1607183100000,
+              "end_ms": 1608559200000
+            },
+            {
+              "start_ms": 1609328700000,
+              "end_ms": 1613015100000
+            },
+            {
+              "start_ms": 1613483100000,
+              "end_ms": 1614996000000
+            },
+            {
+              "start_ms": 1615464900000,
+              "end_ms": 1618884000000
+            },
+            {
+              "start_ms": 1619803800000,
+              "end_ms": 1628820000000
+            },
+            {
+              "start_ms": 1629299700000,
+              "end_ms": 1632898800000
+            },
+            {
+              "start_ms": 1633369500000,
+              "end_ms": 1679661900000
+            },
+            {
+              "start_ms": 1680129900000,
+              "end_ms": 1789689600000
+            }
+          ]
+        },
+        "execution_data": {
+          "timeframe": "5m",
+          "required_start_ms": 1599696000000,
+          "required_end_ms": 1789689600000,
+          "first_cached_ms": 1599696000000,
+          "last_cached_close_ms": 1789689600000,
+          "expected_bars": 633312,
+          "cached_bars": 633025,
+          "missing_bars": 287,
+          "complete_intervals": [
+            {
+              "start_ms": 1599696000000,
+              "end_ms": 1606716000000
+            },
+            {
+              "start_ms": 1606719600000,
+              "end_ms": 1608558600000
+            },
+            {
+              "start_ms": 1608573600000,
+              "end_ms": 1608861600000
+            },
+            {
+              "start_ms": 1608865200000,
+              "end_ms": 1613015100000
+            },
+            {
+              "start_ms": 1613019600000,
+              "end_ms": 1614996000000
+            },
+            {
+              "start_ms": 1615001400000,
+              "end_ms": 1618884000000
+            },
+            {
+              "start_ms": 1618893000000,
+              "end_ms": 1619323500000
+            },
+            {
+              "start_ms": 1619340300000,
+              "end_ms": 1628820000000
+            },
+            {
+              "start_ms": 1628836200000,
+              "end_ms": 1632898800000
+            },
+            {
+              "start_ms": 1632906000000,
+              "end_ms": 1679661600000
+            },
+            {
+              "start_ms": 1679666400000,
+              "end_ms": 1789689600000
+            }
+          ]
+        },
+        "comparable_intervals": [
+          {
+            "start_ms": 1599696000000,
+            "end_ms": 1606716000000
+          },
+          {
+            "start_ms": 1607183100000,
+            "end_ms": 1608558300000
+          },
+          {
+            "start_ms": 1609328700000,
+            "end_ms": 1613015100000
+          },
+          {
+            "start_ms": 1613483100000,
+            "end_ms": 1614996000000
+          },
+          {
+            "start_ms": 1615464900000,
+            "end_ms": 1618884000000
+          },
+          {
+            "start_ms": 1619803800000,
+            "end_ms": 1628820000000
+          },
+          {
+            "start_ms": 1629299700000,
+            "end_ms": 1632898800000
+          },
+          {
+            "start_ms": 1633369500000,
+            "end_ms": 1679661000000
+          },
+          {
+            "start_ms": 1680129900000,
+            "end_ms": 1789689600000
+          }
+        ],
+        "warnings": [
+          "只检查本地缓存时间戳；缓存最早时间不等于交易所上市时间。缺失数据由运行时获取，预览不下载行情、不提交任务。",
+          "共同可比区间表示本地连续数据及完整预热覆盖；不会自动替换请求区间。行情值、细周期 OHLC 对齐和最终快照仍由运行时校验。",
+          "信号周期含预热尚缺 94 根本地行情。",
+          "细周期尚缺 287 根本地行情；实际获取后按已选缺口政策处理。"
+        ],
+        "case": "v5"
+      },
+      {
+        "config": {
+          "strategy": "trend_cloud_stop_confirmation_v1",
+          "parameters": {
+            "center_length": 55,
+            "width_length": 31,
+            "trigger_mult": 0.4,
+            "chase_mult": 2,
+            "confirmation_level": 3,
+            "max_wait_bars": 2,
+            "price_tick": 0.01,
+            "entry_bar_assumption": 0,
+            "activation_pct": 2,
+            "giveback_pct": 50,
+            "initial_stop_pct": 1,
+            "direction_filter": false,
+            "stop_method": 0,
+            "stop_mult": 1.5,
+            "stop_floor_pct": 0.5,
+            "stop_cap_pct": 2,
+            "stop_reentry": false,
+            "stop_confirmation": "next_bar_touch",
+            "stop_range_lock": true
+          },
+          "symbol": "ETH/USDT",
+          "timeframe": "15m",
+          "start": "2020-09-10T00:00:00Z",
+          "end": "2026-09-18T00:00:00Z",
+          "initial_cash": 10000.0,
+          "position_pct": 100.0,
+          "data_gap_policy": "observed_bars",
+          "execution_timeframe": "5m",
+          "intrabar_profit_protection": false,
+          "execution_gap_policy": "coarse_fallback"
+        },
+        "warmup_bars": 515,
+        "warmup_explanation": "按当前参数取各指标所需历史的最大值。EMA／RMA 初始值权重降至 1e-8 以下，再覆盖已声明回看窗口；这是数值初始化标准，不保证价格或信号完全相同。 同源同周期组合统一使用本批最大值 515 根，本组单独需要 515 根。",
+        "rules_summary": [
+          "下一根均指信号周期，细周期只用于成交；延后止损可能亏损超过名义距离。",
+          "反向退出与利润保护不延后；只有初始止损退出才建立禁止入场区。",
+          "止损后等待该信号K线收盘固定高低范围；后续收盘突破范围才重新积累一次同向入场信号，并保留确认及追价限制。",
+          "中心 EMA：55 根；高低差 EMA：31 根；原突破门槛 / W：0.4 W；追价上限 / W：2 W；突破确认价位：信号实体上／下沿；信号后最多等待根数：2 根；突破一个价格单位：0.01 报价币；入场当根先后顺序：入场后止损优先；利润保护启动 %：2 %；最高浮盈回吐 %：50 %；初始止损 %，0 关闭：1 %；仅顺过去6根中心线方向开仓：关闭；初始止损方法：固定百分比；止损后突破止损K线极值，最多重进一次：关闭；初始止损确认：触及后下一根开盘及盘中判断；止损后暂停在止损K线范围内重新入场：开启"
+        ],
+        "signal_data": {
+          "timeframe": "15m",
+          "required_start_ms": 1599232500000,
+          "required_end_ms": 1789689600000,
+          "first_cached_ms": 1599111000000,
+          "last_cached_close_ms": 1789689600000,
+          "expected_bars": 211619,
+          "cached_bars": 211525,
+          "missing_bars": 94,
+          "complete_intervals": [
+            {
+              "start_ms": 1599696000000,
+              "end_ms": 1606716000000
+            },
+            {
+              "start_ms": 1607183100000,
+              "end_ms": 1608559200000
+            },
+            {
+              "start_ms": 1609328700000,
+              "end_ms": 1613015100000
+            },
+            {
+              "start_ms": 1613483100000,
+              "end_ms": 1614996000000
+            },
+            {
+              "start_ms": 1615464900000,
+              "end_ms": 1618884000000
+            },
+            {
+              "start_ms": 1619803800000,
+              "end_ms": 1628820000000
+            },
+            {
+              "start_ms": 1629299700000,
+              "end_ms": 1632898800000
+            },
+            {
+              "start_ms": 1633369500000,
+              "end_ms": 1679661900000
+            },
+            {
+              "start_ms": 1680129900000,
+              "end_ms": 1789689600000
+            }
+          ]
+        },
+        "execution_data": {
+          "timeframe": "5m",
+          "required_start_ms": 1599696000000,
+          "required_end_ms": 1789689600000,
+          "first_cached_ms": 1599696000000,
+          "last_cached_close_ms": 1789689600000,
+          "expected_bars": 633312,
+          "cached_bars": 633025,
+          "missing_bars": 287,
+          "complete_intervals": [
+            {
+              "start_ms": 1599696000000,
+              "end_ms": 1606716000000
+            },
+            {
+              "start_ms": 1606719600000,
+              "end_ms": 1608558600000
+            },
+            {
+              "start_ms": 1608573600000,
+              "end_ms": 1608861600000
+            },
+            {
+              "start_ms": 1608865200000,
+              "end_ms": 1613015100000
+            },
+            {
+              "start_ms": 1613019600000,
+              "end_ms": 1614996000000
+            },
+            {
+              "start_ms": 1615001400000,
+              "end_ms": 1618884000000
+            },
+            {
+              "start_ms": 1618893000000,
+              "end_ms": 1619323500000
+            },
+            {
+              "start_ms": 1619340300000,
+              "end_ms": 1628820000000
+            },
+            {
+              "start_ms": 1628836200000,
+              "end_ms": 1632898800000
+            },
+            {
+              "start_ms": 1632906000000,
+              "end_ms": 1679661600000
+            },
+            {
+              "start_ms": 1679666400000,
+              "end_ms": 1789689600000
+            }
+          ]
+        },
+        "comparable_intervals": [
+          {
+            "start_ms": 1599696000000,
+            "end_ms": 1606716000000
+          },
+          {
+            "start_ms": 1607183100000,
+            "end_ms": 1608558300000
+          },
+          {
+            "start_ms": 1609328700000,
+            "end_ms": 1613015100000
+          },
+          {
+            "start_ms": 1613483100000,
+            "end_ms": 1614996000000
+          },
+          {
+            "start_ms": 1615464900000,
+            "end_ms": 1618884000000
+          },
+          {
+            "start_ms": 1619803800000,
+            "end_ms": 1628820000000
+          },
+          {
+            "start_ms": 1629299700000,
+            "end_ms": 1632898800000
+          },
+          {
+            "start_ms": 1633369500000,
+            "end_ms": 1679661000000
+          },
+          {
+            "start_ms": 1680129900000,
+            "end_ms": 1789689600000
+          }
+        ],
+        "warnings": [
+          "只检查本地缓存时间戳；缓存最早时间不等于交易所上市时间。缺失数据由运行时获取，预览不下载行情、不提交任务。",
+          "共同可比区间表示本地连续数据及完整预热覆盖；不会自动替换请求区间。行情值、细周期 OHLC 对齐和最终快照仍由运行时校验。",
+          "信号周期含预热尚缺 94 根本地行情。",
+          "细周期尚缺 287 根本地行情；实际获取后按已选缺口政策处理。"
+        ],
+        "case": "v6"
+      },
+      {
+        "config": {
+          "strategy": "trend_cloud_stop_confirmation_v1",
+          "parameters": {
+            "center_length": 55,
+            "width_length": 31,
+            "trigger_mult": 0.4,
+            "chase_mult": 2,
+            "confirmation_level": 3,
+            "max_wait_bars": 2,
+            "price_tick": 0.01,
+            "entry_bar_assumption": 0,
+            "activation_pct": 2,
+            "giveback_pct": 50,
+            "initial_stop_pct": 1,
+            "direction_filter": false,
+            "stop_method": 0,
+            "stop_mult": 1.5,
+            "stop_floor_pct": 0.5,
+            "stop_cap_pct": 2,
+            "stop_reentry": false,
+            "stop_confirmation": "next_bar_close",
+            "stop_range_lock": false
+          },
+          "symbol": "ETH/USDT",
+          "timeframe": "15m",
+          "start": "2020-09-10T00:00:00Z",
+          "end": "2026-09-18T00:00:00Z",
+          "initial_cash": 10000.0,
+          "position_pct": 100.0,
+          "data_gap_policy": "observed_bars",
+          "execution_timeframe": "5m",
+          "intrabar_profit_protection": false,
+          "execution_gap_policy": "coarse_fallback"
+        },
+        "warmup_bars": 515,
+        "warmup_explanation": "按当前参数取各指标所需历史的最大值。EMA／RMA 初始值权重降至 1e-8 以下，再覆盖已声明回看窗口；这是数值初始化标准，不保证价格或信号完全相同。 同源同周期组合统一使用本批最大值 515 根，本组单独需要 515 根。",
+        "rules_summary": [
+          "下一根均指信号周期，细周期只用于成交；延后止损可能亏损超过名义距离。",
+          "反向退出与利润保护不延后；只有初始止损退出才建立禁止入场区。",
+          "止损后等待该信号K线收盘固定高低范围；后续收盘突破范围才重新积累一次同向入场信号，并保留确认及追价限制。",
+          "中心 EMA：55 根；高低差 EMA：31 根；原突破门槛 / W：0.4 W；追价上限 / W：2 W；突破确认价位：信号实体上／下沿；信号后最多等待根数：2 根；突破一个价格单位：0.01 报价币；入场当根先后顺序：入场后止损优先；利润保护启动 %：2 %；最高浮盈回吐 %：50 %；初始止损 %，0 关闭：1 %；仅顺过去6根中心线方向开仓：关闭；初始止损方法：固定百分比；止损后突破止损K线极值，最多重进一次：关闭；初始止损确认：触及后下一根收盘判断；止损后暂停在止损K线范围内重新入场：关闭"
+        ],
+        "signal_data": {
+          "timeframe": "15m",
+          "required_start_ms": 1599232500000,
+          "required_end_ms": 1789689600000,
+          "first_cached_ms": 1599111000000,
+          "last_cached_close_ms": 1789689600000,
+          "expected_bars": 211619,
+          "cached_bars": 211525,
+          "missing_bars": 94,
+          "complete_intervals": [
+            {
+              "start_ms": 1599696000000,
+              "end_ms": 1606716000000
+            },
+            {
+              "start_ms": 1607183100000,
+              "end_ms": 1608559200000
+            },
+            {
+              "start_ms": 1609328700000,
+              "end_ms": 1613015100000
+            },
+            {
+              "start_ms": 1613483100000,
+              "end_ms": 1614996000000
+            },
+            {
+              "start_ms": 1615464900000,
+              "end_ms": 1618884000000
+            },
+            {
+              "start_ms": 1619803800000,
+              "end_ms": 1628820000000
+            },
+            {
+              "start_ms": 1629299700000,
+              "end_ms": 1632898800000
+            },
+            {
+              "start_ms": 1633369500000,
+              "end_ms": 1679661900000
+            },
+            {
+              "start_ms": 1680129900000,
+              "end_ms": 1789689600000
+            }
+          ]
+        },
+        "execution_data": {
+          "timeframe": "5m",
+          "required_start_ms": 1599696000000,
+          "required_end_ms": 1789689600000,
+          "first_cached_ms": 1599696000000,
+          "last_cached_close_ms": 1789689600000,
+          "expected_bars": 633312,
+          "cached_bars": 633025,
+          "missing_bars": 287,
+          "complete_intervals": [
+            {
+              "start_ms": 1599696000000,
+              "end_ms": 1606716000000
+            },
+            {
+              "start_ms": 1606719600000,
+              "end_ms": 1608558600000
+            },
+            {
+              "start_ms": 1608573600000,
+              "end_ms": 1608861600000
+            },
+            {
+              "start_ms": 1608865200000,
+              "end_ms": 1613015100000
+            },
+            {
+              "start_ms": 1613019600000,
+              "end_ms": 1614996000000
+            },
+            {
+              "start_ms": 1615001400000,
+              "end_ms": 1618884000000
+            },
+            {
+              "start_ms": 1618893000000,
+              "end_ms": 1619323500000
+            },
+            {
+              "start_ms": 1619340300000,
+              "end_ms": 1628820000000
+            },
+            {
+              "start_ms": 1628836200000,
+              "end_ms": 1632898800000
+            },
+            {
+              "start_ms": 1632906000000,
+              "end_ms": 1679661600000
+            },
+            {
+              "start_ms": 1679666400000,
+              "end_ms": 1789689600000
+            }
+          ]
+        },
+        "comparable_intervals": [
+          {
+            "start_ms": 1599696000000,
+            "end_ms": 1606716000000
+          },
+          {
+            "start_ms": 1607183100000,
+            "end_ms": 1608558300000
+          },
+          {
+            "start_ms": 1609328700000,
+            "end_ms": 1613015100000
+          },
+          {
+            "start_ms": 1613483100000,
+            "end_ms": 1614996000000
+          },
+          {
+            "start_ms": 1615464900000,
+            "end_ms": 1618884000000
+          },
+          {
+            "start_ms": 1619803800000,
+            "end_ms": 1628820000000
+          },
+          {
+            "start_ms": 1629299700000,
+            "end_ms": 1632898800000
+          },
+          {
+            "start_ms": 1633369500000,
+            "end_ms": 1679661000000
+          },
+          {
+            "start_ms": 1680129900000,
+            "end_ms": 1789689600000
+          }
+        ],
+        "warnings": [
+          "只检查本地缓存时间戳；缓存最早时间不等于交易所上市时间。缺失数据由运行时获取，预览不下载行情、不提交任务。",
+          "共同可比区间表示本地连续数据及完整预热覆盖；不会自动替换请求区间。行情值、细周期 OHLC 对齐和最终快照仍由运行时校验。",
+          "信号周期含预热尚缺 94 根本地行情。",
+          "细周期尚缺 287 根本地行情；实际获取后按已选缺口政策处理。"
+        ],
+        "case": "v7"
+      },
+      {
+        "config": {
+          "strategy": "trend_cloud_stop_confirmation_v1",
+          "parameters": {
+            "center_length": 55,
+            "width_length": 31,
+            "trigger_mult": 0.4,
+            "chase_mult": 2,
+            "confirmation_level": 3,
+            "max_wait_bars": 2,
+            "price_tick": 0.01,
+            "entry_bar_assumption": 0,
+            "activation_pct": 2,
+            "giveback_pct": 50,
+            "initial_stop_pct": 1,
+            "direction_filter": false,
+            "stop_method": 0,
+            "stop_mult": 1.5,
+            "stop_floor_pct": 0.5,
+            "stop_cap_pct": 2,
+            "stop_reentry": false,
+            "stop_confirmation": "next_bar_close",
+            "stop_range_lock": true
+          },
+          "symbol": "ETH/USDT",
+          "timeframe": "15m",
+          "start": "2020-09-10T00:00:00Z",
+          "end": "2026-09-18T00:00:00Z",
+          "initial_cash": 10000.0,
+          "position_pct": 100.0,
+          "data_gap_policy": "observed_bars",
+          "execution_timeframe": "5m",
+          "intrabar_profit_protection": false,
+          "execution_gap_policy": "coarse_fallback"
+        },
+        "warmup_bars": 515,
+        "warmup_explanation": "按当前参数取各指标所需历史的最大值。EMA／RMA 初始值权重降至 1e-8 以下，再覆盖已声明回看窗口；这是数值初始化标准，不保证价格或信号完全相同。 同源同周期组合统一使用本批最大值 515 根，本组单独需要 515 根。",
+        "rules_summary": [
+          "下一根均指信号周期，细周期只用于成交；延后止损可能亏损超过名义距离。",
+          "反向退出与利润保护不延后；只有初始止损退出才建立禁止入场区。",
+          "止损后等待该信号K线收盘固定高低范围；后续收盘突破范围才重新积累一次同向入场信号，并保留确认及追价限制。",
+          "中心 EMA：55 根；高低差 EMA：31 根；原突破门槛 / W：0.4 W；追价上限 / W：2 W；突破确认价位：信号实体上／下沿；信号后最多等待根数：2 根；突破一个价格单位：0.01 报价币；入场当根先后顺序：入场后止损优先；利润保护启动 %：2 %；最高浮盈回吐 %：50 %；初始止损 %，0 关闭：1 %；仅顺过去6根中心线方向开仓：关闭；初始止损方法：固定百分比；止损后突破止损K线极值，最多重进一次：关闭；初始止损确认：触及后下一根收盘判断；止损后暂停在止损K线范围内重新入场：开启"
+        ],
+        "signal_data": {
+          "timeframe": "15m",
+          "required_start_ms": 1599232500000,
+          "required_end_ms": 1789689600000,
+          "first_cached_ms": 1599111000000,
+          "last_cached_close_ms": 1789689600000,
+          "expected_bars": 211619,
+          "cached_bars": 211525,
+          "missing_bars": 94,
+          "complete_intervals": [
+            {
+              "start_ms": 1599696000000,
+              "end_ms": 1606716000000
+            },
+            {
+              "start_ms": 1607183100000,
+              "end_ms": 1608559200000
+            },
+            {
+              "start_ms": 1609328700000,
+              "end_ms": 1613015100000
+            },
+            {
+              "start_ms": 1613483100000,
+              "end_ms": 1614996000000
+            },
+            {
+              "start_ms": 1615464900000,
+              "end_ms": 1618884000000
+            },
+            {
+              "start_ms": 1619803800000,
+              "end_ms": 1628820000000
+            },
+            {
+              "start_ms": 1629299700000,
+              "end_ms": 1632898800000
+            },
+            {
+              "start_ms": 1633369500000,
+              "end_ms": 1679661900000
+            },
+            {
+              "start_ms": 1680129900000,
+              "end_ms": 1789689600000
+            }
+          ]
+        },
+        "execution_data": {
+          "timeframe": "5m",
+          "required_start_ms": 1599696000000,
+          "required_end_ms": 1789689600000,
+          "first_cached_ms": 1599696000000,
+          "last_cached_close_ms": 1789689600000,
+          "expected_bars": 633312,
+          "cached_bars": 633025,
+          "missing_bars": 287,
+          "complete_intervals": [
+            {
+              "start_ms": 1599696000000,
+              "end_ms": 1606716000000
+            },
+            {
+              "start_ms": 1606719600000,
+              "end_ms": 1608558600000
+            },
+            {
+              "start_ms": 1608573600000,
+              "end_ms": 1608861600000
+            },
+            {
+              "start_ms": 1608865200000,
+              "end_ms": 1613015100000
+            },
+            {
+              "start_ms": 1613019600000,
+              "end_ms": 1614996000000
+            },
+            {
+              "start_ms": 1615001400000,
+              "end_ms": 1618884000000
+            },
+            {
+              "start_ms": 1618893000000,
+              "end_ms": 1619323500000
+            },
+            {
+              "start_ms": 1619340300000,
+              "end_ms": 1628820000000
+            },
+            {
+              "start_ms": 1628836200000,
+              "end_ms": 1632898800000
+            },
+            {
+              "start_ms": 1632906000000,
+              "end_ms": 1679661600000
+            },
+            {
+              "start_ms": 1679666400000,
+              "end_ms": 1789689600000
+            }
+          ]
+        },
+        "comparable_intervals": [
+          {
+            "start_ms": 1599696000000,
+            "end_ms": 1606716000000
+          },
+          {
+            "start_ms": 1607183100000,
+            "end_ms": 1608558300000
+          },
+          {
+            "start_ms": 1609328700000,
+            "end_ms": 1613015100000
+          },
+          {
+            "start_ms": 1613483100000,
+            "end_ms": 1614996000000
+          },
+          {
+            "start_ms": 1615464900000,
+            "end_ms": 1618884000000
+          },
+          {
+            "start_ms": 1619803800000,
+            "end_ms": 1628820000000
+          },
+          {
+            "start_ms": 1629299700000,
+            "end_ms": 1632898800000
+          },
+          {
+            "start_ms": 1633369500000,
+            "end_ms": 1679661000000
+          },
+          {
+            "start_ms": 1680129900000,
+            "end_ms": 1789689600000
+          }
+        ],
+        "warnings": [
+          "只检查本地缓存时间戳；缓存最早时间不等于交易所上市时间。缺失数据由运行时获取，预览不下载行情、不提交任务。",
+          "共同可比区间表示本地连续数据及完整预热覆盖；不会自动替换请求区间。行情值、细周期 OHLC 对齐和最终快照仍由运行时校验。",
+          "信号周期含预热尚缺 94 根本地行情。",
+          "细周期尚缺 287 根本地行情；实际获取后按已选缺口政策处理。"
+        ],
+        "case": "v8"
+      }
+    ],
+    "comparable_intervals": [
+      {
+        "start_ms": 1599696000000,
+        "end_ms": 1606716000000
+      },
+      {
+        "start_ms": 1607183100000,
+        "end_ms": 1608558300000
+      },
+      {
+        "start_ms": 1609328700000,
+        "end_ms": 1613015100000
+      },
+      {
+        "start_ms": 1613483100000,
+        "end_ms": 1614996000000
+      },
+      {
+        "start_ms": 1615464900000,
+        "end_ms": 1618884000000
+      },
+      {
+        "start_ms": 1619803800000,
+        "end_ms": 1628820000000
+      },
+      {
+        "start_ms": 1629299700000,
+        "end_ms": 1632898800000
+      },
+      {
+        "start_ms": 1633369500000,
+        "end_ms": 1679661000000
+      },
+      {
+        "start_ms": 1680129900000,
+        "end_ms": 1789689600000
+      }
+    ],
+    "warnings": [
+      "按指定历史区间比较；结果不代表未见行情中的最佳参数。"
+    ]
+  }
+}

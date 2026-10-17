@@ -13,7 +13,6 @@ class IndexSourceBinding:
     sina_us_symbol: str | None = None
     pricing_provider: str | None = None
     cboe_csv_url: str | None = None
-    fred_series_id: str | None = None
     yfinance_symbol: str | None = None
 
 
@@ -22,14 +21,12 @@ INDEX_SOURCE_CATALOG: dict[str, IndexSourceBinding] = {
         pricing_provider="sina_us_etf",
         eastmoney_secid="100.SPX",
         sina_us_symbol=".INX",
-        fred_series_id="SP500",
         yfinance_symbol="^GSPC",
     ),
     "US_NASDAQ_COMP": IndexSourceBinding(
         pricing_provider="sina_us_etf",
         eastmoney_secid="100.NDX",
         sina_us_symbol=".IXIC",
-        fred_series_id="NASDAQCOM",
         yfinance_symbol="^IXIC",
     ),
     "US_NASDAQ100": IndexSourceBinding(
@@ -42,7 +39,6 @@ INDEX_SOURCE_CATALOG: dict[str, IndexSourceBinding] = {
         pricing_provider="sina_us_etf",
         eastmoney_secid="100.DJIA",
         sina_us_symbol=".DJI",
-        fred_series_id="DJIA",
         yfinance_symbol="^DJI",
     ),
     "US_RUSSELL2000": IndexSourceBinding(
@@ -53,7 +49,6 @@ INDEX_SOURCE_CATALOG: dict[str, IndexSourceBinding] = {
     "US_VIX": IndexSourceBinding(
         pricing_provider="sina_us_etf",
         cboe_csv_url="https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv",
-        fred_series_id="VIXCLS",
         yfinance_symbol="^VIX",
     ),
     "CN_CSI300": IndexSourceBinding(

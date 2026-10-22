@@ -24,7 +24,7 @@ def environment():
 
 
 def load_strategy(path: Path):
-    module = ModuleType("heimdall_strategy_" + digest(path.read_bytes())[:16])
+    module = ModuleType("opentrading_strategy_" + digest(path.read_bytes())[:16])
     module.__file__ = str(path)
     sys.modules[module.__name__] = module
     exec(compile(path.read_text(encoding="utf-8-sig"), str(path), "exec"), module.__dict__)

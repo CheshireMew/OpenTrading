@@ -48,16 +48,16 @@ try {
   }
   let catalog
   const resolve = async ticker => {
-    if (ticker.replace(/^heimdall:/i,'') === input.request.symbol || ticker === input.symbol.symbol) return input.request.symbol
+    if (ticker.replace(/^(?:opentrading|heimdall):/i,'') === input.request.symbol || ticker === input.symbol.symbol) return input.request.symbol
     if(input.frozen){
-      const plain=ticker.replace(/^heimdall:/i,'')
+      const plain=ticker.replace(/^(?:opentrading|heimdall):/i,'')
       const candidates=Object.values(allSeries).map(item=>item.symbol)
       const found=candidates.find(s=>s.id===plain)||candidates.find(s=>`${s.exchange.toUpperCase()}:${s.symbol}${s.market==='usdm'?'.P':''}`===plain)
       if(found)return found.id
       throw new Error(`原快照没有品种 ${ticker}`)
     }
     catalog ??= await fetch(input.api + '/symbols').then(r => r.json())
-    const normalized = ticker.replace(/^heimdall:/i,'')
+    const normalized = ticker.replace(/^(?:opentrading|heimdall):/i,'')
     let found = catalog.find(s => s.id === normalized)
     if (!found) {
       const parts = normalized.split(':')

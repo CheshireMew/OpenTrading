@@ -1,7 +1,7 @@
 [project]
-name = "heimdall"
+name = "opentrading"
 version = "2.0.0"
-description = "Local market research and portfolio analysis application"
+description = "Market research and portfolio analysis application"
 license = "AGPL-3.0-or-later"
 requires-python = ">=3.12,<3.13"
 dependencies = [

@@ -36,7 +36,7 @@ def prepare(studies):
     for key,label,level,wait,oldkey in VARIANTS:
         rid=old_cases[oldkey]['run_id']
         cases.append(dict(id=f'{key}_at_close',name=f'等收盘：{label}',variant=f'{key}_at_close',period='六年已见历史',role='exploration',previously_seen=True,
-                          command=read_json(ROOT/'.heimdall_runtime/local_backtests'/rid/'config.json'),reuse_run=rid))
+                          command=read_json(ROOT/'.opentrading_runtime/local_backtests'/rid/'config.json'),reuse_run=rid))
         for policy in (0,1):
             p=validate_parameters(spec,dict(confirmation_level=level,max_wait_bars=wait,entry_bar_assumption=policy))
             cid=f'{key}_touch_{policy}'

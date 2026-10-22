@@ -41,11 +41,15 @@ class SentimentProvider(BaseIndicatorProvider):
         try:
             def _get():
                 from pytrends.request import TrendReq
+                import pandas as pd
 
                 pytrends = TrendReq(hl='en-US', tz=360)
                 # kw_list = ["buy bitcoin"]
                 pytrends.build_payload(["buy bitcoin"], cat=0, timeframe='now 7-d', geo='', gprop='')
-                data = pytrends.interest_over_time()
+                # pytrends fills its isPartial object column with False. Use
+                # pandas' future behavior here; the numeric series is unchanged.
+                with pd.option_context('future.no_silent_downcasting', True):
+                    data = pytrends.interest_over_time()
                 if not data.empty:
                     last_row = data.iloc[-1]
                     dt = last_row.name.to_pydatetime()

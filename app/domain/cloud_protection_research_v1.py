@@ -1,4 +1,4 @@
-"""Versioned research extension of Heimdall simulate: optional price-peak protection.
+"""Versioned research extension of OpenTrading simulate: optional price-peak protection.
 
 The original engine remains untouched. API types come from the original engine.
 cap=0 preserves every original record. A cap is activated by the same +2% (or

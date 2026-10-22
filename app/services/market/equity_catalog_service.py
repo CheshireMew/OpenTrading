@@ -79,7 +79,7 @@ class EquityCatalogService:
         self.cache_service = cache_service
         self._client = httpx.AsyncClient(
             timeout=httpx.Timeout(25, connect=10), transport=transport,
-            headers={"Accept": "application/json", "User-Agent": "Heimdall/2.0 (public market catalog)"},
+            headers={"Accept": "application/json", "User-Agent": "OpenTrading/2.0 (public market catalog)"},
             limits=httpx.Limits(max_connections=12, max_keepalive_connections=6),
             follow_redirects=True,
         )

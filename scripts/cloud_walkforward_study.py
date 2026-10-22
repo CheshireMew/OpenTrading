@@ -26,7 +26,7 @@ from scripts.profit_protection_study import ROOT, read, save
 from scripts.trend_cloud_study import stamp
 
 DOCS = ROOT/'docs/verification/cloud-walkforward-20260911'
-RUNTIME = ROOT/'.heimdall_runtime/cloud-walkforward-20260911'
+RUNTIME = ROOT/'.opentrading_runtime/cloud-walkforward-20260911'
 OLD = ROOT/'docs/verification/cloud-timeframe-20260911'
 SOURCE = ROOT/'strategies/trend_cloud_timeframe_v6.py'
 ENGINE = ROOT/'app/domain/cloud_protection_research_v1.py'

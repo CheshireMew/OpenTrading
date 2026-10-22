@@ -31,7 +31,7 @@ async def check_external_sources() -> None:
 
 
 async def main() -> None:
-    parser = argparse.ArgumentParser(description="Diagnose Heimdall runtime dependencies.")
+    parser = argparse.ArgumentParser(description="Diagnose OpenTrading runtime dependencies.")
     parser.add_argument("--external", action="store_true", help="also call public market data APIs")
     args = parser.parse_args()
 

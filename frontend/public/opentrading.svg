@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 264" width="400" height="264" role="img" aria-labelledby="logo-title logo-description">
+  <title id="logo-title">OpenTrading</title>
+  <desc id="logo-description">Three bold geometric ribbons forming the OpenTrading mark.</desc>
+  <style>
+    .mark { fill: #141414; }
+    @media (prefers-color-scheme: dark) { .mark { fill: #ffffff; } }
+  </style>
+  <g class="mark">
+    <path d="M31 41H163C182 41 191 54 196 73L211 119C203 109 194 103 180 103H71Z"/>
+    <path d="M127 114H176C191 114 198 121 206 138L251 232H189Z"/>
+    <path d="M283 32H369L260 232L221 151Z"/>
+  </g>
+</svg>

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
 
 from fastapi import FastAPI, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 
 from app.exceptions import NotFoundError
 from app.infra.executor import run_database
@@ -33,13 +34,26 @@ def _resolve_frontend_asset(path: str) -> Path | None:
 
 def _frontend_not_ready_payload() -> dict[str, str]:
     return {
-        "message": "Heimdall API is running",
+        "message": "OpenTrading API is running",
         "docs": "/docs",
         "frontend_dev": f"http://127.0.0.1:{settings.FRONTEND_DEV_PORT}",
     }
 
 
-async def root():
+def _frontend_dev_redirect(request: Request):
+    target = os.environ.get("OPENTRADING_FRONTEND_DEV_URL", "").rstrip("/")
+    if not target:
+        return None
+    destination = target + request.url.path
+    if request.url.query:
+        destination += "?" + request.url.query
+    return RedirectResponse(destination, status_code=307, headers={"Cache-Control": "no-store"})
+
+
+async def root(request: Request):
+    redirect = _frontend_dev_redirect(request)
+    if redirect is not None:
+        return redirect
     if FRONTEND_INDEX_FILE.exists():
         return FileResponse(str(FRONTEND_INDEX_FILE))
     return _frontend_not_ready_payload()
@@ -55,10 +69,14 @@ async def liveness_check(request: Request):
     return JSONResponse(status_code=status_code, content=payload)
 
 
-async def frontend_fallback(full_path: str):
+async def frontend_fallback(full_path: str, request: Request):
     reserved_paths = {"api", "docs", "redoc", "openapi.json", "health"}
     if full_path in reserved_paths or any(full_path.startswith(f"{prefix}/") for prefix in reserved_paths):
         raise NotFoundError("Not found")
+
+    redirect = _frontend_dev_redirect(request)
+    if redirect is not None:
+        return redirect
 
     if not FRONTEND_INDEX_FILE.exists():
         raise NotFoundError("Frontend build not found")

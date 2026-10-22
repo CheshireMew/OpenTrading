@@ -20,8 +20,8 @@ from scripts.cloud_walkforward_study import read_zip, write_zip
 from scripts.trend_cloud_study import stamp
 
 OUT=ROOT/'docs/verification/eth-intrabar-short-window-20260913'
-RUNTIME=ROOT/'.heimdall_runtime/eth-intrabar-short-window-20260913'
-BASE=ROOT/'.heimdall_runtime/local_backtests/3f31380c7267449f53743dc1fe5bcebd'
+RUNTIME=ROOT/'.opentrading_runtime/eth-intrabar-short-window-20260913'
+BASE=ROOT/'.opentrading_runtime/local_backtests/3f31380c7267449f53743dc1fe5bcebd'
 SOURCE=ROOT/'strategies/trend_cloud_intrabar_methods_v3.py'
 STEP=900000
 WEEK=7*86400000

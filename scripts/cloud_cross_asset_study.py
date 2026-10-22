@@ -1,4 +1,4 @@
-"""Frozen historical representatives, through Heimdall market service and simulator."""
+"""Frozen historical representatives, through OpenTrading market service and simulator."""
 import argparse
 from bisect import bisect_left
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -22,7 +22,7 @@ from scripts.profit_protection_study import ROOT, read, save, metrics
 from scripts.trend_cloud_study import stamp
 
 DOCS = ROOT/'docs/verification/cloud-cross-asset-20260911'
-RUNTIME = ROOT/'.heimdall_runtime/cloud-cross-asset-20260911'
+RUNTIME = ROOT/'.opentrading_runtime/cloud-cross-asset-20260911'
 OLD = ROOT/'docs/verification'
 STEP = 900000
 END = '2026-09-10T00:00:00Z'
@@ -152,7 +152,7 @@ def fetch():
         start,end=map(stamp,plan['periods'][asset]['full'])
         if asset=='eth':
             old=read(OLD/'eth-cloud-joint-six-year-20260911/plan.json')
-            path=ROOT/'.heimdall_runtime/cloud-joint-six-year-20260911/data.json'
+            path=ROOT/'.opentrading_runtime/cloud-joint-six-year-20260911/data.json'
             raw=path.read_bytes()
             assert digest(raw)==old['data_hash']
             rows=json.loads(raw)
@@ -238,12 +238,12 @@ def old_recent(v):
     batch,key=v['batch'],v['old_key']
     if batch=='initial':
         r=read(OLD/BATCHES[batch][0])['results'][key]
-        return ROOT/f'.heimdall_runtime/local_backtests/{r["run_id"]}/result.json'
-    if batch=='experiments': return ROOT/f'.heimdall_runtime/eth-cloud-two-year-20260910/experiment-{key}-full.json'
+        return ROOT/f'.opentrading_runtime/local_backtests/{r["run_id"]}/result.json'
+    if batch=='experiments': return ROOT/f'.opentrading_runtime/eth-cloud-two-year-20260910/experiment-{key}-full.json'
     prefix={'robustness':'cloud-robustness','manual':'cloud-manual','entry':'cloud-entry','context':'cloud-context','parameters':'cloud-parameters','joint':'cloud-joint-six-year'}[batch]
     date='20260911' if batch=='joint' else '20260910'
     suffix='recent' if batch=='joint' else 'full'
-    return ROOT/f'.heimdall_runtime/{prefix}-{date}/{key}-{suffix}.json'
+    return ROOT/f'.opentrading_runtime/{prefix}-{date}/{key}-{suffix}.json'
 
 
 def compare_trace(actual,expected):
@@ -275,7 +275,7 @@ def calculate(task):
             other=joint_keys.get(token(v['parameters']))
             op={'full':'full','recent':'recent',**{f'y{y}':f'y{y-2019}' for y in range(2020,2026)}}[period]
             if other:
-                prior=ROOT/f'.heimdall_runtime/cloud-joint-six-year-20260911/{other}-{op}.json'
+                prior=ROOT/f'.opentrading_runtime/cloud-joint-six-year-20260911/{other}-{op}.json'
                 candidate=read(prior)
                 oldfiles=candidate['provenance']['files']
                 assert candidate['parameters']==v['parameters'] and candidate['period']==[start,end]

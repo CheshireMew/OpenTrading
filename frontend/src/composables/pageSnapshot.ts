@@ -3,7 +3,7 @@ import { getLocalStorage } from '@/utils/storage'
 import { readVersionedStorage, writeVersionedStorage } from '@/utils/versionedStorage'
 export { isRecord } from '@/utils/typeGuards'
 
-const PAGE_SNAPSHOT_PREFIX = 'heimdall_page_snapshot:'
+const PAGE_SNAPSHOT_PREFIX = 'opentrading_page_snapshot:'
 const PAGE_SNAPSHOT_VERSION = 2
 const PAGE_SNAPSHOT_TTL_MS = 1000 * 60 * 60 * 24 * 30
 

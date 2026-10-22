@@ -40,7 +40,7 @@ def groups(ts,field):
 def main():
     OUT.mkdir(exist_ok=True)
     selected=read_json(STUDY/'results.json')['results'][KEY]
-    folder=ROOT/'.heimdall_runtime/local_backtests'/selected['run_id']
+    folder=ROOT/'.opentrading_runtime/local_backtests'/selected['run_id']
     for file,key in [('result.json','result_hash'),('data.json','data_hash'),('execution_data.json','execution_data_hash')]:
         assert file_hash(folder/file)==selected[key]
     r=read_json(folder/'result.json');rows=read_json(folder/'data.json');obs={o['timestamp']:o for o in r['indicators']}

@@ -1,6 +1,6 @@
 """Frozen transfer test on four new assets, with a small secondary parameter grid.
 
-Uses Heimdall MarketDataService/KlineStore and the original v4 simulator.
+Uses OpenTrading MarketDataService/KlineStore and the original v4 simulator.
 Old experiments and their selection records are never changed.
 """
 import argparse
@@ -26,7 +26,7 @@ from scripts.profit_protection_study import ROOT, read, save, metrics
 from scripts.trend_cloud_study import stamp
 
 DOCS = ROOT/'docs/verification/alt-cloud-transfer-20260911'
-RUNTIME = ROOT/'.heimdall_runtime/alt-cloud-transfer-20260911'
+RUNTIME = ROOT/'.opentrading_runtime/alt-cloud-transfer-20260911'
 SOURCE = ROOT/'strategies/trend_cloud_parameters_v4.py'
 STEP = 900000
 END = '2026-09-10T00:00:00Z'

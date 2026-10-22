@@ -1,5 +1,5 @@
 //@version=6
-indicator("Heimdall ETH · EMA55 · 15分钟 v7", overlay=true)
+indicator("OpenTrading ETH · EMA55 · 15分钟 v7", overlay=true)
 
 // 手工观察指标；只使用当前15分钟图，不读取任何小周期。
 // 保留第2/3根盘中突破确认；利润保护改为15分钟收盘更新。

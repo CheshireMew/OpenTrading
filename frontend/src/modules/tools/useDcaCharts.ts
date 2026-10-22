@@ -1,3 +1,4 @@
+import { DARK_PALETTE } from '@/theme/palette.mjs'
 import { nextTick, onBeforeUnmount, ref, type Ref } from 'vue'
 import { Chart, registerables } from 'chart.js'
 
@@ -45,8 +46,8 @@ export const useDcaCharts = ({
     const sourceCurrency = result.value.pricing_currency || 'USDT'
     const labels = history.map((item) => item.date)
     const isDark = theme.value === 'dark'
-    const textColor = isDark ? '#9ca3af' : '#6b7280'
-    const gridColor = isDark ? '#374151' : '#e5e7eb'
+    const textColor = isDark ? DARK_PALETTE.muted : '#6b7280'
+    const gridColor = isDark ? DARK_PALETTE.grid : '#e5e7eb'
 
     nextTick(() => {
       if (roiChartCanvas.value) {
@@ -81,7 +82,7 @@ export const useDcaCharts = ({
                   callbacks: {
                     label: (context) => `ROI: ${parsedY(context.parsed.y).toFixed(2)}%`,
                   },
-                  backgroundColor: isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+                  backgroundColor: isDark ? DARK_PALETTE.elevated : 'rgba(255, 255, 255, 0.9)',
                   titleColor: isDark ? '#fff' : '#000',
                   bodyColor: isDark ? '#fff' : '#000',
                   borderColor: gridColor,
@@ -144,7 +145,7 @@ export const useDcaCharts = ({
                   labels: { color: textColor, boxWidth: 20 },
                 },
                 tooltip: {
-                  backgroundColor: isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+                  backgroundColor: isDark ? DARK_PALETTE.elevated : 'rgba(255, 255, 255, 0.9)',
                   titleColor: isDark ? '#fff' : '#000',
                   bodyColor: isDark ? '#fff' : '#000',
                   borderColor: gridColor,
@@ -197,7 +198,7 @@ export const useDcaCharts = ({
                   callbacks: {
                     label: (context) => `${t('dca.invested')}: ${formatMoney(context.parsed.y, displayCurrency.value)}`,
                   },
-                  backgroundColor: isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+                  backgroundColor: isDark ? DARK_PALETTE.elevated : 'rgba(255, 255, 255, 0.9)',
                   titleColor: isDark ? '#fff' : '#000',
                   bodyColor: isDark ? '#fff' : '#000',
                   borderColor: gridColor,

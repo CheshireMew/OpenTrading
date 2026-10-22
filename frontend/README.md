@@ -1,4 +1,4 @@
-# Heimdall Frontend
+# OpenTrading Frontend
 
 Vue 3 + Vite 前端工程。后端构建完成后会托管 `frontend/dist`，开发期可以单独运行 Vite。
 

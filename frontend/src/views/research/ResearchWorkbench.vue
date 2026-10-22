@@ -1,11 +1,9 @@
 <template>
   <div class="app-page">
     <div class="app-page-inner-wide">
-      <section class="app-hero-panel flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      <section class="app-page-header flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p class="app-eyebrow">Research Workspace</p>
-          <h1 class="app-title mt-2">{{ t('research.title') }}</h1>
-          <p class="app-subtitle mt-3 max-w-3xl">{{ t('research.subtitle') }}</p>
+          <h1 class="app-title">{{ t('research.title') }}</h1>
         </div>
         <div class="flex flex-wrap gap-2">
           <button type="button" class="app-button-secondary" :disabled="loading" @click="load">
@@ -57,11 +55,11 @@
               @click="selectWatchlist(list.id)"
             >
               <span class="block truncate font-semibold">{{ list.name }}</span>
-              <span class="mt-1 block line-clamp-2 text-xs opacity-70">{{ list.description || t('research.noDescription') }}</span>
+              <span v-if="list.description" class="mt-1 block line-clamp-2 text-xs opacity-70">{{ list.description }}</span>
             </button>
             <p v-if="!activeWatchlists.length" class="p-4 text-sm app-muted">{{ t('research.noWatchlists') }}</p>
           </div>
-          <details v-if="archivedWatchlists.length" class="border-t px-4 py-3 dark:border-slate-700" style="border-color:#e4ded3">
+          <details v-if="archivedWatchlists.length" class="border-t px-4 py-3 dark:border-slate-700" style="border-color:var(--app-border)">
             <summary class="cursor-pointer text-sm font-semibold app-muted">{{ t('research.archivedWatchlists', { count: archivedWatchlists.length }) }}</summary>
             <div class="mt-3 space-y-2">
               <div v-for="list in archivedWatchlists" :key="list.id" class="flex items-center justify-between gap-2 text-sm">
@@ -78,14 +76,14 @@
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
                   <h2 class="truncate text-xl font-semibold text-stone-950 dark:text-white">{{ activeWatchlist.name }}</h2>
-                  <p class="mt-1 text-sm app-muted">{{ activeWatchlist.description || t('research.noDescription') }}</p>
+                  <p v-if="activeWatchlist.description" class="mt-1 text-sm app-muted">{{ activeWatchlist.description }}</p>
                 </div>
                 <button type="button" class="shrink-0 text-sm text-rose-600 underline dark:text-rose-300" :disabled="saving" @click="setWatchlistArchived(activeWatchlist, true)">{{ t('research.archive') }}</button>
               </div>
               <button type="button" class="app-button-primary mt-4 w-full" @click="showNewItem = !showNewItem">{{ t('research.addAsset') }}</button>
             </div>
 
-            <form v-if="showNewItem" class="space-y-3 border-b p-4 dark:border-slate-700" style="border-color:#e4ded3" @submit.prevent="submitItem">
+            <form v-if="showNewItem" class="space-y-3 border-b p-4 dark:border-slate-700" style="border-color:var(--app-border)" @submit.prevent="submitItem">
               <SymbolSearchBox
                 v-model="itemForm.symbol"
                 :allowed-classes="['crypto', 'index']"
@@ -120,7 +118,7 @@
                   </div>
                   <span class="app-chip">{{ item.tags?.length || 0 }} {{ t('research.tags') }}</span>
                 </div>
-                <p class="mt-3 line-clamp-3 text-sm leading-6 text-stone-600 dark:text-slate-300">{{ item.thesis || t('research.noThesis') }}</p>
+                <p v-if="item.thesis" class="mt-3 line-clamp-3 text-sm leading-6 text-stone-600 dark:text-slate-300">{{ item.thesis }}</p>
                 <div v-if="item.targetPrice || item.invalidationPrice" class="mt-3 flex gap-4 text-xs app-muted">
                   <span>{{ t('research.targetShort') }} {{ item.targetPrice ?? '--' }}</span>
                   <span>{{ t('research.invalidationShort') }} {{ item.invalidationPrice ?? '--' }}</span>
@@ -129,7 +127,7 @@
               <p v-if="!activeItems.length" class="p-6 text-center text-sm app-muted">{{ t('research.noAssets') }}</p>
             </div>
 
-            <details v-if="archivedItems.length" class="border-t px-4 py-3 dark:border-slate-700" style="border-color:#e4ded3">
+            <details v-if="archivedItems.length" class="border-t px-4 py-3 dark:border-slate-700" style="border-color:var(--app-border)">
               <summary class="cursor-pointer text-sm font-semibold app-muted">{{ t('research.archivedAssets', { count: archivedItems.length }) }}</summary>
               <div class="mt-3 space-y-2">
                 <div v-for="item in archivedItems" :key="item.id" class="flex items-center justify-between gap-2 text-sm">
@@ -167,7 +165,7 @@
               </form>
             </div>
 
-            <div class="flex overflow-x-auto border-b px-4 dark:border-slate-700" style="border-color:#e4ded3">
+            <div class="flex overflow-x-auto border-b px-4 dark:border-slate-700" style="border-color:var(--app-border)">
               <button v-for="tab in tabs" :key="tab" type="button" class="border-b-2 px-4 py-3 text-sm font-semibold" :class="activeTab === tab ? 'border-emerald-700 text-emerald-800 dark:text-emerald-300' : 'border-transparent app-muted'" @click="activeTab = tab">
                 {{ t(`research.tabs.${tab}`) }}
                 <span v-if="tab === 'timeline' && workbench.unacknowledgedEventCount" class="ml-1 bg-rose-600 px-1.5 py-0.5 text-[10px] text-white">{{ workbench.unacknowledgedEventCount }}</span>
@@ -175,7 +173,7 @@
             </div>
 
             <div v-if="activeTab === 'journal'" class="space-y-5 p-5">
-              <form class="space-y-3 border p-4 dark:border-slate-700" style="border-color:#e4ded3" @submit.prevent="submitNote">
+              <form class="space-y-3 border p-4 dark:border-slate-700" style="border-color:var(--app-border)" @submit.prevent="submitNote">
                 <div class="grid gap-3 sm:grid-cols-[10rem_minmax(0,1fr)]">
                   <select v-model="noteForm.kind" class="app-control">
                     <option value="thesis">{{ t('research.noteKinds.thesis') }}</option>
@@ -188,7 +186,7 @@
                 <textarea v-model.trim="noteForm.content" class="app-control min-h-28 w-full" :placeholder="t('research.noteContent')" maxlength="100000" />
                 <button type="submit" class="app-button-primary" :disabled="saving || !noteForm.title">{{ t('research.addNote') }}</button>
               </form>
-              <article v-for="note in itemNotes" :key="note.id" class="border p-4 dark:border-slate-700" style="border-color:#e4ded3">
+              <article v-for="note in itemNotes" :key="note.id" class="border p-4 dark:border-slate-700" style="border-color:var(--app-border)">
                 <div class="flex items-start justify-between gap-3">
                   <div>
                     <span class="app-chip">{{ t(`research.noteKinds.${note.kind}`) }}</span>
@@ -216,7 +214,7 @@
                 <p class="text-sm app-muted">{{ t('research.alertRuntimeHint') }}</p>
                 <button type="button" class="app-button-secondary shrink-0" :disabled="saving" @click="evaluateNow">{{ t('research.evaluateNow') }}</button>
               </div>
-              <form class="space-y-3 border p-4 dark:border-slate-700" style="border-color:#e4ded3" @submit.prevent="submitAlert">
+              <form class="space-y-3 border p-4 dark:border-slate-700" style="border-color:var(--app-border)" @submit.prevent="submitAlert">
                 <input v-model.trim="alertForm.name" class="app-control w-full" :placeholder="t('research.alertName')" maxlength="200" />
                 <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   <select v-model="alertForm.metric" class="app-control">
@@ -234,7 +232,7 @@
                 </div>
                 <button type="submit" class="app-button-primary" :disabled="saving || !alertForm.name || alertForm.threshold === ''">{{ t('research.addAlert') }}</button>
               </form>
-              <article v-for="alert in itemAlerts" :key="alert.id" class="border p-4 dark:border-slate-700" style="border-color:#e4ded3">
+              <article v-for="alert in itemAlerts" :key="alert.id" class="border p-4 dark:border-slate-700" style="border-color:var(--app-border)">
                 <div class="flex items-start justify-between gap-3">
                   <div>
                     <h3 class="font-semibold text-stone-950 dark:text-white">{{ alert.name }}</h3>

@@ -10,7 +10,7 @@ import numpy as np
 from app.domain.cloud_trade_attribution import calendar_returns, compound, date, periods, summary
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / '.heimdall_runtime/cloud-timeframe-20260911'
+SOURCE = ROOT / '.opentrading_runtime/cloud-timeframe-20260911'
 OUT = ROOT / 'docs/verification/zec-hourly-volatility-20260911'
 PUBLIC = ROOT / 'docs/verification/eth-cloud-two-year-20260910'
 

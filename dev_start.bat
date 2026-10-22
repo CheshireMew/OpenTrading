@@ -1,5 +1,7 @@
 @echo off
 setlocal
+chcp 65001 >nul
+title OpenTrading - Unified Console
 
 set "SCRIPT_DIR=%~dp0"
 set "PS_SCRIPT=%SCRIPT_DIR%dev_start.ps1"
@@ -13,15 +15,15 @@ if not exist "%PS_SCRIPT%" (
   exit /b 1
 )
 
-echo [Heimdall] Starting launcher from "%SCRIPT_DIR%"
-powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "& { Set-Location -LiteralPath '%SCRIPT_DIR%'; & '%PS_SCRIPT%' }"
+echo [OpenTrading] Starting launcher from "%SCRIPT_DIR%"
+powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%PS_SCRIPT%" %*
 set "EXIT_CODE=%ERRORLEVEL%"
 
 if not "%EXIT_CODE%"=="0" (
-  echo [Heimdall] Launcher failed with exit code %EXIT_CODE%.
+  echo [OpenTrading] Launcher failed with exit code %EXIT_CODE%.
   if /i not "%~1"=="--no-pause" pause
 ) else (
-  echo [Heimdall] Launcher finished. Backend, background runtime, and frontend windows were opened.
+  echo [OpenTrading] Launcher command finished.
   if "%PAUSE_ON_SUCCESS%"=="1" pause
 )
 

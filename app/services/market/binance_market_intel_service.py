@@ -22,13 +22,13 @@ class BinanceMarketIntelService:
         spot_client = BinanceApiSupport(
             base_url=settings.BINANCE_PUBLIC_BASE_URL,
             cache_namespace="binance:spot",
-            user_agent="heimdall/market-intel",
+            user_agent="opentrading/market-intel",
             cache_service=cache_service,
         )
         usdm_client = BinanceApiSupport(
             base_url=settings.BINANCE_FUTURES_USDM_BASE_URL,
             cache_namespace="binance:usdm",
-            user_agent="heimdall/market-intel",
+            user_agent="opentrading/market-intel",
             cache_service=cache_service,
         )
         self.spot = BinanceSpotMarketService(spot_client, research_store=research_store)

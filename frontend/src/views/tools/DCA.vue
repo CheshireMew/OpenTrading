@@ -212,7 +212,7 @@
     </div>
     </template>
     <div v-else class="app-panel flex min-h-[18rem] items-center justify-center p-8 text-center">
-      <div class="max-w-md"><h3 class="app-section-title">{{ $t('dca.emptyResultTitle') }}</h3><p class="app-subtitle mt-2">{{ $t('dca.emptyResultDescription') }}</p></div>
+      <h3 class="app-section-title">{{ $t('dca.emptyResultTitle') }}</h3>
     </div>
 
     </div>

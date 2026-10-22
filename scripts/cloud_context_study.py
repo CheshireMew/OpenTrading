@@ -18,7 +18,7 @@ from scripts.profit_protection_study import metrics,read,save
 from scripts.trend_cloud_study import stamp
 
 DOCS=ROOT/'docs/verification/eth-cloud-context-20260910'
-RUNTIME=ROOT/'.heimdall_runtime/cloud-context-20260910'
+RUNTIME=ROOT/'.opentrading_runtime/cloud-context-20260910'
 SOURCE=ROOT/'strategies/trend_cloud_context_v3.py'
 NAMES={
     'baseline':'原入场规则（对照）',
@@ -132,7 +132,7 @@ def study():
         parameters=validate_parameters(spec,plan['variants'][key]['parameters'])
         r=simulate(bars[a-650:b],module,parameters,warmup=650,step_ms=900000,initial_cash=10000,position_pct=100)
         # Every unchanged-entry baseline must match the previous project study exactly.
-        reference=read(ROOT/f'.heimdall_runtime/cloud-manual-20260910/baseline-{period}.json') if key=='baseline' else None
+        reference=read(ROOT/f'.opentrading_runtime/cloud-manual-20260910/baseline-{period}.json') if key=='baseline' else None
         if reference:
             assert r['trades']==reference['trades'] and r['equity']==reference['equity']
         m=metrics(r)

@@ -77,7 +77,7 @@ def main():
 
 旧策略均未覆盖。`versions/001-before-new-tests` 保存 32 份原策略、引擎、参数和报告文件；`versions/002-frozen-round-v1` 保存本轮测试前的程序和计划。每份副本有 SHA-256 校验清单，版本目录不复用，`versions/history.jsonl` 只追加。后续版本修改前运行 `python -m scripts.cloud_strategy_versions 新版本说明 文件路径…`，并另存新策略文件；不要覆盖旧策略。
 
-本轮所有参数均在 `plan.json`，每段结果在 `results.json`，每次事先选择分别在 `q1-choice.json` 至 `q4-choice.json`，逐笔信号、交易和账户曲线在 `.heimdall_runtime/cloud-robustness-20260910/`。正式项目运行保存了独立策略副本、参数、行情快照和结果，可以从下表查看完整两年的买卖点。
+本轮所有参数均在 `plan.json`，每段结果在 `results.json`，每次事先选择分别在 `q1-choice.json` 至 `q4-choice.json`，逐笔信号、交易和账户曲线在 `.opentrading_runtime/cloud-robustness-20260910/`。正式项目运行保存了独立策略副本、参数、行情快照和结果，可以从下表查看完整两年的买卖点。
 
 | 版本 | 参数记录标识 | 连续两年收益 | 项目正式记录 |
 | --- | --- | ---: | --- |
@@ -104,7 +104,7 @@ def main():
 <div class="legend"><span style="color:#b45309">事先选参组合</span><span style="color:#526a87">上轮利润保护版</span><span style="color:#087f70">震荡过滤 20%</span></div><div id="chart"></div><small>10,000 USDT 起步，按日显示账户资金。比较范围均为 2025-09-10 至 2026-09-10；每三个月边界平仓，资金连续计算。</small></section>
 <section><h2>全部 20 个版本，好的和差的都在</h2><div class="controls"><label>查看范围 <select id="period"><option value="quarters">后一年，按四段拼接</option><option value="full">完整两年，连续运行</option></select></label><label>版本类别 <select id="group"><option value="all">全部版本</option><option value="reference">旧基准对照</option><option value="neighbor">相邻参数</option><option value="methods">不同入场方法</option></select></label></div><p class="muted" id="table-note"></p><div class="scroll"><table><thead><tr><th>版本</th><th>收益</th><th>从高点最大跌幅</th><th>笔数</th><th>盈利 / 亏损</th><th>第一段收益</th><th>第二段收益</th><th>第三段收益</th><th>第四段收益</th><th>完整两年买卖点</th></tr></thead><tbody id="variants"></tbody></table></div><p class="foot">四段分别从 2025-09-10、2025-12-10、2026-03-10、2026-06-10 开始，每段三个月。后一年边界平仓的口径与上份报告不同，请不要混用数字。</p></section>
 <section><h2>为什么现在停止</h2><p id="stop"></p><p>测试前约定：四段至少三段赚钱、合计赚钱、账户从高点最大跌幅不超过 25%、最差一段亏损不超过 10%，以及整周重抽行情后盈利仍有足够余量。事先选参只通过“合计赚钱”，其余四项没过。</p><details><summary>查看统计检查和它的局限</summary><p id="stats"></p><p>同时考虑从 20 个版本中挑选的影响后，本轮较保守的联合区间没有一个版本能确认盈利下限高于零，也没有确认哪个版本优于上轮基准。这表示证据不足，并不证明永远无效。统计依赖历史行情的抽样假设；不能消除我们已经反复查看这些数据带来的偏差。</p></details><p>结论只针对本次 ETH 15 分钟通道策略。旧版停止继续堆参数；震荡过滤版留下研究记录，还不能称为稳定盈利方案。</p></section>
-<section><h2>每次修改都有副本</h2><p>旧文件保存在 <code>versions/001-before-new-tests</code>，本轮测试前程序和计划保存在 <code>versions/002-frozen-round-v1</code>。每份副本带文件校验值；版本历史只追加。20 个参数版本的完整两年正式记录可从上表直接打开。</p><p class="foot">记录目录：<code>D:\\Code\\Heimdall\\docs\\verification\\eth-cloud-robustness-20260910</code><br>逐笔记录：<code>D:\\Code\\Heimdall\\.heimdall_runtime\\cloud-robustness-20260910</code></p><p><a href="profit-protection.html">查看上一轮利润保护报告</a> · <a href="http://127.0.0.1:4173/research/backtests">打开项目回测记录</a></p></section>
+<section><h2>每次修改都有副本</h2><p>旧文件保存在 <code>versions/001-before-new-tests</code>，本轮测试前程序和计划保存在 <code>versions/002-frozen-round-v1</code>。每份副本带文件校验值；版本历史只追加。20 个参数版本的完整两年正式记录可从上表直接打开。</p><p class="foot">记录目录：<code>D:\\Code\\OpenTrading\\docs\\verification\\eth-cloud-robustness-20260910</code><br>逐笔记录：<code>D:\\Code\\OpenTrading\\.opentrading_runtime\\cloud-robustness-20260910</code></p><p><a href="profit-protection.html">查看上一轮利润保护报告</a> · <a href="http://127.0.0.1:4173/research/backtests">打开项目回测记录</a></p></section>
 </main><script>const payload=__DATA__;
 const d=payload.data, plan=d.plan, variants=plan.variants, rr=d.rolling.report;
 const pct=x=>(x>=0?'+':'')+x.toFixed(2)+'%', cls=x=>x>=0?'positive':'negative';

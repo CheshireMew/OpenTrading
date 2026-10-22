@@ -1,1 +1,1 @@
-"""Command-line entry modules for Heimdall."""
+"""Command-line entry modules for OpenTrading."""

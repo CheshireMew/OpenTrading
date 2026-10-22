@@ -9,7 +9,7 @@ from pathlib import Path
 from app.contracts.chart_workspace import WorkspaceDocument, WorkspaceWrite
 
 ROOT = Path(__file__).resolve().parents[2]
-WORKSPACE_ROOT = ROOT / ".heimdall_runtime" / "chart_workspace"
+WORKSPACE_ROOT = ROOT / ".opentrading_runtime" / "chart_workspace"
 
 
 class WorkspaceConflict(ValueError):
@@ -94,11 +94,16 @@ class ChartWorkspaceStore:
 
     def seed(self):
         try:
-            self.get("scripts", "heimdall-v7-2")
+            self.get("scripts", "opentrading-v7-2")
         except KeyError:
-            self.put("scripts", "heimdall-v7-2", WorkspaceWrite(name="Heimdall ETH · EMA55 · v7.2",
+            self.put("scripts", "opentrading-v7-2", WorkspaceWrite(name="OpenTrading ETH · EMA55 · v7.2",
                 data={"source": (ROOT / "strategies/pine/eth_ema55_manual_chart_v7_2.pine").read_text(encoding="utf-8"),
                       "language": "pine", "kind": "indicator"}), readonly=True)
+        # Retain the old built-in and all its revisions for saved runs, while the
+        # current script picker shows the renamed built-in only.
+        with self.connect() as db:
+            db.execute("UPDATE documents SET archived=1 WHERE kind='scripts' AND id=? AND readonly=1",
+                       ("heimdall-v7-2",))
         if not self.list("watchlists"):
             self.put("watchlists", "default", WorkspaceWrite(name="我的自选", data={"symbols": [
                 "binance:spot:BTCUSDT", "binance:spot:ETHUSDT", "binance:spot:SOLUSDT"]}))

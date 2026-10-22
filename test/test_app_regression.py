@@ -111,7 +111,7 @@ def test_root_returns_frontend_boot_payload_when_build_missing(
     response = api_harness["client"].get("/")
 
     assert response.status_code == 200
-    assert response.json()["message"] == "Heimdall API is running"
+    assert response.json()["message"] == "OpenTrading API is running"
     assert response.json()["docs"] == "/docs"
 
 
@@ -194,6 +194,24 @@ def test_frontend_fallback_rejects_unknown_reserved_paths(api_harness):
     response = api_harness["client"].get("/api/private")
 
     assert response.status_code == 404
+
+
+def test_development_frontend_redirects_root_and_preserves_route_query(api_harness, monkeypatch):
+    monkeypatch.setenv("OPENTRADING_FRONTEND_DEV_URL", "http://127.0.0.1:4173/")
+    client = api_harness["client"]
+    for path in ("/", "/indicators/equities?platform=okx"):
+        response = client.get(path, follow_redirects=False)
+        assert response.status_code == 307
+        assert response.headers["location"] == "http://127.0.0.1:4173" + path
+        assert response.headers["cache-control"] == "no-store"
+
+
+def test_development_frontend_keeps_api_health_and_docs_on_backend(api_harness, monkeypatch):
+    monkeypatch.setenv("OPENTRADING_FRONTEND_DEV_URL", "http://127.0.0.1:4173")
+    client = api_harness["client"]
+    assert client.get("/health/live", follow_redirects=False).status_code == 200
+    assert client.get("/docs", follow_redirects=False).status_code == 200
+    assert client.get("/api/private", follow_redirects=False).status_code == 404
 
 
 def test_dollar_liquidity_dashboard_api_is_retired():

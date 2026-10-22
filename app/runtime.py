@@ -156,6 +156,9 @@ class AppRuntimeServices:
         return self.background
 
     async def start(self) -> None:
+        connect_cache = getattr(self.infra.cache_service, "connect_async", None)
+        if connect_cache is not None:
+            await connect_cache()
         if self.api is not None:
             await self.api.market.binance_intel.start()
             if self.api.research_alerts is not None:
@@ -300,7 +303,7 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
         web3_client = BinanceApiSupport(
             base_url=settings.BINANCE_WEB3_BASE_URL,
             cache_namespace="binance:web3",
-            user_agent="heimdall/web3",
+            user_agent="opentrading/web3",
             cache_service=cache_service,
         )
         web3_ranks = BinanceWeb3RankGateway(web3_client)
@@ -310,7 +313,7 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
             kline_client=BinanceApiSupport(
                 base_url=settings.BINANCE_WEB3_KLINE_BASE_URL,
                 cache_namespace="binance:web3:kline",
-                user_agent="heimdall/web3-kline",
+                user_agent="opentrading/web3-kline",
                 cache_service=cache_service,
             ),
             kline_store=kline_store,

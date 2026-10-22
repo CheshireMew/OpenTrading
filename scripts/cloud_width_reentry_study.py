@@ -23,7 +23,7 @@ from config import settings
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT/'docs/verification/eth-cloud-width-reentry-20260912'
 BASE_ID = '4e65bfb4229646299932d76515ec0ac0'
-BASE = ROOT/'.heimdall_runtime/local_backtests'/BASE_ID
+BASE = ROOT/'.opentrading_runtime/local_backtests'/BASE_ID
 SOURCE = ROOT/'strategies/trend_cloud_width_reentry_v1.py'
 STEP = 900000
 VARIANTS = [

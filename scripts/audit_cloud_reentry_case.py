@@ -9,7 +9,7 @@ from app.infra.research_files import read_json, file_hash
 from app.services.local_backtest_strategies import load_strategy, validate_parameters
 from scripts.cloud_width_reentry_study import OUT, ROOT, SOURCE, keep
 
-CASE = ROOT/'.heimdall_runtime/local_backtests/67f07fcba58e4ceead15917e326d8c4d'
+CASE = ROOT/'.opentrading_runtime/local_backtests/67f07fcba58e4ceead15917e326d8c4d'
 
 
 def main():

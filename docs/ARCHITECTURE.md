@@ -1,6 +1,6 @@
-# Heimdall architecture boundaries
+# OpenTrading architecture boundaries
 
-Heimdall uses a small inward-facing core and an explicit outer runtime shell.
+OpenTrading uses a small inward-facing core and an explicit outer runtime shell.
 
 `app/domain` owns business values and rules. It cannot import HTTP contracts, runtime services, infrastructure, or routers. `app/application` owns use cases, ports, and application errors. It can depend on the domain, but not on contracts, infrastructure, services, routers, or FastAPI.
 

@@ -13,7 +13,7 @@ from scripts.zec_intrabar_methods_study import run
 from scripts import zec_paxg_entry_parameters_study as audit
 
 OUT = ROOT/'docs/verification/eth-no-reverse-20260913'
-BASE = ROOT/'.heimdall_runtime/local_backtests/3f31380c7267449f53743dc1fe5bcebd'
+BASE = ROOT/'.opentrading_runtime/local_backtests/3f31380c7267449f53743dc1fe5bcebd'
 SOURCE = ROOT/'strategies/trend_cloud_intrabar_exit_v4.py'
 OLD = ROOT/'strategies/trend_cloud_intrabar_methods_v3.py'
 ENGINE = ROOT/'app/domain/local_backtest.py'

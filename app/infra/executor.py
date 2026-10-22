@@ -15,23 +15,23 @@ T = TypeVar("T")
 class BlockingExecutorRuntime:
     database: ThreadPoolExecutor = field(default_factory=lambda: ThreadPoolExecutor(
         max_workers=max(int(settings.BLOCKING_DATABASE_MAX_WORKERS), 1),
-        thread_name_prefix="heimdall-db",
+        thread_name_prefix="opentrading-db",
     ))
     compute: ThreadPoolExecutor = field(default_factory=lambda: ThreadPoolExecutor(
         max_workers=max(int(settings.BLOCKING_COMPUTE_MAX_WORKERS), 1),
-        thread_name_prefix="heimdall-compute",
+        thread_name_prefix="opentrading-compute",
     ))
     external_io: ThreadPoolExecutor = field(default_factory=lambda: ThreadPoolExecutor(
         max_workers=max(int(settings.BLOCKING_EXTERNAL_IO_MAX_WORKERS), 1),
-        thread_name_prefix="heimdall-external",
+        thread_name_prefix="opentrading-external",
     ))
     background: ThreadPoolExecutor = field(default_factory=lambda: ThreadPoolExecutor(
         max_workers=max(int(settings.BLOCKING_BACKGROUND_MAX_WORKERS), 1),
-        thread_name_prefix="heimdall-background",
+        thread_name_prefix="opentrading-background",
     ))
     tools: ThreadPoolExecutor = field(default_factory=lambda: ThreadPoolExecutor(
         max_workers=max(int(settings.BLOCKING_TOOL_MAX_WORKERS), 1),
-        thread_name_prefix="heimdall-tools",
+        thread_name_prefix="opentrading-tools",
     ))
 
     def shutdown(self) -> None:

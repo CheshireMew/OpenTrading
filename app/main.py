@@ -40,7 +40,7 @@ from config import settings
 def create_app(role: RuntimeRole | None = None) -> FastAPI:
     resolved_role = role or settings.APP_RUNTIME_ROLE
     app = FastAPI(
-        title="Heimdall",
+        title="OpenTrading",
         description="AI-Powered Crypto Trading Intelligence",
         version=APP_VERSION,
         lifespan=lifespan,

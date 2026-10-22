@@ -55,7 +55,7 @@ class WorkerSession {
   context(select:unknown){return new Promise<any>(resolve=>{if(this.stopped){resolve(null);return}const id=++this.contextId;this.contexts.set(id,resolve);this.post({type:'context',id,select})})}
 }
 
-export class HeimdallPineEngine implements ScriptingEngine {
+export class OpenTradingPineEngine implements ScriptingEngine {
   constructor(private catalog:()=>ChartSymbol[]=()=>[]){}
   readonly language='pine'
   readonly capabilities={streaming:true,visibleRange:true,inputs:true,props:true}

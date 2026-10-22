@@ -72,7 +72,7 @@ jobs:
       - name: Build
         run: npm run build:frontend
         env:
-          HEIMDALL_PYTHON: python
+          OPENTRADING_PYTHON: python
 
       - name: Run frontend tests
         run: npm test

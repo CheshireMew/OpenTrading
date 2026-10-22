@@ -1,5 +1,5 @@
 //@version=6
-indicator("Heimdall ETH · EMA55 盘中确认 · 分色标签 v6.1", overlay=true, max_labels_count=500)
+indicator("OpenTrading ETH · EMA55 盘中确认 · 分色标签 v6.1", overlay=true, max_labels_count=500)
 
 // 手工观察指标，不自动下单，不使用 strategy 原生成交箭头。
 // 对应固定版 +64,338.16%：2020-12-28 至 2026-09-10，项目 ETH/USDT 数据。

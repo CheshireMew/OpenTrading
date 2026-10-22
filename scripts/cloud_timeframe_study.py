@@ -24,7 +24,7 @@ from scripts.profit_protection_study import ROOT, read, save
 from scripts.trend_cloud_study import stamp
 
 DOCS=ROOT/'docs/verification/cloud-timeframe-20260911'
-RUNTIME=ROOT/'.heimdall_runtime/cloud-timeframe-20260911'
+RUNTIME=ROOT/'.opentrading_runtime/cloud-timeframe-20260911'
 SOURCE=ROOT/'strategies/trend_cloud_timeframe_v6.py'
 DEPENDENCY=ROOT/'strategies/trend_cloud_parameters_v4.py'
 PRIOR={'alt':ROOT/'docs/verification/alt-cloud-transfer-20260911', 'repair':ROOT/'docs/verification/paxg-zec-repair-20260911'}
@@ -183,7 +183,7 @@ def calculate(task):
     trace={f:result[f] for f in ('report','trades','signals')};trace['equity']=[dict(timestamp=x['timestamp'],equity=x['equity']) for x in result['equity']]
     if tf=='15m' and period in ('full','recent'):
         prior=plan['variants'][a][k];label=prior['origin'];folder='paxg-zec-repair-20260911' if label=='repair' else 'alt-cloud-transfer-20260911'
-        old=read(ROOT/f'.heimdall_runtime/{folder}/traces/{a}/{prior["origin_key"]}-{"full" if period=="full" else "final"}.json')
+        old=read(ROOT/f'.opentrading_runtime/{folder}/traces/{a}/{prior["origin_key"]}-{"full" if period=="full" else "final"}.json')
         for field in ('report','trades','signals','equity'):assert trace[field]==old[field],f'15m mismatch {a}/{k}/{period}/{field}'
         m['legacy_exact']=True
     trace.update(metrics=m,parameters=p,period=[lo,hi],timeframe=tf,provenance=prov);save(dest,trace)

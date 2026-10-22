@@ -1,8 +1,8 @@
 <template>
   <div class="app-page">
     <div class="app-page-inner-wide">
-      <section class="app-hero-panel flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <div><p class="app-eyebrow">Unified Asset Research</p><h1 class="app-title mt-2">{{ asset?.symbol || routeSymbol }}</h1><p class="app-subtitle mt-3">{{ t('assetResearch.subtitle') }}</p></div>
+      <section class="app-page-header flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div><h1 class="app-title">{{ asset?.symbol || routeSymbol }}</h1></div>
         <div class="flex flex-wrap gap-2"><select v-model="timeframe" class="app-control"><option v-for="value in timeframes" :key="value" :value="value">{{ value }}</option></select><button type="button" class="app-button-secondary" :disabled="loading" @click="load">{{ t('assetResearch.refresh') }}</button><router-link v-if="compareTarget" :to="compareTarget" class="app-button-secondary">{{ t('assetResearch.openCompare') }}</router-link><AddToResearchButton v-if="asset" :symbol="asset.symbol" :asset-class="asset.assetClass" :display-name="asset.symbol" :source-context="researchSourceContext" /></div>
       </section>
       <div v-if="error" class="border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200" role="alert">{{ error }}</div>

@@ -10,7 +10,7 @@ from pathlib import Path
 import sqlite3
 import re
 
-from app.infra.research_files import file_hash
+from app.infra.research_files import file_hash, relocated_project_path
 from app.services.backtest_provenance import evidence_status, execution_summary
 from app.services.research_strategy_families import strategy_family
 from config.settings import BASE_DIR
@@ -262,11 +262,11 @@ class ResearchResultsCatalog:
         with self.connection() as db:
             old_maps = [r[0] for r in db.execute("SELECT DISTINCT s.path FROM sources s JOIN results r ON r.id=s.result_id WHERE s.pointer LIKE '/entries/%' AND r.source_type='legacy' AND r.payload LIKE '%\"context_note\"%'")]
         for name in old_maps:
-            self.reset_manifest(Path(name), max_json_bytes)
-            if not Path(name).is_file():
+            self.reset_manifest(relocated_project_path(name), max_json_bytes)
+            if not relocated_project_path(name).is_file():
                 issues.append(dict(path=name, issue='来源映射已不可读，已撤回其声明；原报告仍可查看。'))
         for root in roots:
-            root = Path(root).resolve(strict=True)
+            root = relocated_project_path(root).resolve(strict=True)
             def paths():
                 if root.is_file():
                     yield root
@@ -333,7 +333,7 @@ class ResearchResultsCatalog:
             known = db.execute('SELECT path FROM imports').fetchall()
         done = {str(p.resolve()) for p, _ in manifests}
         for (name,) in known:
-            p = Path(name)
+            p = relocated_project_path(name)
             if name not in done and p.is_file() and p.stat().st_size < 1024 * 1024:
                 try:
                     doc = json.loads(p.read_text(encoding='utf-8-sig'))
@@ -361,7 +361,7 @@ class ResearchResultsCatalog:
             # Restore only context present in the source itself. If it is no
             # longer a recognizable result it stays out of the ranking.
             for name, pointer in targets:
-                target = Path(name)
+                target = relocated_project_path(name)
                 if not target.is_file() or target.stat().st_size > max_json_bytes:
                     continue
                 try:
@@ -436,7 +436,7 @@ class ResearchResultsCatalog:
             if row is None:
                 raise ValueError('结果目录记录不存在')
             entry = json.loads(row[0])
-            entry['sources'] = [dict(path=p, pointer=t, sha256_at_import=h, exists=Path(p).is_file())
+            entry['sources'] = [dict(path=str(relocated_project_path(p)), pointer=t, sha256_at_import=h, exists=relocated_project_path(p).is_file())
                                 for p, t, h in db.execute('SELECT path,pointer,sha256 FROM sources WHERE result_id=? ORDER BY path,pointer', (identifier,))]
         if sync:
             for evidence in entry['sources']:

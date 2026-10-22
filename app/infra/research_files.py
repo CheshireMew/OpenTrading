@@ -6,6 +6,8 @@ import os
 from pathlib import Path
 from uuid import uuid4
 
+from config.settings import BASE_DIR
+
 
 def encode(value):
     return json.dumps(value, ensure_ascii=False, allow_nan=False, sort_keys=True,
@@ -16,9 +18,27 @@ def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def relocated_project_path(path):
+    """Resolve saved absolute paths after the project folder was renamed."""
+    path = Path(path)
+    if path.exists():
+        return path
+    parts = path.parts
+    for index, part in enumerate(parts):
+        if part.casefold() not in {"heimdall", "opentrading"}:
+            continue
+        relative = list(parts[index + 1:])
+        if relative and relative[0] == ".heimdall_runtime":
+            relative[0] = ".opentrading_runtime"
+        candidate = BASE_DIR.joinpath(*relative)
+        if candidate.exists():
+            return candidate
+    return path
+
+
 def native_path(path):
     """Windows also needs extended paths for hash-named temporary snapshots."""
-    path = Path(path)
+    path = relocated_project_path(path)
     if os.name == 'nt' and not str(path).startswith('\\\\?\\'):
         resolved = str(path.resolve())
         return Path('\\\\?\\UNC\\' + resolved[2:] if resolved.startswith('\\\\') else '\\\\?\\' + resolved)

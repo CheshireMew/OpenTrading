@@ -1,4 +1,4 @@
-"""Finite robustness experiment using only Heimdall's data and simulator."""
+"""Finite robustness experiment using only OpenTrading's data and simulator."""
 import argparse
 from bisect import bisect_left
 from datetime import datetime, timezone
@@ -16,7 +16,7 @@ from scripts.trend_cloud_study import stamp
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT/'docs/verification/eth-cloud-robustness-20260910'
-RUNTIME = ROOT/'.heimdall_runtime/cloud-robustness-20260910'
+RUNTIME = ROOT/'.opentrading_runtime/cloud-robustness-20260910'
 SOURCE = ROOT/'strategies/trend_cloud_robustness_v1.py'
 DAY = 86400000
 
@@ -153,7 +153,7 @@ def run():
              ROOT/'scripts/profit_protection_study.py', ROOT/'scripts/trend_cloud_study.py',
              ROOT/'app/services/local_backtest_strategies.py']
     provenance = {'files': {p.relative_to(ROOT).as_posix():digest(p.read_bytes()) for p in paths}, 'environment':environment()}
-    data_path = ROOT/'.heimdall_runtime/local_backtests'/plan['source_run']/'data.json'
+    data_path = ROOT/'.opentrading_runtime/local_backtests'/plan['source_run']/'data.json'
     raw = data_path.read_bytes()
     assert digest(raw) == plan['data_hash']
     provenance['data_hash'] = digest(raw)
@@ -180,7 +180,7 @@ def run():
         if period == 'full' and key in ('anchor','legacy','no_protection'):
             ids = {'anchor':'af7dce8bc6014d6ebbdfd56c380ef44b', 'legacy':'39db5fdae92f42e89f7556721a43a1c8',
                    'no_protection':'c02076bd6ebf4d9b906ea4587df1cae9'}
-            old = read(ROOT/'.heimdall_runtime/local_backtests'/ids[key]/'result.json')
+            old = read(ROOT/'.opentrading_runtime/local_backtests'/ids[key]/'result.json')
             assert r['trades'] == old['trades'] and r['equity'] == old['equity'], 'Reference behavior changed'
             output.setdefault('exact_reference_replays',[]).append(key)
         summary = metrics(r)

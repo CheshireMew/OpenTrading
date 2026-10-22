@@ -15,7 +15,7 @@ from scripts.profit_protection_study import ROOT,read
 from scripts.trend_cloud_study import stamp
 
 DOCS=ROOT/'docs/verification/cloud-entry-cause-20260912'
-RUNTIME=ROOT/'.heimdall_runtime/cloud-entry-cause-20260912'
+RUNTIME=ROOT/'.opentrading_runtime/cloud-entry-cause-20260912'
 OLD=ROOT/'docs/verification/cloud-direct-adaptation-20260912'
 ASSETS=('paxg','zec','eth');STEP=900000
 START='2020-10-01T00:00:00Z';SPLIT='2024-09-10T00:00:00Z';END='2026-09-10T00:00:00Z'
@@ -31,7 +31,7 @@ def prepare():
     old=read(OLD/'plan.json');inputs={}
     for a in ASSETS:
         report=read(OLD/'reports'/a/'15m-c0r0t0.json')
-        forward=ROOT/f'.heimdall_runtime/cloud-direct-adaptation-20260912/diagnostics/{a}-15m.json.gz'
+        forward=ROOT/f'.opentrading_runtime/cloud-direct-adaptation-20260912/diagnostics/{a}-15m.json.gz'
         inputs[a]=dict(data=old['data'][a]['15m'],trace_path=report['trace_path'],trace_hash=report['trace_hash'],
             forward_path=forward.relative_to(ROOT).as_posix(),forward_hash=digest(forward.read_bytes()))
     files=[Path(__file__),ROOT/'app/domain/cloud_entry_path_audit.py',ROOT/'test/test_cloud_entry_path_audit.py']

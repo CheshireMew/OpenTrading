@@ -2,9 +2,7 @@
   <section class="app-panel">
     <div class="app-panel-header flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
-        <p class="app-eyebrow">{{ t('portfolioLedger.eyebrow') }}</p>
-        <h2 class="app-section-title mt-1">{{ t('portfolioLedger.title') }}</h2>
-        <p class="app-subtitle mt-2">{{ t('portfolioLedger.subtitle') }}</p>
+        <h2 class="app-section-title">{{ t('portfolioLedger.title') }}</h2>
       </div>
       <div class="flex flex-wrap gap-2">
         <button type="button" class="app-button-secondary" @click="download('csv')">{{ t('portfolioLedger.exportCsv') }}</button>
@@ -21,7 +19,7 @@
     <div v-if="loading" class="p-8 text-center text-sm app-muted">{{ t('portfolioLedger.loading') }}</div>
 
     <template v-else-if="ledger">
-      <div class="grid gap-px border-b bg-stone-200 dark:bg-slate-700 sm:grid-cols-2 xl:grid-cols-4" style="border-color:#e4ded3">
+      <div class="grid gap-px border-b bg-stone-200 dark:bg-slate-700 sm:grid-cols-2 xl:grid-cols-4" style="border-color:var(--app-border)">
         <div class="bg-white p-5 dark:bg-slate-800"><p class="text-xs app-muted">{{ t('portfolioLedger.totalEquity') }}</p><p class="mt-2 text-xl font-semibold text-stone-950 dark:text-white">{{ formatMoney(ledger.summary.totalEquity) }}</p></div>
         <div class="bg-white p-5 dark:bg-slate-800"><p class="text-xs app-muted">{{ t('portfolioLedger.totalPnl') }}</p><p class="mt-2 text-xl font-semibold" :class="tone(ledger.summary.totalPnl)">{{ formatSignedMoney(ledger.summary.totalPnl) }}</p></div>
         <div class="bg-white p-5 dark:bg-slate-800"><p class="text-xs app-muted">{{ t('portfolioLedger.netContributions') }}</p><p class="mt-2 text-xl font-semibold text-stone-950 dark:text-white">{{ formatMoney(ledger.summary.netContributions) }}</p></div>
@@ -33,7 +31,7 @@
         <ul class="mt-2 list-disc space-y-1 pl-5"><li v-for="issue in (ledger.summary.issues || [])" :key="issue">{{ issue }}</li></ul>
       </div>
 
-      <form v-if="showForm" class="m-5 space-y-4 border p-4 dark:border-slate-700" style="border-color:#e4ded3" @submit.prevent="saveTransaction">
+      <form v-if="showForm" class="m-5 space-y-4 border p-4 dark:border-slate-700" style="border-color:var(--app-border)" @submit.prevent="saveTransaction">
         <div class="flex items-center justify-between gap-4"><h3 class="font-semibold text-stone-950 dark:text-white">{{ editing ? t('portfolioLedger.editTransaction') : t('portfolioLedger.newTransaction') }}</h3><button type="button" class="text-sm app-muted underline" @click="cancelForm">{{ t('portfolioLedger.cancel') }}</button></div>
         <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <label class="space-y-1"><span class="label">{{ t('portfolioLedger.type') }}</span><select v-model="form.transactionType" class="app-control w-full"><option v-for="type in transactionTypes" :key="type" :value="type">{{ t(`portfolioLedger.types.${type}`) }}</option></select></label>
@@ -53,14 +51,14 @@
       <div class="grid gap-5 p-5 2xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
         <div class="min-w-0">
           <h3 class="font-semibold text-stone-950 dark:text-white">{{ t('portfolioLedger.derivedPositions') }}</h3>
-          <div class="app-table-scroll mt-3 border dark:border-slate-700" style="border-color:#e4ded3">
+          <div class="app-table-scroll mt-3 border dark:border-slate-700" style="border-color:var(--app-border)">
             <table class="min-w-full text-sm"><thead class="app-table-head"><tr><th class="px-3 py-2 text-left">{{ t('portfolioLedger.symbol') }}</th><th class="px-3 py-2 text-right">{{ t('portfolioLedger.units') }}</th><th class="px-3 py-2 text-right">{{ t('portfolioLedger.averageCost') }}</th><th class="px-3 py-2 text-right">{{ t('portfolioLedger.marketValue') }}</th><th class="px-3 py-2 text-right">{{ t('portfolioLedger.unrealized') }}</th></tr></thead><tbody><tr v-for="position in (ledger.summary.positions || [])" :key="position.symbol" class="app-table-row"><td class="px-3 py-3 font-semibold">{{ position.symbol }}</td><td class="px-3 py-3 text-right">{{ formatNumber(position.units) }}</td><td class="px-3 py-3 text-right">{{ formatMoney(position.averageCost) }}</td><td class="px-3 py-3 text-right">{{ formatMoney(position.marketValue) }}</td><td class="px-3 py-3 text-right" :class="tone(position.unrealizedPnl)">{{ formatSignedMoney(position.unrealizedPnl) }}</td></tr><tr v-if="!ledger.summary.positions?.length"><td colspan="5" class="px-4 py-8 text-center app-muted">{{ t('portfolioLedger.noPositions') }}</td></tr></tbody></table>
           </div>
         </div>
 
         <div class="min-w-0">
           <div class="flex items-center justify-between gap-3"><h3 class="font-semibold text-stone-950 dark:text-white">{{ t('portfolioLedger.transactions') }}</h3><select v-model="importMode" class="app-control"><option value="append">{{ t('portfolioLedger.importAppend') }}</option><option value="replace">{{ t('portfolioLedger.importReplace') }}</option></select></div>
-          <div class="app-table-scroll mt-3 border dark:border-slate-700" style="border-color:#e4ded3">
+          <div class="app-table-scroll mt-3 border dark:border-slate-700" style="border-color:var(--app-border)">
             <table class="min-w-[760px] w-full text-sm"><thead class="app-table-head"><tr><th class="px-3 py-2 text-left">{{ t('portfolioLedger.occurredAt') }}</th><th class="px-3 py-2 text-left">{{ t('portfolioLedger.type') }}</th><th class="px-3 py-2 text-left">{{ t('portfolioLedger.symbol') }}</th><th class="px-3 py-2 text-right">{{ t('portfolioLedger.quantity') }}</th><th class="px-3 py-2 text-right">{{ t('portfolioLedger.amount') }}</th><th class="px-3 py-2 text-right">{{ t('portfolioLedger.actions') }}</th></tr></thead><tbody><tr v-for="transaction in (ledger.transactions || [])" :key="transaction.id" class="app-table-row"><td class="px-3 py-3">{{ formatDateTime(transaction.occurredAt) }}</td><td class="px-3 py-3">{{ t(`portfolioLedger.types.${transaction.transactionType}`) }}</td><td class="px-3 py-3 font-semibold">{{ transaction.symbol || transaction.currency }}</td><td class="px-3 py-3 text-right">{{ transaction.quantity ? formatNumber(transaction.quantity) : '--' }}</td><td class="px-3 py-3 text-right">{{ formatMoney(transaction.cashAmount || transaction.quantity * transaction.unitPrice, transaction.currency) }}</td><td class="px-3 py-3 text-right"><button type="button" class="mr-3 text-emerald-700 underline dark:text-emerald-300" @click="beginEdit(transaction)">{{ t('portfolioLedger.edit') }}</button><button type="button" class="text-rose-600 underline dark:text-rose-300" @click="setArchived(transaction, true)">{{ t('portfolioLedger.archive') }}</button></td></tr><tr v-if="!ledger.transactions?.length"><td colspan="6" class="px-4 py-8 text-center app-muted">{{ t('portfolioLedger.noTransactions') }}</td></tr></tbody></table>
           </div>
           <details v-if="ledger.archivedTransactions?.length" class="mt-4"><summary class="cursor-pointer text-sm font-semibold app-muted">{{ t('portfolioLedger.archivedTransactions', { count: ledger.archivedTransactions?.length || 0 }) }}</summary><div class="mt-3 space-y-2"><div v-for="transaction in (ledger.archivedTransactions || [])" :key="transaction.id" class="flex items-center justify-between border p-3 text-sm dark:border-slate-700"><span>{{ formatDateTime(transaction.occurredAt) }} · {{ t(`portfolioLedger.types.${transaction.transactionType}`) }} · {{ transaction.symbol || transaction.currency }}</span><button type="button" class="text-emerald-700 underline dark:text-emerald-300" @click="setArchived(transaction, false)">{{ t('portfolioLedger.restore') }}</button></div></div></details>
@@ -186,7 +184,7 @@ const download = (format: 'csv' | 'json') => {
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
   anchor.href = url
-  anchor.download = `heimdall-ledger-${props.portfolioId}.${format}`
+  anchor.download = `opentrading-ledger-${props.portfolioId}.${format}`
   anchor.click()
   URL.revokeObjectURL(url)
 }

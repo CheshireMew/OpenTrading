@@ -1,5 +1,5 @@
 import { computed, ref } from 'vue'
-import { getLocalStorage } from '@/utils/storage'
+import { getLocalStorage, readStorageValue } from '@/utils/storage'
 
 export interface TimezoneOption {
   value: string
@@ -14,7 +14,7 @@ export const TIMEZONE_OPTIONS: TimezoneOption[] = [
   { value: 'Asia/Tokyo', label: 'Asia/Tokyo' },
 ]
 
-const STORAGE_KEY = 'heimdall_user_preferences'
+const STORAGE_KEY = 'opentrading_user_preferences'
 const PREFERENCES_VERSION = 2
 const DEFAULT_TIMEZONE = 'Asia/Shanghai'
 const DEFAULT_DISPLAY_CURRENCY = 'USD'
@@ -29,7 +29,7 @@ const readStoredPreferences = (): StoredPreferences => {
   const storage = getLocalStorage()
   if (storage === null) return {}
   try {
-    const raw = storage.getItem(STORAGE_KEY)
+    const raw = readStorageValue(storage, STORAGE_KEY)
     return raw ? JSON.parse(raw) : {}
   } catch (error) {
     console.warn('Failed to read user preferences:', error)

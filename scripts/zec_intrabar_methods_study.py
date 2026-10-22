@@ -20,9 +20,9 @@ from scripts.local_backtest_worker import execute
 
 OUT=ROOT/'docs/verification/zec-intrabar-methods-20260913'
 BASE_ID='2a0c67e629a77db26e664880bab12d44'
-BASE=ROOT/'.heimdall_runtime/local_backtests'/BASE_ID
+BASE=ROOT/'.opentrading_runtime/local_backtests'/BASE_ID
 SOURCE=ROOT/'strategies/trend_cloud_intrabar_methods_v3.py'
-FINE=ROOT/'.heimdall_runtime/cloud-timeframe-20260911/data/zec-5m.json'
+FINE=ROOT/'.opentrading_runtime/cloud-timeframe-20260911/data/zec-5m.json'
 FROZEN_FINE=OUT/'execution-data.json'
 STEP=1800000
 VARIANTS=[('wick','突破整根信号K线',{'confirmation_level':2}),
@@ -238,7 +238,7 @@ def report(studies,identifier):
         '- [预先固定的规则](RULES.md)、[计划与参数](plan.json)、[逐项答案](answers.json)、[结构化结果](results.json)。',
         '- [原版逐笔完全一致检查](baseline-parity.json)、[细周期数据核对](fine-data-check.json)、[自动检查记录](test-results.json)。',
         '- 每组的 `*-lineage.json` 记录原信号、委托、成交和重进来源；表内名称可打开项目K线图。',
-        '- 完整结果目录：`.heimdall_runtime/local_backtests/<run_id>/`；各 `run_id` 保存在 results.json 中。',
+        '- 完整结果目录：`.opentrading_runtime/local_backtests/<run_id>/`；各 `run_id` 保存在 results.json 中。',
         '- 细周期结果第一次写入数据库时发现汇总字典误当成逐笔列表的问题，已修复并通过服务复跑测试。已计算结果经哈希核对后补存，没有重算或改收益：[恢复记录](persistence-recovery.json)。','']
     path=OUT/'README.md'
     content='\n'.join(lines)

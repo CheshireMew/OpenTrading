@@ -211,7 +211,7 @@ export const useResearchWorkbench = () => {
   const requestDesktopPermission = async () => {
     if (!('Notification' in window)) return 'unsupported'
     const result = await Notification.requestPermission()
-    if (result === 'granted') window.dispatchEvent(new Event('heimdall:notification-permission'))
+    if (result === 'granted') window.dispatchEvent(new Event('opentrading:notification-permission'))
     return result
   }
 

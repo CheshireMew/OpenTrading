@@ -19,7 +19,7 @@ OUT=ROOT/'docs/verification/intrabar-requested-followups-20260913'
 SOURCE=ROOT/'strategies/trend_cloud_intrabar_methods_v3.py'
 ETH_ID='af38948806a3f2144ad51ef04ddc8a94'
 ZEC_PRIOR=ROOT/'docs/verification/zec-intrabar-methods-20260913'
-ZEC_DATA=ROOT/'.heimdall_runtime/alt-cloud-transfer-20260911/zec-data.json'
+ZEC_DATA=ROOT/'.opentrading_runtime/alt-cloud-transfer-20260911/zec-data.json'
 FINE=ZEC_PRIOR/'execution-data.json'
 
 
@@ -46,10 +46,10 @@ class Frozen(LocalBacktestService):
 
 def setup(db,kind):
     if kind=='eth':
-        base=ROOT/'.heimdall_runtime/local_backtests'/ETH_ID
+        base=ROOT/'.opentrading_runtime/local_backtests'/ETH_ID
         cfg=read_json(base/'config.json');data=base/'data.json';fine=None
     else:
-        cfg={**read_json(ROOT/'.heimdall_runtime/local_backtests/2a0c67e629a77db26e664880bab12d44/config.json'),'timeframe':'15m'}
+        cfg={**read_json(ROOT/'.opentrading_runtime/local_backtests/2a0c67e629a77db26e664880bab12d44/config.json'),'timeframe':'15m'}
         data=ZEC_DATA;fine=FINE
     return ResearchStudyService(Frozen(db,cfg,data,fine))
 
@@ -83,7 +83,7 @@ def prepare(studies,kind):
         _,aligned=align_execution_bars([Bar(*b) for b in rows[650:]],[Bar(*b) for b in fine],900000,300000)
         keep(out/'fine-data-check.json',dict(**aligned,data_hash=expected,fine_hash=file_hash(FINE)))
         for cid in ('baseline','width_stop','atr_stop','fine_control','fine_protect'):
-            old=prior[cid];folder=ROOT/'.heimdall_runtime/local_backtests'/old['run_id']
+            old=prior[cid];folder=ROOT/'.opentrading_runtime/local_backtests'/old['run_id']
             cases.append(case('old_'+cid,'30分钟：'+old['name'],read_json(folder/'config.json'),old['run_id']))
         for cid,name,changes in [('baseline','原1%止损',{}),('width_stop','1.5倍平滑振幅止损',{'stop_method':1}),
                 ('atr_stop','1.5倍ATR14止损',{'stop_method':2}),('fine_control','5分钟成交，15分钟更新保护',{}),

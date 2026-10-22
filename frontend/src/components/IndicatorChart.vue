@@ -3,6 +3,7 @@
 </template>
 
 <script setup>
+import { DARK_PALETTE } from '@/theme/palette.mjs'
 import { watch } from 'vue'
 import * as echarts from 'echarts/core'
 import { LineChart } from 'echarts/charts'
@@ -30,10 +31,10 @@ const { theme } = useTheme()
 const { timezone, formatDate } = useDateTime()
 
 const getChartOption = (indicator, isDark) => {
-  const textColor = isDark ? '#9ca3af' : '#4b5563'
-  const lineColor = isDark ? '#3b82f6' : '#1d6fba'
+  const textColor = isDark ? DARK_PALETTE.muted : '#4b5563'
+  const lineColor = isDark ? DARK_PALETTE.blue : '#1d6fba'
   const areaColor = isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(29, 111, 186, 0.18)'
-  const splitLineColor = isDark ? '#374151' : '#e5e7eb'
+  const splitLineColor = isDark ? DARK_PALETTE.grid : '#e5e7eb'
 
   const dataDates = indicator.history.map(item => formatDate(item.date))
   const dataValues = indicator.history.map(item => item.value)
@@ -41,10 +42,10 @@ const getChartOption = (indicator, isDark) => {
   return {
     tooltip: {
       trigger: 'axis',
-       backgroundColor: isDark ? 'rgba(31, 41, 55, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-      borderColor: isDark ? '#4b5563' : '#e5e7eb',
+       backgroundColor: isDark ? DARK_PALETTE.elevated : 'rgba(255, 255, 255, 0.9)',
+      borderColor: isDark ? DARK_PALETTE.border : '#e5e7eb',
       textStyle: {
-        color: isDark ? '#f3f4f6' : '#111827'
+        color: isDark ? DARK_PALETTE.text : '#111827'
       },
       formatter: function (params) {
         return `${params[0].axisValue}<br/><b>${formatIndicatorAxisValue(indicator, Number(params[0].data))}</b>`

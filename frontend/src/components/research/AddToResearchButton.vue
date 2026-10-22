@@ -9,8 +9,7 @@
       <section ref="dialogRef" role="dialog" aria-modal="true" aria-labelledby="add-research-title" tabindex="-1" class="w-full max-w-xl border border-[#d8d1c5] bg-[#fbfaf7] p-5 shadow-2xl outline-none dark:border-slate-700 dark:bg-slate-800 sm:p-6">
         <div class="flex items-start justify-between gap-4">
           <div>
-            <p class="app-eyebrow">Research</p>
-            <h2 id="add-research-title" class="mt-1 text-xl font-semibold text-stone-950 dark:text-white">{{ t('research.addSymbolTitle', { symbol: displayName || symbol }) }}</h2>
+            <h2 id="add-research-title" class="text-xl font-semibold text-stone-950 dark:text-white">{{ t('research.addSymbolTitle', { symbol: displayName || symbol }) }}</h2>
           </div>
           <button type="button" class="p-2 app-muted" :aria-label="t('common.close')" @click="closeDialog"><XMarkIcon class="h-5 w-5" /></button>
         </div>

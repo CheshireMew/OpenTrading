@@ -1,6 +1,6 @@
 <template>
   <main class="results-page">
-    <div class="heading"><div><h1 class="text-2xl font-semibold">研究结果目录</h1><p class="app-muted mt-2">查找已有策略、参数和区间，核对原始记录。</p></div><button class="app-button-secondary" :disabled="busy" @click="refreshImports">更新旧资料索引</button></div>
+    <div class="heading"><h1 class="text-2xl font-semibold">研究结果目录</h1><button class="app-button-secondary" :disabled="busy" @click="refreshImports">更新旧资料索引</button></div>
     <p v-if="message" class="notice" role="status">{{ message }}</p><p v-if="error" class="error" role="alert">{{ error }}</p>
     <form class="app-panel filters" @submit.prevent="search(true)">
       <label>标的<input v-model.trim="symbol" placeholder="例如 ETH/USDT" /></label>

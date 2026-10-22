@@ -1,5 +1,5 @@
 """
-Shared pytest fixtures for Heimdall tests.
+Shared pytest fixtures for OpenTrading tests.
 """
 from contextlib import asynccontextmanager
 import pytest

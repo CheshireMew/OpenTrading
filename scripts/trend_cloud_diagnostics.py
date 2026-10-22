@@ -1,4 +1,4 @@
-"""Diagnose existing Heimdall runs without downloading or changing execution."""
+"""Diagnose existing OpenTrading runs without downloading or changing execution."""
 import argparse
 from bisect import bisect_left
 from datetime import datetime, timezone
@@ -17,7 +17,7 @@ from scripts.trend_cloud_study import describe, stamp
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT/'docs/verification/eth-cloud-two-year-20260910'
-RUNTIME = ROOT/'.heimdall_runtime/eth-cloud-two-year-20260910'
+RUNTIME = ROOT/'.opentrading_runtime/eth-cloud-two-year-20260910'
 
 
 def read(path):
@@ -33,7 +33,7 @@ def baseline_diagnostics():
     runs = read(DOCS/'runs.json')['runs']
     output = {}
     for variant in ('high_low_ema', 'ema31_atr'):
-        directory = ROOT/'.heimdall_runtime/local_backtests'/runs[variant]
+        directory = ROOT/'.opentrading_runtime/local_backtests'/runs[variant]
         raw = (directory/'data.json').read_bytes()
         assert digest(raw) == read(directory/'metadata.json')['data_hash']
         bars = [Bar(int(r[0]), *map(float, r[1:])) for r in json.loads(raw)]
@@ -103,7 +103,7 @@ def experiment_plan():
 def experiments():
     plan = experiment_plan()
     runs = read(DOCS/'runs.json')['runs']
-    directory = ROOT/'.heimdall_runtime/local_backtests'/runs['ema31_atr']
+    directory = ROOT/'.opentrading_runtime/local_backtests'/runs['ema31_atr']
     raw = (directory/'data.json').read_bytes()
     source = ROOT/'strategies/trend_cloud_experiments.py'
     data_hash = digest(raw)
@@ -149,7 +149,7 @@ def experiments():
                 'trades': result['trades'], 'signals': result['signals'],
             })
             if key in ('high_low_ema', 'ema31_atr', 'ema31_range', 'ema31_cross') and period == 'full':
-                expected = read(ROOT/'.heimdall_runtime/local_backtests'/runs[key]/'result.json')
+                expected = read(ROOT/'.opentrading_runtime/local_backtests'/runs[key]/'result.json')
                 assert result['trades'] == expected['trades'], f'Baseline trade drift: {key}'
                 assert result['equity'] == expected['equity'], f'Baseline equity drift: {key}'
             print(f"{period} {key}: {result['report']['return_pct']:.2f}%, DD {result['report']['max_drawdown_pct']:.2f}%", flush=True)

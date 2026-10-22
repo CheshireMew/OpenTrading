@@ -105,7 +105,7 @@ def main():
     text+=['## 数据与保留记录',
         table(['标的','实际K线（含预热）','缺失K线','缺口段数','零成交量K线'],[[a.upper(),result['data'][a]['candles'],result['data'][a]['missing_bars'],len(result['data'][a]['gaps']),result['data'][a]['zero_volume_bars']] for a in assets]),
         '缺口经过相同项目数据服务补查，没有补造 K 线。逐笔交易跨越缺口的影响记录在各结果 gap_sensitivity 中。零成交量 K 线保留交易所原始数据。',
-        '策略和引擎均与原版本逐字节核对。plan.json 固定研究范围，selection-lock.json 保留提前选择，results.json 保存全部 768 个期间结果，verification.json 核对全部逐笔记录与资金结果。原始行情、配置与逐笔记录在 .heimdall_runtime/alt-cloud-transfer-20260911。']
+        '策略和引擎均与原版本逐字节核对。plan.json 固定研究范围，selection-lock.json 保留提前选择，results.json 保存全部 768 个期间结果，verification.json 核对全部逐笔记录与资金结果。原始行情、配置与逐笔记录在 .opentrading_runtime/alt-cloud-transfer-20260911。']
     (DOCS/'REPORT.md').write_text('\n\n'.join(text)+'\n',encoding='utf-8')
     payload={'verdict':verdict,'assets':plan['assets'],'axes':plan['axes'],'transfer':transfer,'parameters':{k:v['parameters'] for k,v in plan['variants'].items()},
              'results':rows,'rankings':result['rankings'],'selected':selected,'best':best,'labels':LABELS,'data':result['data']}

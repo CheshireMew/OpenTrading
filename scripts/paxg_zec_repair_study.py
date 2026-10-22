@@ -20,7 +20,7 @@ from scripts.profit_protection_study import ROOT,read,save,paired_entries
 from scripts.trend_cloud_study import stamp
 
 DOCS=ROOT/'docs/verification/paxg-zec-repair-20260911'
-RUNTIME=ROOT/'.heimdall_runtime/paxg-zec-repair-20260911'
+RUNTIME=ROOT/'.opentrading_runtime/paxg-zec-repair-20260911'
 SOURCES={'v4':ROOT/'strategies/trend_cloud_parameters_v4.py','v5':ROOT/'strategies/trend_cloud_atr_confirm_v5.py'}
 AXES=dict(center_length=[55,144],trigger_mult=[.4,1.2],chase_mult=[2.,3.],
           activation_pct=None,giveback_pct=[35.,50.],initial_stop_pct=None)
@@ -117,7 +117,7 @@ def calculate(task):
     assert isclose(m['compound_return_pct'],m['return_pct'],rel_tol=1e-9,abs_tol=1e-7)
     trace={f:result[f] for f in ('report','trades','signals')};trace['equity']=[dict(timestamp=x['timestamp'],equity=x['equity']) for x in result['equity']]
     if k==info['baseline'] and period in ('full','final'):
-        old=read(ROOT/f'.heimdall_runtime/alt-cloud-transfer-20260911/traces/{a}/{key(BASE)}-{period}.json')
+        old=read(ROOT/f'.opentrading_runtime/alt-cloud-transfer-20260911/traces/{a}/{key(BASE)}-{period}.json')
         for f in ('report','trades','signals','equity'):assert trace[f]==old[f],f'Legacy mismatch {a}/{period}/{f}'
         m['legacy_exact']=True
     trace.update(parameters=v['parameters'],period=info['periods'][period],metrics=m,provenance=provenance,source=v['source'])

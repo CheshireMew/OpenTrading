@@ -3,7 +3,7 @@
     <a href="#main-content" class="app-skip-link">{{ t('app.skipToContent') }}</a>
 
     <header class="app-mobile-header flex h-14 flex-shrink-0 items-center justify-between border-b px-4 md:hidden">
-      <span class="app-brand text-lg font-semibold tracking-tight">Heimdall</span>
+      <span class="app-brand text-lg font-semibold tracking-tight">OpenTrading</span>
       <button type="button" class="app-icon-button inline-flex" :aria-label="t('app.openMenu')" :aria-expanded="sidebarOpen" @click="sidebarOpen = true">
         <Bars3Icon class="h-6 w-6" />
       </button>
@@ -19,7 +19,7 @@
 
     <aside
       ref="sidebarRef"
-      class="app-sidebar fixed inset-y-0 left-0 z-50 w-72 flex-shrink-0 overflow-y-auto transition-transform duration-200 md:static md:z-auto md:w-60 md:translate-x-0"
+      class="app-sidebar fixed inset-y-0 left-0 z-50 flex w-72 flex-shrink-0 flex-col overflow-hidden transition-transform duration-200 md:static md:z-auto md:w-56 md:translate-x-0"
       :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
       :inert="(!desktopNavigation || route.path === '/') && !sidebarOpen"
       :aria-hidden="(!desktopNavigation || route.path === '/') && !sidebarOpen ? 'true' : undefined"
@@ -30,15 +30,14 @@
     >
       <div class="app-sidebar-header flex items-start justify-between p-5">
         <div>
-          <h1 class="app-brand text-xl font-semibold tracking-tight">Heimdall</h1>
-          <p class="app-sidebar-subtitle mt-1 text-xs">{{ t('app.subtitle') }}</p>
+          <h1 class="app-brand text-xl font-semibold tracking-tight">OpenTrading</h1>
         </div>
         <button type="button" class="app-icon-button inline-flex md:hidden" :aria-label="t('app.closeMenu')" @click="closeSidebar">
           <XMarkIcon class="h-5 w-5" />
         </button>
       </div>
 
-      <nav class="mt-4 space-y-1 px-3" :aria-label="t('app.primaryNavigation')">
+      <nav class="app-sidebar-navigation min-h-0 flex-1 space-y-1 overflow-y-auto px-3 pb-4 pt-3" :aria-label="t('app.primaryNavigation')">
         <template v-for="section in navSections" :key="section.key">
           <div v-if="section.titleKey" class="app-nav-section mt-4 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em]">
             {{ $t(section.titleKey) }}
@@ -50,33 +49,35 @@
             :to="item.path"
             class="app-nav-link flex items-center px-3 py-2 text-sm transition"
             active-class="app-nav-link--active"
+            :title="t(item.nav.labelKey)"
             @click="closeSidebar"
           >
-            <component :is="iconMap[item.nav.icon]" class="mr-2.5 h-5 w-5" />
-            {{ $t(item.nav.labelKey) }}
+            <component :is="iconMap[item.nav.icon]" class="mr-2.5 h-[18px] w-[18px] shrink-0" />
+            <span class="truncate">{{ $t(item.nav.labelKey) }}</span>
           </router-link>
         </template>
 
-        <div class="app-sidebar-controls mt-6 space-y-2 px-3 pt-4">
+      </nav>
+        <div class="app-sidebar-controls mx-3 mb-3 grid shrink-0 grid-cols-[1fr_auto] gap-2 pt-3">
           <button
              @click="toggleTheme"
+             :aria-label="theme === 'dark' ? t('theme.light') : t('theme.dark')"
              class="app-sidebar-button flex w-full items-center justify-between px-3 py-2 text-sm transition"
           >
              <span class="flex items-center">
-                 <MoonIcon v-if="theme === 'dark'" class="mr-2 h-5 w-5 text-yellow-500" />
-                 <SunIcon v-else class="mr-2 h-5 w-5 text-[#0f6b4f]" />
-                 {{ theme === 'dark' ? $t('theme.dark') : $t('theme.light') }}
+                 <SunIcon v-if="theme === 'dark'" class="mr-2 h-4 w-4" />
+                 <MoonIcon v-else class="mr-2 h-4 w-4" />
+                 {{ theme === 'dark' ? $t('theme.light') : $t('theme.dark') }}
              </span>
           </button>
           <button
              @click="toggleLocale"
              class="app-sidebar-button flex w-full items-center justify-center px-3 py-2 text-sm font-semibold transition"
           >
-             <LanguageIcon class="mr-2 h-5 w-5" />
+             <LanguageIcon class="mr-1.5 h-4 w-4" />
              {{ $t('lang.switch') }}
           </button>
         </div>
-      </nav>
     </aside>
 
     <main ref="mainContentRef" id="main-content" class="app-main min-h-0 min-w-0 flex-1 overflow-auto transition-colors duration-300" tabindex="-1">
@@ -214,7 +215,7 @@ watchEffect(() => {
 
 const openWorkspaceNavigation = () => { sidebarOpen.value = true }
 onMounted(() => {
-  window.addEventListener('heimdall:open-navigation', openWorkspaceNavigation)
+  window.addEventListener('opentrading:open-navigation', openWorkspaceNavigation)
   desktopMediaQuery = window.matchMedia('(min-width: 768px)')
   syncDesktopNavigation(desktopMediaQuery)
   desktopMediaQuery.addEventListener('change', syncDesktopNavigation)
@@ -222,7 +223,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('heimdall:open-navigation', openWorkspaceNavigation)
+  window.removeEventListener('opentrading:open-navigation', openWorkspaceNavigation)
   desktopMediaQuery?.removeEventListener('change', syncDesktopNavigation)
 })
 </script>
@@ -259,30 +260,37 @@ onBeforeUnmount(() => {
 }
 
 html.dark .app-shell {
-  --app-shell-bg: #111827;
-  --app-shell-text: #f9fafb;
-  --app-sidebar-bg: #111827;
-  --app-sidebar-border: #334155;
-  --app-brand: #f9fafb;
-  --app-muted: #94a3b8;
-  --app-section: #64748b;
-  --app-nav: #cbd5e1;
-  --app-nav-hover-bg: #1e293b;
-  --app-nav-hover: #f8fafc;
-  --app-nav-active-border: #34d399;
-  --app-nav-active-bg: rgba(6, 78, 59, 0.35);
-  --app-nav-active: #a7f3d0;
-  --app-button-bg: #0f172a;
-  --app-button-border: #334155;
-  --app-button-hover-bg: #1e293b;
-  --app-button-hover-border: #475569;
-  --app-main-bg: #111827;
+  --app-shell-bg: var(--ui-canvas);
+  --app-shell-text: var(--ui-text);
+  --app-sidebar-bg: var(--ui-canvas);
+  --app-sidebar-border: var(--ui-border);
+  --app-brand: var(--ui-title);
+  --app-muted: var(--ui-muted);
+  --app-section: var(--ui-faint);
+  --app-nav: var(--ui-text);
+  --app-nav-hover-bg: var(--ui-elevated);
+  --app-nav-hover: var(--ui-title);
+  --app-nav-active-border: var(--ui-accent);
+  --app-nav-active-bg: #22ab9414;
+  --app-nav-active: #73cabb;
+  --app-button-bg: var(--ui-toolbar);
+  --app-button-border: var(--ui-border);
+  --app-button-hover-bg: var(--ui-elevated);
+  --app-button-hover-border: var(--ui-borderStrong);
+  --app-main-bg: var(--ui-canvas);
 }
 
 .app-sidebar {
   border-right: 1px solid var(--app-sidebar-border);
   background: var(--app-sidebar-bg);
 }
+
+html.dark .app-sidebar-header { padding: 20px 22px 18px; }
+html.dark .app-nav-link { min-height: 38px; border-radius: 4px; font-size: 13px; font-weight: 500; }
+html.dark .app-nav-link--active { font-weight: 600; }
+html.dark .app-nav-section { margin-top: 16px; padding-top: 5px; padding-bottom: 8px; font-size: 10px; letter-spacing: 0.08em; }
+html.dark .app-sidebar-button { min-height: 36px; border-radius: 5px; padding: 7px 9px; font-size: 12px; }
+html.dark .app-sidebar-controls { border-top-color: var(--ui-border); }
 
 .app-mobile-header {
   border-color: var(--app-sidebar-border);
@@ -327,10 +335,6 @@ html.dark .app-shell {
 .app-brand {
   color: var(--app-brand);
   font-family: Georgia, "Times New Roman", serif;
-}
-
-.app-sidebar-subtitle {
-  color: var(--app-muted);
 }
 
 .app-nav-section {

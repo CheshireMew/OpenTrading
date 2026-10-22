@@ -1,4 +1,5 @@
 import { onBeforeUnmount, onMounted } from 'vue'
+import { getLocalStorage, readStorageValue } from '@/utils/storage'
 
 import { researchApi } from './api'
 import {
@@ -17,7 +18,8 @@ export const useDesktopAlertNotifications = () => {
     if (running || !('Notification' in window) || Notification.permission !== 'granted') return
     running = true
     try {
-      const delivered = new Set(loadDeliveredNotificationIds(localStorage.getItem(WINDOWS_NOTIFICATION_DELIVERED_KEY)))
+      const storage = getLocalStorage()
+      const delivered = new Set(loadDeliveredNotificationIds(storage ? readStorageValue(storage, WINDOWS_NOTIFICATION_DELIVERED_KEY) : null))
       const page = await researchApi.listEvents('alert_triggered', true, 100)
       const pending = (page.items || []).filter((event) => isWindowsNotificationEvent(event, delivered)).reverse()
       for (const event of pending) {
@@ -25,7 +27,7 @@ export const useDesktopAlertNotifications = () => {
         delivered.add(event.id)
       }
       if (pending.length > 0) {
-        localStorage.setItem(
+        storage?.setItem(
           WINDOWS_NOTIFICATION_DELIVERED_KEY,
           JSON.stringify(Array.from(delivered).slice(-500)),
         )
@@ -46,13 +48,13 @@ export const useDesktopAlertNotifications = () => {
     timer = window.setInterval(() => void poll(), POLL_INTERVAL_MS)
     window.addEventListener('focus', pollWhenVisible)
     document.addEventListener('visibilitychange', pollWhenVisible)
-    window.addEventListener('heimdall:notification-permission', pollWhenVisible)
+    window.addEventListener('opentrading:notification-permission', pollWhenVisible)
   })
 
   onBeforeUnmount(() => {
     if (timer !== undefined) window.clearInterval(timer)
     window.removeEventListener('focus', pollWhenVisible)
     document.removeEventListener('visibilitychange', pollWhenVisible)
-    window.removeEventListener('heimdall:notification-permission', pollWhenVisible)
+    window.removeEventListener('opentrading:notification-permission', pollWhenVisible)
   })
 }

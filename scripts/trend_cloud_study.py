@@ -1,4 +1,4 @@
-"""Run the fixed ETH comparison through Heimdall services and saved snapshots.
+"""Run the fixed ETH comparison through OpenTrading services and saved snapshots.
 
 prepare queues normal, user-visible backtests. analyze reads completed runs and
 uses the same public simulator for historical subperiods. No data downloader.
@@ -19,7 +19,7 @@ from config import settings
 
 ROOT = Path(__file__).resolve().parents[1]
 DIRECTORY = ROOT/'docs/verification/eth-cloud-two-year-20260910'
-RUNTIME = ROOT/'.heimdall_runtime/eth-cloud-two-year-20260910'
+RUNTIME = ROOT/'.opentrading_runtime/eth-cloud-two-year-20260910'
 
 
 def read(path):

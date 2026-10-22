@@ -1,7 +1,7 @@
 <template>
   <section class="app-panel">
     <div class="app-panel-header flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div><p class="app-eyebrow">Portfolio Risk</p><h2 class="app-section-title mt-1">{{ t('portfolioRisk.title') }}</h2><p class="app-subtitle mt-2">{{ t('portfolioRisk.subtitle') }}</p></div>
+      <h2 class="app-section-title">{{ t('portfolioRisk.title') }}</h2>
       <div class="grid gap-2 sm:grid-cols-[8rem_12rem_auto]">
         <select v-model.number="periodDays" class="app-control"><option :value="90">90 days</option><option :value="365">1 year</option><option :value="1095">3 years</option></select>
         <input v-model.trim="benchmark" class="app-control" placeholder="BTC/USDT" />

@@ -1,6 +1,6 @@
 import type { ResearchEventResponse } from './contracts'
 
-export const WINDOWS_NOTIFICATION_DELIVERED_KEY = 'heimdall.research.windowsNotifications.v1'
+export const WINDOWS_NOTIFICATION_DELIVERED_KEY = 'opentrading.research.windowsNotifications.v1'
 
 export const loadDeliveredNotificationIds = (raw: string | null): string[] => {
   if (!raw) return []

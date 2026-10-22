@@ -1,3 +1,4 @@
+import { DARK_PALETTE } from '@/theme/palette.mjs'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, type WatchStopHandle } from 'vue'
 
 import { createPersistentPageSnapshot, PAGE_SNAPSHOT_KEYS } from '@/composables/pageSnapshot'
@@ -40,9 +41,9 @@ export function useComparePage() {
   const chartColors = computed(() => {
     const isDark = theme.value === 'dark'
     return {
-      bg: isDark ? '#1f2937' : '#ffffff',
-      grid: isDark ? '#374151' : '#e5e7eb',
-      text: isDark ? '#9ca3af' : '#4b5563',
+      bg: isDark ? DARK_PALETTE.canvas : '#ffffff',
+      grid: isDark ? DARK_PALETTE.grid : '#e5e7eb',
+      text: isDark ? DARK_PALETTE.muted : '#4b5563',
       upColor: '#3b82f6',
       downColor: '#1d4ed8',
     }

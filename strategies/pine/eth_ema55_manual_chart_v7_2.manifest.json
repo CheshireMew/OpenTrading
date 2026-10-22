@@ -3,7 +3,7 @@
   "rule_version": "manual-chart-v7.2",
   "pine": {
     "path": "strategies/pine/eth_ema55_manual_chart_v7_2.pine",
-    "sha256": "df212d1411acd55bfcefe996399720df6aaceb3ac2341cfcaa67efa7c1c0f2ed"
+    "sha256": "5ca0dd6432de0d7252d304481ae69e6016991246e2e4be1f432dae59d85755a6"
   },
   "sources": [
     {
@@ -78,5 +78,10 @@
       "status": "verified_with_bounded_historical_runtime_parity"
     },
     "runtime_scope": "650 warmup + 240 synthetic historical OHLC bars, 38 fills, 1e-7 price tolerance; real-time tick behavior and full market history not verified."
+  },
+  "branding_change": {
+    "date": "2026-10-22",
+    "previous_source_sha256": "df212d1411acd55bfcefe996399720df6aaceb3ac2341cfcaa67efa7c1c0f2ed",
+    "change": "Indicator display title renamed to OpenTrading; all trading logic is unchanged. Historical TradingView evidence describes the source before this title change."
   }
 }

@@ -83,9 +83,9 @@ def resolve_database_url(app_settings: AppSettings) -> tuple[str, str]:
     database_url = app_settings.DATABASE_URL.strip()
     if not database_url:
         raise RuntimeError(
-            "DATABASE_URL 未配置。Heimdall 的数据库唯一入口是 DATABASE_URL；"
+            "DATABASE_URL 未配置。OpenTrading 的数据库唯一入口是 DATABASE_URL；"
             "服务器部署请配置 PostgreSQL 连接串，例如 "
-            "postgresql://user:password@host:5432/heimdall。"
+            "postgresql://user:password@host:5432/opentrading。"
         )
     return database_url, "settings"
 

@@ -36,13 +36,13 @@ def local(t):
 def load():
     runs = {}
     for key, rid in RUNS.items():
-        p = ROOT/'.heimdall_runtime/local_backtests'/rid/'result.json'
+        p = ROOT/'.opentrading_runtime/local_backtests'/rid/'result.json'
         r = read(p)
         cutoff = stamp('2026-08-01')
         runs[key] = {k: [x for x in r[k] if x.get('timestamp', x.get('exit_time', 0)) >= cutoff]
                      for k in ('trades', 'fills', 'signals', 'indicators')}
         runs[key]['obs'] = {x['timestamp']: x for x in runs[key]['indicators']}
-    rows = read(ROOT/'.heimdall_runtime/local_backtests'/RUNS['baseline']/'data.json')
+    rows = read(ROOT/'.opentrading_runtime/local_backtests'/RUNS['baseline']/'data.json')
     return rows, runs
 
 
@@ -119,7 +119,7 @@ def extract():
         examples.append(example)
     provenance = {}
     for key, rid in RUNS.items():
-        folder = ROOT/'.heimdall_runtime/local_backtests'/rid
+        folder = ROOT/'.opentrading_runtime/local_backtests'/rid
         metadata = read(folder/'metadata.json')
         actual_hash = hashlib.sha256((folder/'result.json').read_bytes()).hexdigest()
         if metadata.get('result_hash'):
@@ -142,9 +142,9 @@ def extract():
 def render():
     # Dedicated plotting dependencies are installed on D:, not into the project.
     import os
-    os.environ.setdefault('MPLCONFIGDIR', 'D:/Tools/heimdall-chart-deps/mpl-config')
+    os.environ.setdefault('MPLCONFIGDIR', 'D:/Tools/opentrading-chart-deps/mpl-config')
     import sys
-    sys.path.insert(0, 'D:/Tools/heimdall-chart-deps')
+    sys.path.insert(0, 'D:/Tools/opentrading-chart-deps')
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt

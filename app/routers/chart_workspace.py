@@ -66,7 +66,7 @@ async def chart_quotes(symbols:str,service=Depends(services)):
 @router.get("/capabilities",response_model=PineCapabilities)
 async def chart_capabilities():
     return PineCapabilities(supported=["Pine v5/v6 常用指标与 strategy", "多图、绘图、原版 v7.2", "已接入品种的多周期请求"],
-        limited=["varip 支持全局标量（Heimdall 兼容层），不支持局部变量和集合", "实时计算使用实际收到的行情更新", "历史 OHLC 成交模拟不是逐 tick 还原", "USD/USDT 采用报价数值记账，不执行汇率换算"],
+        limited=["varip 支持全局标量（OpenTrading 兼容层），不支持局部变量和集合", "实时计算使用实际收到的行情更新", "历史 OHLC 成交模拟不是逐 tick 还原", "USD/USDT 采用报价数值记账，不执行汇率换算"],
         unsupported=["OCA 联动", "强平价格与跨币种换算", "财报与经济数据", "外部 Pine 库", "lookahead_on", "Bar Magnifier"])
 
 

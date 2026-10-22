@@ -14,7 +14,10 @@ test('original v7.2 contract: 240 bars, 38 events, tolerance 1e-7',async()=>{
   const root=new URL('../../',import.meta.url)
   const fixture=JSON.parse(fs.readFileSync(new URL('docs/verification/pine-v7-2-contract/runtime-fixture-20260920.json',root)))
   const original=fs.readFileSync(new URL('strategies/pine/eth_ema55_manual_chart_v7_2.pine',root),'utf8').replace(/\r\n/g,'\n')
-  assert.equal(crypto.createHash('sha256').update(original).digest('hex'),fixture.source_sha256)
+  // The renamed indicator differs from the frozen source only in its title.
+  const historical = original.replace('indicator("OpenTrading ETH · EMA55 · 当前周期 v7.2",',
+    'indicator("Heimdall ETH · EMA55 · 当前周期 v7.2",')
+  assert.equal(crypto.createHash('sha256').update(historical).digest('hex'),fixture.source_sha256)
   const source=fs.readFileSync(new URL('docs/verification/pine-v7-2-contract/runtime-harness-20260920.pine',root),'utf8')
   const logs=[],originalLog=console.log
   try{

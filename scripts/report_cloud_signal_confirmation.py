@@ -41,7 +41,7 @@ def main():
     text += ['', '## 保存与复核', '',
         '[固定规则](RULES.md)、[完整参数计划](plan.json)、[完整统计](results.json)、[原版逐笔一致性](baseline-parity.json)。', '',
         '每个确认版本另有 `*-lineage.json`：每笔交易关联原信号时间、确认时间、确认价、等待根数、实际入场价、原版对应交易及盈亏。`*-events.json` 保存积累、取消、过期和确认事件。逐笔检查了下一开盘成交、单次消费、没有跨过相反信号、确认价正确、有限版本未超期。', '',
-        f'研究 ID：`{data["study_id"]}`。行情、代码、引擎、完整逐笔和运行日志均在 `.heimdall_runtime/local_backtests/<run_id>/`，表内名称可打开项目图表。', '',
+        f'研究 ID：`{data["study_id"]}`。行情、代码、引擎、完整逐笔和运行日志均在 `.opentrading_runtime/local_backtests/<run_id>/`，表内名称可打开项目图表。', '',
         '有限版本同时使用实体价位和两根期限；与另两个版本的差异不能全部归因于期限。这轮没有搜索新参数，没有改现有 Pine，不保证历史表现延续。', '']
     path=OUT/'README.md';content='\n'.join(text)
     if path.exists() and path.read_text(encoding='utf-8')!=content:

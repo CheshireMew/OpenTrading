@@ -2,10 +2,10 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
-const DEV_FRONTEND_HOST = process.env.HEIMDALL_FRONTEND_HOST ?? '127.0.0.1'
-const DEV_FRONTEND_PORT = Number(process.env.HEIMDALL_FRONTEND_PORT ?? 4173)
-const DEV_API_HOST = process.env.HEIMDALL_API_HOST ?? '127.0.0.1'
-const DEV_API_PORT = Number(process.env.HEIMDALL_API_PORT ?? 8000)
+const DEV_FRONTEND_HOST = process.env.OPENTRADING_FRONTEND_HOST ?? '127.0.0.1'
+const DEV_FRONTEND_PORT = Number(process.env.OPENTRADING_FRONTEND_PORT ?? 4173)
+const DEV_API_HOST = process.env.OPENTRADING_API_HOST ?? '127.0.0.1'
+const DEV_API_PORT = Number(process.env.OPENTRADING_API_PORT ?? 8000)
 const DEV_API_TARGET = `http://${DEV_API_HOST}:${DEV_API_PORT}`
 
 // https://vite.dev/config/

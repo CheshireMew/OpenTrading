@@ -54,7 +54,7 @@ def main():
         '随宽度止损使用相对最近一天的宽度，限制为 0.5%～2%；持续高波动很多天后，参照也升高。它不代表已经验证了所有波动止损或 ATR 止损方法。', '',
         '## 本地复查', '',
         '[完整规则](RULES.md)、[固定参数计划](plan.json)、[统计数据](results.json)、[原版一致性核查](baseline-parity.json)、[9 月 11 日补仓示例](sept11-reentry-example.json)。', '',
-        f'研究 ID：`{identifier}`。每个表格版本名可以打开项目原有 K 线图。所有行情、策略、引擎、逐笔交易及日志分别存放在 `.heimdall_runtime/local_backtests/<run_id>/`；结果 JSON 保存 run_id 和校验哈希。', '',
+        f'研究 ID：`{identifier}`。每个表格版本名可以打开项目原有 K 线图。所有行情、策略、引擎、逐笔交易及日志分别存放在 `.opentrading_runtime/local_backtests/<run_id>/`；结果 JSON 保存 run_id 和校验哈希。', '',
         '这是已经看过的 ETH 历史对照，不能据此声称未来或其他交易对仍有效。此轮到此停止，不继续细调参数追求新冠军。', '']
     path = OUT/'README.md'
     content = '\n'.join(lines)

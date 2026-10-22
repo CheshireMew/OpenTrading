@@ -6,8 +6,7 @@
           <section class="space-y-4">
             <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div>
-                <h3 class="text-xl font-semibold text-slate-900 dark:text-white">{{ t('binanceMarket.rankTitle') }}</h3>
-                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ t('binanceMarket.rankSubtitle') }}</p>
+                <h1 class="app-title">{{ t('binanceMarket.rankTitle') }}</h1>
               </div>
 
               <div class="flex flex-wrap items-center gap-3 text-sm">
@@ -35,20 +34,15 @@
                 <div class="app-panel-header flex items-center justify-between">
                   <div>
                     <h4 class="text-lg font-semibold text-slate-900 dark:text-white">{{ t('binanceMarket.tables.rankContract') }}</h4>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('binanceMarket.tables.contractSortHint') }}</p>
-                  </div>
-                  <div class="app-chip">
-                    {{ contractSort.field === 'price_change_pct' ? t('binanceMarket.tables.sortBy24h') : contractSort.field === 'funding_rate_pct' ? t('binanceMarket.tables.sortByFunding') : contractSort.field === 'oi_change_24h_pct' ? t('binanceMarket.tables.sortByOi') : t('binanceMarket.tables.sortByVolume') }}
                   </div>
                 </div>
 
-                <p class="app-table-scroll-hint">{{ t('common.horizontalScrollHint') }}</p>
-                <div class="app-table-scroll" tabindex="0" :aria-label="t('common.horizontalScrollHint')">
+                <div class="app-table-scroll" tabindex="0" :aria-label="t('binanceMarket.tables.rankContract')">
                   <table class="w-full min-w-[58rem] text-left text-sm">
                     <thead class="app-table-head">
                       <tr>
                         <th class="px-5 py-3 font-semibold">{{ t('binanceMarket.columns.asset') }}</th>
-                        <th class="px-5 py-3 font-semibold">
+                        <th class="px-5 py-3 font-semibold" :aria-sort="contractSort.field === 'price_change_pct' ? (contractSort.direction === 'asc' ? 'ascending' : 'descending') : 'none'">
                           <button
                             type="button"
                             @click="toggleContractSort('price_change_pct')"
@@ -60,7 +54,7 @@
                           </button>
                         </th>
                         <th class="px-5 py-3 font-semibold">{{ t('binanceMarket.columns.price') }}</th>
-                        <th class="px-5 py-3 font-semibold">
+                        <th class="px-5 py-3 font-semibold" :aria-sort="contractSort.field === 'oi_change_24h_pct' ? (contractSort.direction === 'asc' ? 'ascending' : 'descending') : 'none'">
                           <button
                             type="button"
                             @click="toggleContractSort('oi_change_24h_pct')"
@@ -71,7 +65,7 @@
                             <span class="text-xs">{{ sortDirectionIcon(contractSort.field === 'oi_change_24h_pct', contractSort.direction) }}</span>
                           </button>
                         </th>
-                        <th class="px-5 py-3 font-semibold">
+                        <th class="px-5 py-3 font-semibold" :aria-sort="contractSort.field === 'funding_rate_pct' ? (contractSort.direction === 'asc' ? 'ascending' : 'descending') : 'none'">
                           <button
                             type="button"
                             @click="toggleContractSort('funding_rate_pct')"
@@ -82,7 +76,7 @@
                             <span class="text-xs">{{ sortDirectionIcon(contractSort.field === 'funding_rate_pct', contractSort.direction) }}</span>
                           </button>
                         </th>
-                        <th class="px-5 py-3 font-semibold">
+                        <th class="px-5 py-3 font-semibold" :aria-sort="contractSort.field === 'quote_volume' ? (contractSort.direction === 'asc' ? 'ascending' : 'descending') : 'none'">
                           <button
                             type="button"
                             @click="toggleContractSort('quote_volume')"
@@ -128,19 +122,14 @@
                 <div class="app-panel-header flex items-center justify-between">
                   <div>
                     <h4 class="text-lg font-semibold text-slate-900 dark:text-white">{{ t('binanceMarket.tables.rankSpot') }}</h4>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('binanceMarket.tables.spotSortHint') }}</p>
-                  </div>
-                  <div class="app-chip">
-                    {{ spotSort.field === 'price_change_pct' ? (spotSort.direction === 'desc' ? t('binanceMarket.tables.sortByGainers') : t('binanceMarket.tables.sortByLosers')) : t('binanceMarket.tables.sortByVolume') }}
                   </div>
                 </div>
-                <p class="app-table-scroll-hint">{{ t('common.horizontalScrollHint') }}</p>
-                <div class="app-table-scroll" tabindex="0" :aria-label="t('common.horizontalScrollHint')">
+                <div class="app-table-scroll" tabindex="0" :aria-label="t('binanceMarket.tables.rankSpot')">
                   <table class="w-full min-w-[44rem] text-left text-sm">
                     <thead class="app-table-head">
                       <tr>
                         <th class="px-5 py-3 font-semibold">{{ t('binanceMarket.columns.asset') }}</th>
-                        <th class="px-5 py-3 font-semibold">
+                        <th class="px-5 py-3 font-semibold" :aria-sort="spotSort.field === 'price_change_pct' ? (spotSort.direction === 'asc' ? 'ascending' : 'descending') : 'none'">
                           <button
                             type="button"
                             @click="toggleSpotSort('price_change_pct')"
@@ -152,7 +141,7 @@
                           </button>
                         </th>
                         <th class="px-5 py-3 font-semibold">{{ t('binanceMarket.columns.price') }}</th>
-                        <th class="px-5 py-3 font-semibold">
+                        <th class="px-5 py-3 font-semibold" :aria-sort="spotSort.field === 'quote_volume' ? (spotSort.direction === 'asc' ? 'ascending' : 'descending') : 'none'">
                           <button
                             type="button"
                             @click="toggleSpotSort('quote_volume')"
@@ -200,10 +189,7 @@
                 :key="card.label"
                 class="app-card p-3"
               >
-                <div class="flex items-center justify-between">
-                  <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ card.label }}</p>
-                  <p class="text-[10px] text-slate-400 dark:text-slate-500">{{ card.hint }}</p>
-                </div>
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400" :title="card.hint">{{ card.label }}</p>
                 <p class="mt-1 text-2xl font-bold text-slate-900 dark:text-white">{{ card.value }}</p>
               </article>
             </section>
@@ -270,8 +256,7 @@
                   </div>
                 </div>
 
-                <p class="app-table-scroll-hint">{{ t('common.horizontalScrollHint') }}</p>
-                <div class="app-table-scroll" tabindex="0" :aria-label="t('common.horizontalScrollHint')">
+                <div class="app-table-scroll" tabindex="0" :aria-label="t('binanceMarket.tables.monitorList')">
                   <table class="w-full min-w-[56rem] text-left text-sm">
                     <thead class="app-table-head">
                       <tr>

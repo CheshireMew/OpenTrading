@@ -187,7 +187,7 @@ def test_database_resolution_requires_database_url():
     with pytest.raises(RuntimeError, match="DATABASE_URL"):
         resolve_database_url(AppSettings(DATABASE_URL=""))
 
-    explicit_url = "postgresql://postgres@localhost:5432/heimdall"
+    explicit_url = "postgresql://postgres@localhost:5432/opentrading"
     database_url, source = resolve_database_url(AppSettings(DATABASE_URL=explicit_url))
     assert database_url == explicit_url
     assert source == "settings"

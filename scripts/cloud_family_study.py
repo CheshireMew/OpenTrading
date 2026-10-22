@@ -1,4 +1,4 @@
-"""Compare screenshot hypotheses using a saved Heimdall run, without fetching data.
+"""Compare screenshot hypotheses using a saved OpenTrading run, without fetching data.
 
 Run with ``python -m scripts.cloud_family_study`` from the project root.
 This is an in-sample identification study, not a new trading strategy or proof
@@ -130,11 +130,11 @@ def main():
     parser.add_argument('--reference', type=Path, default=STUDY/'reference.json')
     parser.add_argument('--output', type=Path, default=STUDY/'cloud-family-study.json')
     args = parser.parse_args()
-    folder = ROOT/'.heimdall_runtime/local_backtests'/args.run
+    folder = ROOT/'.opentrading_runtime/local_backtests'/args.run
     metadata = json.loads((folder/'metadata.json').read_text(encoding='utf-8'))
     raw = (folder/'data.json').read_bytes()
     if digest(raw) != metadata['data_hash']:
-        raise ValueError('Heimdall snapshot hash mismatch')
+        raise ValueError('OpenTrading snapshot hash mismatch')
     config = json.loads((folder/'config.json').read_text(encoding='utf-8'))
     data = np.array(json.loads(raw), dtype=float)
     times, o, h, l, c, volume = data.T

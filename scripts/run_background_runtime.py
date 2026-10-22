@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import argparse
 import signal
 
 from app.background_runtime import BackgroundRuntimeStatus
@@ -8,7 +9,7 @@ from app.main import create_app
 from utils.logger import logger
 
 
-async def main() -> None:
+async def main(*, report_ready: bool = False) -> None:
     app = create_app(role="background")
     stop_event = asyncio.Event()
     loop = asyncio.get_running_loop()
@@ -16,7 +17,7 @@ async def main() -> None:
     def request_stop() -> None:
         stop_event.set()
 
-    for signal_name in ("SIGINT", "SIGTERM"):
+    for signal_name in ("SIGINT", "SIGTERM", "SIGBREAK"):
         sig = getattr(signal, signal_name, None)
         if sig is None:
             continue
@@ -41,10 +42,14 @@ async def main() -> None:
                 raise state.error
             raise RuntimeError(f"Background runtime did not become ready: {state.status}")
 
-        logger.info("Heimdall background runtime started.")
+        if report_ready:
+            print("OPENTRADING_BACKGROUND_READY", flush=True)
+        logger.info("OpenTrading background runtime started.")
         await stop_event.wait()
-        logger.info("Heimdall background runtime stopping.")
+        logger.info("OpenTrading background runtime stopping.")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    parser = argparse.ArgumentParser(description="OpenTrading background runtime")
+    parser.add_argument("--report-ready", action="store_true", help=argparse.SUPPRESS)
+    asyncio.run(main(report_ready=parser.parse_args().report_ready))

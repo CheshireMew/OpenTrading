@@ -1,7 +1,7 @@
 import type { BinanceWeb3HeatRankBoardsResponse } from './contracts'
 import { createWarmSnapshotStore } from './warmSnapshotStorage'
 
-const WEB3_KEY_PREFIX = 'heimdall_web3_market_rank_warm_snapshot:heat-rank'
+const WEB3_KEY_PREFIX = 'opentrading_web3_market_rank_warm_snapshot:heat-rank'
 const WEB3_SNAPSHOT_LABEL = 'Web3 market warm snapshot'
 
 const web3HeatRankKey = (chainId: string, size: number) => (

@@ -5,10 +5,10 @@ from pathlib import Path
 DIRECTORY = Path(__file__).resolve().parents[1]/'docs/verification/eth-cloud-two-year-20260910'
 
 HTML = '''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ETH 两年策略比较 · Heimdall</title>
+<title>ETH 两年策略比较 · OpenTrading</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#1a2934;font:15px/1.65 system-ui,"Microsoft YaHei",sans-serif}main{max-width:1400px;margin:auto;padding:36px}h1{font-size:30px;margin:0}h2{font-size:20px;margin:0 0 14px}p{margin:10px 0}.muted{color:#63727d}.tag{display:inline-block;background:#e2ede7;color:#256046;padding:3px 10px;border-radius:5px;margin-bottom:12px}.panel{background:white;border:1px solid #dce3e7;border-radius:12px;padding:24px;margin:22px 0}.controls{display:flex;gap:16px;align-items:center;flex-wrap:wrap}select,button{padding:8px 12px;background:white;border:1px solid #aab8c0;border-radius:6px;font:inherit}#choices{display:flex;flex-wrap:wrap;gap:9px 16px;margin:20px 0}#choices label{font-size:13px;cursor:pointer}input{accent-color:#176b59}svg{width:100%;display:block}table{border-collapse:collapse;white-space:nowrap;width:100%;font-size:13px}th,td{text-align:right;padding:10px 12px;border-bottom:1px solid #e5eaed}th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:#fff;z-index:1}thead th{background:#f5f7f9;cursor:pointer}td a{color:#176b59}.scroll{overflow:auto}.positive{color:#167051}.negative{color:#b73b49}.note{border-left:3px solid #3c7c67;padding-left:16px}#verdict{font-size:17px}#months td{min-width:76px}footer{font-size:12px;color:#667782;margin:24px 0}@media(max-width:700px){main{padding:18px}.panel{padding:14px}h1{font-size:24px}}
-</style><main><span class="tag">Heimdall · 项目行情与模拟引擎</span><h1>ETH 15 分钟，两年策略比较</h1>
+</style><main><span class="tag">OpenTrading · 项目行情与模拟引擎</span><h1>ETH 15 分钟，两年策略比较</h1>
 <p class="muted">2024-09-10 至 2026-09-10（UTC，结束不含） · 70,080 根 K 线 · 初始 10,000 · 仓位 100% · 不加杠杆</p>
 <p>按用户要求，所有比较均不计算手续费和滑点。信号在收盘确定，下一根开盘成交；反向信号换仓，同向信号不加仓。</p>
 <p><a href="diagnostics.html" style="color:#176b59">查看进一步分析：ATR 是否有效、亏损原因，以及九种改法的实际结果 →</a></p>
@@ -24,7 +24,7 @@ const f=(n,d=2)=>n==null?'—':Number(n).toLocaleString('zh-CN',{minimumFraction
 const cls=n=>n>0?'positive':n<0?'negative':'';
 const fullbest=R[D.full_return_ranking[0]],winner=R[D.selection_winner];
 document.getElementById('verdict').innerHTML=`<p>完整两年收益最高：<strong>${fullbest.name}</strong>，收益 ${f(fullbest.full.return_pct)}%，最大回撤 ${f(fullbest.full.max_drawdown_pct)}%。</p>`+(winner?`<p>只看前一年选出的方案：<strong>${winner.name}</strong>；后续验证段收益 ${f(winner.validation.return_pct)}%，最大回撤 ${f(winner.validation.max_drawdown_pct)}%。</p>`:'<p>前一年没有符合预设筛选条件的方案。</p>');
-document.getElementById('provenance').textContent=`数据哈希：${D.data_hash}　·　引擎：Heimdall 2　·　14 组正式运行；按无成本口径计算。`;
+document.getElementById('provenance').textContent=`数据哈希：${D.data_hash}　·　引擎：OpenTrading 2　·　14 组正式运行；按无成本口径计算。`;
 document.getElementById('choices').innerHTML=keys.map((k,i)=>`<label style="color:${colors[i]}"><input type="checkbox" value="${k}" ${selected.has(k)?'checked':''}> ${R[k].name}</label>`).join('');
 const notes={full:'包含截图所在时段，用于整体表现描述。',selection:'2024-09-10 至 2025-09-10。用于确定候选，参数不按收益调整。',validation:'2025-09-10 至 2026-08-18。未参与截图形状拟合的后续历史区间。',recent:'2026-08-23 至 2026-09-10。样本只有 18 天。',long_only:'完整两年；做空信号仅平掉多仓，不开空。'};
 function draw(){

@@ -21,7 +21,7 @@ traceback.log
 /test_tmp_frontend/
 /test_tmp_pytest/
 /test_tmp_pytest*/
-/.heimdall_runtime/
+/.opentrading_runtime/
 /.pdm-python
 /frontend/.npm-cache/
 /.pytest_cache/

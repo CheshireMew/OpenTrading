@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 import re
 import sqlite3
-from app.infra.research_files import file_hash
+from app.infra.research_files import file_hash, relocated_project_path
 
 SKIP_KEYS = {'trades', 'candles', 'bars', 'equity', 'signals', 'fills', 'levels', 'indicators', 'rows',
              'curve', 'daily_equity', 'equity_curve', 'sampled_equity'}
@@ -73,7 +73,7 @@ class ResearchCatalog:
                 db.execute("UPDATE files SET issue='索引算法更新，需要重新读取'")
                 db.execute("INSERT OR REPLACE INTO index_meta VALUES ('version',?)", (INDEX_VERSION,))
         for root in roots:
-            root = Path(root).resolve(strict=True)
+            root = relocated_project_path(root).resolve(strict=True)
             def files():
                 if root.is_file():
                     yield root
@@ -138,7 +138,7 @@ class ResearchCatalog:
         for path, pointer, text, digest in rows:
             locations = [text.casefold().find(t) for t in terms if t in text.casefold()]
             start = max(0, min(locations, default=0) - 100)
-            items.append({'path': path, 'pointer': pointer, 'excerpt': text[start:start + 800],
-                          'sha256_at_index': digest, 'exists': Path(path).is_file()})
+            items.append({'path': str(relocated_project_path(path)), 'pointer': pointer, 'excerpt': text[start:start + 800],
+                          'sha256_at_index': digest, 'exists': relocated_project_path(path).is_file()})
         return {'total': count, 'offset': offset, 'items': items,
                 'note': '摘录是原研究证据，不是自动结论。打开原文件核对范围；内容变更后 refresh 更新索引。'}

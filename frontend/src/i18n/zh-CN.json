@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "Heimdall",
+    "title": "OpenTrading",
     "subtitle": "AI 加密货币助手",
     "skipToContent": "跳到主要内容",
     "openMenu": "打开导航菜单",
@@ -403,7 +403,7 @@
     "notUpdated": "未更新",
     "collectingHistory": "正在积累历史数据（已有 {count}/2 个点）",
     "emptyTitle": "当前还没有已采集的市场信号",
-    "emptyDescription": "首次启动或后台采集尚未完成时会出现此状态。确认后端服务正在运行后刷新；如果数据源失败，页面会显示单独的错误信息。",
+    "emptyDescription": "等待首次采集完成后刷新。",
     "groupEmpty": "这个分组暂时没有已采集数据。",
     "groups": {
       "cycle": {
@@ -1314,7 +1314,7 @@
     "capCommon": "Pine v5/v6 常用指标与 strategy",
     "capCharts": "多图、绘图、原版 v7.2",
     "capRequests": "已接入品种的多周期请求",
-    "capVarip": "varip 支持全局标量（Heimdall 兼容层），不支持局部变量和集合",
+    "capVarip": "varip 支持全局标量（OpenTrading 兼容层），不支持局部变量和集合",
     "capLive": "实时计算使用实际收到的行情更新",
     "capHistory": "历史 OHLC 成交模拟不是逐 tick 还原",
     "capCurrency": "USD/USDT 采用报价数值记账，不执行汇率换算",

@@ -22,7 +22,7 @@ from scripts.zec_intrabar_methods_study import run
 
 OUT = ROOT/'docs/verification/paxg-intrabar-combined-20260913'
 PRIOR = ROOT/'docs/verification/cloud-timeframe-20260911'
-OLD = ROOT/'.heimdall_runtime/cloud-timeframe-20260911/traces/paxg/recent1-1h-full.json'
+OLD = ROOT/'.opentrading_runtime/cloud-timeframe-20260911/traces/paxg/recent1-1h-full.json'
 SOURCE = ROOT/'strategies/trend_cloud_intrabar_methods_v3.py'
 ENGINE = ROOT/'app/domain/local_backtest.py'
 STEP = 3600000

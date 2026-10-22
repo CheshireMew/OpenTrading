@@ -9,8 +9,8 @@ from scripts.cloud_width_reentry_study import ROOT, keep
 
 PARENT=ROOT/'docs/verification/zec-intrabar-no-stop-20260913'
 OUT=PARENT/'loss-audit-20260913'
-BASE=ROOT/'.heimdall_runtime/local_backtests/2a0c67e629a77db26e664880bab12d44'
-NO_STOP=ROOT/'.heimdall_runtime/local_backtests/a3f988c546a7d514c979ba0f4c98fca2'
+BASE=ROOT/'.opentrading_runtime/local_backtests/2a0c67e629a77db26e664880bab12d44'
+NO_STOP=ROOT/'.opentrading_runtime/local_backtests/a3f988c546a7d514c979ba0f4c98fca2'
 STEP=1800000
 
 

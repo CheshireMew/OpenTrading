@@ -1,6 +1,6 @@
 """Bounded BTC parameter search with chronological selection and a locked final test.
 
-Uses the saved MarketDataService data and unchanged Heimdall simulator. Every
+Uses the saved MarketDataService data and unchanged OpenTrading simulator. Every
 configuration, phase decision and trace is retained; no expansion after final test.
 """
 import argparse
@@ -21,9 +21,9 @@ from scripts.profit_protection_study import ROOT, read, save, metrics
 from scripts.trend_cloud_study import stamp
 
 DOCS = ROOT/'docs/verification/btc-cloud-parameters-20260911'
-RUNTIME = ROOT/'.heimdall_runtime/btc-cloud-parameters-20260911'
+RUNTIME = ROOT/'.opentrading_runtime/btc-cloud-parameters-20260911'
 OLD = ROOT/'docs/verification/cloud-cross-asset-20260911'
-OLD_RUNTIME = ROOT/'.heimdall_runtime/cloud-cross-asset-20260911'
+OLD_RUNTIME = ROOT/'.opentrading_runtime/cloud-cross-asset-20260911'
 SOURCE = ROOT/'strategies/trend_cloud_parameters_v4.py'
 STEP = 900000
 AXES = dict(center_length=[34, 55, 89], width_length=[20, 31, 50],

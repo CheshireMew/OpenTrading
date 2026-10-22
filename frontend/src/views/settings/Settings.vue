@@ -32,7 +32,6 @@
         <div class="mb-6 flex items-center justify-between gap-4">
           <div>
             <h3 class="app-section-title">{{ $t('settings.llmProvider') }}</h3>
-            <p class="app-muted mt-1 text-sm">{{ $t('settings.llmDescription') }}</p>
           </div>
           <span
             class="px-3 py-1 text-xs font-semibold"

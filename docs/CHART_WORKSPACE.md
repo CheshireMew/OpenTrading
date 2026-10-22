@@ -24,7 +24,7 @@
 
 Pine 在独立 Web Worker 中计算，旧图表销毁时停止旧 Worker，运行超过 60 秒会终止。语法错误尽量定位到原始行列；运行新版本失败时保留原图成功运行的指标。重复添加是允许的，可在对象列表移除不需要的实例。
 
-### 当前兼容边界（PineTS 0.9.34 / Heimdall 兼容层）
+### 当前兼容边界（PineTS 0.9.34 / OpenTrading 兼容层）
 
 | 能力 | 状态 |
 | --- | --- |
@@ -52,9 +52,9 @@ Pine 在独立 Web Worker 中计算，旧图表销毁时停止旧 Worker，运�
 ## 开发与数据位置
 
 - 接口：`/api/v1/chart-workspace`，契约来自 `app/contracts/chart_workspace.py`，通过 `python -m scripts.generate_frontend_contracts` 生成前端类型。
-- SQLite：`.heimdall_runtime/chart_workspace/workspace.sqlite3`，保存布局、自选、脚本版本和运行索引。
-- 每次运行：`.heimdall_runtime/chart_workspace/runs/<id>/`，包含 `input.json`、`series.json`、`result.json`、`metadata.json`、进度及日志。
-- 引擎快照：`.heimdall_runtime/chart_workspace/engines/<sha256>/`，按内容去重保存 Worker、兼容代码及 PineTS Node ESM 文件。重跑校验清单与文件摘要；结果记录 Node 版本。
+- SQLite：`.opentrading_runtime/chart_workspace/workspace.sqlite3`，保存布局、自选、脚本版本和运行索引。
+- 每次运行：`.opentrading_runtime/chart_workspace/runs/<id>/`，包含 `input.json`、`series.json`、`result.json`、`metadata.json`、进度及日志。
+- 引擎快照：`.opentrading_runtime/chart_workspace/engines/<sha256>/`，按内容去重保存 Worker、兼容代码及 PineTS Node ESM 文件。重跑校验清单与文件摘要；结果记录 Node 版本。
 - 行情订阅：现货和 USDT 永续分别使用正确 Binance WebSocket；同品种同周期共享上游订阅。收到 K 线才显示实时，超过 30 秒没有消息则重连并使用 REST 补数据；消息带订阅代次与顺序，旧响应不能覆盖新订阅。
 - Binance 永续行情地址使用 `/market/ws`，依据 [Binance 迁移说明](https://developers.binance.com/en/docs/products/derivatives-trading-usds-futures/websocket-market-streams/Important-WebSocket-Change-Notice)。
 

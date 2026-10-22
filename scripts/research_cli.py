@@ -38,7 +38,7 @@ def diagnostic_output():
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Heimdall structured research CLI")
+    parser = argparse.ArgumentParser(description="OpenTrading structured research CLI")
     subparsers = parser.add_subparsers(dest="resource", required=True)
     from scripts.local_backtest_cli import add_parser
     add_parser(subparsers)
@@ -79,7 +79,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     report = subparsers.add_parser("report", help="List or generate reproducible research reports")
     report.add_argument("action", choices=["list", "generate"])
-    report.add_argument("--title", default="Heimdall Research Brief")
+    report.add_argument("--title", default="OpenTrading Research Brief")
     report.add_argument(
         "--type", choices=["daily_brief", "weekly_brief", "asset_review", "portfolio_review", "decision_review"], default="daily_brief"
     )

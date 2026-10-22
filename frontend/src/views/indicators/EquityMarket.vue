@@ -1,12 +1,10 @@
 <template>
   <div class="app-page">
     <div class="app-page-inner-wide">
-      <section class="app-hero-panel">
+      <section class="app-page-header">
         <div class="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p class="app-eyebrow">BINANCE / OKX / BITGET</p>
-            <h2 class="app-title mt-2">{{ t('equities.title') }}</h2>
-            <p class="app-subtitle mt-3 max-w-3xl">{{ t('equities.subtitle') }}</p>
+            <h1 class="app-title">{{ t('equities.title') }}</h1>
             <p v-if="catalog" class="app-muted mt-2 text-xs">{{ t('equities.updated', { time: formatDateTime(catalog.updated_at) }) }}</p>
           </div>
           <button type="button" class="app-button-primary inline-flex items-center gap-2" :disabled="loading" @click="load(true)">
@@ -14,7 +12,7 @@
             {{ loading ? t('equities.loading') : t('equities.refresh') }}
           </button>
         </div>
-        <div class="mt-6 grid grid-cols-2 gap-4 border-t border-stone-200 pt-5 dark:border-slate-700 lg:grid-cols-4">
+        <div class="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
           <div v-for="stat in stats" :key="stat.label">
             <p class="app-muted text-xs">{{ stat.label }}</p>
             <p class="mt-1 text-2xl font-semibold tabular-nums">{{ catalog ? stat.value.toLocaleString() : '—' }}</p>
@@ -75,8 +73,7 @@
             </div>
           </div>
         </div>
-        <p class="app-table-scroll-hint">{{ t('equities.scrollHint') }}</p>
-        <div class="app-table-scroll" :aria-busy="loading">
+        <div class="app-table-scroll" tabindex="0" :aria-label="t('equities.title')" :aria-busy="loading">
           <table class="w-full min-w-[800px] text-left text-sm">
             <thead class="app-table-head text-xs">
               <tr>

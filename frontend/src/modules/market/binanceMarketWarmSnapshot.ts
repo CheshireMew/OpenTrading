@@ -1,7 +1,7 @@
 import type { BinanceMarketPageResponse } from './contracts'
 import { createWarmSnapshotStore } from './warmSnapshotStorage'
 
-const MARKET_KEY_PREFIX = 'heimdall_binance_market_warm_snapshot:market-page'
+const MARKET_KEY_PREFIX = 'opentrading_binance_market_warm_snapshot:market-page'
 const MARKET_SNAPSHOT_LABEL = 'Binance market warm snapshot'
 
 const marketPageKey = (minRisePct: number, quoteAsset: string) => (

@@ -17,9 +17,9 @@ from scripts.profit_protection_study import metrics,read,save
 from scripts.trend_cloud_study import stamp
 
 DOCS=ROOT/'docs/verification/eth-cloud-manual-20260910'
-RUNTIME=ROOT/'.heimdall_runtime/cloud-manual-20260910'
+RUNTIME=ROOT/'.opentrading_runtime/cloud-manual-20260910'
 SOURCE=ROOT/'strategies/trend_cloud_manual_v1.py'
-BASELINE=ROOT/'.heimdall_runtime/local_backtests/f6bdf2e5831c468381a1a7c224ec1afa'
+BASELINE=ROOT/'.opentrading_runtime/local_backtests/f6bdf2e5831c468381a1a7c224ec1afa'
 
 
 def prepare():

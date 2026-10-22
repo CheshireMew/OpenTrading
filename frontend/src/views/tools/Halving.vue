@@ -28,10 +28,7 @@
       <div class="halving-progress-card app-card relative overflow-hidden">
         <h3 class="mb-4 text-sm font-medium text-stone-500 dark:text-slate-400">{{ $t('halving.cycleProgress') }}</h3>
         <div class="relative pt-1">
-          <div class="flex mb-2 items-center justify-between">
-            <div class="inline-block bg-[#edf3ee] px-2 py-1 text-xs font-semibold uppercase text-[#0f6b4f] dark:bg-emerald-900/40 dark:text-emerald-300">
-              {{ $t('halving.inProgress') }}
-            </div>
+          <div class="mb-2 flex items-center justify-end">
             <div class="text-right">
               <span class="inline-block text-xs font-semibold text-[#0f6b4f] dark:text-emerald-300">
                 {{ cycleProgress }}%
@@ -62,15 +59,12 @@
              <ChartBarIcon class="mr-2 h-6 w-6 text-[#0f6b4f]" />
              {{ $t('halving.chartTitle') }}
            </h2>
-           <p class="mt-1 text-sm text-stone-500 dark:text-slate-400">
-             {{ $t('halving.chartDesc') }}
-             <span class="inline-flex items-center ml-2 space-x-2">
+           <div v-if="showPhases" class="mt-2 flex flex-wrap items-center gap-2 text-xs text-stone-500 dark:text-slate-400">
                 <span class="w-3 h-3 rounded-sm bg-green-500/20 border border-green-500/50"></span>
-                <span class="text-xs">{{ $t('halving.accumulation') }}</span>
+                <span>{{ $t('halving.accumulation') }}</span>
                 <span class="w-3 h-3 rounded-sm bg-orange-500/20 border border-orange-500/50"></span>
-                <span class="text-xs">{{ $t('halving.bullRun') }}</span>
-             </span>
-           </p>
+                <span>{{ $t('halving.bullRun') }}</span>
+           </div>
         </div>
 
         <div class="flex w-full flex-wrap items-center gap-4 sm:mt-0 sm:w-auto">

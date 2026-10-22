@@ -1,12 +1,10 @@
 <template>
   <div class="app-page">
     <div class="app-page-inner-wide">
-      <section class="app-hero-panel">
+      <section class="app-page-header">
         <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div>
-            <p class="app-eyebrow">{{ t('web3Rank.eyebrow') }}</p>
-            <h2 class="app-title mt-2">{{ t('web3Rank.title') }}</h2>
-            <p class="app-subtitle mt-3">{{ t('web3Rank.subtitle') }}</p>
+            <h1 class="app-title">{{ t('web3Rank.title') }}</h1>
             <p v-if="updatedAt" class="app-muted mt-2 text-xs">{{ t('web3Rank.updatedAt', { time: new Date(updatedAt).toLocaleString() }) }}</p>
           </div>
 
@@ -29,7 +27,6 @@
         <div class="app-panel-header flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 class="app-section-title">{{ t('web3Rank.heatRank.title') }}</h3>
-            <p class="app-muted text-sm">{{ t('web3Rank.heatRank.subtitle') }}</p>
           </div>
           <button
             type="button"
@@ -41,8 +38,7 @@
           </button>
         </div>
         <div v-if="web3Error" class="border-b border-rose-100 bg-rose-50 px-5 py-3 text-sm text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">{{ web3Error }}</div>
-        <p class="app-table-scroll-hint">{{ t('common.horizontalScrollHint') }}</p>
-        <div class="app-table-scroll" tabindex="0" :aria-label="t('common.horizontalScrollHint')">
+        <div class="app-table-scroll" tabindex="0" :aria-label="t('web3Rank.heatRank.title')">
           <table class="min-w-[72rem] text-left text-sm">
             <thead class="app-table-head">
               <tr>
@@ -50,7 +46,7 @@
                 <th class="px-5 py-3 font-semibold">{{ t('web3Rank.columns.token') }}</th>
                 <th class="px-5 py-3 font-semibold">{{ t('web3Rank.columns.heat') }}</th>
                 <th class="px-5 py-3 font-semibold">{{ t('web3Rank.columns.signal') }}</th>
-                <th class="px-5 py-3 font-semibold">
+                <th class="px-5 py-3 font-semibold" :aria-sort="web3Sort.field === 'percent_change_24h' ? (web3Sort.direction === 'asc' ? 'ascending' : 'descending') : 'none'">
                   <button
                     type="button"
                     @click="toggleWeb3Sort('percent_change_24h')"
@@ -61,7 +57,7 @@
                     <span class="text-xs">{{ sortDirectionIcon(web3Sort.field === 'percent_change_24h', web3Sort.direction) }}</span>
                   </button>
                 </th>
-                <th class="px-5 py-3 font-semibold">
+                <th class="px-5 py-3 font-semibold" :aria-sort="web3Sort.field === 'market_cap' ? (web3Sort.direction === 'asc' ? 'ascending' : 'descending') : 'none'">
                   <button
                     type="button"
                     @click="toggleWeb3Sort('market_cap')"
@@ -72,7 +68,7 @@
                     <span class="text-xs">{{ sortDirectionIcon(web3Sort.field === 'market_cap', web3Sort.direction) }}</span>
                   </button>
                 </th>
-                <th class="px-5 py-3 font-semibold">
+                <th class="px-5 py-3 font-semibold" :aria-sort="web3Sort.field === 'liquidity' ? (web3Sort.direction === 'asc' ? 'ascending' : 'descending') : 'none'">
                   <button
                     type="button"
                     @click="toggleWeb3Sort('liquidity')"
@@ -131,8 +127,7 @@
         <div class="app-panel-header">
           <h3 class="app-section-title">{{ t('web3Rank.addressPnlTitle') }}</h3>
         </div>
-        <p class="app-table-scroll-hint">{{ t('common.horizontalScrollHint') }}</p>
-        <div class="app-table-scroll" tabindex="0" :aria-label="t('common.horizontalScrollHint')">
+        <div class="app-table-scroll" tabindex="0" :aria-label="t('web3Rank.addressPnlTitle')">
           <table class="min-w-[52rem] text-left text-sm">
             <thead class="app-table-head">
               <tr>

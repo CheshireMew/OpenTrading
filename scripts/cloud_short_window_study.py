@@ -1,4 +1,4 @@
-"""Frozen short-lookback study using Heimdall data, strategy and simulator.
+"""Frozen short-lookback study using OpenTrading data, strategy and simulator.
 
 24 candidates; 4 trailing windows x3 update frequencies. Cached causal candidate
 paths supply past-only scores. Choices are frozen before policy simulation.
@@ -26,7 +26,7 @@ from scripts.profit_protection_study import ROOT, read, save
 from scripts.trend_cloud_study import stamp
 
 DOCS=ROOT/'docs/verification/cloud-short-window-20260912'
-RUNTIME=ROOT/'.heimdall_runtime/cloud-short-window-20260912'
+RUNTIME=ROOT/'.opentrading_runtime/cloud-short-window-20260912'
 OLD=ROOT/'docs/verification/cloud-walkforward-20260911'
 ASSETS=('paxg','zec','eth','btc')
 TFS=('5m','15m','30m','1h')

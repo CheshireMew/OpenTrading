@@ -12,7 +12,7 @@ DATA_DIR = BASE_DIR / "data"
 
 
 def _default_runtime_root() -> Path:
-    return BASE_DIR / ".heimdall_runtime"
+    return BASE_DIR / ".opentrading_runtime"
 
 
 class AppSettings(BaseSettings):

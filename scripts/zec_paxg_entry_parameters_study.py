@@ -30,7 +30,7 @@ AXES={'center_length':[55,89,144],'width_length':[31,50],'trigger_mult':[.4,.8,1
 START='2021-01-22T00:00:00Z';SPLIT='2024-09-10T00:00:00Z';END='2026-09-10T00:00:00Z'
 
 
-def original(kind):return ROOT/'.heimdall_runtime/local_backtests'/ORIGINAL[kind]
+def original(kind):return ROOT/'.opentrading_runtime/local_backtests'/ORIGINAL[kind]
 
 
 class Frozen(LocalBacktestService):

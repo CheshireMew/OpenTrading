@@ -4,7 +4,7 @@
 // still use the upstream rollback. The Pine source is never rewritten.
 import { PineTS, Indicator } from 'pinets'
 import { codeOnly } from './pineCompatibility.mjs'
-export const PINE_ADAPTER_VERSION='heimdall-2'
+export const PINE_ADAPTER_VERSION='opentrading-2'
 let primaryIdentity='',primaryBars=new Map()
 let symbolCatalog=[]
 export function setPineSymbolCatalog(catalog){symbolCatalog=catalog}
@@ -17,7 +17,7 @@ function closingTime(bar,timeframe){
   const match=String(timeframe).match(/^(\d+)?([mhdwDWH]?)$/)
   return match?open+Number(match[1]||1)*({m:60000,h:3600000,H:3600000,d:86400000,D:86400000,w:604800000,W:604800000,'':60000}[match[2]]):NaN
 }
-const installed=Symbol.for('heimdall.pinets.0.9.34.compat')
+const installed=Symbol.for('opentrading.pinets.0.9.34.compat')
 export function installPineRuntimeCompat(){
   if(Indicator.prototype[installed])return
   const prepare=Indicator.prototype.prepare,restore=PineTS.prototype._restoreVarState,initialize=PineTS.prototype._initializeContext
@@ -28,7 +28,7 @@ export function installPineRuntimeCompat(){
   PineTS.prototype._initializeContext=function(...args){
     const context=initialize.apply(this,args)
     if(symbolCatalog.length){
-      const ticker=String(context.tickerId).split(';')[0].replace(/^heimdall:/i,'')
+      const ticker=String(context.tickerId).split(';')[0].replace(/^(?:opentrading|heimdall):/i,'')
       const parts=ticker.split(':'),code=parts.at(-1).replace(/\.P$/,'')
       const info=symbolCatalog.find(s=>s.id===ticker)||symbolCatalog.find(s=>s.symbol===code&&s.exchange===(parts.length>1?parts[0].toLowerCase():'binance')&&s.market===(ticker.endsWith('.P')?'usdm':'spot'))
       if(!info)throw new Error(`没有 ${ticker} 的真实品种元数据`)

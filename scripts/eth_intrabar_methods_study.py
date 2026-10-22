@@ -23,9 +23,9 @@ from scripts import zec_intrabar_methods_study as shared
 
 OUT=ROOT/'docs/verification/eth-intrabar-methods-20260913'
 BASE_ID='af38948806a3f2144ad51ef04ddc8a94'
-BASE=ROOT/'.heimdall_runtime/local_backtests'/BASE_ID
+BASE=ROOT/'.opentrading_runtime/local_backtests'/BASE_ID
 SOURCE=ROOT/'strategies/trend_cloud_intrabar_methods_v3.py'
-FINE=ROOT/'.heimdall_runtime/cloud-walkforward-20260911/data/eth-5m.json'
+FINE=ROOT/'.opentrading_runtime/cloud-walkforward-20260911/data/eth-5m.json'
 STEP=900000
 VARIANTS=[('width_stop','1.5倍平滑振幅止损，限制0.5%至2%',{'stop_method':1}),
           ('atr_stop','1.5倍ATR14止损，限制0.5%至2%',{'stop_method':2}),
@@ -158,7 +158,7 @@ def report(studies,identifier):
         '5分钟保护只在收盘后更新、下一根生效，尚有细K线内部先后不明；聚合行情不一致的区间两组共同回退15分钟，完整清单保留。所有历史已见，不能由本次比较证明未来稳定盈利。','',
         '- [固定规则](RULES.md)、[完整参数和计划](plan.json)、[逐项答案](answers.json)、[结构化结果](results.json)。',
         '- [原版一致检查](baseline-parity.json)、[数据核对](fine-data-check.json)、[代码与逐笔检查](test-results.json)。',
-        '- 每组 `*-lineage.json` 保存原信号→委托→成交；表中名称打开项目图表。完整行情、策略、逐笔、权益保存在 `.heimdall_runtime/local_backtests/<run_id>/`，run_id见results.json。','']
+        '- 每组 `*-lineage.json` 保存原信号→委托→成交；表中名称打开项目图表。完整行情、策略、逐笔、权益保存在 `.opentrading_runtime/local_backtests/<run_id>/`，run_id见results.json。','']
     content='\n'.join(lines);path=OUT/'README.md'
     if path.exists():assert path.read_text(encoding='utf8')==content
     else:path.write_text(content,encoding='utf8')

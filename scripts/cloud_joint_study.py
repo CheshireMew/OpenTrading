@@ -20,7 +20,7 @@ from scripts.cloud_strategy_versions import snapshot
 from scripts.trend_cloud_study import stamp
 
 DOCS = ROOT/'docs/verification/eth-cloud-joint-six-year-20260911'
-RUNTIME = ROOT/'.heimdall_runtime/cloud-joint-six-year-20260911'
+RUNTIME = ROOT/'.opentrading_runtime/cloud-joint-six-year-20260911'
 SOURCE = ROOT/'strategies/trend_cloud_parameters_v4.py'
 OLD = ROOT/'docs/verification/eth-cloud-parameters-20260910'
 AXES = {'center_length': [55, 65], 'width_length': [31, 40], 'trigger_mult': [.4, .8],
@@ -135,7 +135,7 @@ def calculate(task):
         reference = references.get(token(params))
         if reference and period in ('recent', 'y5'):
             old_period = 'full' if period == 'recent' else 'selection'
-            old = read(ROOT/f'.heimdall_runtime/cloud-parameters-20260910/{reference}-{old_period}.json')
+            old = read(ROOT/f'.opentrading_runtime/cloud-parameters-20260910/{reference}-{old_period}.json')
             assert all(result[k] == old[k] for k in ('report', 'trades', 'signals', 'equity'))
             m['old_record_exact'] = reference+'-'+old_period
         trace = {k: result[k] for k in ('report', 'trades', 'signals')}

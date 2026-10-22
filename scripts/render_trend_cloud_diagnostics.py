@@ -59,7 +59,7 @@ def main():
     recent = diagnosis['high_low_ema']['recent']
     report = f'''# ETH 通道：ATR 是否有用，亏损从哪里来
 
-这次已完成 8 组公式对照，以及对两个候选分别尝试 9 种改法，共 26 组方案、104 次分段模拟。全部使用项目已有的 Binance ETH/USDT 15 分钟行情快照和 Heimdall 引擎，不计算手续费和滑点。
+这次已完成 8 组公式对照，以及对两个候选分别尝试 9 种改法，共 26 组方案、104 次分段模拟。全部使用项目已有的 Binance ETH/USDT 15 分钟行情快照和 OpenTrading 引擎，不计算手续费和滑点。
 
 目前结论是：通道宽度有过滤过密信号的作用，但这批行情没有显示 ATR 相比平滑高低差有独立优势。策略主要靠持续一段时间的趋势赚钱；短时间反向、追过远的价格以及利润回吐都在消耗收益。改进仍有取舍，没有找到可以声称稳定有效的新版本。
 
@@ -125,7 +125,7 @@ def main():
 
 数据 SHA-256：`{data['data_hash']}`。实验源码 SHA-256：`{data['strategy_hash']}`。
 
-项目入口：`python -m scripts.trend_cloud_diagnostics baseline` 重建逐笔诊断；`experiments` 按保存计划重跑；`publish` 创建或检查可在项目中打开的实验记录。报告生成：`python -m scripts.render_trend_cloud_diagnostics`。完整交易路径诊断保存在 `.heimdall_runtime/eth-cloud-two-year-20260910/*-diagnostics.json`，实验参数、逐笔交易和信号保存在同目录 `experiment-*.json`。
+项目入口：`python -m scripts.trend_cloud_diagnostics baseline` 重建逐笔诊断；`experiments` 按保存计划重跑；`publish` 创建或检查可在项目中打开的实验记录。报告生成：`python -m scripts.render_trend_cloud_diagnostics`。完整交易路径诊断保存在 `.opentrading_runtime/eth-cloud-two-year-20260910/*-diagnostics.json`，实验参数、逐笔交易和信号保存在同目录 `experiment-*.json`。
 
 本次有针对性的 42 项测试通过，覆盖原版交易一致、退出开盘排除后续行情、多空浮盈亏手算、过滤不阻止平仓、两次收盘确认，以及原引擎成交与止损规则。
 '''
@@ -137,7 +137,7 @@ def main():
 
 
 HTML = '''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ATR 与亏损原因 · Heimdall</title><style>
+<title>ATR 与亏损原因 · OpenTrading</title><style>
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#1a2934;font:16px/1.8 system-ui,"Microsoft YaHei",sans-serif}main{max-width:1250px;margin:auto;padding:32px}h1{font-size:29px;line-height:1.4}h2{font-size:21px;line-height:1.5}p{margin:12px 0}a{color:#176b59}.panel{padding:24px;background:white;border:1px solid #dce3e7;border-radius:12px;margin:22px 0}.muted{color:#64747f;font-size:14px}.controls{display:flex;gap:16px;flex-wrap:wrap;align-items:center}select{font:inherit;padding:7px;border:1px solid #aab8c0;border-radius:6px;background:white}.scroll{overflow:auto}table{border-collapse:collapse;width:100%;font-size:14px;white-space:nowrap}td,th{padding:12px;border-bottom:1px solid #e5eaed;text-align:right}td:first-child,th:first-child{text-align:left}th{background:#f5f7f9}.positive{color:#167051}.negative{color:#b73b49}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card{border-left:3px solid #3c7c67;padding-left:16px}.big{font-size:26px;font-weight:700}.warning{border-left:4px solid #b07c30}.tag{background:#e2ede7;color:#256046;display:inline-block;padding:3px 9px;border-radius:5px}summary{cursor:pointer;color:#176b59}nav{display:flex;gap:22px;flex-wrap:wrap}@media(max-width:700px){main{padding:16px}.panel{padding:16px}.cards{grid-template-columns:1fr}h1{font-size:24px}}
 </style><main><nav><a href="comparison.html">← 原来的两年比较</a><a href="DIAGNOSTICS.md">完整分析与全部区间结果</a><a id="projectlink">在项目中看过滤后的实际交易</a></nav>
 <p><span class="tag">26 组方案 · 104 次分段模拟 · 全部不计手续费和滑点</span></p>

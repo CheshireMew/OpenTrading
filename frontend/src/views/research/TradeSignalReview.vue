@@ -1,11 +1,9 @@
 <template>
   <div class="app-page">
     <div class="app-page-inner-wide">
-      <section class="app-hero-panel flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      <section class="app-page-header flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p class="app-eyebrow">Signal Validation</p>
-          <h1 class="app-title mt-2">{{ t('signalReview.title') }}</h1>
-          <p class="app-subtitle mt-3 max-w-3xl">{{ t('signalReview.subtitle') }}</p>
+          <h1 class="app-title">{{ t('signalReview.title') }}</h1>
         </div>
         <button type="button" class="app-button-primary" :disabled="evaluating" @click="evaluate()">
           {{ evaluating ? t('signalReview.evaluating') : t('signalReview.evaluateAll') }}

@@ -20,8 +20,8 @@ from scripts.local_backtest_worker import execute
 
 OUT = ROOT/'docs/verification/zec-intrabar-no-stop-20260913'
 OLD_DOCS = ROOT/'docs/verification/cloud-timeframe-20260911'
-OLD_TRACE = ROOT/'.heimdall_runtime/cloud-timeframe-20260911/traces/zec/full1-30m-full.json'
-FULL_DATA = ROOT/'.heimdall_runtime/cloud-timeframe-20260911/data/zec-30m.json'
+OLD_TRACE = ROOT/'.opentrading_runtime/cloud-timeframe-20260911/traces/zec/full1-30m-full.json'
+FULL_DATA = ROOT/'.opentrading_runtime/cloud-timeframe-20260911/data/zec-30m.json'
 DATA = OUT/'data.json'
 STEP = 1800000
 START, END = '2019-09-10T00:00:00Z', '2026-09-10T00:00:00Z'

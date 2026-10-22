@@ -1,4 +1,4 @@
-# Heimdall - AI-Powered Crypto Trading Guide
+# OpenTrading - AI-Powered Crypto Trading Guide
 # Python Dependencies
 
 # 核心依赖

@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "Heimdall",
+    "title": "OpenTrading",
     "subtitle": "AI Crypto Assistant",
     "skipToContent": "Skip to main content",
     "openMenu": "Open navigation menu",
@@ -403,7 +403,7 @@
     "notUpdated": "Not updated",
     "collectingHistory": "Collecting history ({count}/2 points available)",
     "emptyTitle": "No collected market signals yet",
-    "emptyDescription": "This is expected on first launch or before background collection completes. Confirm the backend is running and refresh; source failures are shown separately as errors.",
+    "emptyDescription": "Refresh after the first data collection completes.",
     "groupEmpty": "No collected data is available for this group yet.",
     "groups": {
       "cycle": {
@@ -1314,7 +1314,7 @@
     "capCommon": "Common Pine v5/v6 indicators and strategies",
     "capCharts": "Multiple charts, drawings and original v7.2",
     "capRequests": "Multi-timeframe requests for connected symbols",
-    "capVarip": "varip supports global scalars via the Heimdall compatibility layer, not local variables or collections",
+    "capVarip": "varip supports global scalars via the OpenTrading compatibility layer, not local variables or collections",
     "capLive": "Live calculations use received market updates",
     "capHistory": "Historical OHLC fill simulation does not reconstruct individual ticks",
     "capCurrency": "USD/USDT use quoted values for accounting without FX conversion",

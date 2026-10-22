@@ -23,7 +23,7 @@ from scripts.profit_protection_study import ROOT,read,save
 from scripts.trend_cloud_study import stamp
 
 DOCS=ROOT/'docs/verification/cross-market-trend-20260911-r2'
-RUNTIME=ROOT/'.heimdall_runtime/cross-market-trend-20260911-r2'
+RUNTIME=ROOT/'.opentrading_runtime/cross-market-trend-20260911-r2'
 PRIOR=ROOT/'docs/verification/cross-market-trend-20260911'
 SOURCE=ROOT/'strategies/cross_market_trend_v1.py'
 OLD_SOURCE=ROOT/'strategies/trend_cloud_parameters_v4.py'

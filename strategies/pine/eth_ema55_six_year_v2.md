@@ -30,4 +30,4 @@
 
 原六年回测的9427笔交易中，有246笔开仓同根初始止损（其中114笔多单）；这一现象与原高累计收益结果可以同时存在。原累计收益+25829.05%是每笔全部资金、连续复利、不计手续费和滑点的项目历史成绩，胜率26.94%；不能当作当前 Pine 已复现相同成绩。
 
-证据：原六年运行 `4e65bfb4229646299932d76515ec0ac0`；本次复核运行 `67f07fcba58e4ceead15917e326d8c4d`。完整行情、逐笔与代码由项目保存在 `.heimdall_runtime/local_backtests/`；本次摘录和修改核对保存在 `docs/verification/eth-pine-sept11-20260912/`。
+证据：原六年运行 `4e65bfb4229646299932d76515ec0ac0`；本次复核运行 `67f07fcba58e4ceead15917e326d8c4d`。完整行情、逐笔与代码由项目保存在 `.opentrading_runtime/local_backtests/`；本次摘录和修改核对保存在 `docs/verification/eth-pine-sept11-20260912/`。

@@ -24,7 +24,7 @@ const commandExists = (command) => {
   return !result.error
 }
 
-const configuredPython = process.env.HEIMDALL_PYTHON?.trim()
+const configuredPython = process.env.OPENTRADING_PYTHON?.trim()
 
 const resolveConfiguredPython = () => {
   if (!configuredPython) {
@@ -55,7 +55,7 @@ const python = candidates[0]
 
 if (!python) {
   console.error(
-    'Backend Python runtime not found. Set HEIMDALL_PYTHON or create venv/.venv in the repository root.',
+    'Backend Python runtime not found. Set OPENTRADING_PYTHON or create venv/.venv in the repository root.',
   )
   process.exit(1)
 }

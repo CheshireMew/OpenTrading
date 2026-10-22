@@ -34,7 +34,7 @@ def main():
     selected_p = data['entry_comparisons']['w31_m99_a1_g50']['full']
     report = f'''# ETH 通道参数与利润保护：已完成测试
 
-使用项目原有 Binance ETH/USDT 15 分钟数据和 Heimdall 回测引擎，共 21 组参数、84 次分段模拟。另做 12 次固定原入场时刻的对照，检查保护本身的影响。所有结果不计算手续费和滑点；初始 10,000 USDT，每次使用当前账户资金的 100%，不加杠杆。
+使用项目原有 Binance ETH/USDT 15 分钟数据和 OpenTrading 回测引擎，共 21 组参数、84 次分段模拟。另做 12 次固定原入场时刻的对照，检查保护本身的影响。所有结果不计算手续费和滑点；初始 10,000 USDT，每次使用当前账户资金的 100%，不加杠杆。
 
 当前结论：利润保护与反向信号已按“任一条件成立都可平仓”实现。保护确实能救回由盈转亏的交易，但也截短部分大盈利，不能只看胜率。通道门槛 0.8 是只看前一年选出的设置；盈利 2% 后允许回吐一半，是看完各段后值得观察的收益／跌幅取舍，不能冒充前一年选出的赢家。最近十八天全部 21 组都亏损。
 
@@ -101,7 +101,7 @@ def main():
 
 68 项相关测试通过，覆盖多空手算、两种独立退出、启动边界、保护线不放宽、开盘越线、重新入场重置、无未来数据影响、原规则一致、服务快照与已有引擎规则。前端类型检查通过。
 
-命令：`python -m scripts.profit_protection_study run`；项目运行创建与核对：`python -m scripts.profit_protection_study publish`；生成报告：`python -m scripts.render_profit_protection_study`。完整参数、选择记录和所有指标在本目录；各组信号和逐笔交易、固定入场对照以及源码/引擎副本保存在 `.heimdall_runtime/profit-protection-study-20260910`。
+命令：`python -m scripts.profit_protection_study run`；项目运行创建与核对：`python -m scripts.profit_protection_study publish`；生成报告：`python -m scripts.render_profit_protection_study`。完整参数、选择记录和所有指标在本目录；各组信号和逐笔交易、固定入场对照以及源码/引擎副本保存在 `.opentrading_runtime/profit-protection-study-20260910`。
 
 数据 SHA-256：`{data['provenance']['data_hash']}`；策略 SHA-256：`{data['provenance']['strategy_hash']}`；引擎 SHA-256：`{data['provenance']['engine_hash']}`。
 '''
@@ -113,7 +113,7 @@ def main():
     print(DOCS/'report.html')
 
 
-HTML = '''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>通道与利润保护测试 · Heimdall</title>
+HTML = '''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>通道与利润保护测试 · OpenTrading</title>
 <style>*{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#1a2934;font:16px/1.8 system-ui,"Microsoft YaHei",sans-serif}main{max-width:1350px;margin:auto;padding:32px}h1{font-size:29px;line-height:1.45}h2{font-size:21px}a{color:#176b59}.muted{color:#64747f;font-size:14px}.panel{background:white;border:1px solid #dce3e7;border-radius:12px;margin:22px 0;padding:24px}.warning{border-left:4px solid #ba8746}.tag{display:inline-block;background:#e2ede7;color:#256046;padding:3px 10px;border-radius:5px}.controls,nav{display:flex;align-items:center;gap:18px;flex-wrap:wrap}select{font:inherit;border:1px solid #aab8c0;border-radius:5px;background:white;padding:7px}table{border-collapse:collapse;width:100%;font-size:14px;white-space:nowrap}th,td{border-bottom:1px solid #e5eaed;padding:10px;text-align:right}th{background:#f5f7f9}th:first-child,td:first-child{text-align:left}.scroll{overflow:auto}.positive{color:#167051}.negative{color:#b73b49}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.card{border-left:3px solid #3c7c67;padding-left:16px}.big{font-size:25px;font-weight:bold}svg{width:100%;display:block}summary{cursor:pointer;color:#176b59}@media(max-width:750px){main{padding:16px}.panel{padding:16px}.cards{grid-template-columns:1fr}h1{font-size:23px}}</style>
 <main><nav><a href="diagnostics.html">← 上一轮亏损诊断</a><a href="comparison.html">最初两年比较</a><a id="candidate">在项目中看利润保护逐笔交易</a></nav>
 <p><span class="tag">21 组参数 · 84 次分段模拟 · 12 次固定入场对照 · 不计手续费和滑点</span></p>

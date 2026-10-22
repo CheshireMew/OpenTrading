@@ -1,4 +1,4 @@
-import { getLocalStorage } from '@/utils/storage'
+import { getLocalStorage, readStorageValue } from '@/utils/storage'
 import { isRecord } from '@/utils/typeGuards'
 
 interface VersionedStorageEnvelope<TPayload> {
@@ -21,7 +21,7 @@ export const readVersionedStorage = <TPayload>(
   const storage = getLocalStorage()
   if (storage === null) return null
   try {
-    const stored = storage.getItem(options.key)
+    const stored = readStorageValue(storage, options.key)
     if (!stored) return null
     const parsed: unknown = JSON.parse(stored)
     if (!isRecord(parsed)) return null

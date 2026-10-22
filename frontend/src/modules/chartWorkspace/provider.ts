@@ -4,10 +4,10 @@ import { chartApi, type ChartSymbol, BASE } from './api'
 import { cw } from './locale'
 
 export const timeframes:Record<string,string> = {'1':'1m','5':'5m','15':'15m','30':'30m','60':'1h','240':'4h','D':'1d','1D':'1d','W':'1w','1W':'1w','M':'1M','1M':'1M'}
-export const velaSymbol = (id:string) => 'heimdall:' + id
-export const fromVela = (id:string) => id.replace(/^heimdall:/,'')
+export const velaSymbol = (id:string) => 'opentrading:' + id
+export const fromVela = (id:string) => id.replace(/^(?:opentrading|heimdall):/,'')
 
-export class HeimdallProvider implements DataProvider {
+export class OpenTradingProvider implements DataProvider {
   catalog:ChartSymbol[] = []
   statuses = new Map<string,{status:string;error?:string}>()
   private socket?:WebSocket

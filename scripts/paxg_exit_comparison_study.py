@@ -14,7 +14,7 @@ from scripts.zec_intrabar_methods_study import run
 from scripts import zec_paxg_entry_parameters_study as audit
 
 OUT=ROOT/'docs/verification/paxg-exit-comparison-20260913'
-BASE=ROOT/'.heimdall_runtime/local_backtests/97f289b0295f2decd9c7d57c4e795c05'
+BASE=ROOT/'.opentrading_runtime/local_backtests/97f289b0295f2decd9c7d57c4e795c05'
 SOURCE=ROOT/'strategies/trend_cloud_intrabar_exit_v4.py'
 OLD=ROOT/'strategies/trend_cloud_intrabar_methods_v3.py'
 ENGINE=ROOT/'app/domain/local_backtest.py'

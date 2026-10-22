@@ -73,13 +73,11 @@
         <section v-else-if="storageReady && !storageLoading && portfolioTransitioning" role="status" aria-live="polite" class="app-panel flex min-h-[24rem] min-w-0 items-center justify-center p-8 text-center">
           <div class="max-w-lg">
             <h2 class="app-section-title text-xl">{{ $t('portfolioBalance.preparingTitle') }}</h2>
-            <p class="app-muted mt-3 text-sm leading-6">{{ $t('portfolioBalance.preparingDescription') }}</p>
           </div>
         </section>
         <section v-else-if="storageReady && !storageLoading" class="app-panel flex min-h-[24rem] min-w-0 items-center justify-center p-8 text-center">
           <div class="max-w-lg">
             <h2 class="app-section-title text-xl">{{ $t('portfolioBalance.emptyTitle') }}</h2>
-            <p class="app-muted mt-3 text-sm leading-6">{{ $t('portfolioBalance.emptyDescription') }}</p>
             <div class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
               <button type="button" class="app-button-primary px-5 py-3" :disabled="storageSaving" @click="handleCreatePortfolio">{{ $t('portfolioBalance.createBlank') }}</button>
               <button type="button" class="app-button-secondary px-5 py-3" :disabled="storageSaving" @click="handleCreateSamplePortfolio">{{ $t('portfolioBalance.useSample') }}</button>
@@ -175,7 +173,7 @@ const exportBackup = async () => {
     const url = URL.createObjectURL(blob)
     const anchor = window.document.createElement('a')
     anchor.href = url
-    anchor.download = `heimdall-portfolios-${todayLocalIsoDate()}.json`
+    anchor.download = `opentrading-portfolios-${todayLocalIsoDate()}.json`
     anchor.click()
     URL.revokeObjectURL(url)
   } catch (error) {

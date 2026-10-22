@@ -47,7 +47,7 @@ def main():
         '数据和参数：[规则](RULES.md)、[原版选择](selection.json)、[原版重放核对](baseline-parity.json)、[四组结果](results.json)、[行情快照](data.json)、[有止损确认逐笔核对](entry_only-lineage.json)、[无止损确认逐笔核对](combined-lineage.json)。',
         '每次运行都保存完整strategy.py、engine.py、config.json、metadata.json、data.json、result.json和run.log；result.json包含逐笔交易、成交、信号、K线指标、权益和保护价，项目数据库也保留了这些记录。']
     for cid,name,_,_ in CASES:
-        v=r[cid];text.append(f"- [{name}的项目图表]({v['chart']})；运行目录 `.heimdall_runtime/local_backtests/{v['run_id']}`。")
+        v=r[cid];text.append(f"- [{name}的项目图表]({v['chart']})；运行目录 `.opentrading_runtime/local_backtests/{v['run_id']}`。")
     blocks=[]
     for line in text:
         if blocks and ((line.startswith('|') and blocks[-1].startswith('|')) or

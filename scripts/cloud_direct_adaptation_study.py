@@ -19,7 +19,7 @@ from scripts.profit_protection_study import ROOT,read,save
 from scripts.trend_cloud_study import stamp
 
 DOCS=ROOT/'docs/verification/cloud-direct-adaptation-20260912'
-RUNTIME=ROOT/'.heimdall_runtime/cloud-direct-adaptation-20260912'
+RUNTIME=ROOT/'.opentrading_runtime/cloud-direct-adaptation-20260912'
 SOURCE=ROOT/'strategies/trend_cloud_direct_v7.py'
 ASSETS=('paxg','zec','eth','btc');TFS={'15m':900000,'1h':3600000}
 START='2020-10-01T00:00:00Z';SPLIT='2024-09-10T00:00:00Z';END='2026-09-10T00:00:00Z';WARMUP=650

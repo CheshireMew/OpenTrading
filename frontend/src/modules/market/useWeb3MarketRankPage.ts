@@ -1,3 +1,4 @@
+import { DARK_PALETTE } from '@/theme/palette.mjs'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -43,11 +44,11 @@ export function useWeb3MarketRankPage() {
   const web3ChartColors = computed(() => {
     const isDark = theme.value === 'dark'
     return {
-      bg: isDark ? '#020617' : '#ffffff',
-      grid: isDark ? '#1e293b' : '#e2e8f0',
-      text: isDark ? '#94a3b8' : '#475569',
-      upColor: '#10b981',
-      downColor: '#ef4444',
+      bg: isDark ? DARK_PALETTE.canvas : '#ffffff',
+      grid: isDark ? DARK_PALETTE.grid : '#e2e8f0',
+      text: isDark ? DARK_PALETTE.muted : '#475569',
+      upColor: isDark ? DARK_PALETTE.positive : '#10b981',
+      downColor: isDark ? DARK_PALETTE.negative : '#ef4444',
     }
   })
 

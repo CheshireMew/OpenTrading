@@ -3,6 +3,7 @@
 </template>
 
 <script setup>
+import { DARK_PALETTE } from '@/theme/palette.mjs'
 import { watch } from 'vue'
 import * as echarts from 'echarts/core'
 import { LineChart } from 'echarts/charts'
@@ -30,8 +31,8 @@ const { t, locale } = useI18n()
 
 const getOption = () => {
   const isDark = theme.value === 'dark'
-  const axisColor = isDark ? '#9ca3af' : '#4b5563'
-  const splitLineColor = isDark ? '#374151' : '#e5e7eb'
+  const axisColor = isDark ? DARK_PALETTE.muted : '#4b5563'
+  const splitLineColor = isDark ? DARK_PALETTE.grid : '#e5e7eb'
   const equityColor = isDark ? '#60a5fa' : '#2563eb'
   const drawdownColor = isDark ? '#fca5a5' : '#dc2626'
   const data = props.points || []
@@ -42,10 +43,10 @@ const getOption = () => {
     animation: false,
     tooltip: {
       trigger: 'axis',
-      backgroundColor: isDark ? 'rgba(31, 41, 55, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-      borderColor: isDark ? '#4b5563' : '#e5e7eb',
+      backgroundColor: isDark ? DARK_PALETTE.elevated : 'rgba(255, 255, 255, 0.95)',
+      borderColor: isDark ? DARK_PALETTE.border : '#e5e7eb',
       textStyle: {
-        color: isDark ? '#f3f4f6' : '#111827',
+        color: isDark ? DARK_PALETTE.text : '#111827',
       },
       formatter(params) {
         const point = data[params[0]?.dataIndex ?? 0]

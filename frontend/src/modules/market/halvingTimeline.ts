@@ -1,3 +1,4 @@
+import { DARK_PALETTE } from '@/theme/palette.mjs'
 import type { ChartConfiguration, ChartDataset } from 'chart.js'
 
 import { parseLocalIsoDate } from '@/utils/localDate'
@@ -72,7 +73,7 @@ const buildAnnotations = (t: Translate, isDark: boolean, showPhases: boolean, co
         display: !compact || index >= 3,
         content: halving.label,
         position: 'start',
-        backgroundColor: isDark ? 'rgba(30, 41, 59, 1)' : 'rgba(255, 255, 255, 1)',
+        backgroundColor: isDark ? DARK_PALETTE.elevated : 'rgba(255, 255, 255, 1)',
         color: isDark ? '#fff' : '#000',
         font: { size: 11, weight: 'bold' },
         yAdjust: 0,
@@ -122,8 +123,8 @@ export const buildHalvingChartConfig = (options: {
   formatTick: (value: number) => string
   compact?: boolean
 }): ChartConfiguration<'line'> => {
-  const gridColor = options.isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'
-  const textColor = options.isDark ? '#9CA3AF' : '#6B7280'
+  const gridColor = options.isDark ? DARK_PALETTE.grid : 'rgba(0, 0, 0, 0.05)'
+  const textColor = options.isDark ? DARK_PALETTE.muted : '#6B7280'
   const datasets: ChartDataset<'line'>[] = [{
     label: options.t('halving.btcPrice'),
     data: options.seriesData,
@@ -159,10 +160,10 @@ export const buildHalvingChartConfig = (options: {
         legend: { display: false },
         tooltip: {
           enabled: true,
-          backgroundColor: options.isDark ? 'rgba(17, 24, 39, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+          backgroundColor: options.isDark ? DARK_PALETTE.elevated : 'rgba(255, 255, 255, 0.9)',
           titleColor: options.isDark ? '#fff' : '#000',
           bodyColor: options.isDark ? '#fff' : '#000',
-          borderColor: options.isDark ? '#374151' : '#E5E7EB',
+          borderColor: options.isDark ? DARK_PALETTE.grid : '#E5E7EB',
           borderWidth: 1,
         },
       },

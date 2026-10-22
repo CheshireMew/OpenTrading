@@ -1,4 +1,4 @@
-"""Bounded width and profit-protection study using Heimdall snapshots/simulator."""
+"""Bounded width and profit-protection study using OpenTrading snapshots/simulator."""
 import argparse
 from bisect import bisect_left
 from collections import Counter
@@ -18,7 +18,7 @@ from scripts.trend_cloud_study import describe, stamp
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT/'docs/verification/eth-profit-protection-20260910'
-RUNTIME = ROOT/'.heimdall_runtime/profit-protection-study-20260910'
+RUNTIME = ROOT/'.opentrading_runtime/profit-protection-study-20260910'
 SOURCE = ROOT/'strategies/trend_cloud_profit_protection.py'
 
 
@@ -79,7 +79,7 @@ def paired_entries(original, changed):
 
 def study():
     plan = read(DOCS/'plan.json')
-    original_dir = ROOT/'.heimdall_runtime/local_backtests'/plan['baseline_run']
+    original_dir = ROOT/'.opentrading_runtime/local_backtests'/plan['baseline_run']
     raw = (original_dir/'data.json').read_bytes()
     if digest(raw) != plan['data_hash']:
         raise ValueError('Source snapshot differs from frozen plan')

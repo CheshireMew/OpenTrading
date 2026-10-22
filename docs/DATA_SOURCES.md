@@ -1,6 +1,6 @@
 # Data Sources
 
-Heimdall uses a small set of public data sources. Runtime configuration lives in `.env`; application defaults live in `config/settings.py`.
+OpenTrading uses a small set of public data sources. Runtime configuration lives in `.env`; application defaults live in `config/settings.py`.
 
 ## Required
 

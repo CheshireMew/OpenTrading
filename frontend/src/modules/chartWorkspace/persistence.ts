@@ -6,11 +6,11 @@ import { checkPine } from './pineCompatibility.mjs'
 const sources = new WeakMap<Vela,Map<string,{scriptId?:string;version?:number}>>()
 // Vela's cell snapshot reads its initial bars budget, while setMarket changes the
 // live budget. Preserve the requested depth when a cell is pooled by a layout.
-registerStatePersistence({key:'heimdall.historyDepth',scope:'cell',serialize:ctx=>ctx.chart.market.bars,restore:(payload,ctx)=>{
+registerStatePersistence({key:'opentrading.historyDepth',scope:'cell',serialize:ctx=>ctx.chart.market.bars,restore:(payload,ctx)=>{
   if(typeof payload==='number'&&Number.isFinite(payload)&&payload>0&&payload!==ctx.chart.market.bars)
     queueMicrotask(()=>{void ctx.chart.setMarket({bars:payload})})
 }})
-registerStatePersistence({key:'heimdall.viewport',scope:'cell',serialize:ctx=>ctx.chart.getVisibleRange(),restore:(payload,ctx)=>{
+registerStatePersistence({key:'opentrading.viewport',scope:'cell',serialize:ctx=>ctx.chart.getVisibleRange(),restore:(payload,ctx)=>{
   const range=payload as VisibleRange|null
   if(!range||!Number.isFinite(range.from)||!Number.isFinite(range.to)||range.to<=range.from)return
   ctx.chart.setVisibleRange(range)
@@ -21,7 +21,7 @@ export function markScript(chart:Vela,id:string,scriptId:string,version:number) 
   if(!map){map=new Map();sources.set(chart,map)}
   map.set(id,{scriptId,version})
 }
-registerStatePersistence({key:'heimdall.pine',scope:'cell',serialize:ctx=>ctx.chart.indicators().filter(h=>h.source).map(h=>({
+registerStatePersistence({key:'opentrading.pine',scope:'cell',serialize:ctx=>ctx.chart.indicators().filter(h=>h.source).map(h=>({
   id:h.id,name:h.title,script:h.source,language:'pine',inputs:h.inputValues(),props:h.propValues(),hidden:!h.visible,...sources.get(ctx.chart)?.get(h.id),
 })),restore:(payload,ctx)=>{
   if(!Array.isArray(payload))return
@@ -39,7 +39,7 @@ export function installMarketDrawings(workspace:VelaWorkspace,onChange:()=>void)
   const maps=new Map<string,Record<string,unknown>>()
   const owners=new WeakMap<Vela,string>()
   const restoring=new WeakSet<Vela>()
-  const dispose=registerStatePersistence({key:'heimdall.marketDrawings',scope:'cell',
+  const dispose=registerStatePersistence({key:'opentrading.marketDrawings',scope:'cell',
     serialize:ctx=>{
       const market=owners.get(ctx.chart)??ctx.chart.market.symbol??'',map=maps.get(ctx.cellId)??{}
       map[market]=ctx.chart.drawings.toJSON();maps.set(ctx.cellId,map)

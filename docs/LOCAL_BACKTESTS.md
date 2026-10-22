@@ -4,7 +4,7 @@
 
 多版本策略研究请使用[统一研究 CLI](STRATEGY_RESEARCH.md)，先查已有结果，再冻结问题、参数和验证范围。`backtest result` 默认返回摘要；需要旧版完整输出时显式使用 `--full`，大文件优先导出到本地。
 
-Heimdall 使用自己的逐根 K 线引擎进行单币种多空研究。结果含义统一为：**基于所选价格数据、不计成本的多空策略模拟**。使用现有交易所目录中的现货历史，不需要 Freqtrade 或 TradingView 会员。
+OpenTrading 使用自己的逐根 K 线引擎进行单币种多空研究。结果含义统一为：**基于所选价格数据、不计成本的多空策略模拟**。使用现有交易所目录中的现货历史，不需要 Freqtrade 或 TradingView 会员。
 
 ## 使用入口
 
@@ -31,7 +31,7 @@ Heimdall 使用自己的逐根 K 线引擎进行单币种多空研究。结果�
 .\venv\Scripts\python.exe -m scripts.research_cli backtest cancel RUN_ID
 .\venv\Scripts\python.exe -m scripts.research_cli backtest rerun RUN_ID --wait
 .\venv\Scripts\python.exe -m scripts.research_cli backtest archive RUN_ID
-.\venv\Scripts\python.exe -m scripts.research_cli backtest export RUN_ID --format trades --output D:\Code\Heimdall\.heimdall_runtime\trades.csv
+.\venv\Scripts\python.exe -m scripts.research_cli backtest export RUN_ID --format trades --output D:\Code\OpenTrading\.opentrading_runtime\trades.csv
 ```
 
 `run` 不加 `--wait` 时返回已入队任务。参数文件通过 `--parameters D:\path\parameters.json` 传入 JSON 对象，例如 `{"fast":10,"slow":30,"stop":5,"target":10,"trailing":0}`。`export --format` 支持 `json`、`trades`、`equity`，文件必须不存在，避免意外覆盖。`list --archived` 查看归档记录。状态查询可查看失败任务；`result` 或 `--wait` 遇到未成功完成的任务会以非零退出码返回。
@@ -169,8 +169,8 @@ ATR 对照与亏损诊断见 [逐笔原因及改法比较](verification/eth-clou
 
 2026-09-09 的历史冻结样例：Binance BTC/USDT 现货 1h，2025-01-01 至 2025-04-01，默认 ma_cross 参数，初始 10,000、仓位 100%。下载 2,361 根（含 201 根预热），96 笔交易，期末权益 10,649.415803470534，收盘权益最大回撤 22.866525%。此数值仅作为该历史快照的核对基准；当前参数相关预热会产生不同输入，不应直接套用这一数值，也不作为策略有效性的保证。
 
-2026-09-09 已补齐原 PostgreSQL `heimdall` 环境验收，使用项目 Python 3.12.10，数据库从 `008_drop_funding_rates` 迁移至 `018_local_backtests`，结构检查通过。迁移前完整 SQL 备份为 `.heimdall_runtime/postgres-before-local-backtests-20260909.sql`；既有 009 迁移去除了 4,706 条重复指标记录，备份保留迁移前全部数据。
+2026-09-09 已补齐原 PostgreSQL `opentrading` 环境验收，使用项目 Python 3.12.10，数据库从 `008_drop_funding_rates` 迁移至 `018_local_backtests`，结构检查通过。迁移前完整 SQL 备份为 `.opentrading_runtime/postgres-before-local-backtests-20260909.sql`；既有 009 迁移去除了 4,706 条重复指标记录，备份保留迁移前全部数据。
 
 页面提交、CLI 提交、页面快照重跑的全部信号、成交、逐笔交易、权益、保护价和统计已在 PostgreSQL 逐项比对一致，JSON/CSV 与数据库核对一致；页面刷新、点击交易定位，以及取消、失败、非零 CLI 退出码和归档查询均通过。成功 CLI JSON 在标准输出，失败 JSON 在标准错误。首笔空仓在 2025-01-01 07:00 以 93,757.57 入场，20:00 反向信号以 94,627.08 平仓，数量约 0.106658，亏损 92.740245；页面点击该笔可见对应价格和标记。
 
-完整后端回归 210 项通过，前端契约生成、类型检查及生产构建通过。新增测试覆盖多空移动止损入场基准、止损单向移动、跳空退出保护价、同根反向仓位轨迹、旧引擎版本拒绝重跑，以及真实 Windows 后台被强制结束后计算进程和派生进程退出、重启后原任务中断且队列继续执行。原数据库验收记录保存在 `.heimdall_runtime/postgres-local-backtest-verification-20260909.json`。
+完整后端回归 210 项通过，前端契约生成、类型检查及生产构建通过。新增测试覆盖多空移动止损入场基准、止损单向移动、跳空退出保护价、同根反向仓位轨迹、旧引擎版本拒绝重跑，以及真实 Windows 后台被强制结束后计算进程和派生进程退出、重启后原任务中断且队列继续执行。原数据库验收记录保存在 `.opentrading_runtime/postgres-local-backtest-verification-20260909.json`。

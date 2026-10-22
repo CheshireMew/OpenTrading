@@ -1,7 +1,7 @@
 <template>
   <div class="tester">
     <div class="tester-controls">
-      <strong>{{ cw('strategyTester') }}</strong><span>{{ symbol?.name }} · {{ timeframe }}</span>
+      <span>{{ symbol?.name }} · {{ timeframe }}</span>
       <label>{{ cw('start') }} <input type="datetime-local" v-model="start" /></label><label>{{ cw('end') }} <input type="datetime-local" v-model="end" /></label>
       <button :disabled="busy||!script||declaration!=='strategy'" @click="run">{{ cw('runStrategy') }}</button>
       <button v-if="selected&&running" @click="cancel">{{ cw('cancel') }}</button>
@@ -35,6 +35,7 @@
   </div>
 </template>
 <script setup lang="ts">
+import { DARK_PALETTE } from '@/theme/palette.mjs'
 import { computed,nextTick,onBeforeUnmount,onMounted,ref,watch } from 'vue'
 import { createChart,LineSeries, type IChartApi, type UTCTimestamp } from 'lightweight-charts'
 import { readPineMetadata } from '@/modules/chartWorkspace/pineEngine'
@@ -131,7 +132,7 @@ async function loadRecords(){
     let all=[...result.items]
     for(let from=all.length;from<result.total;from+=10000)all.push(...(await chartApi.records(id,kind,from,10000)).items)
     await nextTick();if(!equityHost.value||id!==selected.value?.id||kind!==recordKind.value)return
-    chart=createChart(equityHost.value,{autoSize:true,height:150,layout:{background:{color:props.dark?'#111318':'#ffffff'},textColor:props.dark?'#aeb7c5':'#4b5563'},grid:{vertLines:{visible:false},horzLines:{visible:false}},timeScale:{timeVisible:true}})
+    chart=createChart(equityHost.value,{autoSize:true,height:150,layout:{background:{color:props.dark?DARK_PALETTE.canvas:'#ffffff'},textColor:props.dark?DARK_PALETTE.muted:'#4b5563'},grid:{vertLines:{visible:false},horzLines:{visible:false}},timeScale:{timeVisible:true}})
     const line=chart.addSeries(LineSeries,{color:'#22ab94',lineWidth:2})
     const points=[...new Map(all.filter(r=>r.time).map(r=>[r.time,{time:Number(r.time)/1000 as UTCTimestamp,value:Number(r.equity)}])).values()].sort((a,b)=>Number(a.time)-Number(b.time))
     line.setData(points);chart.timeScale().fitContent()

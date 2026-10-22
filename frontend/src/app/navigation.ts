@@ -167,7 +167,9 @@ const hasKeepAlive = (
   'keepAlive' in route && route.keepAlive === true
 )
 
+// Keep saved research pages and direct URLs available while their menu is hidden.
 export const APP_NAV_ITEMS = APP_ROUTE_DEFINITIONS.filter(hasNav)
+  .filter((route) => route.nav.section !== 'research')
 export const APP_KEEP_ALIVE_ROUTE_NAMES = APP_ROUTE_DEFINITIONS
   .filter(hasKeepAlive)
   .map((route: { name: string }) => route.name)

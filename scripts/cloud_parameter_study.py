@@ -17,9 +17,9 @@ from scripts.profit_protection_study import read, save, metrics, paired_entries
 from scripts.trend_cloud_study import stamp
 
 DOCS = ROOT/'docs/verification/eth-cloud-parameters-20260910'
-RUNTIME = ROOT/'.heimdall_runtime/cloud-parameters-20260910'
+RUNTIME = ROOT/'.opentrading_runtime/cloud-parameters-20260910'
 SOURCE = ROOT/'strategies/trend_cloud_parameters_v4.py'
-BASELINE = ROOT/'.heimdall_runtime/local_backtests/4c549bfe4fe0496fa43830193dd06728'
+BASELINE = ROOT/'.opentrading_runtime/local_backtests/4c549bfe4fe0496fa43830193dd06728'
 GROUPS = {
     'center': ('中心线周期', ['center_length']),
     'width': ('振幅平均周期', ['width_length']),
@@ -120,7 +120,7 @@ def study():
         result = simulate(bars[a-650:b], module, params, warmup=650, step_ms=900000, initial_cash=10000, position_pct=100)
         if key == 'baseline':
             old_period = {'selection': 'q1-train', 'full': 'full'}.get(period, period+'-test')
-            old = read(ROOT/f'.heimdall_runtime/cloud-robustness-20260910/center55-{old_period}.json')
+            old = read(ROOT/f'.opentrading_runtime/cloud-robustness-20260910/center55-{old_period}.json')
             assert result['trades'] == old['trades'] and result['equity'] == old['equity'], 'Baseline changed'
             if period == 'full':
                 formal = read(BASELINE/'result.json')

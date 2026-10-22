@@ -1,45 +1,29 @@
 <template>
   <div :class="['signal-page min-h-full text-slate-900 transition-colors dark:text-slate-100', theme === 'dark' ? 'signal-page--dark' : 'signal-page--light']">
     <section class="flex w-full flex-col gap-8 px-3 py-5 sm:px-4 lg:px-5 xl:px-6">
-      <div class="signal-hero max-w-4xl space-y-4 border-b border-stone-200 pb-6 dark:border-slate-800">
-        <div class="signal-kicker inline-flex items-center gap-2 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
-          Market Signal Monitor
-        </div>
-        <h1 class="signal-title max-w-3xl text-4xl font-semibold leading-tight dark:text-white sm:text-5xl">
+      <header class="app-page-header flex flex-wrap items-center justify-between gap-4">
+        <h1 class="app-title">
           {{ t('marketSignals.title') }}
         </h1>
-        <p class="max-w-3xl text-sm leading-6 text-stone-600 dark:text-slate-400 sm:text-base">
-          {{ t('marketSignals.subtitle') }}
-        </p>
-      </div>
+        <button type="button" class="signal-primary-button app-touch-target" :disabled="loading" @click="refresh">
+          {{ loading ? t('marketSignals.refreshing') : t('marketSignals.refresh') }}
+        </button>
+      </header>
 
       <div v-if="error" role="alert" class="flex flex-wrap items-center justify-between gap-3 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/40 dark:bg-red-950/40 dark:text-red-200">
         <span>{{ error }}</span>
-        <button type="button" class="app-button-secondary app-touch-target" :disabled="loading" @click="refresh">{{ t('common.retry') }}</button>
+        <button type="button" class="app-button-secondary app-touch-target" :disabled="loading" @click="refresh">{{ t('app.retry') }}</button>
       </div>
 
-      <div class="signal-panel p-5">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <div class="panel-kicker">{{ t('marketSignals.coverage') }}</div>
-            <h2 class="mt-2 text-lg font-semibold text-slate-950 dark:text-white">{{ t('marketSignals.overview') }}</h2>
-          </div>
-          <button type="button" class="signal-primary-button app-touch-target self-start" :disabled="loading" @click="refresh">
-            {{ loading ? t('marketSignals.refreshing') : t('marketSignals.refresh') }}
-          </button>
+      <div v-if="!error || totalCount > 0" class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div class="summary-card summary-card--primary">
+          <span>{{ t('marketSignals.currentIndicators') }}</span>
+          <strong>{{ totalCount }}</strong>
         </div>
-
-        <div class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <div class="summary-card summary-card--primary">
-            <span>{{ t('marketSignals.currentIndicators') }}</span>
-            <strong>{{ totalCount }}</strong>
-            <em>{{ t('marketSignals.fromGroups', { count: populatedGroupCount }) }}</em>
-          </div>
-          <div v-for="group in groups" :key="group.definition.id" class="summary-card">
-            <span>{{ group.definition.title }}</span>
-            <strong>{{ group.cards.length }}</strong>
-            <em>{{ t('marketSignals.lastUpdated', { time: group.latestUpdatedLabel }) }}</em>
-          </div>
+        <div v-for="group in groups" :key="group.definition.id" class="summary-card">
+          <span>{{ group.definition.title }}</span>
+          <strong>{{ group.cards.length }}</strong>
+          <em>{{ t('marketSignals.lastUpdated', { time: group.latestUpdatedLabel }) }}</em>
         </div>
       </div>
 
@@ -51,9 +35,7 @@
         <section v-for="group in groups" :key="group.definition.id" class="space-y-3">
           <div :class="['category-heading', `category-heading--${group.definition.accent}`]">
             <div>
-              <div class="panel-kicker">{{ group.definition.eyebrow }}</div>
-              <h2 class="mt-2 text-lg font-semibold text-slate-950 dark:text-white">{{ group.definition.title }}</h2>
-              <p class="mt-1 text-sm text-slate-500 dark:text-slate-500">{{ group.definition.description }}</p>
+              <h2 class="text-lg font-semibold text-slate-950 dark:text-white">{{ group.definition.title }}</h2>
             </div>
             <div class="text-sm font-semibold text-slate-500 dark:text-slate-400">{{ t('marketSignals.itemCount', { count: group.cards.length }) }}</div>
           </div>
@@ -62,10 +44,7 @@
             <article v-for="card in group.cards" :key="card.indicator.indicator_id" class="metric-card">
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
-                  <div class="truncate text-xs uppercase tracking-wide text-stone-500 dark:text-slate-500">
-                    {{ card.indicator.indicator_id }}
-                  </div>
-                  <h3 class="mt-1 text-sm font-semibold text-slate-950 dark:text-white">
+                  <h3 class="text-sm font-semibold text-slate-950 dark:text-white" :title="card.indicator.indicator_id">
                     {{ $t('indicator.' + card.indicator.indicator_id, card.indicator.name) }}
                   </h3>
                 </div>
@@ -95,7 +74,7 @@
           </div>
         </section>
       </template>
-      <div v-else class="signal-panel flex min-h-[20rem] items-center justify-center p-8 text-center">
+      <div v-else-if="!error" class="signal-panel flex min-h-[20rem] items-center justify-center p-8 text-center">
         <div class="max-w-lg">
           <h2 class="text-lg font-semibold text-slate-950 dark:text-white">{{ t('marketSignals.emptyTitle') }}</h2>
           <p class="mt-3 text-sm leading-6 text-stone-600 dark:text-slate-400">{{ t('marketSignals.emptyDescription') }}</p>
@@ -115,7 +94,7 @@ import { useMarketSignalIndicators } from '@/modules/market'
 
 const { theme } = useTheme()
 const { t } = useI18n()
-const { loading, error, groups, totalCount, populatedGroupCount, load, refresh } = useMarketSignalIndicators()
+const { loading, error, groups, totalCount, load, refresh } = useMarketSignalIndicators()
 
 const changeToneClass = (value: number | null) => {
   if (typeof value !== 'number' || Math.abs(value) < 0.01) {
@@ -138,9 +117,7 @@ onMounted(() => {
 }
 
 .signal-page--dark {
-  background:
-    radial-gradient(circle at top left, rgba(15, 107, 79, 0.12), transparent 32rem),
-    linear-gradient(180deg, #020713 0%, #030816 52%, #020617 100%);
+  background: var(--ui-canvas);
 }
 
 .signal-panel,
@@ -151,43 +128,15 @@ onMounted(() => {
 
 .signal-page--dark .signal-panel,
 .signal-page--dark .metric-card {
-  border-color: rgba(30, 41, 59, 0.95);
-  background: rgba(2, 6, 23, 0.72);
+  border-color: var(--ui-border);
+  background: var(--ui-panel);
+  border-radius: 8px;
 }
 
-.signal-kicker {
-  border: 1px solid #cfded4;
-  background: #edf3ee;
-  color: #0f6b4f;
-}
-
-.signal-page--dark .signal-kicker {
-  border-color: rgba(52, 211, 153, 0.3);
-  background: rgba(52, 211, 153, 0.1);
-  color: #6ee7b7;
-}
-
-.signal-title {
-  color: #14110f;
-  font-family: Georgia, "Times New Roman", serif;
-  letter-spacing: 0;
-}
-
-.signal-page--dark .signal-title {
-  color: #f8fafc;
-}
-
-.panel-kicker {
-  color: #0f6b4f;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.signal-page--dark .panel-kicker {
-  color: #34d399;
-}
+.signal-page--dark .signal-primary-button { background: var(--ui-accent); border-color: transparent; border-radius: 5px; }
+.signal-page--dark .signal-primary-button:hover:not(:disabled) { background: var(--ui-accentHover); }
+.signal-page--dark .summary-card--primary strong { color: var(--ui-title); }
+.signal-page--dark .change-pill { border-radius: 4px; }
 
 .signal-primary-button {
   border: 1px solid #0f6b4f;
@@ -212,8 +161,9 @@ onMounted(() => {
 }
 
 .signal-page--dark .summary-card {
-  border-color: rgba(30, 41, 59, 0.75);
-  background: rgba(15, 23, 42, 0.32);
+  border-color: var(--ui-border);
+  background: var(--ui-toolbar);
+  border-radius: 5px;
 }
 
 .summary-card span {
@@ -244,7 +194,7 @@ onMounted(() => {
 
 .signal-page--dark .summary-card span,
 .signal-page--dark .summary-card em {
-  color: #94a3b8;
+  color: var(--ui-muted);
 }
 
 .category-heading {
@@ -294,8 +244,9 @@ onMounted(() => {
 }
 
 .signal-page--dark .empty-row {
-  border-color: rgba(30, 41, 59, 0.95);
-  background: rgba(2, 6, 23, 0.48);
-  color: #94a3b8;
+  border-color: var(--ui-border);
+  background: var(--ui-panel);
+  color: var(--ui-muted);
+  border-radius: 6px;
 }
 </style>

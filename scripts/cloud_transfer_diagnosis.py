@@ -19,7 +19,7 @@ from scripts.profit_protection_study import ROOT, read, save
 from scripts.trend_cloud_study import stamp
 
 DOCS=ROOT/'docs/verification/cloud-transfer-diagnosis-20260911'
-RUNTIME=ROOT/'.heimdall_runtime/cloud-transfer-diagnosis-20260911'
+RUNTIME=ROOT/'.opentrading_runtime/cloud-transfer-diagnosis-20260911'
 ALT=ROOT/'docs/verification/alt-cloud-transfer-20260911'
 SOURCE=ROOT/'strategies/trend_cloud_parameters_v4.py'
 ASSETS=['eth','btc','sol','bnb','paxg','zec']
@@ -45,11 +45,11 @@ def prepare():
         for label,p in configs.items():
             k=key(p);name=f'{a}__{label}';path=None
             if a in ('sol','bnb','paxg','zec'):
-                path=ROOT/f'.heimdall_runtime/alt-cloud-transfer-20260911/traces/{a}/{k}-full.json'
+                path=ROOT/f'.opentrading_runtime/alt-cloud-transfer-20260911/traces/{a}/{k}-full.json'
             elif label=='eth_original':
-                path=ROOT/f'.heimdall_runtime/cloud-cross-asset-20260911/traces/{a}/joint__{k}-full.json'
+                path=ROOT/f'.opentrading_runtime/cloud-cross-asset-20260911/traces/{a}/joint__{k}-full.json'
             elif a=='btc':
-                path=ROOT/f'.heimdall_runtime/btc-cloud-parameters-20260911/traces/{k}-full.json'
+                path=ROOT/f'.opentrading_runtime/btc-cloud-parameters-20260911/traces/{k}-full.json'
             if path:
                 assert path.exists()
                 full[name]=dict(path=path.relative_to(ROOT).as_posix(),hash=digest(path.read_bytes()),asset=a,config=label)
@@ -67,7 +67,7 @@ def prepare():
     alt=read(ALT/'results.json');hindsight={}
     for a in ('paxg','zec','sol','bnb'):
         k=alt['rankings'][a]['full'][0]
-        path=ROOT/f'.heimdall_runtime/alt-cloud-transfer-20260911/traces/{a}/{k}-full.json'
+        path=ROOT/f'.opentrading_runtime/alt-cloud-transfer-20260911/traces/{a}/{k}-full.json'
         hindsight[a]=dict(path=path.relative_to(ROOT).as_posix(),hash=digest(path.read_bytes()),asset=a)
     plan=dict(created_at=datetime.now(timezone.utc).isoformat(),assets=ASSETS,data=data,configs=configs,
         full=full,common=common,hindsight=hindsight,tests=tests,common_period=COMMON,

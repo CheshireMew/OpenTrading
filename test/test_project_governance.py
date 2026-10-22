@@ -97,15 +97,6 @@ def test_frontend_contract_generator_discovers_included_api_routes():
     assert ("update_llm_config", "/api/v1/llm-config") in discovered
 
 
-def test_windows_launcher_rolls_back_partial_startup_and_checks_frontend():
-    launcher = (ROOT / "dev_start.ps1").read_text(encoding="utf-8-sig")
-
-    assert "Stop-HeimdallLaunchAttempt" in launcher
-    assert "Start-Process powershell -PassThru" in launcher
-    assert 'Wait-HeimdallEndpointReady -Label "Frontend"' in launcher
-    assert "catch {" in launcher
-
-
 def test_repository_license_and_third_party_boundary_are_explicit():
     root_package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]

@@ -29,7 +29,7 @@ def extract():
     from app.domain.local_backtest import Bar
     from strategies.trend_cloud_parameters_v4 import Calculation
     plan_file = ROOT / 'docs/verification/btc-cloud-parameters-20260911/plan.json'
-    trace_file = ROOT / f'.heimdall_runtime/btc-cloud-parameters-20260911/traces/{KEY}-final.json'
+    trace_file = ROOT / f'.opentrading_runtime/btc-cloud-parameters-20260911/traces/{KEY}-final.json'
     plan, trace = read(plan_file), read(trace_file)
     data_file = ROOT / plan['data']['path']
     strategy_file = ROOT / 'strategies/trend_cloud_parameters_v4.py'

@@ -44,8 +44,8 @@ observe(int action, float price) =>
         array.set(counts, 0, cursor + 1)
     0
 `;
-  once('indicator("Heimdall ETH · EMA55 · 当前周期 v7.2", overlay=true)',
-       'indicator("Heimdall v7.2 runtime validation", overlay=true)' + header);
+  once('indicator("OpenTrading ETH · EMA55 · 当前周期 v7.2", overlay=true)',
+       'indicator("OpenTrading v7.2 runtime validation", overlay=true)' + header);
   pine += `
 // Validation output only; no production trading logic is changed.
 var int checkedBars = 0

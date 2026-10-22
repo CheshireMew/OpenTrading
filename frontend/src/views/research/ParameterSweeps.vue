@@ -1,7 +1,7 @@
 <template>
   <div class="app-page sweeps">
     <header class="page-head">
-      <div><h1 class="text-2xl font-semibold">批量参数比较</h1><p class="app-muted mt-2">填入要比较的取值，软件自动组合、回测并保留每一组结果。</p></div>
+      <h1 class="text-2xl font-semibold">批量参数比较</h1>
       <RouterLink class="app-button-secondary" to="/research/backtests">单次回测与 K 线复盘</RouterLink>
     </header>
     <p v-if="error" class="error" role="alert">{{ error }}</p>

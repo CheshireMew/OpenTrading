@@ -3,8 +3,7 @@
     <section class="app-panel p-5">
       <div class="flex items-start justify-between gap-3">
         <div>
-          <div class="app-eyebrow">{{ $t('portfolioBalance.eyebrow') }}</div>
-          <h1 class="mt-2 text-2xl font-semibold text-stone-950 dark:text-white">{{ $t('portfolioBalance.title') }}</h1>
+          <h1 class="text-2xl font-semibold text-stone-950 dark:text-white">{{ $t('portfolioBalance.title') }}</h1>
         </div>
         <button
           type="button"

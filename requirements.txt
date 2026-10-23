@@ -2,7 +2,7 @@
 # Python Dependencies
 
 # 核心依赖
-ccxt>=4.0.0              # 加密货币交易所数据接口
+ccxt>=4.5.89              # 加密货币交易所数据接口
 requests>=2.31.0         # 同步外部数据源 HTTP 请求
 httpx>=0.24.0            # 异步 HTTP 请求库
 pytrends>=4.9.2          # Google Trends indicator data
@@ -38,3 +38,5 @@ pytest>=7.4.0            # 单元测试框架
 pytest-asyncio>=0.23.0   # pytest async def 测试支持
 # black>=23.0.0          # 代码格式化
 # flake8>=6.0.0          # 代码检查
+
+certifi>=2026.10.19

@@ -5,11 +5,12 @@ description = "Market research and portfolio analysis application"
 license = "AGPL-3.0-or-later"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+  "certifi>=2026.10.19",
   "akshare>=1.18.0",
   "alembic>=1.13.0",
   "apscheduler>=3.10.0",
   "baostock>=0.8.9",
-  "ccxt>=4.0.0",
+  "ccxt>=4.5.89",
   "fastapi>=0.100.0",
   "httpx>=0.24.0",
   "pandas>=2.0.0",

@@ -3,12 +3,12 @@
     <div class="app-page-inner-wide flex flex-col space-y-4">
     <!-- Configuration -->
     <div class="app-hero-panel transition-colors">
-      <h2 class="app-section-title mb-4 flex items-center">
+      <h1 class="app-section-title mb-4 flex items-center">
         <BanknotesIcon class="mr-2 h-6 w-6 text-[#0f6b4f] dark:text-green-400" />
         {{ $t('dca.config') }}
-      </h2>
+      </h1>
       
-      <div class="dca-config-grid grid gap-4 items-end">
+      <div class="dca-config-grid grid gap-4 items-start">
         <div>
           <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400">{{ $t('dca.pair') }}</label>
           <SymbolSearchBox v-model="config.symbol" :aria-label="$t('dca.pair')" />
@@ -85,8 +85,8 @@
         </div>
         
         <button type="button" @click="runSimulation" :disabled="loading || !canRunSimulation" class="dca-config-submit app-button-primary app-touch-target flex items-center justify-center px-6 py-2">
-          <span v-if="loading" class="mr-2 animate-spin">⟳</span>
-          {{ $t('dca.calculate') }}
+          <ArrowPathIcon v-if="loading" class="h-4 w-4 animate-spin" aria-hidden="true" />
+          {{ loading ? $t('dca.calculating') : $t('dca.calculate') }}
         </button>
       </div>
     </div>
@@ -211,6 +211,10 @@
         </div>
     </div>
     </template>
+    <div v-else-if="loading" role="status" aria-live="polite" class="app-panel flex min-h-[18rem] items-center justify-center gap-3 p-8 text-center app-muted">
+      <ArrowPathIcon class="h-5 w-5 animate-spin" aria-hidden="true" />
+      {{ $t('dca.calculating') }}
+    </div>
     <div v-else class="app-panel flex min-h-[18rem] items-center justify-center p-8 text-center">
       <h3 class="app-section-title">{{ $t('dca.emptyResultTitle') }}</h3>
     </div>
@@ -220,7 +224,7 @@
 </template>
 
 <script setup>
-import { BanknotesIcon, ChartBarIcon, WalletIcon } from '@heroicons/vue/24/outline'
+import { ArrowPathIcon, BanknotesIcon, ChartBarIcon, WalletIcon } from '@heroicons/vue/24/outline'
 import AppDateField from '@/components/AppDateField.vue'
 import AppTimezoneSelect from '@/components/AppTimezoneSelect.vue'
 import SymbolSearchBox from '@/components/SymbolSearchBox.vue'
@@ -241,8 +245,8 @@ const {
   isPositiveRoi,
   isIndexSelected,
   dcaStartMin,
-    dcaStartMax,
-    canRunSimulation,
+  dcaStartMax,
+  canRunSimulation,
   sentimentClass,
   displayCurrency,
   formatMoney,

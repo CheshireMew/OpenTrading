@@ -24,7 +24,7 @@
           @load-more-deleted="handleLoadMoreDeletedPortfolios"
         />
 
-        <main v-if="storageReady && !storageLoading && !portfolioTransitioning && activePortfolio" class="min-w-0 space-y-6">
+        <div v-if="storageReady && !storageLoading && !portfolioTransitioning && activePortfolio" class="min-w-0 space-y-6">
           <PortfolioBalanceSetup
             :active-portfolio="activePortfolio"
             :tracking="tracking"
@@ -69,7 +69,7 @@
             :portfolio-id="activePortfolio.id"
             :refresh-key="activePortfolio.lastPriceUpdatedAt"
           />
-        </main>
+        </div>
         <section v-else-if="storageReady && !storageLoading && portfolioTransitioning" role="status" aria-live="polite" class="app-panel flex min-h-[24rem] min-w-0 items-center justify-center p-8 text-center">
           <div class="max-w-lg">
             <h2 class="app-section-title text-xl">{{ $t('portfolioBalance.preparingTitle') }}</h2>

@@ -94,7 +94,7 @@
                         <div class="flex flex-wrap items-center gap-2">
                           <span class="font-mono text-base font-bold text-stone-950 dark:text-white">{{ item.ticker }}</span>
                           <span v-if="item.name_zh" class="text-xs">{{ item.name_zh }}</span>
-                          <span v-if="item.market !== 'US'" class="app-muted text-[10px]">{{ item.market }}</span>
+                          <span v-if="item.market !== 'US'" class="app-muted text-xs">{{ item.market }}</span>
                         </div>
                         <p class="app-muted mt-1 truncate text-xs" :title="item.name">{{ item.name }}</p>
                       </div>
@@ -237,11 +237,11 @@ onBeforeUnmount(() => { active = false })
 </script>
 
 <style scoped>
-.equity-platform-tag { @apply inline-flex items-center border px-2 py-1 text-[11px] font-semibold; }
+.equity-platform-tag { @apply inline-flex items-center border px-2 py-1 text-xs font-semibold; }
 .equity-platform-tag--binance { @apply border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200; }
 .equity-platform-tag--okx { @apply border-stone-300 bg-stone-100 text-stone-800 dark:border-slate-500 dark:bg-slate-700 dark:text-slate-100; }
 .equity-platform-tag--bitget { @apply border-cyan-200 bg-cyan-50 text-cyan-800 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-200; }
-.equity-type-tag { @apply inline-flex whitespace-nowrap px-2 py-1 text-[10px] font-semibold; }
+.equity-type-tag { @apply inline-flex whitespace-nowrap px-2 py-1 text-xs font-semibold; }
 .equity-type-tag--spot { @apply bg-emerald-50 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300; }
 .equity-type-tag--perpetual { @apply bg-indigo-50 text-indigo-800 dark:bg-indigo-500/15 dark:text-indigo-300; }
 </style>

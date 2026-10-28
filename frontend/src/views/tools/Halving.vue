@@ -1,6 +1,7 @@
 <template>
   <div class="app-page">
     <div class="app-page-inner-wide space-y-6">
+    <h1 class="app-title">{{ $t('nav.halving') }}</h1>
     <!-- Summary Cards -->
     <div class="halving-summary-grid grid gap-6">
       <!-- Card 1: Countdown -->
@@ -35,7 +36,7 @@
               </span>
             </div>
           </div>
-          <div class="mb-4 flex h-3 overflow-hidden bg-stone-200 text-xs dark:bg-gray-700">
+          <div class="mb-4 flex h-3 overflow-hidden bg-stone-200 text-xs dark:bg-gray-700" role="progressbar" :aria-label="$t('halving.cycleProgress')" :aria-valuenow="cycleProgress" :aria-valuemin="0" :aria-valuemax="100">
             <div :style="{ width: cycleProgress + '%' }" class="flex flex-col justify-center whitespace-nowrap bg-[#0f6b4f] text-center text-white shadow-none transition-all duration-1000 ease-out dark:bg-emerald-500"></div>
           </div>
           <div class="flex justify-between text-xs text-stone-400">

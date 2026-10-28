@@ -5,6 +5,7 @@
       class="symbol-trigger"
       aria-haspopup="dialog"
       :aria-expanded="open"
+      :aria-controls="open ? dialogId : undefined"
       :aria-label="ariaLabel || placeholderText"
       :disabled="disabled"
       :class="[triggerClass, disabled ? 'cursor-not-allowed opacity-60' : '']"
@@ -22,32 +23,35 @@
           ref="dialogRef"
           role="dialog"
           aria-modal="true"
-          aria-labelledby="symbol-search-title"
+          :id="dialogId"
+          :aria-labelledby="titleId"
           tabindex="-1"
-          class="mx-auto flex max-h-[88vh] w-full max-w-5xl flex-col overflow-hidden border border-[#d8d1c5] bg-[#fbfaf7] shadow-2xl outline-none dark:border-gray-700 dark:bg-gray-900"
+          class="symbol-dialog mx-auto flex w-full max-w-3xl flex-col overflow-hidden border shadow-xl outline-none"
         >
           <div class="flex items-center justify-between border-b border-[#e4ded3] px-5 py-4 dark:border-gray-700">
-            <h2 id="symbol-search-title" class="text-lg font-semibold text-stone-950 dark:text-white">{{ t('symbolSearch.title') }}</h2>
-            <button type="button" :aria-label="t('common.close')" class="p-2 text-stone-500 transition hover:bg-[#f1ece3] dark:text-gray-300 dark:hover:bg-gray-800" @click="closeSearch">
+            <h2 :id="titleId" class="text-lg font-semibold text-stone-950 dark:text-white">{{ t('symbolSearch.title') }}</h2>
+            <button type="button" :aria-label="t('common.close')" class="app-icon-button" @click="closeSearch">
               <XMarkIcon class="h-5 w-5" />
             </button>
           </div>
 
           <div class="border-b border-[#e4ded3] p-4 dark:border-gray-700">
-            <div class="flex items-center border border-[#d8d1c5] bg-white px-3 dark:border-gray-600 dark:bg-gray-950">
+            <div class="symbol-search-field flex items-center border px-3">
               <MagnifyingGlassIcon class="h-5 w-5 shrink-0 text-stone-400" />
               <input
                 ref="searchInput"
                 v-model.trim="query"
-                type="text"
+                type="search"
                 class="h-12 min-w-0 flex-1 bg-transparent px-3 text-base text-stone-950 outline-none dark:text-white"
                 :placeholder="placeholderText"
+                :aria-label="placeholderText"
                 @keydown.enter.prevent="selectFirst"
               />
               <button
                 v-if="query"
                 type="button"
-                class="p-1 text-stone-400 transition hover:bg-[#f1ece3] hover:text-stone-700 dark:hover:bg-gray-800"
+                :aria-label="t('symbolSearch.clear')"
+                class="app-icon-button"
                 @click="query = ''"
               >
                 <XMarkIcon class="h-4 w-4" />
@@ -59,8 +63,9 @@
                 v-for="tab in visibleTabs"
                 :key="tab.value"
                 type="button"
-                class="px-3 py-1.5 text-sm font-medium transition"
-                :class="activeClass === tab.value ? 'bg-[#0f6b4f] text-white dark:bg-emerald-500 dark:text-gray-950' : 'border border-[#e4ded3] bg-white text-stone-700 hover:bg-[#f1ece3] dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'"
+                :aria-pressed="activeClass === tab.value"
+                class="app-segment-button"
+                :class="{ 'is-active': activeClass === tab.value }"
                 @click="activeClass = tab.value"
               >
                 {{ tab.label }}
@@ -81,17 +86,19 @@
               v-for="item in filteredSymbols"
               :key="item.symbol"
               type="button"
-              class="grid w-full grid-cols-[minmax(6rem,10rem)_minmax(0,1fr)_5rem_6rem] items-center gap-3 border-b border-[#eee8dd] px-5 py-3 text-left transition hover:bg-[#f6f1e8] dark:border-gray-800 dark:hover:bg-gray-800/70"
+              :disabled="isDisabled(item)"
+              :aria-pressed="isSelected(item)"
+              class="symbol-result grid w-full items-center gap-x-3 gap-y-1 border-b px-5 py-3 text-left transition"
               :class="[
                 isSelected(item) ? 'bg-[#edf3ee] dark:bg-emerald-950/30' : '',
                 isDisabled(item) ? 'cursor-not-allowed opacity-45 hover:bg-transparent dark:hover:bg-transparent' : '',
               ]"
               @click="choose(item)"
             >
-              <span class="font-semibold text-[#0f6b4f] dark:text-emerald-300">{{ item.symbol }}</span>
-              <span class="min-w-0 truncate text-gray-900 dark:text-white">{{ item.name }}</span>
-              <span class="text-sm text-gray-500 dark:text-gray-400">{{ marketLabel(item) }}</span>
-              <span class="justify-self-end border border-[#e4ded3] bg-white px-2 py-1 text-xs font-medium text-stone-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+              <span class="symbol-result-symbol font-semibold">{{ item.symbol }}</span>
+              <span class="symbol-result-name min-w-0 truncate text-gray-900 dark:text-white">{{ item.name !== item.symbol ? item.name : '' }}</span>
+              <span class="symbol-result-market text-xs app-muted">{{ marketLabel(item) }}</span>
+              <span class="symbol-result-kind app-chip justify-self-end">
                 {{ isDisabled(item) ? disabledText : classLabel(item.asset_class) }}
               </span>
             </button>
@@ -107,7 +114,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, useId } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { useModalDialog } from '@/composables/useModalDialog'
@@ -141,6 +148,8 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const dialogId = useId()
+const titleId = `${dialogId}-title`
 const { symbols, loadSymbols } = useSymbolCatalog()
 const open = ref(false)
 const catalogLoading = ref(false)
@@ -148,7 +157,7 @@ const catalogError = ref('')
 const query = ref('')
 const searchInput = ref<HTMLInputElement | null>(null)
 const activeClass = ref('all')
-const { dialogRef } = useModalDialog(open, closeSearch)
+const { dialogRef } = useModalDialog(open, closeSearch, searchInput)
 
 const placeholderText = computed(() => props.placeholder || t('symbolSearch.placeholder'))
 const disabledText = computed(() => props.disabledLabel || t('symbolSearch.disabled'))
@@ -192,8 +201,6 @@ const outputValue = (item: MarketSymbolSearchItem) => props.outputMode === 'base
 const openSearch = async () => {
   if (props.disabled) return
   open.value = true
-  await nextTick()
-  searchInput.value?.focus()
   await loadCatalog()
 }
 
@@ -252,13 +259,32 @@ onMounted(() => {
 
 <style scoped>
 .symbol-trigger {
-  @apply flex h-10 w-full items-center justify-between gap-2 border px-3 text-left text-sm outline-none transition dark:border-gray-600 dark:bg-gray-900;
-  background: #fff;
-  border-color: #e4ded3;
+  @apply flex w-full items-center justify-between gap-2 border px-3 text-left text-sm transition;
+  min-height: 38px;
+  border-radius: 5px;
+  background: var(--ui-toolbar);
+  border-color: var(--ui-borderStrong);
 }
 
-.symbol-trigger:hover,
-.symbol-trigger:focus {
-  border-color: #0f6b4f;
+.symbol-trigger:hover:not(:disabled),
+.symbol-trigger:focus-visible {
+  border-color: var(--ui-accent);
 }
+.symbol-dialog { max-height: min(88dvh, 720px); border-radius: 10px; border-color: var(--ui-borderStrong); background: var(--ui-panel); }
+.symbol-dialog > div { border-color: var(--ui-border); }
+.symbol-search-field { border-radius: 6px; border-color: var(--ui-borderStrong); background: var(--ui-toolbar); }
+.symbol-search-field:focus-within { border-color: var(--ui-accent); outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+.symbol-search-field input:focus-visible { outline: none; }
+.symbol-search-field input::-webkit-search-cancel-button { display: none; }
+.symbol-result { grid-template-columns: minmax(0, 1fr) auto; border-color: var(--ui-border); }
+.symbol-result:hover:not(:disabled) { background: var(--ui-elevated); }
+.symbol-result-symbol { color: var(--ui-accent); overflow-wrap: anywhere; }
+.symbol-result-name { grid-column: 1; grid-row: 2; font-size: 13px; }
+.symbol-result-market { grid-column: 2; grid-row: 2; }
+.symbol-result-kind { grid-column: 2; grid-row: 1; }
+@media (min-width: 640px) {
+  .symbol-result { grid-template-columns: minmax(7rem, 10rem) minmax(0, 1fr) 5rem 6rem; }
+  .symbol-result-name, .symbol-result-market, .symbol-result-kind { grid-column: auto; grid-row: auto; }
+}
+@media (max-width: 767px), (pointer: coarse) { .symbol-trigger { min-height: 44px; } }
 </style>

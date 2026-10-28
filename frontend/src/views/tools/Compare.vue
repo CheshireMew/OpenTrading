@@ -1,6 +1,7 @@
 <template>
   <div class="app-page">
     <div class="app-page-inner-wide flex min-h-full flex-col">
+    <h1 class="app-title">{{ $t('nav.compare') }}</h1>
     <!-- Configuration Panel -->
     <div class="app-hero-panel flex flex-wrap items-end gap-4 transition-colors">
       <div class="flex-1 min-w-[200px]">
@@ -36,7 +37,7 @@
       </div>
 
       <button type="button" @click="fetchComparisonData" :disabled="loading || !canCompare" class="app-button-primary app-touch-target flex items-center px-6 py-2">
-        <span v-if="loading" class="mr-2 animate-spin">&#10227;</span>
+        <ArrowPathIcon v-if="loading" class="h-4 w-4 animate-spin" aria-hidden="true" />
         {{ loading ? $t('compare.analyzing') : $t('compare.compare') }}
       </button>
     </div>
@@ -110,6 +111,7 @@
 </template>
 
 <script setup>
+import { ArrowPathIcon } from '@heroicons/vue/24/outline'
 import TradingViewChart from '@/components/TradingViewChart.vue'
 import SymbolSearchBox from '@/components/SymbolSearchBox.vue'
 import { useComparePage } from '@/modules/tools'

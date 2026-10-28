@@ -1,0 +1,263 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-28T16:50:24Z",
+  "title": "Design System: OpenTrading",
+  "extensions": {
+    "colorMeta": {
+      "light-accent": {
+        "role": "primary",
+        "displayName": "浅色墨绿"
+      },
+      "dark-accent": {
+        "role": "primary",
+        "displayName": "深色青绿"
+      },
+      "light-canvas": {
+        "role": "neutral",
+        "displayName": "浅色暖白背景"
+      },
+      "dark-canvas": {
+        "role": "neutral",
+        "displayName": "深色石墨灰背景"
+      },
+      "light-panel": {
+        "role": "neutral",
+        "displayName": "浅色内容面板"
+      },
+      "dark-panel": {
+        "role": "neutral",
+        "displayName": "深色内容面板"
+      },
+      "light-positive": {
+        "role": "secondary",
+        "displayName": "浅色正向数据"
+      },
+      "dark-positive": {
+        "role": "secondary",
+        "displayName": "深色正向数据"
+      },
+      "light-negative": {
+        "role": "secondary",
+        "displayName": "浅色负向数据"
+      },
+      "dark-negative": {
+        "role": "secondary",
+        "displayName": "深色负向数据"
+      }
+    },
+    "typographyMeta": {
+      "brand": {
+        "displayName": "品牌字标",
+        "purpose": "侧栏、移动标题栏与图表工具栏的 OpenTrading 字标。"
+      },
+      "body": {
+        "displayName": "系统界面字体",
+        "purpose": "正文、控件、导航与图表工作台继承的字体栈。"
+      },
+      "title": {
+        "displayName": "页面标题",
+        "purpose": "普通页面主标题；767px 以下缩小为23px。"
+      },
+      "section": {
+        "displayName": "分区标题",
+        "purpose": "页面分区与卡片层级。"
+      },
+      "subtitle": {
+        "displayName": "说明文字",
+        "purpose": "标题下说明；最长75ch，长内容允许换行。"
+      },
+      "label": {
+        "displayName": "表单标签",
+        "purpose": "表单标签及分类标签。"
+      }
+    },
+    "shadows": [
+      {
+        "name": "chart-navigation",
+        "value": "8px 0 40px #0005",
+        "purpose": "图表首页打开的覆盖式导航。"
+      },
+      {
+        "name": "chart-sync-menu",
+        "value": "0 8px 30px #0003",
+        "purpose": "图表同步选项浮层。"
+      },
+      {
+        "name": "chart-search-dialog",
+        "value": "0 20px 80px #0006",
+        "purpose": "图表交易对搜索与兼容说明弹窗。"
+      },
+      {
+        "name": "chart-indicator-picker",
+        "value": "0 10px 35px #0005",
+        "purpose": "图表指标选择面板。"
+      },
+      {
+        "name": "compact-watchlist",
+        "value": "-8px 0 24px #0003",
+        "purpose": "950px 以下自选列表抽屉。"
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-transition-duration",
+        "value": "150ms",
+        "purpose": "Tailwind 默认控件颜色与边框过渡时长。"
+      },
+      {
+        "name": "control-transition-easing",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Tailwind 默认控件过渡曲线。"
+      },
+      {
+        "name": "navigation-transition-duration",
+        "value": "200ms",
+        "purpose": "应用侧栏的 transform 过渡。"
+      },
+      {
+        "name": "skip-link-transition",
+        "value": "transform 150ms ease",
+        "purpose": "键盘聚焦时显示跳转到主内容链接。"
+      },
+      {
+        "name": "reduced-motion",
+        "value": "0.01ms",
+        "purpose": "减少动态效果时的动画和过渡时长，动画仅运行一次。"
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "symbol-results-four-columns",
+        "value": "640px"
+      },
+      {
+        "name": "compact-page-max",
+        "value": "767px"
+      },
+      {
+        "name": "persistent-navigation-min",
+        "value": "768px"
+      },
+      {
+        "name": "compact-chart-max",
+        "value": "950px"
+      },
+      {
+        "name": "compact-chart-brand-max",
+        "value": "1250px"
+      },
+      {
+        "name": "app-content-grid-min",
+        "value": "34rem"
+      },
+      {
+        "name": "portfolio-setup-grid-min",
+        "value": "46rem"
+      },
+      {
+        "name": "app-content-wide-grid-min",
+        "value": "56rem"
+      },
+      {
+        "name": "table-cards-container-max",
+        "value": "60rem"
+      },
+      {
+        "name": "app-content-extra-wide-grid-min",
+        "value": "100rem"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "主按钮",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "主要操作；继承界面主题，深色实心按钮使用深色文字。",
+      "html": "<button type=\"button\" class=\"ds-button-primary\">查看结果</button>",
+      "css": ".ds-button-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:8px 16px;border:1px solid transparent;border-radius:5px;font:600 14px/20px -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Microsoft YaHei\", sans-serif;cursor:pointer;transition:background-color 150ms cubic-bezier(0.4,0,0.2,1),border-color 150ms cubic-bezier(0.4,0,0.2,1),color 150ms cubic-bezier(0.4,0,0.2,1)}.ds-button-primary:focus-visible{outline:2px solid var(--ui-accent,#0f6b4f);outline-offset:3px}.ds-button-primary:disabled{opacity:.55;cursor:not-allowed}@media(max-width:767px),(hover:none),(pointer:coarse){.ds-button-primary{min-height:44px}}@media(prefers-reduced-motion:reduce){.ds-button-primary{transition-duration:.01ms}}.ds-button-primary{background:var(--ui-accent,#0f6b4f);color:#fff;color:light-dark(#fff,#09231f)}.ds-button-primary:hover:not(:disabled){background:var(--ui-accentHover,#0b5a41)}"
+    },
+    {
+      "name": "次按钮",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "辅助操作；以边框和工具栏底色区分。",
+      "html": "<button type=\"button\" class=\"ds-button-secondary\">取消</button>",
+      "css": ".ds-button-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:8px 16px;border:1px solid transparent;border-radius:5px;font:600 14px/20px -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Microsoft YaHei\", sans-serif;cursor:pointer;transition:background-color 150ms cubic-bezier(0.4,0,0.2,1),border-color 150ms cubic-bezier(0.4,0,0.2,1),color 150ms cubic-bezier(0.4,0,0.2,1)}.ds-button-secondary:focus-visible{outline:2px solid var(--ui-accent,#0f6b4f);outline-offset:3px}.ds-button-secondary:disabled{opacity:.55;cursor:not-allowed}@media(max-width:767px),(hover:none),(pointer:coarse){.ds-button-secondary{min-height:44px}}@media(prefers-reduced-motion:reduce){.ds-button-secondary{transition-duration:.01ms}}.ds-button-secondary{background:var(--ui-toolbar,#fbfaf7);border-color:var(--ui-borderStrong,#b8b2a8);color:var(--ui-text,#383b36)}.ds-button-secondary:hover:not(:disabled){background:var(--ui-hover,#eae7df);border-color:var(--ui-faint,#746e65)}"
+    },
+    {
+      "name": "危险按钮",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "危险操作沿用负向色描边，默认背景透明。",
+      "html": "<button type=\"button\" class=\"ds-button-danger\">移除</button>",
+      "css": ".ds-button-danger{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:8px 12px;border:1px solid transparent;border-radius:5px;font:600 14px/20px -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Microsoft YaHei\", sans-serif;cursor:pointer;transition:background-color 150ms cubic-bezier(0.4,0,0.2,1),border-color 150ms cubic-bezier(0.4,0,0.2,1),color 150ms cubic-bezier(0.4,0,0.2,1)}.ds-button-danger:focus-visible{outline:2px solid var(--ui-accent,#0f6b4f);outline-offset:3px}.ds-button-danger:disabled{opacity:.55;cursor:not-allowed}@media(max-width:767px),(hover:none),(pointer:coarse){.ds-button-danger{min-height:44px}}@media(prefers-reduced-motion:reduce){.ds-button-danger{transition-duration:.01ms}}.ds-button-danger{background:transparent;border-color:var(--ui-negative,#c52d3c);color:var(--ui-negative,#c52d3c)}.ds-button-danger:hover:not(:disabled){background:color-mix(in srgb,var(--ui-negative,#c52d3c) 9%,var(--ui-panel,#fff))}"
+    },
+    {
+      "name": "输入框",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "普通表单输入；焦点改变边框并保留外轮廓。",
+      "html": "<input class=\"ds-input\" aria-label=\"输入内容\" placeholder=\"输入内容\">",
+      "css": ".ds-input{width:100%;min-height:38px;padding:8px 12px;border:1px solid var(--ui-borderStrong,#b8b2a8);border-radius:5px;background:var(--ui-toolbar,#fbfaf7);color:var(--ui-text,#383b36);caret-color:var(--ui-accent,#0f6b4f);font:400 14px/20px -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Microsoft YaHei\", sans-serif;transition:background-color 150ms cubic-bezier(0.4,0,0.2,1),border-color 150ms cubic-bezier(0.4,0,0.2,1),color 150ms cubic-bezier(0.4,0,0.2,1)}.ds-input::placeholder{color:var(--ui-faint,#746e65);opacity:1}.ds-input:focus-visible{border-color:var(--ui-accent,#0f6b4f);outline:2px solid var(--ui-accent,#0f6b4f);outline-offset:1px}.ds-input:disabled{color:var(--ui-faint,#746e65);background:var(--ui-canvas,#f7f4ed);cursor:not-allowed}@media(max-width:767px),(hover:none),(pointer:coarse){.ds-input{min-height:44px}}@media(prefers-reduced-motion:reduce){.ds-input{transition-duration:.01ms}}"
+    },
+    {
+      "name": "侧栏导航",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "选中项以左侧色线、浅底和较粗文字表达当前位置。",
+      "html": "<nav class=\"ds-nav\" aria-label=\"主导航\"><a class=\"ds-nav-link ds-nav-link-active\" href=\"#chart\" aria-current=\"page\">图表</a><a class=\"ds-nav-link\" href=\"#portfolio\">组合</a></nav>",
+      "css": ".ds-nav{display:grid;gap:4px;font-family:-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Microsoft YaHei\", sans-serif}.ds-nav-link{display:flex;align-items:center;min-height:38px;padding:8px 12px;border-left:2px solid transparent;border-radius:4px;color:var(--ui-text,#383b36);font-size:13px;line-height:20px;font-weight:500;text-decoration:none;transition:background-color 150ms cubic-bezier(0.4,0,0.2,1),border-color 150ms cubic-bezier(0.4,0,0.2,1),color 150ms cubic-bezier(0.4,0,0.2,1)}.ds-nav-link:hover{background:var(--ui-elevated,#f1eee7);color:var(--ui-title,#18251f)}.ds-nav-link-active{border-left-color:var(--ui-accent,#0f6b4f);background:color-mix(in srgb,var(--ui-accent,#0f6b4f) 10%,var(--ui-toolbar,#fbfaf7));color:var(--ui-accent,#0f6b4f);color:light-dark(var(--ui-accent,#0f6b4f),#73cabb);font-weight:700}.ds-nav-link:focus-visible{outline:2px solid var(--ui-accent,#0f6b4f);outline-offset:3px}@media(pointer:coarse){.ds-nav-link{min-height:44px}}@media(prefers-reduced-motion:reduce){.ds-nav-link{transition-duration:.01ms}}"
+    },
+    {
+      "name": "分类标签",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "静态分类信息，不带按钮交互状态。",
+      "html": "<span class=\"ds-chip\">现货</span>",
+      "css": ".ds-chip{display:inline-block;padding:4px 12px;border-radius:4px;background:var(--ui-elevated,#f1eee7);color:var(--ui-text,#383b36);font:600 12px/16px -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Microsoft YaHei\", sans-serif}"
+    },
+    {
+      "name": "内容卡片",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "常驻内容使用背景与细边框，无通用卡片投影。",
+      "html": "<section class=\"ds-card\"><h3 class=\"ds-card-title\">研究结果</h3><p class=\"ds-card-description\">查看回测概览与记录。</p></section>",
+      "css": ".ds-card{padding:20px;border:1px solid var(--ui-border,#e4ded3);border-radius:8px;background:var(--ui-panel,#fff);color:var(--ui-text,#383b36);font-family:-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Microsoft YaHei\", sans-serif}.ds-card-title{margin:0;color:var(--ui-title,#18251f);font-size:16px;font-weight:600;line-height:24px}.ds-card-description{margin:12px 0 0;max-width:75ch;overflow-wrap:anywhere;color:var(--ui-muted,#65645d);font-size:14px;line-height:24px}"
+    },
+    {
+      "name": "交易对搜索入口",
+      "kind": "button",
+      "refersTo": "symbol-trigger",
+      "description": "搜索弹窗触发按钮，悬停及聚焦时强调边框。",
+      "html": "<button type=\"button\" class=\"ds-symbol-trigger\" aria-haspopup=\"dialog\"><span>BTC/USDT</span><svg class=\"ds-symbol-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"m21 21-4.34-4.34M19 10.75a8.25 8.25 0 1 1-16.5 0 8.25 8.25 0 0 1 16.5 0Z\"/></svg></button>",
+      "css": ".ds-symbol-trigger{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;min-height:38px;padding:0 12px;border:1px solid var(--ui-borderStrong,#b8b2a8);border-radius:5px;background:var(--ui-toolbar,#fbfaf7);color:var(--ui-title,#18251f);text-align:left;font:400 14px/20px -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Microsoft YaHei\", sans-serif;cursor:pointer;transition:background-color 150ms cubic-bezier(0.4,0,0.2,1),border-color 150ms cubic-bezier(0.4,0,0.2,1),color 150ms cubic-bezier(0.4,0,0.2,1)}.ds-symbol-trigger:hover:not(:disabled),.ds-symbol-trigger:focus-visible{border-color:var(--ui-accent,#0f6b4f)}.ds-symbol-trigger:focus-visible{outline:2px solid var(--ui-accent,#0f6b4f);outline-offset:3px}.ds-symbol-trigger:disabled{opacity:.6;cursor:not-allowed}.ds-symbol-icon{width:16px;height:16px;flex-shrink:0;color:var(--ui-muted,#65645d)}@media(max-width:767px),(pointer:coarse){.ds-symbol-trigger{min-height:44px}}@media(prefers-reduced-motion:reduce){.ds-symbol-trigger{transition-duration:.01ms}}"
+    }
+  ],
+  "narrative": {
+    "overview": "本文件记录已实现的界面，依据共享调色板、全局样式、应用导航、交易对搜索和图表工作台。OpenTrading 用于行情图表、策略研究与投资组合分析；界面以图表、表格和配置表单为主，保留现有品牌与布局。\n\n深色界面以石墨灰承载内容，青绿色标示主要操作和当前状态；浅色界面使用暖白背景与墨绿色重点。品牌字标使用衬线字体，操作界面使用系统无衬线字体。内容区域主要依靠底色、细边框和间距划分。",
+    "keyCharacteristics": [
+      "深浅主题共享语义颜色，应用外壳与通用页面使用同一套运行时变量。",
+      "研究页面保持清楚的标题、配置、结果层次；图表工作台保留紧凑的工具密度。",
+      "键盘焦点、弹窗关闭与焦点恢复具有明确反馈。"
+    ],
+    "rules": [
+      {
+        "name": "The Theme Token Rule",
+        "body": "通用界面沿用现有语义变量，深浅主题一起维护；图表工作台的局部色值不升级为通用调色板。",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "Do 使用共享语义变量同步维护通用页面的深浅主题。",
+      "Do 保留 Georgia 品牌字标与系统界面字体的职责分工。",
+      "Do 保留可见焦点、弹窗内 Tab 循环和关闭后的焦点恢复。",
+      "Do 按现有容器宽度重排表格与网格，让内容区独立滚动。"
+    ],
+    "donts": [
+      "Don't 将图表工作台的紧凑控件尺寸直接用于普通页面表单。",
+      "Don't 将临时弹窗和抽屉的投影复制到常驻卡片。",
+      "Don't 将局部硬编码色值当作新的全局主题色。"
+    ]
+  }
+}

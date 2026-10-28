@@ -9,20 +9,35 @@ const FOCUSABLE_SELECTOR = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(',')
 
-export const useModalDialog = (open: Readonly<Ref<boolean>>, close: () => void) => {
+const modalStack: symbol[] = []
+let unlockedBodyOverflow = ''
+
+export const useModalDialog = (
+  open: Readonly<Ref<boolean>>,
+  close: () => void,
+  initialFocus?: Readonly<Ref<HTMLElement | null | undefined>>,
+) => {
   const dialogRef = ref<HTMLElement | null>(null)
+  const modalId = Symbol('modal')
   let previouslyFocused: HTMLElement | null = null
-  let previousBodyOverflow = ''
+  let active = false
+
+  const isTopmost = () => modalStack[modalStack.length - 1] === modalId
 
   const focusableElements = () => (
     Array.from(dialogRef.value?.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR) ?? [])
-      .filter((element) => !element.hasAttribute('disabled') && element.getAttribute('aria-hidden') !== 'true')
+      .filter((element) => !element.hasAttribute('disabled')
+        && element.tabIndex >= 0
+        && !element.closest('[inert], [aria-hidden="true"]')
+        && element.getClientRects().length > 0
+        && getComputedStyle(element).visibility !== 'hidden')
   )
 
   const handleKeydown = (event: KeyboardEvent) => {
-    if (!open.value) return
+    if (!active || !isTopmost()) return
     if (event.key === 'Escape') {
       event.preventDefault()
+      event.stopImmediatePropagation()
       close()
       return
     }
@@ -36,7 +51,10 @@ export const useModalDialog = (open: Readonly<Ref<boolean>>, close: () => void) 
     }
     const first = focusable[0]
     const last = focusable[focusable.length - 1]
-    if (event.shiftKey && document.activeElement === first) {
+    if (!dialogRef.value?.contains(document.activeElement)) {
+      event.preventDefault()
+      ;(event.shiftKey ? last : first).focus()
+    } else if (event.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.value)) {
       event.preventDefault()
       last.focus()
     } else if (!event.shiftKey && document.activeElement === last) {
@@ -46,9 +64,22 @@ export const useModalDialog = (open: Readonly<Ref<boolean>>, close: () => void) 
   }
 
   const deactivate = () => {
+    if (!active) return
+    const restoreFocus = isTopmost()
+    active = false
     window.removeEventListener('keydown', handleKeydown, true)
-    document.body.style.overflow = previousBodyOverflow
-    previouslyFocused?.focus()
+    const index = modalStack.indexOf(modalId)
+    if (index >= 0) modalStack.splice(index, 1)
+    if (!modalStack.length) document.body.style.overflow = unlockedBodyOverflow
+    const returnTarget = previouslyFocused
+    const remainingTop = modalStack[modalStack.length - 1]
+    // Vue must first remove the background's inert attribute. Focusing while
+    // it is still inert silently sends keyboard users back to the body.
+    if (restoreFocus) void nextTick(() => {
+      if (!active && remainingTop === modalStack[modalStack.length - 1] && returnTarget?.isConnected) {
+        returnTarget.focus({ preventScroll: true })
+      }
+    })
     previouslyFocused = null
   }
 
@@ -57,18 +88,22 @@ export const useModalDialog = (open: Readonly<Ref<boolean>>, close: () => void) 
       deactivate()
       return
     }
+    if (active) return
+    active = true
     previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null
-    previousBodyOverflow = document.body.style.overflow
+    if (!modalStack.length) unlockedBodyOverflow = document.body.style.overflow
+    modalStack.push(modalId)
     document.body.style.overflow = 'hidden'
     window.addEventListener('keydown', handleKeydown, true)
     await nextTick()
-    const firstFocusable = focusableElements()[0]
+    if (!open.value || !active || !isTopmost()) return
+    const firstFocusable = initialFocus?.value ?? focusableElements()[0]
     if (firstFocusable) firstFocusable.focus()
     else dialogRef.value?.focus()
-  })
+  }, { immediate: true })
 
   onBeforeUnmount(() => {
-    if (open.value) deactivate()
+    deactivate()
   })
 
   return { dialogRef }

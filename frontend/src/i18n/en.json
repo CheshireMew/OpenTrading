@@ -217,6 +217,7 @@
     }
   },
   "signalReview": {
+    "outcomeFilter": "Filter by outcome",
     "title": "Trade Signal Review",
     "subtitle": "Persist rule and AI setups, evaluate target and stop order independently, and measure hit rate, MFE, MAE, and forward returns.",
     "evaluateAll": "Evaluate all signals",
@@ -256,6 +257,7 @@
     }
   },
   "assetResearch": {
+    "timeframe": "Timeframe",
     "subtitle": "Review price, technical indicators, market context, thesis, journal, alerts, and trade signals on one continuous page.",
     "refresh": "Refresh",
     "loading": "Combining asset research data…",
@@ -348,6 +350,10 @@
     }
   },
   "dataHealth": {
+    "symbol": "Symbol",
+    "timeframe": "Timeframe",
+    "days": "Lookback days",
+    "loading": "Loading data status…",
     "title": "Data Health and Repair",
     "subtitle": "Inspect coverage, freshness, background heartbeats, and errors for every data category, then run a scoped refresh or verification.",
     "refresh": "Refresh status",
@@ -422,6 +428,7 @@
   },
   "symbolSearch": {
     "title": "Symbol Search",
+    "clear": "Clear search",
     "placeholder": "Search symbol or index",
     "noMatches": "No matches",
     "loading": "Loading available symbols…",
@@ -677,6 +684,7 @@
     "strength": "Strength",
     "recommended": "Recommended",
     "calculate": "Calculate",
+    "calculating": "Calculating returns…",
     "market": "Market Overview",
     "marketLoading": "Refreshing…",
     "refreshMarket": "Refresh market overview",

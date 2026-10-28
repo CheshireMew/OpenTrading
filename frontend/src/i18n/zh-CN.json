@@ -217,6 +217,7 @@
     }
   },
   "signalReview": {
+    "outcomeFilter": "筛选结果",
     "title": "交易信号复盘",
     "subtitle": "自动保存规则与 AI 判断，独立检查目标价和止损的先后，并统计真实命中率、MFE、MAE 与前瞻收益。",
     "evaluateAll": "立即评估全部信号",
@@ -256,6 +257,7 @@
     }
   },
   "assetResearch": {
+    "timeframe": "数据周期",
     "subtitle": "把价格、技术指标、市场快照、研究判断、日志、提醒和交易信号放在同一页连续查看。",
     "refresh": "刷新",
     "loading": "正在汇总资产研究数据…",
@@ -348,6 +350,10 @@
     }
   },
   "dataHealth": {
+    "symbol": "标的",
+    "timeframe": "数据周期",
+    "days": "回溯天数",
+    "loading": "正在读取数据状态…",
     "title": "数据健康与修复中心",
     "subtitle": "查看每类数据的覆盖区间、最新时间、后台心跳和错误，并从这里执行范围明确的重新拉取或复查。",
     "refresh": "刷新状态",
@@ -422,6 +428,7 @@
   },
   "symbolSearch": {
     "title": "搜索标的",
+    "clear": "清空搜索",
     "placeholder": "搜索交易对或指数",
     "noMatches": "没有匹配结果",
     "loading": "正在加载可用标的…",
@@ -677,6 +684,7 @@
     "strength": "强度系数",
     "recommended": "推荐",
     "calculate": "计算收益",
+    "calculating": "正在计算收益…",
     "market": "市场概览",
     "marketLoading": "刷新中…",
     "refreshMarket": "刷新市场概览",

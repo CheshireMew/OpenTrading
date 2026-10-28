@@ -1,6 +1,6 @@
 import colors from 'tailwindcss/colors.js'
 import plugin from 'tailwindcss/plugin.js'
-import { DARK_PALETTE, DARK_NEUTRALS, hexRgb } from './src/theme/palette.mjs'
+import { DARK_PALETTE, DARK_NEUTRALS, LIGHT_PALETTE, LIGHT_NEUTRALS, hexRgb } from './src/theme/palette.mjs'
 
 const neutralColors = (family) => Object.fromEntries(
     Object.entries(colors[family]).map(([shade, value]) => [
@@ -31,6 +31,10 @@ export default {
     },
     plugins: [plugin(({ addBase }) => {
         addBase({
+            ':root': {
+                ...Object.fromEntries(Object.entries(LIGHT_NEUTRALS).map(([shade, value]) => [`--ui-neutral-${shade}`, hexRgb(value)])),
+                ...Object.fromEntries(Object.entries(LIGHT_PALETTE).map(([key, value]) => [`--ui-${key}`, value])),
+            },
             'html.dark': {
                 ...Object.fromEntries(Object.entries(DARK_NEUTRALS).map(([shade, value]) => [`--ui-neutral-${shade}`, hexRgb(value)])),
                 ...Object.fromEntries(Object.entries(DARK_PALETTE).map(([key, value]) => [`--ui-${key}`, value])),

@@ -43,8 +43,9 @@
               v-for="item in intervals"
               :key="item"
               type="button"
-              class="px-4 py-2 text-sm transition"
-              :class="interval === item ? 'bg-[#0f6b4f] text-white dark:bg-emerald-600' : 'text-slate-600 hover:bg-[#f1ece3] dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'"
+              class="app-segment-button"
+              :class="{ 'is-active': interval === item }"
+              :aria-pressed="interval === item"
               @click="$emit('update:interval', item)"
             >
               {{ item }}

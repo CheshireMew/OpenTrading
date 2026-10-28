@@ -29,4 +29,5 @@
 
 - [贡献指南](../CONTRIBUTING.md)：开发环境、检查命令、生成契约与 PR 说明。
 - [架构](ARCHITECTURE.md)：前后端分层、数据库、后台任务与运行边界。
+- [界面规范](../DESIGN.md)：现有主题、字体、控件、响应式与键盘交互。
 - [许可证范围](../LICENSING.md)与[第三方说明](../THIRD_PARTY_NOTICES.md)：源码、依赖和金融数据的使用条件。

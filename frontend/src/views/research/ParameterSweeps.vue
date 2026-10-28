@@ -1,5 +1,5 @@
 <template>
-  <div class="app-page sweeps">
+  <div class="app-page app-page-inner-wide sweeps">
     <header class="page-head">
       <h1 class="text-2xl font-semibold">批量参数比较</h1>
       <RouterLink class="app-button-secondary" to="/research/backtests">单次回测与 K 线复盘</RouterLink>
@@ -16,7 +16,7 @@
         <div class="pager"><button :disabled="historyOffset === 0" @click="historyOffset -= 10; guard(refreshHistory)">上一页</button><span>{{ historyOffset + history.length }}/{{ historyTotal }}</span><button :disabled="historyOffset + 10 >= historyTotal" @click="historyOffset += 10; guard(refreshHistory)">下一页</button></div>
         <p class="app-muted text-xs mt-4">关闭页面后继续运行。后台停止后，可从这里恢复；旧参数、结果和逐笔交易会保留。</p>
       </aside>
-      <main class="space-y-5 min-w-0">
+      <div class="space-y-5 min-w-0">
         <section v-if="selected" class="app-panel section" ref="resultSection">
           <div class="page-head"><div><h2 class="text-xl font-semibold">{{ selected.title }}</h2><p class="app-muted mt-1">{{ status(selected.status) }} · 已完成 {{ selected.counts.completed || 0 }} / {{ selected.total }} 组</p></div>
             <div class="actions"><button class="app-button-secondary" :disabled="busy" @click="copyVersion">复制参数，另建一版</button><button class="app-button-secondary" :disabled="busy" @click="guard(download)">导出 CSV</button><button v-if="selected.status === 'running'" class="app-button-secondary" :disabled="busy" @click="act('cancel')">取消未完成项</button><button v-if="selected.status === 'attention'" class="app-button-primary" :disabled="busy" @click="act('resume')">恢复未完成项</button></div>
@@ -86,7 +86,7 @@
             <p v-for="w in preview.warnings" :key="w" class="app-muted text-xs">{{ w }}</p>
           </section>
         </form>
-      </main>
+      </div>
     </div>
   </div>
 </template>

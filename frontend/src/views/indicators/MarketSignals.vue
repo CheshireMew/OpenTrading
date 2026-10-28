@@ -5,7 +5,7 @@
         <h1 class="app-title">
           {{ t('marketSignals.title') }}
         </h1>
-        <button type="button" class="signal-primary-button app-touch-target" :disabled="loading" @click="refresh">
+        <button type="button" class="app-button-primary app-touch-target" :disabled="loading" @click="refresh">
           {{ loading ? t('marketSignals.refreshing') : t('marketSignals.refresh') }}
         </button>
       </header>
@@ -53,7 +53,7 @@
 
               <div class="mt-4 flex items-end justify-between gap-3">
                 <div class="min-w-0 text-2xl font-semibold text-slate-950 dark:text-white">{{ card.valueLabel }}</div>
-                <div class="text-right text-[11px] text-stone-500 dark:text-slate-500">{{ card.lastUpdatedLabel }}</div>
+                <div class="text-right text-xs app-muted">{{ card.lastUpdatedLabel }}</div>
               </div>
 
               <div class="mt-3">
@@ -78,7 +78,7 @@
         <div class="max-w-lg">
           <h2 class="text-lg font-semibold text-slate-950 dark:text-white">{{ t('marketSignals.emptyTitle') }}</h2>
           <p class="mt-3 text-sm leading-6 text-stone-600 dark:text-slate-400">{{ t('marketSignals.emptyDescription') }}</p>
-          <button type="button" class="signal-primary-button app-touch-target mt-5" @click="refresh">{{ t('marketSignals.refresh') }}</button>
+          <button type="button" class="app-button-primary app-touch-target mt-5" @click="refresh">{{ t('marketSignals.refresh') }}</button>
         </div>
       </div>
     </section>
@@ -112,141 +112,14 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.signal-page {
-  background: #f7f4ed;
-}
-
-.signal-page--dark {
-  background: var(--ui-canvas);
-}
-
-.signal-panel,
-.metric-card {
-  border: 1px solid #e4ded3;
-  background: rgba(255, 255, 255, 0.88);
-}
-
-.signal-page--dark .signal-panel,
-.signal-page--dark .metric-card {
-  border-color: var(--ui-border);
-  background: var(--ui-panel);
-  border-radius: 8px;
-}
-
-.signal-page--dark .signal-primary-button { background: var(--ui-accent); border-color: transparent; border-radius: 5px; }
-.signal-page--dark .signal-primary-button:hover:not(:disabled) { background: var(--ui-accentHover); }
-.signal-page--dark .summary-card--primary strong { color: var(--ui-title); }
-.signal-page--dark .change-pill { border-radius: 4px; }
-
-.signal-primary-button {
-  border: 1px solid #0f6b4f;
-  background: #0f6b4f;
-  color: #ffffff;
-  padding: 0.65rem 0.95rem;
-  font-size: 0.82rem;
-  font-weight: 700;
-  transition: background-color 0.18s ease, border-color 0.18s ease;
-}
-
-.signal-primary-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.summary-card {
-  min-width: 0;
-  border: 1px solid #eee7dc;
-  background: #fbfaf7;
-  padding: 0.7rem 0.8rem;
-}
-
-.signal-page--dark .summary-card {
-  border-color: var(--ui-border);
-  background: var(--ui-toolbar);
-  border-radius: 5px;
-}
-
-.summary-card span {
-  display: block;
-  font-size: 0.68rem;
-  color: #78716c;
-}
-
-.summary-card strong {
-  margin-top: 0.35rem;
-  display: block;
-  font-size: 1.1rem;
-}
-
-.summary-card--primary strong {
-  color: #0f6b4f;
-  font-size: 2rem;
-  line-height: 1;
-}
-
-.summary-card em {
-  display: block;
-  margin-top: 0.35rem;
-  color: #78716c;
-  font-size: 0.78rem;
-  font-style: normal;
-}
-
-.signal-page--dark .summary-card span,
-.signal-page--dark .summary-card em {
-  color: var(--ui-muted);
-}
-
-.category-heading {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  border-left: 2px solid #0f6b4f;
-  padding-left: 0.75rem;
-}
-
-.category-heading--amber {
-  border-left-color: #b7791f;
-}
-
-.category-heading--blue {
-  border-left-color: #1d6fba;
-}
-
-@media (min-width: 640px) {
-  .category-heading {
-    flex-direction: row;
-    align-items: flex-end;
-    justify-content: space-between;
-  }
-}
-
-.metric-card {
-  min-height: 24rem;
-  padding: 1rem;
-}
-
-.change-pill {
-  flex-shrink: 0;
-  border-width: 1px;
-  padding: 0.18rem 0.4rem;
-  font-size: 0.68rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.empty-row {
-  border: 1px solid #e4ded3;
-  background: rgba(255, 255, 255, 0.64);
-  padding: 2rem;
-  text-align: center;
-  color: #78716c;
-}
-
-.signal-page--dark .empty-row {
-  border-color: var(--ui-border);
-  background: var(--ui-panel);
-  color: var(--ui-muted);
-  border-radius: 6px;
-}
+.signal-page { background: var(--ui-canvas); }
+.signal-panel, .metric-card { min-width: 0; border: 1px solid var(--ui-border); background: var(--ui-panel); border-radius: 8px; }
+.summary-card { min-width: 0; padding: 12px 16px; border: 1px solid var(--ui-border); border-radius: 6px; background: var(--ui-toolbar); }
+.summary-card span, .summary-card em { display: block; color: var(--ui-muted); font-size: 12px; font-style: normal; }
+.summary-card strong { display: block; margin-top: 6px; font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ui-title); }
+.summary-card em { margin-top: 4px; }
+.category-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+.metric-card { padding: 18px; }
+.change-pill { flex-shrink: 0; border-width: 1px; border-radius: 4px; padding: 3px 6px; font-size: 12px; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.empty-row { border: 1px solid var(--ui-border); border-radius: 6px; background: var(--ui-panel); padding: 32px 20px; text-align: center; color: var(--ui-muted); }
 </style>

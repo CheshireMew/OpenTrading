@@ -2,7 +2,7 @@
   <div class="app-page">
     <div class="app-page-inner-wide flex flex-col gap-6">
       <div>
-        <h2 class="app-title">{{ $t('settings.title') }}</h2>
+        <h1 class="app-title">{{ $t('settings.title') }}</h1>
       </div>
 
       <section class="app-panel p-6">
@@ -93,7 +93,7 @@
           <input v-model="form.reasoningEnabled" class="h-5 w-5" type="checkbox" @change="applyProviderPreset" />
         </label>
 
-        <div class="mt-6 flex items-center gap-3">
+        <div class="mt-6 flex flex-wrap items-center gap-3">
           <button
             type="button"
             class="app-button-primary app-touch-target px-4 py-2"

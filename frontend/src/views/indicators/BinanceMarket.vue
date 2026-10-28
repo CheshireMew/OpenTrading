@@ -222,8 +222,9 @@
                     ]"
                     :key="item.key"
                     @click="mode = item.key"
-                    class="px-4 py-2 text-sm transition"
-                    :class="mode === item.key ? 'bg-[#0f6b4f] text-white dark:bg-emerald-500 dark:text-slate-950' : 'text-stone-600 hover:bg-stone-100 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'"
+                    class="app-segment-button"
+                    :class="{ 'is-active': mode === item.key }"
+                    :aria-pressed="mode === item.key"
                   >
                     {{ item.label }}
                   </button>
@@ -238,8 +239,9 @@
                     ]"
                     :key="item.key"
                     @click="marketFilter = item.key"
-                    class="px-4 py-2 text-sm transition"
-                    :class="marketFilter === item.key ? 'bg-[#0f6b4f] text-white dark:bg-emerald-500 dark:text-slate-950' : 'text-stone-600 hover:bg-stone-100 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'"
+                    class="app-segment-button"
+                    :class="{ 'is-active': marketFilter === item.key }"
+                    :aria-pressed="marketFilter === item.key"
                   >
                     {{ item.label }}
                   </button>

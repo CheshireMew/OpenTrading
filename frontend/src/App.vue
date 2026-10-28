@@ -1,5 +1,5 @@
 <template>
-  <div class="app-shell flex h-screen flex-col overflow-hidden transition-colors duration-300 md:flex-row" :class="{'app-chart-mode': route.path === '/', 'app-chart-menu-open': sidebarOpen}">
+  <div class="app-shell flex h-dvh flex-col overflow-hidden md:flex-row" :class="{'app-chart-mode': route.path === '/', 'app-chart-menu-open': sidebarOpen}">
     <a href="#main-content" class="app-skip-link">{{ t('app.skipToContent') }}</a>
 
     <header class="app-mobile-header flex h-14 flex-shrink-0 items-center justify-between border-b px-4 md:hidden">
@@ -30,7 +30,7 @@
     >
       <div class="app-sidebar-header flex items-start justify-between p-5">
         <div>
-          <h1 class="app-brand text-xl font-semibold tracking-tight">OpenTrading</h1>
+          <span class="app-brand text-xl font-semibold tracking-tight">OpenTrading</span>
         </div>
         <button type="button" class="app-icon-button inline-flex md:hidden" :aria-label="t('app.closeMenu')" @click="closeSidebar">
           <XMarkIcon class="h-5 w-5" />
@@ -60,6 +60,7 @@
       </nav>
         <div class="app-sidebar-controls mx-3 mb-3 grid shrink-0 grid-cols-[1fr_auto] gap-2 pt-3">
           <button
+             type="button"
              @click="toggleTheme"
              :aria-label="theme === 'dark' ? t('theme.light') : t('theme.dark')"
              class="app-sidebar-button flex w-full items-center justify-between px-3 py-2 text-sm transition"
@@ -71,6 +72,7 @@
              </span>
           </button>
           <button
+             type="button"
              @click="toggleLocale"
              class="app-sidebar-button flex w-full items-center justify-center px-3 py-2 text-sm font-semibold transition"
           >
@@ -80,7 +82,7 @@
         </div>
     </aside>
 
-    <main ref="mainContentRef" id="main-content" class="app-main min-h-0 min-w-0 flex-1 overflow-auto transition-colors duration-300" tabindex="-1">
+    <main ref="mainContentRef" id="main-content" class="app-main min-h-0 min-w-0 flex-1 overflow-auto" :inert="navigationModalOpen" tabindex="-1">
       <div v-if="bootstrapError" role="alert" class="m-4 flex items-center justify-between gap-4 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-950/30 dark:text-rose-200">
         <span>{{ t('app.bootstrapLoadFailed') }}</span>
         <button type="button" class="font-semibold underline disabled:opacity-60" :disabled="bootstrapLoading" @click="loadBootstrapResources">
@@ -237,60 +239,39 @@ onBeforeUnmount(() => {
 .app-chart-mode .app-mobile-header{display:none!important}
 
 .app-shell {
-  --app-shell-bg: #f7f4ed;
-  --app-shell-text: #1c1917;
-  --app-sidebar-bg: #fbfaf7;
-  --app-sidebar-border: #e4ded3;
-  --app-brand: #10261f;
-  --app-muted: #78716c;
-  --app-section: #78716c;
-  --app-nav: #57534e;
-  --app-nav-hover-bg: #f1eee7;
-  --app-nav-hover: #10261f;
-  --app-nav-active-border: #0f6b4f;
-  --app-nav-active-bg: #edf3ee;
-  --app-nav-active: #0f4f3c;
-  --app-button-bg: #ffffff;
-  --app-button-border: #e4ded3;
-  --app-button-hover-bg: #f4f1ea;
-  --app-button-hover-border: #cfc7ba;
-  --app-main-bg: #f7f4ed;
-  background: var(--app-shell-bg);
-  color: var(--app-shell-text);
-}
-
-html.dark .app-shell {
   --app-shell-bg: var(--ui-canvas);
   --app-shell-text: var(--ui-text);
-  --app-sidebar-bg: var(--ui-canvas);
+  --app-sidebar-bg: var(--ui-toolbar);
   --app-sidebar-border: var(--ui-border);
   --app-brand: var(--ui-title);
   --app-muted: var(--ui-muted);
-  --app-section: var(--ui-faint);
+  --app-section: var(--ui-muted);
   --app-nav: var(--ui-text);
   --app-nav-hover-bg: var(--ui-elevated);
   --app-nav-hover: var(--ui-title);
   --app-nav-active-border: var(--ui-accent);
-  --app-nav-active-bg: #22ab9414;
-  --app-nav-active: #73cabb;
+  --app-nav-active-bg: color-mix(in srgb, var(--ui-accent) 10%, var(--ui-toolbar));
+  --app-nav-active: var(--ui-accent);
   --app-button-bg: var(--ui-toolbar);
   --app-button-border: var(--ui-border);
   --app-button-hover-bg: var(--ui-elevated);
   --app-button-hover-border: var(--ui-borderStrong);
   --app-main-bg: var(--ui-canvas);
+  background: var(--app-shell-bg);
+  color: var(--app-shell-text);
 }
-
+html.dark .app-shell { --app-sidebar-bg: var(--ui-canvas); --app-nav-active: #73cabb; }
 .app-sidebar {
   border-right: 1px solid var(--app-sidebar-border);
   background: var(--app-sidebar-bg);
 }
 
-html.dark .app-sidebar-header { padding: 20px 22px 18px; }
-html.dark .app-nav-link { min-height: 38px; border-radius: 4px; font-size: 13px; font-weight: 500; }
-html.dark .app-nav-link--active { font-weight: 600; }
-html.dark .app-nav-section { margin-top: 16px; padding-top: 5px; padding-bottom: 8px; font-size: 10px; letter-spacing: 0.08em; }
-html.dark .app-sidebar-button { min-height: 36px; border-radius: 5px; padding: 7px 9px; font-size: 12px; }
-html.dark .app-sidebar-controls { border-top-color: var(--ui-border); }
+.app-sidebar-header { padding: 20px 22px 18px; }
+.app-nav-link { min-height: 38px; border-radius: 4px; font-size: 13px; font-weight: 500; }
+.app-nav-link--active { font-weight: 600; }
+.app-nav-section { margin-top: 16px; padding-top: 5px; padding-bottom: 8px; font-size: 10px; letter-spacing: 0.08em; }
+.app-sidebar-button { min-height: 36px; border-radius: 5px; padding: 7px 9px; font-size: 12px; }
+.app-sidebar-controls { border-top-color: var(--ui-border); }
 
 .app-mobile-header {
   border-color: var(--app-sidebar-border);
@@ -375,8 +356,14 @@ html.dark .app-sidebar-controls { border-top-color: var(--ui-border); }
 }
 
 .app-main {
+  overscroll-behavior: contain;
   background: var(--app-main-bg);
   container-name: app-content;
   container-type: inline-size;
+}
+
+.app-main:focus { outline: none; }
+@media (pointer: coarse) {
+  .app-nav-link, .app-sidebar-button { min-height: 44px; }
 }
 </style>

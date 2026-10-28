@@ -33,7 +33,16 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          // Shared preload/CommonJS helpers are also used by the app shell.
+          // Putting them in Monaco would preload the entire optional editor.
+          if (id.includes('commonjsHelpers') || id.includes('preload-helper')) return 'runtime-vendor'
           if (id.includes('node_modules')) {
+            // Keep optional editors and chart runtimes out of the app shell.
+            // A shared catch-all vendor chunk otherwise preloads all of them.
+            if (id.includes('monaco-editor')) return 'editor-vendor'
+            if (id.includes('@luxalgo/vela-pinets') || id.includes('/pinets/')) return 'pine-vendor'
+            if (id.includes('@luxalgo/vela/')) return 'vela-vendor'
+            if (id.includes('@heroicons')) return 'icons-vendor'
             if (id.includes('lightweight-charts')) {
               return 'lightweight-charts-vendor'
             }
@@ -56,10 +65,8 @@ export default defineConfig({
             ) {
               return 'vue-vendor'
             }
-            if (id.includes('@heroicons')) {
-              return 'icons-vendor'
-            }
-            return 'vendor'
+            // Let Rollup place other dependencies by actual usage instead of
+            // attaching every optional dependency to an eagerly loaded chunk.
           }
         },
       },

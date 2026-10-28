@@ -1,5 +1,5 @@
 <template>
-  <main class="results-page">
+  <div class="results-page">
     <div class="heading"><h1 class="text-2xl font-semibold">研究结果目录</h1><button class="app-button-secondary" :disabled="busy" @click="refreshImports">更新旧资料索引</button></div>
     <p v-if="message" class="notice" role="status">{{ message }}</p><p v-if="error" class="error" role="alert">{{ error }}</p>
     <form class="app-panel filters" @submit.prevent="search(true)">
@@ -31,7 +31,7 @@
       <h3 class="font-semibold mt-4">来源位置</h3><p class="app-muted text-sm my-2">校验值用于核对导入时的文件。旧资料变更后需重新更新索引。</p>
       <div v-for="(source, i) in selected.sources" :key="i" class="source"><p>{{ source.path }} · {{ source.pointer }}</p><small>{{ source.exists ? (source.unchanged === false ? '文件已经变化，请重新导入' : source.unchanged === true ? '已核对，内容未变化' : '文件存在') : '来源文件缺失' }}</small><code v-if="source.sha256_at_import">SHA-256 {{ source.sha256_at_import }}</code></div>
     </section>
-  </main>
+  </div>
 </template>
 
 <script setup lang="ts">

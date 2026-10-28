@@ -147,7 +147,7 @@
             <div class="app-panel-header">
               <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p class="app-eyebrow">{{ activeItem.assetClass }}</p>
+                  <p class="text-xs app-muted">{{ activeItem.assetClass }}</p>
                   <h2 class="mt-1 text-2xl font-semibold text-stone-950 dark:text-white">{{ activeItem.symbol }}</h2>
                   <p class="mt-1 text-sm app-muted">{{ activeItem.displayName }}</p>
                 </div>

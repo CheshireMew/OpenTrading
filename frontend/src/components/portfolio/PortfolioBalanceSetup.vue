@@ -1,14 +1,14 @@
 <template>
-  <section class="app-hero-panel p-6">
-    <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_26rem]">
+  <section class="app-hero-panel portfolio-setup-panel p-6">
+    <div class="portfolio-setup-grid grid min-w-0 gap-6">
       <div class="grid gap-4 md:grid-cols-2">
         <label class="block"><span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">{{ $t('portfolioBalance.portfolioName') }}</span><input :value="activePortfolio.name" type="text" class="app-control w-full px-4 py-3" @input="$emit('update-name', $event.target.value.trim())" /></label>
         <AppDateField :model-value="tracking.inceptionDate" :label="$t('portfolioBalance.inceptionDate')" input-class="app-control w-full px-4 py-3" label-class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300" @update:model-value="$emit('update-inception-date', $event)" />
       </div>
       <div class="grid grid-cols-2 gap-3">
-        <div v-for="metric in metrics" :key="metric.label" class="border border-[#e4ded3] bg-white/80 p-4 backdrop-blur dark:border-slate-700 dark:bg-slate-900/70">
+        <div v-for="metric in metrics" :key="metric.label" class="min-w-0 py-2">
           <div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ metric.label }}</div>
-          <div class="mt-2 text-2xl font-semibold" :class="metric.className">{{ metric.value }}</div>
+          <div class="mt-2 break-words text-2xl font-semibold tabular-nums" :class="metric.className">{{ metric.value }}</div>
         </div>
       </div>
     </div>

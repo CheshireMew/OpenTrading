@@ -43,12 +43,12 @@
 
       <section class="app-panel p-4">
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(12rem,1fr)_12rem_12rem_auto]">
-          <input v-model.trim="filters.symbol" class="app-control" :placeholder="t('signalReview.symbol')" @keydown.enter.prevent="load" />
-          <select v-model="filters.outcome" class="app-control">
+          <input :aria-label="t('signalReview.symbol')" v-model.trim="filters.symbol" class="app-control" :placeholder="t('signalReview.symbol')" @keydown.enter.prevent="load" />
+          <select :aria-label="t('signalReview.outcomeFilter')" v-model="filters.outcome" class="app-control">
             <option value="">{{ t('signalReview.allOutcomes') }}</option>
             <option v-for="status in outcomes" :key="status" :value="status">{{ outcomeLabel(status) }}</option>
           </select>
-          <select v-model="filters.source" class="app-control">
+          <select :aria-label="t('signalReview.source')" v-model="filters.source" class="app-control">
             <option value="">{{ t('signalReview.allSources') }}</option>
             <option value="rules">Rules</option><option value="ai">AI</option>
           </select>

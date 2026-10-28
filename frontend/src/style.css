@@ -3,185 +3,107 @@
 @tailwind utilities;
 
 @layer components {
-  .label { @apply block text-gray-500 dark:text-gray-400 text-xs font-bold mb-1; }
-  .input { @apply w-full border bg-white px-3 py-2 text-stone-900 outline-none transition focus:border-emerald-700 dark:border-gray-600 dark:bg-gray-900 dark:text-white; border-color: #e4ded3; }
-  .btn-primary { @apply text-white py-2 font-bold transition disabled:opacity-50; background: #0f6b4f; }
-  .btn-primary:hover { background: #0b5a41; }
-  .btn-secondary { @apply bg-white hover:bg-stone-100 dark:bg-gray-900 dark:hover:bg-gray-800 text-stone-700 dark:text-gray-200 py-2 font-bold transition border dark:border-gray-700; border-color: #e4ded3; }
-  .btn-danger { @apply bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/40 text-red-600 dark:text-red-300 px-3 py-2 font-bold transition border border-red-200 dark:border-red-800; }
-  .section-title { @apply text-sm font-bold text-gray-900 dark:text-white; }
-  .editor-section { @apply border bg-white p-3 space-y-3 dark:border-gray-700 dark:bg-gray-900/50; border-color: #e4ded3; }
-  .editor-card { @apply border p-3 dark:border-gray-700 dark:bg-gray-900/40; border-color: #e4ded3; background: #fbfaf7; }
-
-  .app-page { @apply min-h-full text-stone-900 transition-colors dark:text-slate-100; background: #f7f4ed; }
-  .app-page-inner { @apply w-full space-y-6 px-3 py-5 sm:px-4 lg:px-5 xl:px-6; }
-  .app-page-inner-wide { @apply w-full space-y-6 px-3 py-5 sm:px-4 lg:px-5 xl:px-6; }
-  .app-page-header { @apply border-b pb-5; border-color: var(--app-border); }
-  .app-hero-panel { @apply border p-6 dark:border-slate-700 dark:bg-slate-800/90; border-color: #e4ded3; background: rgba(255, 255, 255, 0.88); }
-  .app-panel { @apply border bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800; border-color: #e4ded3; }
-  .app-panel-header { @apply border-b px-5 py-4 dark:border-slate-700; border-color: #e4ded3; }
-  .app-card { @apply border bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800; border-color: #e4ded3; }
-  .app-chart-frame { @apply border p-2 dark:border-slate-700 dark:bg-slate-900; border-color: #e4ded3; background: #fbfaf7; }
-  .app-eyebrow { @apply text-xs font-semibold uppercase tracking-[0.24em] dark:text-emerald-300; color: #0f6b4f; }
-  .app-title { @apply text-3xl font-semibold tracking-normal text-stone-950 dark:text-white; font-family: Georgia, "Times New Roman", serif; }
-  .app-section-title { @apply text-lg font-semibold text-stone-950 dark:text-white; }
-  .app-subtitle { @apply text-sm leading-6 text-stone-600 dark:text-slate-300; }
-  .app-muted { @apply text-stone-500 dark:text-slate-400; }
-  .app-button-primary { @apply px-5 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400; min-height: 44px; background: #0f6b4f; }
-  .app-button-primary:hover { background: #0b5a41; }
-  .app-button-secondary { @apply border bg-white px-4 py-2 text-sm font-semibold transition dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800; min-height: 44px; border-color: #e4ded3; color: #0f6b4f; }
-  .app-button-secondary:hover { background: #f4f1ea; }
-  .app-control { @apply border bg-white px-3 py-2 text-sm text-stone-700 outline-none transition focus:border-emerald-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100; border-color: #e4ded3; }
-  .app-table-head { @apply text-stone-500 dark:bg-slate-900/60 dark:text-slate-400; background: #fbfaf7; }
-  .app-table-row { @apply border-t text-stone-700 transition hover:bg-stone-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700/50; border-color: #eee7dc; }
+  .label { @apply mb-1 block text-xs font-semibold; color: var(--ui-muted); }
+  .input, .app-control { @apply border px-3 py-2 text-sm transition; background: var(--ui-toolbar); border-color: var(--ui-borderStrong); color: var(--ui-text); min-height: 38px; border-radius: 5px; }
+  .input { width: 100%; }
+  .btn-primary, .app-button-primary { @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold transition; background: var(--ui-accent); color: #fff; border: 1px solid transparent; border-radius: 5px; min-height: 38px; }
+  .btn-secondary, .app-button-secondary { @apply inline-flex items-center justify-center gap-2 border px-4 py-2 text-sm font-semibold transition; background: var(--ui-toolbar); border-color: var(--ui-borderStrong); color: var(--ui-text); min-height: 38px; border-radius: 5px; }
+  .btn-danger { @apply inline-flex items-center justify-center gap-2 border px-3 py-2 text-sm font-semibold transition; border-color: var(--ui-negative); color: var(--ui-negative); border-radius: 5px; min-height: 38px; }
+  .section-title { @apply text-sm font-semibold; color: var(--ui-title); }
+  .editor-section { @apply space-y-3 border p-3; background: var(--ui-panel); border-color: var(--ui-border); border-radius: 8px; }
+  .editor-card { @apply border p-3; background: var(--ui-toolbar); border-color: var(--ui-border); border-radius: 6px; }
+  .app-page { @apply min-h-full; background: var(--ui-canvas); color: var(--ui-text); }
+  .app-page-inner, .app-page-inner-wide { @apply w-full space-y-6; padding: 24px; }
+  .app-page-header { @apply border-b pb-5; border-color: var(--ui-border); }
+  .app-hero-panel { @apply border p-6; background: var(--ui-panel); border-color: var(--ui-border); border-radius: 8px; }
+  .app-panel { @apply border; background: var(--ui-panel); border-color: var(--ui-border); border-radius: 8px; }
+  .app-panel-header { @apply border-b px-5 py-4; border-color: var(--ui-border); }
+  .app-card { @apply border p-5; background: var(--ui-panel); border-color: var(--ui-border); border-radius: 8px; }
+  .app-chart-frame { @apply border p-2; border-color: var(--ui-border); background: var(--ui-toolbar); border-radius: 6px; }
+  .app-title { @apply text-2xl font-semibold; color: var(--ui-title); font-size: 26px; letter-spacing: -0.025em; line-height: 1.3; }
+  .app-section-title { @apply text-base font-semibold; color: var(--ui-title); line-height: 1.5; }
+  .app-subtitle { @apply text-sm leading-6; color: var(--ui-muted); }
+  .app-muted { color: var(--ui-muted); }
+  .app-table-head { background: var(--ui-toolbar); color: var(--ui-muted); }
+  .app-table-row { @apply border-t transition; border-color: var(--ui-border); color: var(--ui-text); }
   .app-table-scroll { @apply overflow-x-auto; overscroll-behavior-inline: contain; }
   .app-touch-target { min-height: 44px; min-width: 44px; }
-  .app-chip { @apply px-3 py-1 text-xs font-semibold dark:bg-slate-900 dark:text-slate-300; background: #edf3ee; color: #0f4f3c; }
+  .app-chip { @apply px-3 py-1 text-xs font-semibold; background: var(--ui-elevated); color: var(--ui-text); border-radius: 4px; }
+  .app-segment-button { @apply inline-flex shrink-0 items-center justify-center px-3 py-2 text-sm font-medium transition; min-height: 36px; border-radius: 4px; color: var(--ui-text); }
+  .app-segment-button:hover { background: var(--ui-elevated); }
+  .app-segment-button.is-active { background: var(--ui-accent); color: #fff; }
 }
 
 :root {
   color-scheme: light;
-  --app-bg: #f7f4ed;
-  --app-surface: #ffffff;
-  --app-elevated: #fbfaf7;
-  --app-text: #1c1917;
-  --app-border: #e4ded3;
-}
-
-html.dark {
-  color-scheme: dark;
   --app-bg: var(--ui-canvas);
   --app-surface: var(--ui-panel);
   --app-elevated: var(--ui-elevated);
   --app-text: var(--ui-text);
   --app-border: var(--ui-border);
 }
+html.dark { color-scheme: dark; }
+html.light { color-scheme: light; }
 
-html.light {
-  color-scheme: light;
-}
-
+html, body, #app { width: 100%; height: 100%; min-width: 0; overflow: hidden; }
 body {
-  @apply text-gray-900 dark:bg-gray-900 dark:text-gray-100;
-  background: #f7f4ed;
   margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
-
-html.dark body {
   background: var(--ui-canvas);
   color: var(--ui-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
   -webkit-font-smoothing: antialiased;
 }
-
-:focus-visible {
-  outline: 2px solid #0f6b4f;
-  outline-offset: 2px;
+button, input, select, textarea { font: inherit; }
+button, select, summary { -webkit-tap-highlight-color: transparent; }
+button:not(:disabled), summary { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 3px; }
+::selection { background: color-mix(in srgb, var(--ui-accent) 26%, transparent); color: var(--ui-title); }
+input, textarea { caret-color: var(--ui-accent); }
+input:is([type=checkbox], [type=radio]) { accent-color: var(--ui-accent); }
+option { background: var(--ui-panel); color: var(--ui-text); }
+:is(.app-control, .input)::placeholder { color: var(--ui-faint); opacity: 1; }
+:is(.app-control, .input):focus-visible { border-color: var(--ui-accent); outline-offset: 1px; }
+:is(input, select, textarea):disabled { color: var(--ui-faint); background: var(--ui-canvas); cursor: not-allowed; }
+:is(.app-button-primary, .app-button-secondary, .btn-primary, .btn-secondary, .btn-danger):disabled { opacity: .55; cursor: not-allowed; }
+:is(.app-button-primary, .btn-primary):hover:not(:disabled) { background: var(--ui-accentHover); }
+:is(.app-button-secondary, .btn-secondary):hover:not(:disabled) { background: var(--ui-hover); border-color: var(--ui-faint); }
+.btn-danger:hover:not(:disabled) { background: color-mix(in srgb, var(--ui-negative) 9%, var(--ui-panel)); }
+html.dark :is(.app-button-primary, .btn-primary) { color: #09231f; }
+html.dark .app-segment-button.is-active { color: #09231f; }
+.app-table-head th { font-weight: 500; white-space: nowrap; }
+.app-table-row:hover { background: var(--ui-elevated); }
+:is(.app-panel, .app-card, .app-hero-panel) :is(td, dd, output),
+.app-page table { font-variant-numeric: tabular-nums; }
+.app-page-header > *, .app-panel-header > * { min-width: 0; }
+.app-subtitle { max-width: 75ch; overflow-wrap: anywhere; }
+.portfolio-setup-panel { container-name: portfolio-setup; container-type: inline-size; }
+@container portfolio-setup (min-width: 46rem) {
+  .portfolio-setup-grid { grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.8fr); }
 }
 
-html.dark :focus-visible {
-  outline-color: var(--ui-accent);
-}
+html { scrollbar-color: var(--ui-borderStrong) transparent; scrollbar-width: thin; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--ui-borderStrong); border: 2px solid var(--ui-canvas); border-radius: 8px; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
 
+@media (hover: none), (pointer: coarse) {
+  :is(.app-button-primary, .app-button-secondary, .btn-primary, .btn-secondary, .btn-danger, .app-control, .input, .app-segment-button) { min-height: 44px; }
+}
+@media (max-width: 767px) {
+  :is(.app-page-inner, .app-page-inner-wide) { padding: 20px 12px; }
+  .app-title { font-size: 23px; }
+  .app-hero-panel { padding: 20px 16px; }
+  :is(.app-button-primary, .app-button-secondary, .btn-primary, .btn-secondary, .btn-danger, .app-control, .input, .app-segment-button) { min-height: 44px; }
+}
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
-
-html.dark .app-page {
-  background: var(--ui-canvas);
-}
-
-html.dark {
-  scrollbar-color: var(--ui-borderStrong) transparent;
-  scrollbar-width: thin;
-}
-
-html.dark ::selection { background: #22ab9440; color: var(--ui-title); }
-html.dark ::-webkit-scrollbar { width: 8px; height: 8px; }
-html.dark ::-webkit-scrollbar-thumb { background: var(--ui-borderStrong); border: 2px solid var(--ui-canvas); border-radius: 8px; }
-html.dark ::-webkit-scrollbar-track { background: transparent; }
-html.dark ::-webkit-scrollbar-corner { background: transparent; }
-
-html.dark .app-page { color: var(--ui-text); }
-html.dark :is(.app-page-inner, .app-page-inner-wide) { padding: 24px; }
-html.dark .app-title {
-  font-family: inherit;
-  color: var(--ui-title);
-  font-size: 26px;
-  font-weight: 600;
-  letter-spacing: -0.025em;
-  line-height: 1.3;
-}
-html.dark .app-section-title { color: var(--ui-title); font-size: 16px; line-height: 1.5; }
-html.dark .app-eyebrow { color: var(--ui-muted); font-size: 10px; letter-spacing: 0.14em; }
-html.dark .app-subtitle { color: var(--ui-muted); }
-html.dark .app-muted { color: var(--ui-muted); }
-html.dark :is(.app-panel, .app-card, .app-hero-panel) {
-  background: var(--ui-panel);
-  border-color: var(--ui-border);
-  border-radius: 8px;
-  box-shadow: none;
-}
-html.dark .app-panel-header { border-color: var(--ui-border); }
-html.dark .app-chart-frame { background: var(--ui-canvas); border-color: var(--ui-border); border-radius: 6px; }
-html.dark :is(.app-button-primary, .btn-primary) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid transparent;
-  border-radius: 5px;
-  background: var(--ui-accent);
-  color: #fff;
-  box-shadow: none;
-  font-weight: 600;
-}
-html.dark :is(.app-button-primary, .btn-primary):hover:not(:disabled) { background: var(--ui-accentHover); }
-html.dark :is(.app-button-secondary, .btn-secondary) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-color: var(--ui-borderStrong);
-  border-radius: 5px;
-  background: var(--ui-toolbar);
-  color: var(--ui-text);
-  box-shadow: none;
-}
-html.dark :is(.app-button-secondary, .btn-secondary):hover:not(:disabled) { background: var(--ui-hover); border-color: var(--ui-faint); }
-html.dark :is(.app-button-primary, .app-button-secondary) { min-height: 38px; }
-html.dark :is(.app-control, .input) {
-  min-height: 38px;
-  border-radius: 5px;
-  border-color: var(--ui-borderStrong);
-  background: var(--ui-toolbar);
-  color: var(--ui-text);
-}
-html.dark :is(.app-control, .input):focus { border-color: var(--ui-accent); box-shadow: 0 0 0 2px #22ab9418; }
-html.dark :is(.app-control, .input)::placeholder { color: var(--ui-faint); }
-html.dark :is(input, select, textarea):disabled { color: var(--ui-faint); background: var(--ui-canvas); }
-html.dark option { background: var(--ui-panel); color: var(--ui-text); }
-html.dark input:is([type=checkbox], [type=radio]) { accent-color: var(--ui-accent); }
-html.dark .app-table-head { background: var(--ui-toolbar); color: var(--ui-muted); }
-html.dark .app-table-head th { font-weight: 500; white-space: nowrap; }
-html.dark .app-table-row { border-color: var(--ui-border); color: var(--ui-text); }
-html.dark .app-table-row:hover { background: var(--ui-elevated); }
-html.dark .app-chip { background: var(--ui-elevated); color: var(--ui-text); border-radius: 4px; }
-html.dark :is(.app-panel, .app-card) :is(td, dd, output) { font-variant-numeric: tabular-nums; }
-html.dark .app-responsive-table tr.app-table-row { background: var(--ui-panel); border-color: var(--ui-border); }
-html.dark .app-responsive-table tr.app-table-row:hover { background: var(--ui-elevated); }
-
-@media (max-width: 767px) {
-  html.dark :is(.app-page-inner, .app-page-inner-wide) { padding: 16px 12px; }
-  html.dark .app-title { font-size: 23px; }
-  html.dark :is(.app-button-primary, .app-button-secondary, .app-control, .input) { min-height: 44px; }
-}
-
 .dashboard-workspace { min-height: 500px; }
 .dca-config-grid { grid-template-columns: minmax(0, 1fr); }
 .dca-market-grid { grid-template-columns: minmax(0, 1fr); }
@@ -224,10 +146,10 @@ html.dark .app-responsive-table tr.app-table-row:hover { background: var(--ui-el
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     overflow: hidden;
-    border: 1px solid #eee7dc;
-    background: #fff;
+    border: 1px solid var(--ui-border);
+    background: var(--ui-panel);
   }
-  .app-responsive-table tr.app-table-row:hover { background: #fff; }
+  .app-responsive-table tr.app-table-row:hover { background: var(--ui-panel); }
   .app-responsive-table tr.app-table-row td {
     display: flex;
     min-width: 0;
@@ -239,11 +161,11 @@ html.dark .app-responsive-table tr.app-table-row:hover { background: var(--ui-el
   }
   .app-responsive-table tr.app-table-row td::before {
     content: attr(data-label);
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #78716c;
+    color: var(--ui-muted);
   }
   .app-responsive-table tr.app-table-row td.app-table-primary { grid-column: 1 / -1; }
   .app-responsive-table tr.app-table-empty-row { display: block; }

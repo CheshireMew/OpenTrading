@@ -1,7 +1,7 @@
 import { reactive } from 'vue'
 
 import { isRecord } from '@/composables/pageSnapshot'
-import { ensureSymbolCatalogLoaded, isIndexSymbol, marketIndexApi, marketInsightApi, marketLiveApi } from '@/modules/market'
+import { ensureSymbolCatalogLoaded, isIndexSymbol, marketIndexApi, marketInsightApi, marketLiveApi, toBaseSymbol } from '@/modules/market'
 import { resolveSentimentBucket } from '@/modules/market/sentiment'
 import { localIsoDateDaysAgo } from '@/utils/localDate'
 import type { MarketIndexHistoryResponse, RealtimeResponse } from '@/modules/market/contracts'
@@ -99,7 +99,7 @@ export const useDcaMarketContext = ({
           marketData.rsi = realtimeResponse.indicators?.rsi?.toFixed(2) || '--'
           marketData.currentPrice = realtimeResponse.current_price
           marketData.pricingCurrency = 'USDT'
-          marketData.pricingSymbol = `${currentSymbol}/USDT`
+          marketData.pricingSymbol = `${toBaseSymbol(currentSymbol)}/USDT`
         }
       } else {
         marketData.rsi = null

@@ -1,0 +1,48 @@
+{
+  "title": "股票页：选一种布局",
+  "question": "三种方案使用相同的真实目录内容。可以展开查看完整页面，再选择你希望继续做成实际页面的一种。",
+  "options": [
+    {
+      "id": "master-detail",
+      "kind": "assigned",
+      "label": "股票与产品双栏",
+      "thesis": "左边快速找股票，右边直接查看各平台具体产品。",
+      "palette": ["#f7f4ed", "#ffffff", "#18251f", "#0f6b4f"],
+      "materials": ["紧凑证券列表", "固定产品详情区"],
+      "viewport": "顶部搜索与条件，左侧证券列表，右侧按平台展示已选股票的产品与链接。",
+      "risk": "适合逐只查看，横向比较很多股票时需要切换选择。",
+      "html": ".impeccable/mocks/decision/equities-master-detail.html",
+      "htmlFrame": "1440x900",
+      "comp": ".impeccable/mocks/decision/equities-master-detail.png"
+    },
+    {
+      "id": "coverage-matrix",
+      "kind": "dealt",
+      "label": "平台覆盖对照",
+      "thesis": "每个平台独立成列，直接比较一只股票在哪里有现货或永续。",
+      "palette": ["#f7f4ed", "#ffffff", "#18251f", "#0f6b4f"],
+      "materials": ["平台对照表", "固定列头与就地产品展开"],
+      "viewport": "页首搜索与轻量筛选，证券名称后依次排列 Binance、OKX、Bitget，产品种类和入口直接对应。",
+      "risk": "桌面比较效率高，窄屏需要转换成逐证券的平台清单。",
+      "html": ".impeccable/mocks/decision/equities-coverage-matrix.html",
+      "htmlFrame": "1440x900",
+      "comp": ".impeccable/mocks/decision/equities-coverage-matrix.png"
+    },
+    {
+      "id": "filter-directory",
+      "kind": "dealt",
+      "label": "筛选目录",
+      "thesis": "把平台、资产和交易方式集中在左边，右边只保留清晰紧凑的结果。",
+      "palette": ["#f7f4ed", "#ffffff", "#18251f", "#0f6b4f"],
+      "materials": ["常驻筛选栏", "高密度证券目录"],
+      "viewport": "标题和搜索之下，左侧常驻筛选，右侧完整结果表；常用条件无需展开。",
+      "risk": "筛选较直接，但桌面上会额外占用一列宽度。",
+      "html": ".impeccable/mocks/decision/equities-filter-directory.html",
+      "htmlFrame": "1440x900",
+      "comp": ".impeccable/mocks/decision/equities-filter-directory.png"
+    }
+  ],
+  "buildPath": {"value": "code", "toggle": true},
+  "reroll": {"registers": ["safer", "bolder"]},
+  "steer": true
+}

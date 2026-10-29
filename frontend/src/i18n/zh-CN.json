@@ -64,7 +64,21 @@
       "ok": "已更新",
       "stale": "更新失败，保留上次记录",
       "unavailable": "暂时无法读取"
-    }
+    },
+    "layout": "布局",
+    "layoutSplit": "双栏",
+    "layoutMatrix": "平台对照",
+    "layoutDirectory": "左侧筛选",
+    "layoutSplitHint": "证券列表与产品详情并排",
+    "layoutMatrixHint": "按平台对比现货与永续产品",
+    "layoutDirectoryHint": "常驻筛选条件与证券目录",
+    "securities": "只证券",
+    "refreshing": "刷新中",
+    "allTradingShort": "全部",
+    "bothShort": "两者都有",
+    "clearSearch": "清空搜索",
+    "emptyHint": "试试其他名称，或减少筛选条件。",
+    "notListed": "未收录的产品不代表平台不支持。Bitget Stock+ 完整名单尚未核实。"
   },
   "pages": {
     "notFound": "页面未找到"

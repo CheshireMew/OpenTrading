@@ -1,135 +1,137 @@
 <template>
-  <div class="app-page">
-    <div class="app-page-inner-wide">
-      <header class="app-workspace-header">
-        <div><h1 class="app-title">{{ t('equities.title') }}</h1><p v-if="catalog" class="app-muted">{{ t('equities.updated', { time: formatDateTime(catalog.updated_at) }) }}</p></div>
-        <button type="button" class="app-button-secondary" :disabled="loading" @click="load(true)"><ArrowPathIcon class="h-4 w-4" :class="{ 'animate-spin': loading }" />{{ loading ? t('equities.loading') : t('equities.refresh') }}</button>
-      </header>
-      <div class="app-metric-strip" :aria-label="t('equities.title')">
-        <button v-for="stat in stats" :key="stat.id" type="button" :aria-pressed="statSelected(stat.id)" @click="selectStat(stat.id)"><span class="app-metric-label">{{ stat.label }}</span><strong class="app-metric-value">{{ catalog ? stat.value.toLocaleString() : '—' }}</strong></button>
-      </div>
-      <div v-if="error" role="alert" class="app-inline-note text-rose-700 dark:text-rose-300">{{ error }}<button type="button" class="ml-3 underline" :disabled="loading" @click="load()">{{ t('common.retry') }}</button></div>
-      <div v-if="unavailableLabels" role="status" class="app-inline-note text-amber-800 dark:text-amber-200">{{ t('equities.partial') }} {{ unavailableLabels }}</div>
-      <section class="app-panel app-responsive-table equity-results">
-        <div class="equity-toolbar space-y-4">
-          <div class="flex items-center gap-3">
-            <div class="app-search-field flex-1"><MagnifyingGlassIcon aria-hidden="true" /><label class="sr-only" for="equity-search">{{ t('equities.search') }}</label><input id="equity-search" v-model="search" type="search" class="app-control" :placeholder="t('equities.searchPlaceholder')" /></div>
-            <button type="button" class="equity-filter-toggle app-button-secondary" :aria-expanded="filtersOpen" aria-controls="equity-refine" @click="filtersOpen = !filtersOpen"><FunnelIcon class="h-4 w-4" />{{ t('ui.filters') }}<span v-if="filterCount">{{ filterCount }}</span></button>
-          </div>
-          <div id="equity-refine" class="equity-refine" :class="{ 'is-open': filtersOpen }">
-                        <div>
-              <label class="label" for="equity-platform">{{ t('equities.platform') }}</label>
-              <select id="equity-platform" v-model="platform" class="app-control w-full">
-                <option value="all">{{ t('equities.allPlatforms') }}</option>
-                <option v-for="p in platforms" :key="p" :value="p">{{ platformName(p) }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="label" for="equity-trading-type">{{ t('equities.tradingType') }}</label>
-              <select id="equity-trading-type" v-model="tradingType" class="app-control w-full">
-                <option value="all">{{ t('equities.allTradingTypes') }}</option>
-                <option value="spot">{{ t('equities.spot') }}</option>
-                <option value="perpetual">{{ t('equities.perpetual') }}</option>
-                <option value="both">{{ t('equities.both') }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="label" for="equity-asset-type">{{ t('equities.assetType') }}</label>
-              <select id="equity-asset-type" v-model="assetType" class="app-control w-full">
-                <option value="all">{{ t('equities.allAssets') }}</option>
-                <option value="stock">{{ t('equities.stock') }}</option>
-                <option value="etf">ETF</option>
-                <option value="index">{{ t('equities.index') }}</option>
-                <option value="unknown">{{ t('equities.unknown') }}</option>
-              </select>
-            </div>
-            <label class="equity-shared flex items-center gap-2 text-xs"><input v-model="sharedOnly" type="checkbox" />{{ t('equities.sharedOnly') }}</label>
-          </div>
-          <div class="flex flex-wrap items-center justify-between gap-3 text-xs">
-            <p class="app-muted" aria-live="polite">{{ t('equities.results', { count: filtered.length, total: catalog?.items.length ?? 0 }) }}</p>
-            <div class="flex items-center gap-3"><button v-if="hasFilters" type="button" class="font-semibold text-emerald-700 underline dark:text-emerald-300" @click="resetFilters">{{ t('equities.reset') }}</button><label class="sr-only" for="equity-sort">{{ t('equities.sort') }}</label><select id="equity-sort" v-model="sort" class="equity-sort app-control"><option value="coverage">{{ t('equities.sortCoverage') }}</option><option value="ticker">{{ t('equities.sortTicker') }}</option><option value="name">{{ t('equities.sortName') }}</option></select></div>
-          </div>
+  <div class="app-page equities-page">
+    <div class="eq-page-inner">
+      <header class="eq-page-header">
+        <div class="eq-title-block">
+          <h1>{{ t('equities.title') }}</h1>
+          <p v-if="catalog"><strong>{{ catalog.items.length.toLocaleString() }}</strong> {{ t('equities.securities') }}<span class="eq-meta-separator">·</span>{{ t('equities.updated', { time: formatDateTime(catalog.updated_at) }) }}</p>
         </div>
-        <AppLoadingState v-if="loading && !catalog" :label="t('equities.loading')" />
-        <template v-else>
-          <div class="app-table-scroll" tabindex="0" :aria-label="t('equities.title')" :aria-busy="loading">
-          <table class="app-data-table w-full min-w-[800px] text-left text-sm">
-            <thead class="app-table-head text-xs">
-              <tr>
-                <th scope="col" class="px-5 py-3">{{ t('equities.security') }}</th>
-                <th scope="col" class="px-4 py-3">{{ t('equities.assetType') }}</th>
-                <th scope="col" class="px-4 py-3">{{ t('equities.supportedPlatforms') }}</th>
-                <th scope="col" class="px-4 py-3">{{ t('equities.tradingType') }}</th>
-                <th scope="col" class="px-5 py-3 text-right">{{ t('equities.products') }}</th>
-              </tr>
-            </thead>
+        <div class="eq-header-actions">
+          <div class="eq-layout-picker" role="group" :aria-label="t('equities.layout')">
+            <button v-for="option in layouts" :key="option.id" type="button" :aria-pressed="layout === option.id" :title="option.description" @click="layout = option.id">
+              <component :is="option.icon" aria-hidden="true" /><span>{{ option.label }}</span>
+            </button>
+          </div>
+          <button type="button" class="eq-refresh" :aria-label="loading ? t('equities.refreshing') : t('equities.refresh')" :disabled="loading" @click="load(true)">
+            <ArrowPathIcon aria-hidden="true" :class="{ 'animate-spin': loading }" /><span>{{ loading ? t('equities.refreshing') : t('equities.refresh') }}</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="eq-search-row">
+        <div class="eq-search">
+          <MagnifyingGlassIcon aria-hidden="true" />
+          <label class="sr-only" for="eq-search-input">{{ t('equities.search') }}</label>
+          <input id="eq-search-input" ref="searchInput" v-model="search" type="search" :placeholder="t('equities.searchPlaceholder')" />
+          <button v-if="search" type="button" :aria-label="t('equities.clearSearch')" @click="search = ''; searchInput?.focus()"><XMarkIcon aria-hidden="true" /></button>
+          <kbd v-else aria-hidden="true">/</kbd>
+        </div>
+        <button v-if="layout === 'directory'" type="button" class="eq-mobile-filter-toggle eq-control" :aria-expanded="filtersOpen" aria-controls="eq-filter-sidebar" @click="filtersOpen = !filtersOpen">
+          <AdjustmentsHorizontalIcon aria-hidden="true" />{{ t('ui.filters') }}<span v-if="filterCount">{{ filterCount }}</span>
+        </button>
+      </div>
+
+      <div v-if="error && catalog" role="alert" class="eq-notice eq-notice--error"><span>{{ error }}</span><button type="button" :disabled="loading" @click="load()">{{ t('common.retry') }}</button></div>
+      <div v-if="unavailableLabels" role="status" class="eq-notice eq-notice--warning">{{ t('equities.partial') }} {{ unavailableLabels }}</div>
+
+      <EquityCatalogFilters v-if="layout !== 'directory'" id="eq-bar" variant="bar" v-model:platform="platform" v-model:asset-type="assetType" v-model:trading-type="tradingType" v-model:shared-only="sharedOnly" :spot-count="spotCount" :perpetual-count="perpetualCount" />
+
+      <div class="eq-workbench" :class="`eq-workbench--${layout}`">
+        <aside v-if="layout === 'directory'" id="eq-filter-sidebar" class="eq-facets" :class="{ 'is-open': filtersOpen }" :aria-label="t('ui.filters')">
+          <EquityCatalogFilters id="eq-sidebar" variant="sidebar" v-model:platform="platform" v-model:asset-type="assetType" v-model:trading-type="tradingType" v-model:shared-only="sharedOnly" :spot-count="spotCount" :perpetual-count="perpetualCount" />
+          <button v-if="hasFilters" type="button" class="eq-text-button eq-sidebar-reset" @click="resetFilters">{{ t('equities.reset') }}</button>
+        </aside>
+
+        <section class="eq-results" :aria-label="t('equities.security')" :aria-busy="loading">
+          <div class="eq-results-toolbar">
+            <p aria-live="polite">{{ t('equities.results', { count: filtered.length.toLocaleString(), total: catalog?.items.length.toLocaleString() ?? '—' }) }}</p>
+            <div class="eq-result-actions">
+              <button v-if="hasFilters" type="button" class="eq-text-button" @click="resetFilters">{{ t('equities.reset') }}</button>
+              <label class="eq-sort"><span class="sr-only">{{ t('equities.sort') }}</span><select v-model="sort" :aria-label="t('equities.sort')"><option value="coverage">{{ t('equities.sortCoverage') }}</option><option value="ticker">{{ t('equities.sortTicker') }}</option><option value="name">{{ t('equities.sortName') }}</option></select></label>
+            </div>
+          </div>
+
+          <AppLoadingState v-if="loading && !catalog" :label="t('equities.loading')" :rows="7" />
+          <div v-else-if="error && !catalog" role="alert" class="eq-load-error"><p>{{ error }}</p><button type="button" class="eq-control" @click="load()">{{ t('common.retry') }}</button></div>
+          <AppEmptyState v-else-if="!paged.length" :title="t('equities.empty')" :description="t('equities.emptyHint')" :icon="MagnifyingGlassIcon"><button v-if="hasFilters" type="button" class="eq-control" @click="resetFilters">{{ t('equities.reset') }}</button></AppEmptyState>
+
+          <div v-else-if="layout === 'split'" class="eq-split">
+            <div class="eq-security-list" :aria-label="t('equities.security')">
+              <button v-for="item in paged" :key="item.ticker" type="button" class="eq-list-item" :class="{ 'is-selected': selectedTicker === item.ticker }" :aria-pressed="selectedTicker === item.ticker" aria-controls="eq-selected-products" @click="selectStock(item)">
+                <EquityCompanyLogo :src="item.logo_url" :ticker="item.ticker" class="eq-logo" />
+                <span class="eq-identity"><strong>{{ item.ticker }}<span v-if="item.market !== 'US'" class="eq-market">{{ item.market }}</span></strong><span :title="item.name">{{ item.name_zh || item.name }}</span></span>
+                <span class="eq-list-count">{{ item.offerings.length }}</span><ChevronRightIcon class="eq-row-chevron" aria-hidden="true" />
+              </button>
+            </div>
+            <section v-if="selectedStock" id="eq-selected-products" class="eq-selection" :aria-label="`${selectedStock.ticker} ${t('equities.products')}`">
+              <header class="eq-selection-header">
+                <EquityCompanyLogo :src="selectedStock.logo_url" :ticker="selectedStock.ticker" />
+                <div class="eq-selected-identity"><h2>{{ selectedStock.ticker }}<span>{{ selectedStock.name_zh }}</span></h2><p>{{ selectedStock.name }}</p></div>
+                <span class="eq-selected-meta">{{ assetName(selectedStock.asset_type) }} · {{ selectedStock.market }}<br>{{ t('equities.productCount', { count: selectedStock.offerings.length }) }}</span>
+              </header>
+              <EquityProductDetails :item="selectedStock" :sources="catalog?.sources ?? []" arrangement="stack" />
+            </section>
+          </div>
+
+          <table v-else class="eq-catalog-table" :class="{ 'eq-matrix-table': layout === 'matrix', 'eq-directory-table': layout === 'directory' }">
+            <colgroup v-if="layout === 'matrix'"><col class="eq-security-col" /><col v-for="p in platforms" :key="p" /></colgroup>
+            <colgroup v-else><col class="eq-security-col" /><col class="eq-type-col" /><col class="eq-platform-col" /><col class="eq-trading-col" /><col class="eq-product-col" /></colgroup>
+            <thead><tr>
+              <th scope="col">{{ t('equities.security') }}</th>
+              <template v-if="layout === 'matrix'"><th v-for="p in platforms" :key="p" scope="col" :class="{ 'is-filtered': platform === p }">{{ platformName(p) }}</th></template>
+              <template v-else><th scope="col">{{ t('equities.assetType') }}</th><th scope="col">{{ t('equities.supportedPlatforms') }}</th><th scope="col">{{ t('equities.tradingType') }}</th><th scope="col" class="eq-align-end">{{ t('equities.products') }}</th></template>
+            </tr></thead>
             <tbody>
               <template v-for="item in paged" :key="item.ticker">
-                <tr class="app-table-row">
-                  <td class="app-table-primary max-w-[310px] px-5 py-4" :data-label="t('equities.security')">
-                    <div class="flex items-center gap-3">
-                      <EquityCompanyLogo :src="item.logo_url" :ticker="item.ticker" />
-                      <div class="min-w-0">
-                        <div class="flex flex-wrap items-center gap-2">
-                          <span class="font-mono text-base font-bold text-stone-950 dark:text-white">{{ item.ticker }}</span>
-                          <span v-if="item.name_zh" class="text-xs">{{ item.name_zh }}</span>
-                          <span v-if="item.market !== 'US'" class="app-muted text-xs">{{ item.market }}</span>
-                        </div>
-                        <p class="app-muted mt-1 truncate text-xs" :title="item.name">{{ item.name }}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="px-4 py-4 text-xs" :data-label="t('equities.assetType')">{{ assetName(item.asset_type) }}</td>
-                  <td class="px-4 py-4" :data-label="t('equities.supportedPlatforms')"><div class="flex flex-wrap gap-2"><span v-for="p in item.platforms" :key="p" class="equity-platform-tag" :class="`equity-platform-tag--${p}`" :title="platformDescription(item, p)">{{ platformName(p) }}</span></div></td>
-                  <td class="px-4 py-4" :data-label="t('equities.tradingType')"><div class="flex flex-wrap gap-2">
-                    <span v-if="item.trading_types.includes('spot')" class="equity-type-tag equity-type-tag--spot">{{ t('equities.spot') }}</span>
-                    <span v-if="item.trading_types.includes('perpetual')" class="equity-type-tag equity-type-tag--perpetual">{{ t('equities.perpetual') }}</span>
-                  </div></td>
-                  <td class="px-5 py-4 text-right" :data-label="t('equities.products')">
-                    <button type="button" class="app-touch-target inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300" :aria-label="t('equities.expand', { ticker: item.ticker })" :aria-expanded="expanded === item.ticker" :aria-controls="`equity-detail-${item.ticker}`" @click="expanded = expanded === item.ticker ? '' : item.ticker">
-                      {{ t('equities.productCount', { count: item.offerings.length }) }}<ChevronDownIcon class="h-4 w-4" :class="{ 'rotate-180': expanded === item.ticker }" />
+                <tr class="eq-stock-row" :class="{ 'is-selected': selectedTicker === item.ticker && detailOpen }">
+                  <td class="eq-security-cell">
+                    <button type="button" class="eq-stock-trigger" :aria-label="t('equities.expand', { ticker: item.ticker })" :aria-expanded="selectedTicker === item.ticker && detailOpen" :aria-controls="`eq-products-${item.ticker}`" @click="toggleStock(item)">
+                      <EquityCompanyLogo :src="item.logo_url" :ticker="item.ticker" class="eq-logo" />
+                      <span class="eq-identity"><strong>{{ item.ticker }}<span v-if="item.market !== 'US'" class="eq-market">{{ item.market }}</span></strong><span :title="item.name">{{ item.name_zh || item.name }}</span></span>
+                      <ChevronDownIcon class="eq-row-chevron" :class="{ 'is-open': selectedTicker === item.ticker && detailOpen }" aria-hidden="true" />
                     </button>
                   </td>
+                  <template v-if="layout === 'matrix'">
+                    <td v-for="p in platforms" :key="p" class="eq-platform-cell" :data-label="platformName(p)">
+                      <button type="button" class="eq-platform-coverage" :aria-label="t('equities.expand', { ticker: `${item.ticker} · ${platformName(p)}` })" :aria-expanded="selectedTicker === item.ticker && detailOpen" :aria-controls="`eq-products-${item.ticker}`" @click="toggleStock(item)">
+                        <template v-if="platformOfferings(item, p).length">
+                          <span v-for="kind in ['spot', 'perpetual']" v-show="offeringCount(item, p, kind)" :key="kind">{{ t(`equities.${kind}`) }}<strong>{{ offeringCount(item, p, kind) }}</strong></span>
+                        </template>
+                        <span v-else class="eq-not-listed" :title="t('equities.notListed')">—</span>
+                      </button>
+                    </td>
+                  </template>
+                  <template v-else>
+                    <td :data-label="t('equities.assetType')">{{ assetName(item.asset_type) }}</td>
+                    <td :data-label="t('equities.supportedPlatforms')"><span class="eq-platform-names">{{ item.platforms.map(platformName).join(' / ') }}</span></td>
+                    <td :data-label="t('equities.tradingType')">{{ item.trading_types.map(kind => t(`equities.${kind}`)).join(' / ') }}</td>
+                    <td class="eq-align-end" :data-label="t('equities.products')"><button type="button" class="eq-text-button" :aria-label="t('equities.expand', { ticker: item.ticker })" :aria-expanded="selectedTicker === item.ticker && detailOpen" @click="toggleStock(item)">{{ item.offerings.length }}</button></td>
+                  </template>
                 </tr>
-                <tr v-if="expanded === item.ticker" :id="`equity-detail-${item.ticker}`" class="equity-detail-row border-t border-stone-100 bg-stone-50/70 dark:border-slate-700 dark:bg-slate-900/40">
-                  <td colspan="5" class="px-5 py-4"><div class="grid gap-3 lg:grid-cols-3">
-                    <div v-for="p in item.platforms" :key="p" class="equity-offerings p-3">
-                      <h3 class="mb-2 text-xs font-semibold">{{ platformName(p) }}</h3>
-                      <ul class="space-y-2"><li v-for="offering in item.offerings.filter(o => o.platform === p)" :key="`${offering.source_id}:${offering.symbol}`" class="flex flex-wrap items-center gap-2 text-xs">
-                        <span class="equity-type-tag" :class="offering.trading_type === 'spot' ? 'equity-type-tag--spot' : 'equity-type-tag--perpetual'">{{ t(`equities.${offering.trading_type}`) }}</span>
-                        <a :href="offering.url" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 font-mono font-semibold underline decoration-stone-300 underline-offset-4">{{ offering.symbol }}<ArrowTopRightOnSquareIcon class="h-3 w-3" /></a>
-                        <span class="app-muted">{{ offering.product }}</span>
-                        <span v-if="isRestricted(offering.status)" class="text-amber-700 dark:text-amber-300">{{ t('equities.restricted') }}</span>
-                        <span v-if="isSourceStale(offering.source_id)" class="text-amber-700 dark:text-amber-300">{{ t('equities.cached') }}</span>
-                      </li></ul>
-                    </div>
-                  </div></td>
-                </tr>
+                <tr v-if="selectedTicker === item.ticker && detailOpen" :id="`eq-products-${item.ticker}`" class="eq-expanded-row"><td :colspan="layout === 'matrix' ? 4 : 5">
+                  <div :class="{ 'eq-matrix-expansion': layout === 'matrix' }">
+                    <div v-if="layout === 'matrix'" class="eq-expansion-label"><strong>{{ item.ticker }}</strong><p>{{ t('equities.productCount', { count: item.offerings.length }) }}</p></div>
+                    <EquityProductDetails :item="item" :sources="catalog?.sources ?? []" :arrangement="layout === 'matrix' ? 'columns' : 'rows'" />
+                  </div>
+                </td></tr>
               </template>
-
             </tbody>
           </table>
-        </div>
-          <AppEmptyState v-if="!paged.length" :title="t('equities.empty')" :icon="MagnifyingGlassIcon"><button v-if="hasFilters" type="button" class="app-button-secondary" @click="resetFilters">{{ t('equities.reset') }}</button></AppEmptyState>
-                  <div class="flex flex-wrap items-center justify-between gap-3 border-t border-stone-200 px-5 py-4 text-xs dark:border-slate-700">
-          <label class="app-muted flex items-center gap-2">{{ t('equities.pageSize') }}<select v-model.number="pageSize" class="app-control py-1 text-xs"><option :value="25">25</option><option :value="50">50</option><option :value="100">100</option></select></label>
-          <div class="flex items-center gap-3">
-            <button type="button" class="app-button-secondary px-3 py-1 text-xs" :disabled="page <= 1" @click="page--">{{ t('equities.previous') }}</button>
-            <span class="tabular-nums">{{ page }} / {{ pageCount }}</span>
-            <button type="button" class="app-button-secondary px-3 py-1 text-xs" :disabled="page >= pageCount" @click="page++">{{ t('equities.next') }}</button>
-          </div>
-        </div>
-        </template>
-      </section>
-      <details v-if="catalog" class="app-panel">
-        <summary class="cursor-pointer px-5 py-4 text-sm font-semibold">{{ t('equities.sources') }} · {{ catalog.sources.filter(s => s.status === 'ok').length }} / {{ catalog.sources.length }}</summary>
-        <div class="space-y-3 border-t border-stone-200 px-5 py-4 dark:border-slate-700">
-          <p class="app-muted text-xs leading-6">{{ t('equities.scope') }}</p>
-          <div v-for="source in catalog.sources" :key="source.id" class="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 pb-3 text-xs last:border-0 dark:border-slate-700">
-            <a :href="source.url" target="_blank" rel="noopener noreferrer" class="font-semibold underline underline-offset-4">{{ source.label }}</a>
-            <span class="app-muted">{{ source.count.toLocaleString() }} · {{ source.updated_at ? formatDateTime(source.updated_at) : '—' }} · <span :class="source.status !== 'ok' ? 'text-amber-700 dark:text-amber-300' : ''">{{ source.error === 'catalog_not_verified' ? t('equities.sourceNotVerified') : t(`equities.sourceStatus.${source.status}`) }}</span></span>
-          </div>
-          <p class="app-muted text-xs leading-6">{{ t('equities.availability') }}</p>
+
+          <footer v-if="catalog && filtered.length" class="eq-pagination">
+            <label>{{ t('equities.pageSize') }}<select v-model.number="pageSize" class="eq-control" :aria-label="t('equities.pageSize')"><option :value="25">25</option><option :value="50">50</option><option :value="100">100</option></select></label>
+            <div><button type="button" class="eq-control eq-page-arrow" :aria-label="t('equities.previous')" :disabled="page <= 1" @click="page--"><ChevronLeftIcon aria-hidden="true" /></button><span>{{ page }} / {{ pageCount }}</span><button type="button" class="eq-control eq-page-arrow" :aria-label="t('equities.next')" :disabled="page >= pageCount" @click="page++"><ChevronRightIcon aria-hidden="true" /></button></div>
+          </footer>
+        </section>
+      </div>
+
+      <details v-if="catalog" class="eq-source-details">
+        <summary><CircleStackIcon aria-hidden="true" /><span>{{ t('equities.sources') }}</span><span class="eq-source-count">{{ catalog.sources.filter(source => source.status === 'ok').length }} / {{ catalog.sources.length }}</span><ChevronDownIcon class="eq-source-chevron" aria-hidden="true" /></summary>
+        <div class="eq-source-body">
+          <p>{{ t('equities.scope') }}</p>
+          <p>{{ t('equities.notListed') }}</p>
+          <ul><li v-for="source in catalog.sources" :key="source.id"><a :href="source.url" target="_blank" rel="noopener noreferrer">{{ source.label }}<ArrowUpRightIcon aria-hidden="true" /></a><span>{{ source.count.toLocaleString() }} · {{ source.updated_at ? formatDateTime(source.updated_at) : '—' }}</span><span :class="{ 'eq-source-warning': source.status !== 'ok' }">{{ source.error === 'catalog_not_verified' ? t('equities.sourceNotVerified') : t(`equities.sourceStatus.${source.status}`) }}</span></li></ul>
+          <p>{{ t('equities.availability') }}</p>
         </div>
       </details>
     </div>
@@ -139,21 +141,38 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ArrowPathIcon, ArrowTopRightOnSquareIcon, ChevronDownIcon, FunnelIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
+import { AdjustmentsHorizontalIcon, ArrowPathIcon, ArrowUpRightIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, CircleStackIcon, MagnifyingGlassIcon, TableCellsIcon, ViewColumnsIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { apiErrorMessage } from '@/api/request'
 import { useDateTime } from '@/composables/useDateTime'
 import AppEmptyState from '@/components/AppEmptyState.vue'
 import AppLoadingState from '@/components/AppLoadingState.vue'
 import EquityCompanyLogo from '@/components/market/EquityCompanyLogo.vue'
+import EquityCatalogFilters from '@/components/market/EquityCatalogFilters.vue'
+import EquityProductDetails from '@/components/market/EquityProductDetails.vue'
 import { equityCatalogApi } from '@/modules/market/equityCatalog'
 import type { EquityCatalogItemResponse, EquityCatalogResponse } from '@/modules/market/contracts'
+import './equityMarket.css'
 
+type CatalogLayout = 'split' | 'matrix' | 'directory'
+const layoutStorageKey = 'opentrading:equity-catalog-layout'
+function readLayout(): CatalogLayout {
+  try { const value = localStorage.getItem(layoutStorageKey); if (value === 'matrix' || value === 'directory') return value } catch {}
+  return 'split'
+}
 const { t } = useI18n()
 const { formatDateTime } = useDateTime()
+const layout = ref<CatalogLayout>(readLayout())
+const layouts = computed(() => [
+  { id: 'split' as const, label: t('equities.layoutSplit'), description: t('equities.layoutSplitHint'), icon: ViewColumnsIcon },
+  { id: 'matrix' as const, label: t('equities.layoutMatrix'), description: t('equities.layoutMatrixHint'), icon: TableCellsIcon },
+  { id: 'directory' as const, label: t('equities.layoutDirectory'), description: t('equities.layoutDirectoryHint'), icon: AdjustmentsHorizontalIcon },
+])
+watch(layout, value => { try { localStorage.setItem(layoutStorageKey, value) } catch {} })
 const catalog = ref<EquityCatalogResponse | null>(null)
 const loading = ref(false)
 const error = ref('')
 const search = ref('')
+const searchInput = ref<HTMLInputElement | null>(null)
 const filtersOpen = ref(false)
 const platform = ref('all')
 const tradingType = ref('all')
@@ -162,95 +181,57 @@ const sharedOnly = ref(false)
 const sort = ref('coverage')
 const page = ref(1)
 const pageSize = ref(50)
-const expanded = ref('')
+const selectedTicker = ref('AAPL')
+const detailOpen = ref(true)
 const platforms = ['binance', 'okx', 'bitget'] as const
 let active = true
 
-const platformName = (p: string) => p === 'binance' ? t('equities.binance') : p === 'okx' ? 'OKX' : 'Bitget'
-const assetName = (kind: string) => kind === 'etf' ? 'ETF' : t(`equities.${kind}`)
-const platformDescription = (item: EquityCatalogItemResponse, p: string) => `${platformName(p)}: ${[...new Set(item.offerings.filter(o => o.platform === p).map(o => t(`equities.${o.trading_type}`)))].join(' / ')}`
-const isRestricted = (status: string) => !['trading', 'TRADING', 'BUY_SELL', 'live', 'online'].includes(status)
-const isSourceStale = (id: string) => catalog.value?.sources.find(s => s.id === id)?.status === 'stale'
-const unavailableLabels = computed(() => catalog.value?.sources.filter(s => s.status !== 'ok' && s.error !== 'catalog_not_verified').map(s => s.label).join(' / '))
-const stats = computed(() => {
-  const items = catalog.value?.items ?? []
-  return [
-    { id: 'all', label: t('equities.total'), value: items.length },
-    { id: 'spot', label: t('equities.withSpot'), value: items.filter(i => i.trading_types.includes('spot')).length },
-    { id: 'perpetual', label: t('equities.withPerpetual'), value: items.filter(i => i.trading_types.includes('perpetual')).length },
-    { id: 'shared', label: t('equities.shared'), value: items.filter(i => i.platforms.length > 1).length },
-  ]
-})
+const platformName = (value: string) => value === 'binance' ? t('equities.binance') : value === 'okx' ? 'OKX' : 'Bitget'
+const assetName = (kind: string) => t(`equities.${kind}`)
+const platformOfferings = (item: EquityCatalogItemResponse, value: string) => item.offerings.filter(offering => offering.platform === value)
+const offeringCount = (item: EquityCatalogItemResponse, value: string, kind: string) => item.offerings.filter(offering => offering.platform === value && offering.trading_type === kind).length
+const spotCount = computed(() => catalog.value ? catalog.value.items.filter(item => item.trading_types.includes('spot')).length : null)
+const perpetualCount = computed(() => catalog.value ? catalog.value.items.filter(item => item.trading_types.includes('perpetual')).length : null)
+const unavailableLabels = computed(() => catalog.value?.sources.filter(source => source.status !== 'ok' && source.error !== 'catalog_not_verified').map(source => source.label).join(' / '))
 const hasFilters = computed(() => Boolean(search.value || platform.value !== 'all' || tradingType.value !== 'all' || assetType.value !== 'all' || sharedOnly.value))
 const filterCount = computed(() => [platform.value !== 'all', tradingType.value !== 'all', assetType.value !== 'all', sharedOnly.value].filter(Boolean).length)
-const statSelected = (id: string) => id === 'all' ? !hasFilters.value : id === 'shared' ? sharedOnly.value : tradingType.value === id
-function selectStat(id: string) {
-  if (id === 'all') resetFilters()
-  else if (id === 'shared') sharedOnly.value = !sharedOnly.value
-  else tradingType.value = tradingType.value === id ? 'all' : id
-}
 const filtered = computed(() => {
   const query = search.value.trim().toLowerCase()
   return (catalog.value?.items ?? []).filter(item => {
     if (assetType.value !== 'all' && item.asset_type !== assetType.value) return false
     if (sharedOnly.value && item.platforms.length < 2) return false
-    const offerings = item.offerings.filter(o => platform.value === 'all' || o.platform === platform.value)
+    const offerings = item.offerings.filter(offering => platform.value === 'all' || offering.platform === platform.value)
     if (!offerings.length) return false
     if (tradingType.value === 'both') {
-      if (!offerings.some(o => o.trading_type === 'spot') || !offerings.some(o => o.trading_type === 'perpetual')) return false
-    } else if (tradingType.value !== 'all' && !offerings.some(o => o.trading_type === tradingType.value)) return false
-    return !query || [item.ticker, item.name, item.name_zh, ...item.offerings.map(o => o.symbol)].some(v => v.toLowerCase().includes(query))
+      if (!offerings.some(offering => offering.trading_type === 'spot') || !offerings.some(offering => offering.trading_type === 'perpetual')) return false
+    } else if (tradingType.value !== 'all' && !offerings.some(offering => offering.trading_type === tradingType.value)) return false
+    return !query || [item.ticker, item.name, item.name_zh, ...item.offerings.map(offering => offering.symbol)].some(value => value.toLowerCase().includes(query))
   }).sort((a, b) => sort.value === 'name' ? a.name.localeCompare(b.name) : (sort.value === 'coverage' ? b.platforms.length - a.platforms.length : 0) || a.ticker.localeCompare(b.ticker))
 })
 const pageCount = computed(() => Math.max(1, Math.ceil(filtered.value.length / pageSize.value)))
 const paged = computed(() => filtered.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value))
-watch([search, platform, tradingType, assetType, sharedOnly, sort, pageSize], () => { page.value = 1; expanded.value = '' })
+const selectedStock = computed(() => paged.value.find(item => item.ticker === selectedTicker.value) ?? null)
+watch([search, platform, tradingType, assetType, sharedOnly, sort, pageSize], () => { page.value = 1 })
 watch(pageCount, value => { page.value = Math.min(page.value, value) })
-function resetFilters() {
-  search.value = ''; platform.value = 'all'; tradingType.value = 'all'; assetType.value = 'all'; sharedOnly.value = false
+watch(paged, items => { if (items.length && !items.some(item => item.ticker === selectedTicker.value)) selectedTicker.value = items[0].ticker })
+function selectStock(item: EquityCatalogItemResponse) { selectedTicker.value = item.ticker; detailOpen.value = true }
+function toggleStock(item: EquityCatalogItemResponse) {
+  if (selectedTicker.value === item.ticker) detailOpen.value = !detailOpen.value
+  else selectStock(item)
+}
+function resetFilters() { search.value = ''; platform.value = 'all'; tradingType.value = 'all'; assetType.value = 'all'; sharedOnly.value = false }
+function searchShortcut(event: KeyboardEvent) {
+  const target = event.target as HTMLElement | null
+  if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey || target?.closest('input, textarea, select, [contenteditable=true]')) return
+  event.preventDefault(); searchInput.value?.focus()
 }
 async function load(refresh = false) {
   if (loading.value) return
-  loading.value = true
-  error.value = ''
-  try {
-    const result = await equityCatalogApi.getCatalog(refresh)
-    if (active) catalog.value = result
-  } catch (cause) {
-    if (active) error.value = apiErrorMessage(cause, t('equities.loadFailed'))
-  } finally {
-    if (active) loading.value = false
-  }
+  loading.value = true; error.value = ''
+  try { const result = await equityCatalogApi.getCatalog(refresh); if (active) catalog.value = result }
+  catch (cause) { if (active) error.value = apiErrorMessage(cause, t('equities.loadFailed')) }
+  finally { if (active) loading.value = false }
 }
-onMounted(() => load())
-onBeforeUnmount(() => { active = false })
+onMounted(() => { load(); window.addEventListener('keydown', searchShortcut) })
+onBeforeUnmount(() => { active = false; window.removeEventListener('keydown', searchShortcut) })
 </script>
-
-<style scoped>
-.equity-platform-tag { @apply inline-flex items-center border px-2 py-1 text-xs font-semibold; }
-.equity-platform-tag--binance { @apply border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200; }
-.equity-platform-tag--okx { @apply border-stone-300 bg-stone-100 text-stone-800 dark:border-slate-500 dark:bg-slate-700 dark:text-slate-100; }
-.equity-platform-tag--bitget { @apply border-cyan-200 bg-cyan-50 text-cyan-800 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-200; }
-.equity-type-tag { @apply inline-flex whitespace-nowrap px-2 py-1 text-xs font-semibold; }
-.equity-type-tag--spot { @apply bg-emerald-50 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300; }
-.equity-type-tag--perpetual { @apply bg-indigo-50 text-indigo-800 dark:bg-indigo-500/15 dark:text-indigo-300; }
-</style>
-
-<style scoped>
-.equity-toolbar { position: sticky; top: 0; z-index: 2; padding: 20px; border-bottom: 1px solid var(--ui-border); background: var(--ui-panel); border-radius: 8px 8px 0 0; }
-.equity-refine { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 12px; align-items: end; }
-.equity-shared { min-height: 38px; padding-inline: 8px; }
-.equity-filter-toggle { display: none; }
-.equity-sort { min-height: 32px; padding-block: 4px; font-size: 12px; }
-.equity-offerings { border-radius: 5px; background: var(--ui-panel); }
-@container app-content (max-width: 48rem) {
-  .equity-filter-toggle { display: inline-flex; }
-  .equity-refine { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .equity-refine:not(.is-open) { display: none; }
-  .equity-toolbar { position: static; padding: 16px; }
-}
-@container (max-width: 60rem) {
-  .equity-detail-row, .equity-detail-row > td { display: block; width: 100%; }
-  .equity-detail-row { margin: -12px 0 0; }
-}
-</style>

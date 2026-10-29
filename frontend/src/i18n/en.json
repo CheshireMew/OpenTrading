@@ -64,7 +64,21 @@
       "ok": "Updated",
       "stale": "Refresh failed; previous data retained",
       "unavailable": "Currently unavailable"
-    }
+    },
+    "layout": "Layout",
+    "layoutSplit": "Split",
+    "layoutMatrix": "Platforms",
+    "layoutDirectory": "Filters",
+    "layoutSplitHint": "Securities alongside their product details",
+    "layoutMatrixHint": "Compare spot and perpetual products by platform",
+    "layoutDirectoryHint": "Persistent filters alongside the catalog",
+    "securities": "securities",
+    "refreshing": "Refreshing",
+    "allTradingShort": "All",
+    "bothShort": "Both",
+    "clearSearch": "Clear search",
+    "emptyHint": "Try a different name or remove some filters.",
+    "notListed": "Missing records do not mean a platform does not support an asset. The complete Bitget Stock+ catalog has not been verified."
   },
   "pages": {
     "notFound": "Page not found"

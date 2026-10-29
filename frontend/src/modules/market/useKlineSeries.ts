@@ -25,11 +25,13 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
   const loadingMore = ref(false)
   const noMoreHistory = ref(false)
   const loadError = ref(false)
+  const loading = ref(false)
   const enabled = computed(() => options.enabled?.value ?? true)
   let tailRefreshPending = false
   let refreshTimer: number | null = null
   let isRouteActive = true
   let shouldRefreshOnActivate = false
+  let requestVersion = 0
 
   const cacheKey = computed(() => options.source?.key.value || `${symbol.value}:${timeframe.value}`)
   const klineData = computed(() => (
@@ -58,9 +60,10 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
     }))
   )
 
-  const fetchLatest = async (fetchOptions: { force?: boolean } = {}) => {
+  const fetchLatest = async (fetchOptions: { force?: boolean } = {}, version = requestVersion) => {
     const requestSymbol = symbol.value
     const requestTimeframe = timeframe.value
+    const requestKey = cacheKey.value
     if (!isRouteActive || !enabled.value || !requestSymbol || !requestTimeframe) {
       indexKlineData.value = []
       return
@@ -68,7 +71,7 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
     noMoreHistory.value = false
     if (options.source) {
       const items = await options.source.latest(1000)
-      if (!isRouteActive || cacheKey.value !== options.source.key.value) return
+      if (!isRouteActive || !enabled.value || version !== requestVersion || requestKey !== cacheKey.value) return
       sourceKlineData.value = mergeKlines(items).slice(-1000)
       return
     }
@@ -82,12 +85,12 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
         start_date: toLocalIsoDate(start),
         end_date: toLocalIsoDate(end),
       })
-      if (!isRouteActive || requestSymbol !== symbol.value || requestTimeframe !== timeframe.value) return
+      if (!isRouteActive || !enabled.value || version !== requestVersion || requestKey !== cacheKey.value) return
       indexKlineData.value = res.data || []
       return
     }
     const data = await klineStore.getKlineData(requestSymbol, requestTimeframe, 1000, fetchOptions)
-    if (!isRouteActive || requestSymbol !== symbol.value || requestTimeframe !== timeframe.value) return
+    if (!isRouteActive || !enabled.value || version !== requestVersion || requestKey !== cacheKey.value) return
     if (data) {
       klineStore.setKlineHistory(requestSymbol, requestTimeframe, data, 1000)
     }
@@ -97,6 +100,8 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
   const refreshTail = async () => {
     const requestSymbol = symbol.value
     const requestTimeframe = timeframe.value
+    const requestKey = cacheKey.value
+    const version = requestVersion
     if (!isRouteActive || !enabled.value || !requestSymbol || !requestTimeframe || (!options.source && isIndexSymbol(requestSymbol))) return
     const tail = options.source
       ? await options.source.tail(LIVE_TAIL_LIMIT)
@@ -105,7 +110,7 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
           timeframe: requestTimeframe,
           limit: LIVE_TAIL_LIMIT,
         })).kline_data || []
-    if (!isRouteActive || requestSymbol !== symbol.value || requestTimeframe !== timeframe.value) return
+    if (!isRouteActive || !enabled.value || version !== requestVersion || requestKey !== cacheKey.value) return
     if (tail.length === 0) return
     if (options.source) sourceKlineData.value = mergeKlines(sourceKlineData.value, tail).slice(-1000)
     else klineStore.applyKlineTail(requestSymbol, requestTimeframe, tail, 1000)
@@ -124,25 +129,34 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
     refreshTimer = window.setInterval(() => {
       if (!isRouteActive || isIndexSymbol(symbol.value) || tailRefreshPending) return
       tailRefreshPending = true
+      const version = requestVersion
       refreshTail().catch(error => {
+        if (version !== requestVersion || !enabled.value) return
         console.error('Realtime refresh failed', error)
         loadError.value = true
         stopAutoRefresh()
       }).finally(() => {
-        tailRefreshPending = false
+        if (version === requestVersion) tailRefreshPending = false
       })
     }, REFRESH_INTERVAL_MS)
   }
 
   const loadLatest = async (fetchOptions: { force?: boolean } = {}) => {
+    const version = ++requestVersion
+    loading.value = true
+    loadError.value = false
     try {
-      await fetchLatest(fetchOptions)
-      loadError.value = false
+      await fetchLatest(fetchOptions, version)
+      if (version === requestVersion) loadError.value = false
     } catch (error) {
+      if (version !== requestVersion) return
       loadError.value = true
       console.error('Market history load failed', error)
     } finally {
-      if (!loadError.value) startAutoRefresh()
+      if (version === requestVersion) {
+        loading.value = false
+        if (!loadError.value) startAutoRefresh()
+      }
     }
   }
 
@@ -150,6 +164,8 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
     if (loadingMore.value || noMoreHistory.value || klineData.value.length === 0) return
 
     loadingMore.value = true
+    const version = requestVersion
+    const requestKey = cacheKey.value
     try {
       const requestSymbol = symbol.value
       const requestTimeframe = timeframe.value
@@ -164,7 +180,7 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
           start_date: toLocalIsoDate(start),
           end_date: toLocalIsoDate(end),
         })
-        if (requestSymbol !== symbol.value || requestTimeframe !== timeframe.value) return
+        if (!isRouteActive || !enabled.value || version !== requestVersion || requestKey !== cacheKey.value) return
         const newKlines = res.data || []
         if (newKlines.length === 0) {
           noMoreHistory.value = true
@@ -182,7 +198,7 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
         end_ts: oldest.timestamp - 1,
         limit: 500,
       })).items || []
-      if (requestSymbol !== symbol.value || requestTimeframe !== timeframe.value) return
+      if (!isRouteActive || !enabled.value || version !== requestVersion || requestKey !== cacheKey.value) return
 
       if (newKlines.length === 0) {
         noMoreHistory.value = true
@@ -192,9 +208,9 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
       if (options.source) sourceKlineData.value = mergeKlines(newKlines, sourceKlineData.value).slice(-5000)
       else klineStore.prependKlineHistory(requestSymbol, requestTimeframe, newKlines)
     } catch (e) {
-      console.error('Load history failed', e)
+      if (version === requestVersion) console.error('Load history failed', e)
     } finally {
-      loadingMore.value = false
+      if (version === requestVersion) loadingMore.value = false
     }
   }
 
@@ -203,6 +219,9 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
   ).sort((left, right) => left.timestamp - right.timestamp)
 
   watch([symbol, timeframe, enabled, cacheKey], async () => {
+    requestVersion += 1
+    loading.value = false
+    loadingMore.value = false
     stopAutoRefresh()
     tailRefreshPending = false
     if (!isRouteActive || !enabled.value || !symbol.value || !timeframe.value) {
@@ -230,6 +249,9 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
   })
 
   onDeactivated(() => {
+    requestVersion += 1
+    loading.value = false
+    loadingMore.value = false
     isRouteActive = false
     shouldRefreshOnActivate = true
     tailRefreshPending = false
@@ -237,6 +259,7 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
   })
 
   onUnmounted(() => {
+    requestVersion += 1
     isRouteActive = false
     stopAutoRefresh()
   })
@@ -245,6 +268,7 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
     chartData,
     volumeData,
     loadingMore,
+    loading,
     noMoreHistory,
     loadError,
     fetchLatest,

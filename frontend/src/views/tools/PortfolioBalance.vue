@@ -29,6 +29,7 @@
         <div v-if="storageReady && !storageLoading && !portfolioTransitioning && activePortfolio" class="min-w-0 space-y-6">
           <div v-if="sourceMessage || sourceError" :role="sourceError ? 'alert' : 'status'" class="app-inline-note" :class="sourceError ? 'text-amber-800 dark:text-amber-200' : ''">{{ sourceError || sourceMessage }}</div>
           <AppTabs id="portfolio" v-model="activeSection" :label="t('portfolioBalance.title')" :tabs="portfolioTabs" />
+          <div v-show="activeSection === 'overview'" id="portfolio-panel-overview" role="tabpanel" aria-labelledby="portfolio-tab-overview" tabindex="0"><PortfolioOverview v-if="activeSection === 'overview'" :plan="plan" :ledger="ledgerSnapshot" :ledger-state="ledgerState" @navigate="activeSection = $event" /></div>
           <div v-show="activeSection === 'allocation'" id="portfolio-panel-allocation" role="tabpanel" aria-labelledby="portfolio-tab-allocation" tabindex="0" class="space-y-5">
             <div v-if="!hasHoldings" class="app-inline-note flex flex-wrap items-center justify-between gap-3"><span>{{ t('ui.portfolioPlanHint') }}</span><button type="button" class="font-semibold underline underline-offset-4" @click="activeSection = 'ledger'">{{ t('ui.ledgerTab') }}</button></div>
             <PortfolioAssetsTable
@@ -59,7 +60,7 @@
           <div v-show="activeSection === 'ledger'" id="portfolio-panel-ledger" role="tabpanel" aria-labelledby="portfolio-tab-ledger" tabindex="0"><PortfolioLedgerPanel
             :portfolio-id="activePortfolio.id"
             :price-refresh-key="activePortfolio.lastPriceUpdatedAt"
-            @ledger-updated="applyPortfolioLedger"
+            @ledger-updated="onLedgerUpdated" @load-state="ledgerState = $event"
           /></div>
           <div v-show="activeSection === 'simulation'" id="portfolio-panel-simulation" role="tabpanel" aria-labelledby="portfolio-tab-simulation" tabindex="0"><PortfolioSimulationPanel
             :simulation="simulation"
@@ -93,6 +94,7 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
+import PortfolioOverview from '@/components/portfolio/PortfolioOverview.vue'
 import AppTabs from '@/components/AppTabs.vue'
 import { useI18n } from 'vue-i18n'
 import PortfolioAssetsTable from '@/components/portfolio/PortfolioAssetsTable.vue'
@@ -148,10 +150,15 @@ const {
   loadMoreDeletedPortfolios,
 } = usePortfolioBalancePage()
 const { t } = useI18n()
-const activeSection = ref('allocation')
+const activeSection = ref('overview')
+const ledgerSnapshot = ref(null)
+const ledgerState = ref({ loading: true, error: '' })
+const onLedgerUpdated = ledger => { if (ledger.portfolioId !== activePortfolioId.value) return; ledgerSnapshot.value = ledger; applyPortfolioLedger(ledger) }
+watch(activePortfolioId, () => { ledgerSnapshot.value = null; ledgerState.value = { loading: true, error: '' } })
 const visitedRisk = ref(false)
 const hasHoldings = computed(() => assets.value.some(asset => Number(asset.units) > 0))
 const portfolioTabs = computed(() => [
+  { id: 'overview', label: t('workspaceViews.overview') },
   { id: 'allocation', label: t('ui.allocationTab') },
   { id: 'ledger', label: t('ui.ledgerTab') },
   { id: 'simulation', label: t('ui.historicalSimulation') },

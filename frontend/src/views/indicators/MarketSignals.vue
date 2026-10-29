@@ -5,9 +5,10 @@
         <h1 class="app-title">
           {{ t('marketSignals.title') }}
         </h1>
+        <div class="flex flex-wrap items-center gap-3"><AppLayoutSwitch v-model="pageLayout" :options="layoutOptions" />
         <button type="button" class="app-button-primary app-touch-target" :disabled="loading" @click="refresh">
           {{ loading ? t('marketSignals.refreshing') : t('marketSignals.refresh') }}
-        </button>
+        </button></div>
       </header>
 
       <div v-if="error" role="alert" class="flex flex-wrap items-center justify-between gap-3 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/40 dark:bg-red-950/40 dark:text-red-200">
@@ -32,6 +33,14 @@
       </div>
 
       <template v-else-if="totalCount > 0">
+        <section v-if="selectedCard" class="signal-detail app-panel p-5" aria-labelledby="signal-detail-title">
+          <header class="flex flex-wrap items-center justify-between gap-3"><h2 id="signal-detail-title" class="app-section-title">{{ t('indicator.' + selectedCard.indicator.indicator_id, selectedCard.indicator.name) }}</h2><button type="button" class="app-button-secondary" @click="selectedId = ''">{{ t('workspaceViews.close') }}</button></header>
+          <div class="my-4 flex items-baseline gap-4"><strong class="text-3xl">{{ selectedCard.valueLabel }}</strong><span :class="changeToneClass(selectedCard.changeValue)">{{ selectedCard.changeLabel }}</span><span class="text-xs app-muted">{{ selectedCard.lastUpdatedLabel }}</span></div>
+          <IndicatorChart v-if="selectedCard.indicator.history.length >= 2" :key="selectedId" :indicator="selectedCard.indicator" height="h-80" />
+          <p v-else class="py-12 text-center app-muted">{{ t('marketSignals.collectingHistory', { count: selectedCard.indicator.history.length }) }}</p>
+          <p v-if="selectedCard.indicator.description" class="mt-4 text-sm app-muted">{{ selectedCard.indicator.description }}</p>
+        </section>
+
         <section v-for="group in visibleGroups" :key="group.definition.id" class="space-y-3">
           <div :class="['category-heading', `category-heading--${group.definition.accent}`]">
             <div>
@@ -40,16 +49,16 @@
             <div class="text-sm font-semibold text-slate-500 dark:text-slate-400">{{ t('marketSignals.itemCount', { count: group.cards.length }) }}</div>
           </div>
 
-          <div v-if="group.cards.length > 0" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div v-if="group.cards.length > 0 && pageLayout === 'cards'" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <article v-for="card in group.cards" :key="card.indicator.indicator_id" class="metric-card">
-              <div class="flex items-start justify-between gap-3">
+              <button type="button" class="flex w-full items-start justify-between gap-3 text-left" :aria-expanded="selectedId === card.indicator.indicator_id" @click="selectIndicator(card.indicator.indicator_id)">
                 <div class="min-w-0">
                   <h3 class="text-sm font-semibold text-slate-950 dark:text-white" :title="card.indicator.indicator_id">
                     {{ $t('indicator.' + card.indicator.indicator_id, card.indicator.name) }}
                   </h3>
                 </div>
                 <span :class="['change-pill', changeToneClass(card.changeValue)]">{{ card.changeLabel }}</span>
-              </div>
+              </button>
 
               <div class="mt-4 flex items-end justify-between gap-3">
                 <div class="min-w-0 text-2xl font-semibold text-slate-950 dark:text-white">{{ card.valueLabel }}</div>
@@ -69,6 +78,11 @@
             </article>
           </div>
 
+          <div v-else-if="group.cards.length > 0" class="signal-compact-list">
+            <button v-for="card in group.cards" :key="card.indicator.indicator_id" type="button" :aria-expanded="selectedId === card.indicator.indicator_id" @click="selectIndicator(card.indicator.indicator_id)">
+              <strong>{{ t('indicator.' + card.indicator.indicator_id, card.indicator.name) }}</strong><span class="signal-list-value">{{ card.valueLabel }}</span><span :class="changeToneClass(card.changeValue)">{{ card.changeLabel }}</span><time>{{ card.lastUpdatedLabel }}</time>
+            </button>
+          </div>
           <div v-else class="empty-row">
             {{ $t('marketSignals.groupEmpty') }}
           </div>
@@ -86,7 +100,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import AppLayoutSwitch from "@/components/AppLayoutSwitch.vue"
+import { usePageLayout } from "@/composables/usePageLayout"
+import { nextTick, computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import IndicatorChart from '@/components/IndicatorChart.vue'
 import { useTheme } from '@/composables/useTheme'
@@ -112,6 +128,12 @@ const changeToneClass = (value: number | null) => {
 onMounted(() => {
   load()
 })
+
+const pageLayout = usePageLayout('signals', ['cards', 'compact'] as const, 'cards')
+const layoutOptions = computed(() => ['cards', 'compact'].map(value => ({ value, label: t(`workspaceViews.${value}`) })))
+const selectedId = ref('')
+const selectedCard = computed(() => visibleGroups.value.flatMap(group => group.cards).find(card => card.indicator.indicator_id === selectedId.value))
+const selectIndicator = (id: string) => { selectedId.value = selectedId.value === id ? '' : id; if (selectedId.value) void nextTick(() => document.querySelector('.signal-detail')?.scrollIntoView({ block: 'nearest' })) }
 </script>
 
 <style scoped>
@@ -125,6 +147,13 @@ onMounted(() => {
 .metric-card { padding: 18px; }
 .change-pill { flex-shrink: 0; border-width: 1px; border-radius: 4px; padding: 3px 6px; font-size: 12px; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .empty-row { border: 1px solid var(--ui-border); border-radius: 6px; background: var(--ui-panel); padding: 32px 20px; text-align: center; color: var(--ui-muted); }
+
+.signal-compact-list { border-block:1px solid var(--ui-border); }
+.signal-compact-list button { display:grid; grid-template-columns:minmax(180px,1fr) minmax(100px,.6fr) 100px 140px; gap:18px; align-items:center; width:100%; padding:18px 12px; text-align:left; border-bottom:1px solid var(--ui-border); font-size:13px; }
+.signal-compact-list button:hover,.signal-compact-list button[aria-expanded=true] { background:var(--ui-hover); }
+.signal-list-value { font-size:18px; font-weight:600; font-variant-numeric:tabular-nums; }
+.signal-compact-list time { color:var(--ui-muted); font-size:11px; text-align:right; }
+@container app-content (max-width:48rem) { .signal-compact-list button { grid-template-columns:minmax(0,1fr) auto; gap:8px 16px; } .signal-compact-list time { grid-column:1; text-align:left; grid-row:2; } }
 </style>
 
 <style scoped>

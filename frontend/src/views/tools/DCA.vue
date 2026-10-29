@@ -1,9 +1,9 @@
 <template>
   <div class="app-page">
     <div class="app-page-inner-wide">
-      <header class="app-workspace-header"><h1 class="app-title">{{ $t('nav.dca') }}</h1></header>
-      <div class="dca-workspace">
-        <aside class="dca-configuration min-w-0 space-y-6">
+      <header class="app-workspace-header"><h1 class="app-title">{{ $t('nav.dca') }}</h1><AppLayoutSwitch v-model="pageLayout" :options="layoutOptions" /></header>
+      <div class="dca-workspace" :class="{ 'dca-results-only': pageLayout === 'results' }">
+        <aside v-show="pageLayout === 'split'" class="dca-configuration min-w-0 space-y-6">
           <form class="app-panel p-5" @submit.prevent="runSimulation">
             <h2 class="app-section-title mb-5">{{ $t('dca.config') }}</h2>
             <div class="dca-primary-fields">
@@ -39,7 +39,8 @@
             <div class="dca-supporting-charts"><section class="app-panel p-5"><h2 class="app-section-title mb-4">{{ $t('dca.priceVsCost') }}</h2><div class="h-64"><canvas ref="priceChartCanvas" role="img" :aria-label="$t('dca.priceVsCost')" /></div></section><section class="app-panel p-5"><h2 class="app-section-title mb-4">{{ $t('dca.dailyAmount') }}</h2><div class="h-64"><canvas ref="investmentChartCanvas" role="img" :aria-label="$t('dca.dailyAmount')" /></div></section></div>
           </template>
           <div v-else-if="loading" class="app-panel"><AppLoadingState :label="$t('dca.calculating')" :rows="6" /></div>
-          <div v-else class="dca-empty"><AppEmptyState :title="$t('dca.emptyResultTitle')" :description="$t('ui.dcaEmptyHint')" :icon="PresentationChartLineIcon" /></div>
+          <div v-else class="dca-empty">
+            <button v-if="pageLayout === 'results'" type="button" class="app-button-primary mx-auto mt-5" @click="pageLayout = 'split'">{{ $t('dca.config') }}</button><AppEmptyState :title="$t('dca.emptyResultTitle')" :description="$t('ui.dcaEmptyHint')" :icon="PresentationChartLineIcon" /></div>
         </section>
       </div>
     </div>
@@ -47,6 +48,10 @@
 </template>
 
 <script setup>
+import AppLayoutSwitch from "@/components/AppLayoutSwitch.vue"
+import { usePageLayout } from "@/composables/usePageLayout"
+import { computed } from "vue"
+import { useI18n } from "vue-i18n"
 import { ArrowPathIcon, PresentationChartLineIcon } from '@heroicons/vue/24/outline'
 import AppEmptyState from '@/components/AppEmptyState.vue'
 import AppLoadingState from '@/components/AppLoadingState.vue'
@@ -76,6 +81,10 @@ const {
   displayCurrency,
   formatMoney,
 } = useDcaPage()
+
+const { t } = useI18n()
+const pageLayout = usePageLayout('dca', ['split', 'results'], 'split')
+const layoutOptions = computed(() => [{ value:'split', label:t('workspaceViews.configuration') }, { value:'results', label:t('workspaceViews.results') }])
 </script>
 
 <style scoped>
@@ -109,4 +118,7 @@ const {
   .dca-context-values { gap: 12px; }
   .dca-context-values dd { font-size: 16px; }
 }
+.dca-workspace.dca-results-only { grid-template-columns:minmax(0,1fr); }
+.dca-results-only .dca-output-values { grid-template-columns:repeat(6,minmax(0,1fr)); }
+@container app-content (max-width:60rem) { .dca-results-only .dca-output-values { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 </style>

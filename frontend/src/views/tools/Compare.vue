@@ -1,7 +1,7 @@
 <template>
   <div class="app-page">
     <div class="app-page-inner-wide flex min-h-full flex-col">
-    <header class="app-workspace-header"><h1 class="app-title">{{ $t('nav.compare') }}</h1></header>
+    <header class="app-workspace-header"><h1 class="app-title">{{ $t('nav.compare') }}</h1><AppLayoutSwitch v-model="pageLayout" :options="layoutOptions" /></header>
     <!-- Configuration Panel -->
     <div class="app-hero-panel flex flex-wrap items-end gap-4 transition-colors">
       <div class="flex-1 min-w-[200px]">
@@ -66,10 +66,11 @@
     </div>
 
     <!-- Charts Grid -->
-    <div v-else-if="hasData" class="compare-charts">
+    <div v-else-if="hasData" class="compare-charts" :class="`compare-layout-${pageLayout}`">
+      <label v-if="pageLayout === 'focus'" for="compare-focused-chart" class="flex items-center gap-3 text-sm">{{ $t('workspaceViews.chart') }}<select id="compare-focused-chart" v-model="focusedChart" :aria-label="$t('workspaceViews.chart')" class="app-control"><option value="ratio">{{ $t('compare.ratio') }}</option><option value="a">{{ resultSymbols.symbolA }}</option><option value="b">{{ resultSymbols.symbolB }}</option></select></label>
 
       <!-- Ratio Chart (Full Width) -->
-      <div class="app-panel relative flex flex-col overflow-hidden transition-colors compare-ratio-chart">
+      <div class="app-panel relative flex flex-col overflow-hidden transition-colors compare-ratio-chart" v-show="pageLayout !== 'focus' || focusedChart === 'ratio'">
         <div class="absolute top-2 left-2 z-10 border border-[#b8d2c4] bg-white/90 px-2 py-1 text-sm font-bold text-[#0f6b4f] dark:border-green-500/30 dark:bg-gray-900/80 dark:text-green-400">
           {{ $t('compare.ratio') }}: {{ resultSymbols.symbolA }} / {{ resultSymbols.symbolB }}
         </div>
@@ -80,8 +81,8 @@
           :colors="chartColors"
         />
       </div>
-<div class="compare-price-charts">      <!-- Chart A -->
-      <div class="app-panel relative flex flex-col overflow-hidden transition-colors">
+<div class="compare-price-charts" v-show="pageLayout !== 'focus' || focusedChart !== 'ratio'">      <!-- Chart A -->
+      <div class="app-panel relative flex flex-col overflow-hidden transition-colors" v-show="pageLayout !== 'focus' || focusedChart === 'a'">
         <div class="absolute top-2 left-2 z-10 border border-[#b8d2c4] bg-white/90 px-2 py-1 text-sm font-bold text-[#0f6b4f] dark:border-emerald-500/30 dark:bg-gray-900/80 dark:text-emerald-300">
           {{ symbolLabel(resultSymbols.symbolA) }}
         </div>
@@ -93,7 +94,7 @@
       </div>
 
       <!-- Chart B -->
-      <div class="app-panel relative flex flex-col overflow-hidden transition-colors">
+      <div class="app-panel relative flex flex-col overflow-hidden transition-colors" v-show="pageLayout !== 'focus' || focusedChart === 'b'">
         <div class="absolute top-2 left-2 z-10 border border-[#efc4b5] bg-white/90 px-2 py-1 text-sm font-bold text-[#c84c28] dark:border-purple-500/30 dark:bg-gray-900/80 dark:text-purple-400">
           {{ symbolLabel(resultSymbols.symbolB) }}
         </div>
@@ -112,6 +113,10 @@
 </template>
 
 <script setup>
+import AppLayoutSwitch from "@/components/AppLayoutSwitch.vue"
+import { usePageLayout } from "@/composables/usePageLayout"
+import { computed, ref } from "vue"
+import { useI18n } from "vue-i18n"
 const formatStatistic = value => value == null ? '—' : typeof value === 'number' ? value.toLocaleString(undefined, { maximumFractionDigits: 3 }) : value
 import { ArrowPathIcon } from '@heroicons/vue/24/outline'
 import TradingViewChart from '@/components/TradingViewChart.vue'
@@ -138,6 +143,11 @@ const {
   symbolLabel,
   canCompare,
 } = useComparePage()
+
+const { t } = useI18n()
+const pageLayout = usePageLayout('compare', ['ratio', 'prices', 'focus'], 'ratio')
+const focusedChart = ref('ratio')
+const layoutOptions = computed(() => ['ratio', 'prices', 'focus'].map(value => ({ value, label: t(`workspaceViews.${value}`) })))
 </script>
 
 <style scoped>
@@ -147,4 +157,11 @@ const {
 .compare-price-charts > div { min-height: 300px; }
 .compare-metrics { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 @container app-content (max-width: 48rem) { .compare-price-charts { grid-template-columns: minmax(0, 1fr); } .compare-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.compare-layout-prices .compare-price-charts { order:-1; }
+.compare-layout-prices .compare-price-charts > div { min-height:440px; }
+.compare-layout-prices .compare-ratio-chart { min-height:240px; }
+.compare-layout-focus .compare-price-charts { grid-template-columns:minmax(0,1fr); }
+.compare-layout-focus .compare-ratio-chart,.compare-layout-focus .compare-price-charts > div { min-height:560px; }
+@container app-content (max-width:48rem) { .compare-layout-focus .compare-ratio-chart,.compare-layout-focus .compare-price-charts > div { min-height:400px; } }
 </style>

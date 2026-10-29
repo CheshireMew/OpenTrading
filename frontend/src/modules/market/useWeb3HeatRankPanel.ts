@@ -38,6 +38,7 @@ export function useWeb3HeatRankPanel(chainId: Ref<string>) {
   const web3Kline = ref<BinanceWeb3TokenKlineItemResponse[]>([])
   const web3KlineInterval = ref('15min')
   let heatRankFetchState: { key: string; task: Promise<void> } | null = null
+  let detailRequestId = 0
 
   const web3ChartData = computed<CandlestickData[]>(() => (
     web3Kline.value
@@ -121,6 +122,7 @@ export function useWeb3HeatRankPanel(chainId: Ref<string>) {
   }
 
   const loadWeb3TokenDetail = async () => {
+    const requestId = ++detailRequestId
     const token = web3Dialog.value.token
     if (!web3Dialog.value.open || !token?.chain_id || !token?.contract_address || !token?.platform) return
     web3DetailLoading.value = true
@@ -142,27 +144,36 @@ export function useWeb3HeatRankPanel(chainId: Ref<string>) {
           limit: 240,
         }),
       ])
+      if (requestId !== detailRequestId) return
       web3Dynamic.value = dynamicRes
       web3Audit.value = auditRes
       web3Kline.value = klineRes?.items || []
     } catch (requestError) {
+      if (requestId !== detailRequestId) return
       web3DetailErrorKey.value = 'web3Rank.tokenDetailLoadFailed'
       web3Dynamic.value = null
       web3Audit.value = null
       web3Kline.value = []
       console.error('Failed to load Web3 token detail', requestError)
     } finally {
-      web3DetailLoading.value = false
+      if (requestId === detailRequestId) web3DetailLoading.value = false
     }
   }
 
   const openWeb3Token = (token: BinanceWeb3HeatRankItemResponse) => {
     if (!token.chain_id || !token.contract_address) return
+    if (web3Dialog.value.token?.contract_address !== token.contract_address || web3Dialog.value.token?.chain_id !== token.chain_id) {
+      web3Dynamic.value = null
+      web3Audit.value = null
+      web3Kline.value = []
+    }
     web3Dialog.value = { open: true, token }
     void loadWeb3TokenDetail()
   }
 
   const closeWeb3Token = () => {
+    detailRequestId += 1
+    web3DetailLoading.value = false
     web3Dialog.value = { open: false, token: null }
     web3Dynamic.value = null
     web3Audit.value = null
@@ -182,6 +193,7 @@ export function useWeb3HeatRankPanel(chainId: Ref<string>) {
   }
 
   watch(chainId, () => {
+    closeWeb3Token()
     if (!restoreHeatRankWarmSnapshot()) web3HeatRankBoards.value = {}
     void fetchWeb3HeatRank()
   })

@@ -12,6 +12,7 @@
       <select v-if="layouts.length>1" :aria-label="cw('savedLayouts')" :value="layoutId" @change="switchLayout(($event.target as HTMLSelectElement).value)"><option v-for="item in layouts" :key="item.id" :value="item.id">{{ item.name }}</option></select>
       <button @click="toggleTheme" :aria-label="cw('toggleTheme')"><SunIcon v-if="theme==='dark'" class="cw-icon" aria-hidden="true" /><MoonIcon v-else class="cw-icon" aria-hidden="true" /></button><button @click="toggleWatchlist" :aria-expanded="watchlistVisible">{{ cw('watchlist') }}</button>
     </header>
+    <div class="cw-panel-toolbar"><AppLayoutSwitch :model-value="currentPanelView" :options="panelOptions" @update:model-value="choosePanelView" /></div>
     <div v-if="error" class="cw-notice" role="alert"><span>{{ messageText(error) }}</span><button v-if="conflictDraft" @click="recoverDraft">{{ cw('recoverLayout') }}</button><button @click="error=''">{{ cw('close') }}</button><button v-if="!workspace" @click="initialize">{{ cw('reload') }}</button></div>
     <div v-if="snapshotRun" class="cw-notice"><span>{{ cw('viewingSnapshot',{run:snapshotRun.slice(0,8)}) }}</span><button @click="returnLive">{{ cw('returnLive') }}</button></div>
     <div class="cw-body">
@@ -51,6 +52,9 @@ import { OpenTradingPineEngine } from '@/modules/chartWorkspace/pineEngine'
 import { DARK_THEME,LIGHT_THEME,type IndicatorHandle } from '@luxalgo/vela'
 import { Bars3Icon, MagnifyingGlassIcon, AdjustmentsHorizontalIcon, SunIcon, MoonIcon, XMarkIcon, ChevronDownIcon, PencilSquareIcon, PlusIcon, StarIcon } from '@heroicons/vue/24/outline'
 import { useModalDialog } from '@/composables/useModalDialog'
+import AppLayoutSwitch from '@/components/AppLayoutSwitch.vue'
+import { usePageLayout } from '@/composables/usePageLayout'
+import { useI18n } from 'vue-i18n'
 import { useTheme } from '@/composables/useTheme'
 import { chartApi,type ChartSymbol,type ChartQuote,type WorkspaceDocument,type PineRun,type PineCapabilities } from '@/modules/chartWorkspace/api'
 import { OpenTradingProvider,fromVela,velaSymbol,timeframes } from '@/modules/chartWorkspace/provider'
@@ -98,6 +102,19 @@ const {dialogRef:capabilitiesDialogRef}=useModalDialog(capabilitiesOpen,()=>{cap
 const rightOpen=ref(true),rightWidth=ref(300),bottomHeight=ref(340),bottomTab=ref(''),editorMounted=ref(false),testerMounted=ref(false)
 const compactWorkspace=ref(false),watchlistDrawerOpen=ref(false),maxBottomHeight=ref(700)
 const watchlistVisible=computed(()=>compactWorkspace.value?watchlistDrawerOpen.value:rightOpen.value)
+const { t } = useI18n()
+const panelView = usePageLayout('chart-panels', ['custom', 'focus', 'watchlist', 'editor'] as const, 'custom')
+const panelOptions = computed(() => [{ value:'focus', label:t('workspaceViews.chartFocus') }, { value:'watchlist', label:t('workspaceViews.watchlist') }, { value:'editor', label:t('workspaceViews.editor') }])
+function applyPanelView() {
+  if (panelView.value === 'focus') { rightOpen.value=false; watchlistDrawerOpen.value=false; bottomTab.value='' }
+  else if (panelView.value === 'editor') { rightOpen.value=false; watchlistDrawerOpen.value=false; bottomTab.value='editor'; editorMounted.value=true }
+  else if (panelView.value === 'watchlist') { rightOpen.value=true; watchlistDrawerOpen.value=compactWorkspace.value; bottomTab.value='' }
+  void nextTick(()=>workspace.value?.resize())
+}
+const currentPanelView = computed(() => bottomTab.value === 'editor' ? 'editor' : !bottomTab.value && !watchlistVisible.value ? 'focus' : !bottomTab.value && watchlistVisible.value ? 'watchlist' : '')
+function choosePanelView(value:string) { panelView.value=value as typeof panelView.value; applyPanelView() }
+watch(currentPanelView, value => { if (!loading.value) panelView.value = value || 'custom' })
+
 const {dialogRef:watchlistDialogRef}=useModalDialog(computed(()=>compactWorkspace.value&&watchlistDrawerOpen.value),()=>{watchlistDrawerOpen.value=false})
 function toggleWatchlist(){if(compactWorkspace.value)watchlistDrawerOpen.value=!watchlistDrawerOpen.value;else rightOpen.value=!rightOpen.value}
 function syncWorkspaceViewport(){compactWorkspace.value=window.innerWidth<=950;maxBottomHeight.value=Math.max(180,window.innerHeight-180);if(!compactWorkspace.value)watchlistDrawerOpen.value=false;if(bottomHeight.value>maxBottomHeight.value)bottomHeight.value=maxBottomHeight.value}
@@ -298,7 +315,7 @@ async function initialize(){
     const lastScript=await readDraft<string>('last-script')
     if(lastScript===''){const draft=await readDraft<{source:string}>('script:new');if(draft){scriptId.value='';source.value=draft.source;editorReady=true;scriptDirty.value=true}else await openScript()}
     else{if(lastScript&&scripts.value.some(s=>s.id===lastScript))scriptId.value=lastScript;await openScript()}
-    projectActive();void refreshQuotes()
+    projectActive();applyPanelView();void refreshQuotes()
   }catch(e){fail(e)}finally{loading.value=false}
 }
 watch(source,value=>{if(!editorReady)return;scriptDirty.value=value!==selectedScript.value?.data.source;clearTimeout(localTimer);localTimer=setTimeout(()=>void writeDraft('script:'+(scriptId.value||'new'),{source:value}).catch(fail),400)})
@@ -352,4 +369,10 @@ onBeforeUnmount(()=>{finishName(false);cancelPine();disposed=true;clearTimeout(q
   .cw-watchlist{display:flex!important;position:absolute;inset-block:0;right:0;z-index:30;max-width:calc(100% - 32px);box-shadow:-8px 0 24px #0003}
   .cw-chart .vela-panel{position:absolute;right:0;inset-block:0;z-index:12;max-width:calc(100% - 48px);box-shadow:-6px 0 20px #0002}
 }
+
+.cw-panel-toolbar { display:flex; padding:6px 10px; border-bottom:1px solid var(--cw-border); background:var(--cw-panel); }
+.chart-workspace .cw-panel-toolbar .app-layout-switch { padding:2px; border-color:var(--cw-border); }
+.chart-workspace .cw-panel-toolbar .app-layout-switch button { display:flex; gap:6px; min-height:28px; padding:4px 10px; font-size:11px; }
+.chart-workspace .cw-panel-toolbar .app-layout-switch button[aria-pressed=true] { background:var(--cw-accent); color:white; }
+.chart-workspace.cw-dark .cw-panel-toolbar .app-layout-switch button[aria-pressed=true] { color:#09231f; }
 </style>

@@ -9,6 +9,15 @@
           </div>
 
           <div class="flex flex-wrap items-end gap-4">
+            <AppLayoutSwitch v-model="pageLayout" :options="layoutOptions" />
+          <button
+            type="button"
+            class="app-button-primary app-touch-target px-4 py-2"
+            :disabled="web3Loading"
+            @click="fetchWeb3HeatRank"
+          >
+            {{ web3Loading ? t('web3Rank.refreshing') : t('web3Rank.refresh') }}
+          </button>
             <div class="w-40">
               <label for="web3-chain" class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400">{{ t('web3Rank.chain') }}</label>
               <select id="web3-chain" v-model="chainId" class="app-control w-full">
@@ -24,22 +33,25 @@
       </section>
 
 <AppTabs id="web3" v-model="activeView" :label="t('web3Rank.title')" :tabs="viewTabs" />
-      <section v-show="activeView === 'heat'" id="web3-panel-heat" role="tabpanel" aria-labelledby="web3-tab-heat" tabindex="0">
+      <label v-show="activeView === 'heat'" class="block"><span class="sr-only">{{ t('workspaceViews.search') }}</span><input v-model="query" type="search" class="app-control w-full" :placeholder="t('workspaceViews.search')" /></label>
+      <div v-if="web3Error && activeView === 'heat'" role="alert" class="app-inline-note text-rose-700 dark:text-rose-300">{{ web3Error }}</div>
+      <div class="market-workspace" :class="{ 'is-split': pageLayout === 'split' && activeView === 'heat' }">
+      <div class="market-results" :id="`web3-panel-${activeView}`" role="tabpanel" :aria-labelledby="`web3-tab-${activeView}`" tabindex="0">
+        <div v-if="pageLayout === 'split' && activeView === 'heat'" class="market-quick-list">
+          <button v-for="item in web3HeatRank" :key="`${item.chain_id}:${item.contract_address}`" type="button" :aria-pressed="web3Dialog.open && web3Dialog.token?.contract_address === item.contract_address && web3Dialog.token?.chain_id === item.chain_id" :aria-label="t('workspaceViews.openDetail', { name: item.symbol || item.contract_address })" @click.stop="selectToken(item)">
+            <span><strong>{{ item.symbol || '—' }}</strong><small>{{ item.chain_id }} · #{{ item.rank }}</small></span><span class="market-list-value" :class="changeClass(item.metrics?.percent_change_24h)">{{ formatPercent(item.metrics?.percent_change_24h) }}<small>{{ t('web3Rank.columns.heat') }} {{ formatScore(item.heat_score) }}</small></span>
+          </button>
+          <p v-if="!web3HeatRank.length" class="p-6 text-sm app-muted">{{ web3Loading ? t('web3Rank.refreshing') : t('web3Rank.heatRank.noRows') }}</p>
+        </div>
+      <section v-show="activeView === 'heat' && pageLayout !== 'split'">
             <article class="app-panel app-responsive-table overflow-hidden">
         <div class="app-panel-header flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 class="app-section-title">{{ t('web3Rank.heatRank.title') }}</h3>
           </div>
-          <button
-            type="button"
-            class="app-button-primary app-touch-target px-4 py-2"
-            :disabled="web3Loading"
-            @click="fetchWeb3HeatRank"
-          >
-            {{ web3Loading ? t('web3Rank.refreshing') : t('web3Rank.refresh') }}
-          </button>
+
         </div>
-        <div v-if="web3Error" class="border-b border-rose-100 bg-rose-50 px-5 py-3 text-sm text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">{{ web3Error }}</div>
+
         <div class="app-table-scroll" tabindex="0" :aria-label="t('web3Rank.heatRank.title')">
           <table class="app-data-table w-full min-w-[66rem] text-left text-sm">
             <thead class="app-table-head">
@@ -88,14 +100,14 @@
               <tr
                 v-for="item in web3HeatRank"
                 :key="`${item.chain_id}-${item.contract_address}`"
-                class="app-table-row"
+                class="app-table-row market-row-clickable" @click.stop="selectToken(item)"
               >
                 <td class="px-5 py-4 text-slate-500 dark:text-slate-400" :data-label="t('web3Rank.columns.rank')">{{ item.rank ?? '--' }}</td>
                 <td class="px-5 py-4 app-table-primary" :data-label="t('web3Rank.columns.token')">
                   <div class="flex items-center gap-3">
                     <Web3TokenIcon :src="item.icon_url" :symbol="item.symbol" />
                     <div>
-                      <button type="button" class="app-touch-target font-semibold text-stone-950 transition hover:text-[#0f6b4f] dark:text-white dark:hover:text-emerald-300" @click="openWeb3Token(item)">
+                      <button type="button" class="app-touch-target font-semibold text-stone-950 transition hover:text-[#0f6b4f] dark:text-white dark:hover:text-emerald-300" @click.stop="selectToken(item)">
                         {{ item.symbol || '--' }}
                       </button>
                       <div class="max-w-[160px] truncate text-xs text-slate-400 dark:text-slate-500">{{ item.contract_address }}</div>
@@ -127,7 +139,7 @@
 
 
       </section>
-      <section v-show="activeView === 'addresses'" id="web3-panel-addresses" role="tabpanel" aria-labelledby="web3-tab-addresses" tabindex="0">
+      <section v-show="activeView === 'addresses'">
             <article class="app-panel app-responsive-table">
         <div class="app-panel-header">
           <h3 class="app-section-title">{{ t('web3Rank.addressPnlTitle') }}</h3>
@@ -156,10 +168,12 @@
         </div>
       </article>
       </section>
-    </div>
-
+      </div>
+      <div v-if="pageLayout === 'split' && activeView === 'heat' && !web3Dialog.open" class="market-detail-empty">{{ t('workspaceViews.selectItem') }}</div>
     <BinanceWeb3TokenDialog
-      :open="web3Dialog.open"
+      :open="web3Dialog.open && activeView === 'heat'"
+      :inline="pageLayout === 'split'"
+      :class="{ 'market-detail': pageLayout === 'split' }"
       :token="web3Dialog.token"
       :interval="web3KlineInterval"
       :intervals="web3KlineIntervals"
@@ -178,10 +192,14 @@
       @close="closeWeb3Token"
       @update:interval="web3KlineInterval = $event"
     />
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import AppLayoutSwitch from "@/components/AppLayoutSwitch.vue"
+import { usePageLayout } from "@/composables/usePageLayout"
 defineOptions({ name: 'Web3MarketRank' })
 
 import { useWeb3MarketRankPage } from '@/modules/market'
@@ -201,7 +219,7 @@ const {
   chainOptions,
   addressPnl,
   updatedAt,
-  web3HeatRank,
+  web3HeatRank: allHeatRank,
   web3Loading,
   web3Error,
   web3Dialog,
@@ -226,6 +244,16 @@ const {
   sortDirectionIcon,
   changeClass,
 } = useWeb3MarketRankPage()
+
+const pageLayout = usePageLayout('web3', ['table', 'split'] as const, 'table')
+const query = ref('')
+const layoutOptions = computed(() => ['table', 'split'].map(value => ({ value, label: t(`workspaceViews.${value}`) })))
+const web3HeatRank = computed(() => allHeatRank.value.filter(item => `${item.symbol} ${item.contract_address}`.toLowerCase().includes(query.value.toLowerCase())))
+
+const selectToken = (item: typeof allHeatRank.value[number]) => {
+  if (pageLayout.value === 'split' && web3Dialog.value.open && web3Dialog.value.token?.contract_address === item.contract_address && web3Dialog.value.token?.chain_id === item.chain_id) closeWeb3Token()
+  else openWeb3Token(item)
+}
 </script>
 
 <style scoped>

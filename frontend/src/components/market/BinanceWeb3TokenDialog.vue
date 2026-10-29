@@ -1,13 +1,13 @@
 <template>
   <div
     v-if="open && token"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-2 backdrop-blur-sm sm:p-4"
-    @click.self="$emit('close')"
+    :class="inline ? 'market-inline-dialog' : 'fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-2 backdrop-blur-sm sm:p-4'"
+    @click.self="!inline && $emit('close')"
   >
     <section
       ref="dialogRef"
-      role="dialog"
-      aria-modal="true"
+      :role="inline ? 'region' : 'dialog'"
+      :aria-modal="inline ? undefined : true"
       aria-labelledby="web3-token-dialog-title"
       tabindex="-1"
       class="flex h-[min(90vh,860px)] w-full max-w-7xl flex-col overflow-hidden border border-[#d8d1c5] bg-[#fbfaf7] shadow-2xl outline-none dark:border-slate-700 dark:bg-slate-800"
@@ -176,6 +176,7 @@
         </aside>
 
         <main class="min-h-[320px] bg-slate-950 p-4 lg:min-h-0">
+          <p v-if="!chartData.length && detailLoading" role="status" class="text-center text-sm app-muted">{{ t('web3Rank.refreshing') }}</p>
           <TradingViewChart
             :data="chartData"
             :volume-data="volumeData"
@@ -194,7 +195,7 @@ import TradingViewChart from '@/components/TradingViewChart.vue'
 import type { TradingViewChartColors } from '@/components/useTradingViewChart'
 import Web3TokenIcon from '@/components/market/Web3TokenIcon.vue'
 import { useModalDialog } from '@/composables/useModalDialog'
-import { toRef } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type {
   BinanceWeb3HeatRankItem,
@@ -207,6 +208,7 @@ import type {
 const { t } = useI18n()
 
 const props = defineProps<{
+  inline?: boolean
   open: boolean
   token: BinanceWeb3HeatRankItem | null
   interval: string
@@ -230,5 +232,5 @@ const emit = defineEmits<{
   'update:interval': [interval: string]
 }>()
 
-const { dialogRef } = useModalDialog(toRef(props, 'open'), () => emit('close'))
+const { dialogRef } = useModalDialog(computed(() => props.open && !props.inline), () => emit('close'))
 </script>

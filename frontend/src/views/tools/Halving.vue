@@ -3,7 +3,7 @@
     <div class="app-page-inner-wide space-y-6">
     <h1 class="app-title">{{ $t('nav.halving') }}</h1>
     <!-- Summary Cards -->
-    <div class="halving-summary-grid grid gap-6">
+    <div class="halving-summary-grid grid gap-6 halving-summary-strip">
       <!-- Card 1: Countdown -->
       <div class="app-card relative overflow-hidden transition-all">
         <h3 class="text-sm font-medium text-stone-500 dark:text-slate-400">{{ $t('halving.nextHalvingEstimate') }}</h3>
@@ -131,3 +131,12 @@ const {
   formatPrice,
 } = useHalvingPage()
 </script>
+
+<style scoped>
+.halving-summary-strip { border-block:1px solid var(--ui-border); gap:0; }
+.halving-summary-strip .app-card { border:0; border-radius:0; background:transparent; padding:20px 24px; }
+.halving-summary-strip .app-card + .app-card { border-left:1px solid var(--ui-border); }
+.halving-summary-strip .app-card:first-child { padding-left:0; }
+@container app-content (max-width:48rem) { .halving-summary-strip .app-card { padding:16px 12px; } .halving-summary-strip .halving-progress-card { border-left:0; border-top:1px solid var(--ui-border); padding-left:0; } }
+@container app-content (max-width:34rem) { .halving-summary-strip .app-card { padding-left:0; } .halving-summary-strip .app-card + .app-card { border-left:0; border-top:1px solid var(--ui-border); } }
+</style>

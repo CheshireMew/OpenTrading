@@ -2,8 +2,9 @@
   <div class="app-page">
     <div class="app-page-inner-wide flex flex-col gap-6">
       <header class="app-workspace-header"><h1 class="app-title">{{ $t('settings.title') }}</h1></header>
+      <nav class="settings-section-nav" :aria-label="$t('settings.title')"><a href="#settings-preferences">{{ $t('workspaceViews.preferences') }}</a><a href="#settings-model">{{ $t('workspaceViews.model') }}</a><a href="#settings-runtime">{{ $t('ui.runtime') }}</a></nav>
 
-      <section class="app-settings-section"><div><h2 class="app-section-title">{{ $t('ui.preferences') }}</h2><p class="app-settings-description">{{ $t('ui.preferencesHint') }}</p></div><div>
+      <section id="settings-preferences" class="app-settings-section"><div><h2 class="app-section-title">{{ $t('ui.preferences') }}</h2><p class="app-settings-description">{{ $t('ui.preferencesHint') }}</p></div><div>
         <div class="grid gap-4 md:grid-cols-3">
           <label class="block">
             <span class="label">{{ $t('settings.language') }}</span>
@@ -23,7 +24,7 @@
         </div>
       </div></section>
 
-      <section class="app-settings-section"><div><h2 class="app-section-title">{{ $t('settings.llmProvider') }}</h2><p class="app-settings-description">{{ $t('ui.modelSettingsHint') }}</p></div><div>
+      <section id="settings-model" class="app-settings-section"><div><h2 class="app-section-title">{{ $t('settings.llmProvider') }}</h2><p class="app-settings-description">{{ $t('ui.modelSettingsHint') }}</p></div><div>
         <div v-if="llmLoading" role="status" aria-live="polite" class="py-12 text-center app-muted">{{ $t('settings.loading') }}</div>
         <div v-else-if="llmLoadError" role="alert" class="flex flex-wrap items-center justify-between gap-3 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200"><span>{{ llmLoadError }}</span><button type="button" class="app-button-secondary app-touch-target" @click="loadLlmConfig">{{ $t('common.retry') }}</button></div>
         <template v-else>
@@ -88,7 +89,7 @@
           <input v-model="form.reasoningEnabled" class="h-5 w-5" type="checkbox" @change="applyProviderPreset" />
         </label>
 
-        <div class="mt-6 flex flex-wrap items-center gap-3">
+        <div class="settings-save-bar mt-6 flex flex-wrap items-center gap-3">
           <button
             type="button"
             class="app-button-primary app-touch-target px-4 py-2"
@@ -106,7 +107,7 @@
         </template>
       </div></section>
 
-      <section class="app-settings-section"><div><h2 class="app-section-title">{{ $t('ui.runtime') }}</h2></div><div>
+      <section id="settings-runtime" class="app-settings-section"><div><h2 class="app-section-title">{{ $t('ui.runtime') }}</h2></div><div>
         <div v-if="systemLoading" role="status" aria-live="polite" class="py-8 text-center app-muted">{{ $t('settings.loading') }}</div>
         <div v-else-if="systemLoadError" role="alert" class="flex flex-wrap items-center justify-between gap-3 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200"><span>{{ systemLoadError }}</span><button type="button" class="app-button-secondary app-touch-target" @click="loadSystemConfig">{{ $t('common.retry') }}</button></div>
         <div v-else class="grid gap-3 text-sm text-stone-600 dark:text-gray-400 md:grid-cols-2">
@@ -160,4 +161,12 @@ const {
   @apply w-full border bg-white px-3 py-2 text-sm font-semibold text-stone-900 outline-none transition focus:border-emerald-700 disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:disabled:bg-gray-950 dark:disabled:text-gray-500;
   border-color: #e4ded3;
 }
+</style>
+
+<style scoped>
+.settings-section-nav { display:flex; flex-wrap:wrap; gap:8px 24px; border-bottom:1px solid var(--ui-border); }
+.settings-section-nav a { display:block; padding:10px 0 14px; font-size:13px; color:var(--ui-muted); }
+.settings-section-nav a:hover { color:var(--ui-accent); }
+.app-settings-section { scroll-margin-top:16px; }
+.settings-save-bar { padding-block:16px; border-top:1px solid var(--ui-border); }
 </style>

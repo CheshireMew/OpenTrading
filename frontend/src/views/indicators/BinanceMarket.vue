@@ -1,9 +1,10 @@
 <template>
-  <div class="app-page">
+  <div class="app-page market-page">
     <div class="app-page-inner-wide">
       <header class="app-workspace-header">
         <h1 class="app-title">{{ t('nav.binanceMarket') }}</h1>
         <div class="flex flex-wrap items-center gap-3">
+          <AppLayoutSwitch v-model="pageLayout" :options="layoutOptions" />
           <button type="button" class="app-button-secondary" :aria-pressed="autoRefresh" @click="autoRefresh = !autoRefresh">
             <span class="binance-live-dot" :class="{ 'is-active': autoRefresh }" aria-hidden="true" />
             {{ t('binanceMarket.autoRefresh') }} · {{ autoRefresh ? t('binanceMarket.autoRefreshOn') : t('binanceMarket.autoRefreshOff') }}
@@ -16,8 +17,12 @@
       </dl>
       <div v-if="error" role="alert" class="app-inline-note text-rose-700 dark:text-rose-300">{{ error }}</div>
       <AppTabs id="binance" v-model="activeView" :label="t('nav.binanceMarket')" :tabs="viewTabs" />
-      <section v-show="activeView === 'monitor'" id="binance-panel-monitor" role="tabpanel" aria-labelledby="binance-tab-monitor" tabindex="0" class="space-y-4">
-        <div class="binance-monitor-toolbar flex flex-col gap-3">
+      <AppTabs v-show="activeView === 'rankings'" id="binance-rank" v-model="activeRank" :label="t('binanceMarket.rankTitle')" :tabs="rankTabs" />
+      <div class="market-workspace" :class="{ 'is-split': pageLayout === 'split', 'is-filters': pageLayout === 'filters' }">
+        <button v-if="pageLayout === 'filters'" type="button" class="market-filter-toggle app-button-secondary" :aria-expanded="filtersOpen" aria-controls="binance-filters" @click="filtersOpen = !filtersOpen">{{ t('ui.filters') }}</button>
+        <aside id="binance-filters" class="market-filters" :class="{ 'is-open': filtersOpen }">
+          <label class="block"><span class="sr-only">{{ t('workspaceViews.search') }}</span><input v-model="query" type="search" class="app-control w-full" :placeholder="t('workspaceViews.search')" /></label>
+<div v-show="activeView === 'monitor'" class="binance-monitor-toolbar flex flex-col gap-3">
               <div class="flex flex-col gap-4 px-2 xl:flex-row xl:items-center xl:justify-between">
                 <div class="flex flex-wrap items-baseline gap-3">
 
@@ -30,8 +35,8 @@
                   <input v-model.number="minRisePct" type="number" min="1" max="30" step="0.5" class="w-14 bg-transparent text-center font-semibold text-slate-900 outline-none dark:text-white" />
                 </label>
               </div>
-              <div class="flex flex-wrap items-center gap-3">
-                <div class="flex flex-wrap gap-2 border border-stone-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900">
+              <div class="market-filter-group flex flex-wrap items-center gap-3">
+                <div class="market-filter-options flex flex-wrap gap-2 border border-stone-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900">
                   <button
                     v-for="item in [
                       { key: 'focus', label: t('binanceMarket.filters.focus') },
@@ -49,7 +54,7 @@
                   </button>
                 </div>
 
-                <div class="flex flex-wrap gap-2 border border-stone-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900">
+                <div class="market-filter-options flex flex-wrap gap-2 border border-stone-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900">
                   <button
                     v-for="item in [
                       { key: 'all', label: t('binanceMarket.market.all') },
@@ -67,7 +72,16 @@
                 </div>
               </div>
             </div>
-
+        </aside>
+        <div class="market-results" :id="`binance-panel-${activeView}`" role="tabpanel" :aria-labelledby="`binance-tab-${activeView}`" tabindex="0">
+          <div v-if="pageLayout === 'split'" class="market-quick-list" :aria-label="t('nav.binanceMarket')">
+            <button v-for="item in listRows" :key="toItemKey(item)" type="button" :aria-pressed="chartDialog.open && chartSymbol === item.symbol && chartDialog.market === item.market" :aria-label="t('workspaceViews.openDetail', { name: `${displaySymbol(item.symbol)} · ${formatMarketLabel(item)}` })" @click="selectRow(item)">
+              <span><strong>{{ displaySymbol(item.symbol) }}</strong><small>{{ formatMarketLabel(item) }}</small></span>
+              <span class="market-list-value" :class="valueTone(item.price_change_pct)">{{ formatSigned(item.price_change_pct) }}<small>{{ formatPrice(item.mark_price ?? item.last_price) }}</small></span>
+            </button>
+            <p v-if="!listRows.length" class="p-6 text-sm app-muted">{{ loading ? t('binanceMarket.refreshing') : t('binanceMarket.tables.noMonitorRows') }}</p>
+          </div>
+      <section v-show="activeView === 'monitor' && pageLayout !== 'split'" class="space-y-4">
         <AppLoadingState v-if="loading && !filteredItems.length" :label="t('binanceMarket.refreshing')" />
         <article v-else class="app-responsive-table app-panel overflow-hidden">
                 <div class="app-panel-header flex items-center justify-between">
@@ -94,7 +108,7 @@
                       <tr
                         v-for="item in filteredItems"
                         :key="`${item.market}-${item.symbol}`"
-                        class="app-table-row"
+                        class="app-table-row market-row-clickable" @click="selectRow(item)"
                         :class="chartDialog.open && detailKey === toItemKey(item) ? 'bg-[#edf3ee] dark:bg-emerald-500/10' : ''"
                       >
                         <td class="app-table-primary px-5 py-4" :data-label="t('binanceMarket.columns.asset')">
@@ -104,7 +118,7 @@
                               <button
                                 type="button"
                                 class="app-touch-target font-semibold text-slate-900 transition hover:text-[#0f6b4f] dark:text-white dark:hover:text-emerald-300"
-                                @click="openMonitorDetail(item)"
+                                @click.stop="openMonitorDetail(item)"
                               >
                                 {{ displaySymbol(item.symbol) }}
                               </button>
@@ -133,8 +147,8 @@
                 </div>
               </article>
       </section>
-      <section v-show="activeView === 'rankings'" id="binance-panel-rankings" role="tabpanel" aria-labelledby="binance-tab-rankings" tabindex="0" class="space-y-4">
-        <AppTabs id="binance-rank" v-model="activeRank" :label="t('binanceMarket.rankTitle')" :tabs="rankTabs" />
+      <section v-show="activeView === 'rankings' && pageLayout !== 'split'" class="space-y-4">
+
         <section v-show="activeRank === 'contracts'" id="binance-rank-panel-contracts" role="tabpanel" aria-labelledby="binance-rank-tab-contracts" tabindex="0">
           <AppLoadingState v-if="loading && !contractRows.length" :label="t('binanceMarket.refreshing')" />
           <article v-else class="app-responsive-table app-panel overflow-hidden">
@@ -200,7 +214,7 @@
                       <tr
                         v-for="item in contractRows"
                         :key="`${item.market}-${item.symbol}`"
-                        class="app-table-row"
+                        class="app-table-row market-row-clickable" @click="selectRow(item)"
                       >
                         <td class="app-table-primary px-5 py-4 font-medium text-slate-900 dark:text-white" :data-label="t('binanceMarket.columns.asset')">
                           <button
@@ -264,12 +278,12 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="(item, index) in spotRows" :key="item.symbol || `spot-${index}`" class="app-table-row">
+                      <tr v-for="(item, index) in spotRows" :key="item.symbol || `spot-${index}`" class="app-table-row market-row-clickable" @click="selectRow(item)">
                         <td class="app-table-primary px-5 py-4 font-medium text-slate-900 dark:text-white" :data-label="t('binanceMarket.columns.asset')">
                           <button
                             type="button"
                             class="app-touch-target px-2 py-1 transition hover:bg-[#edf3ee] hover:text-[#0f6b4f] dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300"
-                            @click="openChart({ ...item, market: 'spot' })"
+                            @click.stop="openChart({ ...item, market: 'spot' })"
                           >
                             {{ displaySymbol(item.symbol) }}
                           </button>
@@ -287,9 +301,12 @@
               </article>
         </section>
       </section>
-    </div>
+        </div>
+        <div v-if="pageLayout === 'split' && !chartDialog.open" class="market-detail-empty">{{ t('workspaceViews.selectItem') }}</div>
     <BinanceSymbolChartDialog
       :open="chartDialog.open"
+      :inline="pageLayout === 'split'"
+      :class="{ 'market-detail': pageLayout === 'split' }"
       :market-label="chartMarketLabel"
       :title="chartTitle"
       :symbol="chartSymbol"
@@ -299,6 +316,7 @@
       :chart-data="chartData"
       :volume-data="volumeData"
       :loading-more="chartLoadingMore"
+      :loading="chartLoading"
       :chart-error="chartError"
       :contract-detail="contractDetail"
       :contract-detail-loading="contractDetailLoading"
@@ -317,10 +335,14 @@
       @retry-chart="retryChart"
       @update:timeframe="chartTimeframe = $event"
     />
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import AppLayoutSwitch from "@/components/AppLayoutSwitch.vue"
+import { usePageLayout } from "@/composables/usePageLayout"
 defineOptions({ name: 'BinanceMarket' })
 
 import { computed, ref } from 'vue'
@@ -350,11 +372,11 @@ const {
   marketFilter,
   autoRefresh,
   monitor,
-  spotRows,
+  spotRows: allSpotRows,
   spotSort,
-  contractRows,
+  contractRows: allContractRows,
   contractSort,
-  filteredItems,
+  filteredItems: allMonitorItems,
   detailKey,
   detailItem,
   chartDialog,
@@ -367,6 +389,7 @@ const {
   chartData,
   volumeData,
   chartLoadingMore,
+  chartLoading,
   chartError,
   contractDetail,
   contractDetailLoading,
@@ -395,11 +418,29 @@ const {
   verdictTone,
   toItemKey,
 } = useBinanceMarketPage()
+
+const pageLayout = usePageLayout('binance', ['table', 'split', 'filters'] as const, 'table')
+const filtersOpen = ref(false)
+const query = ref('')
+const layoutOptions = computed(() => ['table', 'split', 'filters'].map(value => ({ value, label: t(`workspaceViews.${value}`) })))
+const matches = (item: { symbol?: string | null }) => !query.value || String(item.symbol || '').toLowerCase().includes(query.value.toLowerCase())
+const filteredItems = computed(() => allMonitorItems.value.filter(matches))
+const spotRows = computed(() => allSpotRows.value.filter(matches))
+const contractRows = computed(() => allContractRows.value.filter(matches))
+const listRows = computed(() => activeView.value === 'monitor' ? filteredItems.value : activeRank.value === 'contracts' ? contractRows.value.map(item => ({ ...item, market: 'usdm' })) : spotRows.value.map(item => ({ ...item, market: 'spot', mark_price: null })))
+const selectRow = (item: any) => {
+  const market = activeView.value === 'monitor' ? item.market : activeRank.value === 'contracts' ? 'usdm' : 'spot'
+  if (pageLayout.value === 'split' && chartDialog.value.open && chartSymbol.value === item.symbol && chartDialog.value.market === market) { closeChart(); return }
+  if (activeView.value === 'monitor') openMonitorDetail(item)
+  else openChart({ ...item, market })
+}
 </script>
 
 <style scoped>
 .binance-monitor-toolbar { padding: 0 0 4px; }
 .binance-live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ui-faint); }
 .binance-live-dot.is-active { background: var(--ui-accent); }
+.market-workspace:not(.is-filters):not(.is-split) .market-filters { display:flex; flex-direction:column; gap:16px; }
+.market-workspace.is-split .market-filters { grid-column:1 / -1; display:flex; flex-direction:column; gap:16px; }
 [role=tabpanel]:focus { outline: none; }
 </style>

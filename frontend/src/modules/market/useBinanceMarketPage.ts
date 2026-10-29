@@ -136,6 +136,7 @@ export function useBinanceMarketPage() {
     chartData: chart.chartData,
     volumeData: chart.volumeData,
     chartLoadingMore: chart.chartLoadingMore,
+    chartLoading: chart.chartLoading,
     chartError: chart.chartError,
     contractDetail: chart.contractDetail,
     contractDetailLoading: chart.contractDetailLoading,

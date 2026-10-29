@@ -79,7 +79,7 @@ import { parsePortfolioLedgerFile, portfolioLedgerCsv, portfolioLedgerJson } fro
 import type { PortfolioLedgerResponse, PortfolioTransactionResponse } from '@/modules/tools/contracts'
 
 const props = defineProps<{ portfolioId: string; priceRefreshKey?: string | null }>()
-const emit = defineEmits<{ 'ledger-updated': [ledger: PortfolioLedgerResponse] }>()
+const emit = defineEmits<{ 'ledger-updated': [ledger: PortfolioLedgerResponse]; 'load-state': [state: { loading: boolean; error: string }] }>()
 const { t } = useI18n()
 const { formatDateTime } = useDateTime()
 const { formatMoney, formatSignedMoney } = useMoney()
@@ -101,12 +101,16 @@ const load = async () => {
   loading.value = true
   error.value = ''
   ledger.value = null
+  emit('load-state', { loading: true, error: '' })
+  const portfolioId = props.portfolioId
   try {
-    ledger.value = await toolsApi.getPortfolioLedger(props.portfolioId)
+    const result = await toolsApi.getPortfolioLedger(portfolioId)
+    if (portfolioId !== props.portfolioId) return
+    ledger.value = result
     emit('ledger-updated', ledger.value)
   }
-  catch (cause) { error.value = apiErrorMessage(cause, t('portfolioLedger.loadFailed')) }
-  finally { loading.value = false }
+  catch (cause) { if (portfolioId === props.portfolioId) error.value = apiErrorMessage(cause, t('portfolioLedger.loadFailed')) }
+  finally { if (portfolioId === props.portfolioId) { loading.value = false; emit('load-state', { loading: false, error: error.value }) } }
 }
 
 const beginCreate = () => { editing.value = null; Object.assign(form, emptyForm()); showForm.value = true }

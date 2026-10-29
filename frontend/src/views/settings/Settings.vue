@@ -1,38 +1,33 @@
 <template>
   <div class="app-page">
     <div class="app-page-inner-wide flex flex-col gap-6">
-      <div>
-        <h1 class="app-title">{{ $t('settings.title') }}</h1>
-      </div>
+      <header class="app-workspace-header"><h1 class="app-title">{{ $t('settings.title') }}</h1></header>
 
-      <section class="app-panel p-6">
+      <section class="app-settings-section"><div><h2 class="app-section-title">{{ $t('ui.preferences') }}</h2><p class="app-settings-description">{{ $t('ui.preferencesHint') }}</p></div><div>
         <div class="grid gap-4 md:grid-cols-3">
           <label class="block">
-            <span class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-gray-400">{{ $t('settings.language') }}</span>
+            <span class="label">{{ $t('settings.language') }}</span>
             <AppLanguageSelect />
           </label>
           <label class="block">
-            <span class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-gray-400">{{ $t('settings.timezone') }}</span>
+            <span class="label">{{ $t('settings.timezone') }}</span>
             <AppTimezoneSelect />
           </label>
           <label class="block">
-            <span class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-gray-400">{{ $t('settings.currency') }}</span>
+            <span class="label">{{ $t('settings.currency') }}</span>
             <AppCurrencySelect />
           </label>
         </div>
         <div class="mt-4 text-sm text-gray-500 dark:text-gray-400">
           {{ $t('settings.currencyRate') }}: {{ ratesAreFallback ? $t('settings.currencyFallback') : formatDateTime(ratesUpdatedAt, { hour12: false }) }}
         </div>
-      </section>
+      </div></section>
 
-      <section class="app-panel p-6">
+      <section class="app-settings-section"><div><h2 class="app-section-title">{{ $t('settings.llmProvider') }}</h2><p class="app-settings-description">{{ $t('ui.modelSettingsHint') }}</p></div><div>
         <div v-if="llmLoading" role="status" aria-live="polite" class="py-12 text-center app-muted">{{ $t('settings.loading') }}</div>
         <div v-else-if="llmLoadError" role="alert" class="flex flex-wrap items-center justify-between gap-3 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200"><span>{{ llmLoadError }}</span><button type="button" class="app-button-secondary app-touch-target" @click="loadLlmConfig">{{ $t('common.retry') }}</button></div>
         <template v-else>
-        <div class="mb-6 flex items-center justify-between gap-4">
-          <div>
-            <h3 class="app-section-title">{{ $t('settings.llmProvider') }}</h3>
-          </div>
+        <div class="mb-5 flex items-center justify-end gap-4">
           <span
             class="px-3 py-1 text-xs font-semibold"
             :class="form.apiKeySet ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'"
@@ -43,7 +38,7 @@
 
         <div class="grid gap-5 md:grid-cols-2">
           <label class="space-y-2">
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $t('settings.provider') }}</span>
+            <span class="label">{{ $t('settings.provider') }}</span>
             <select v-model="form.provider" class="input" @change="handleProviderChange">
               <option v-for="preset in presets" :key="preset.id" :value="preset.id">
                 {{ preset.label }}
@@ -109,9 +104,9 @@
           <span v-if="error" role="alert" class="text-sm text-rose-600 dark:text-rose-300">{{ error }}</span>
         </div>
         </template>
-      </section>
+      </div></section>
 
-      <section class="app-panel p-6">
+      <section class="app-settings-section"><div><h2 class="app-section-title">{{ $t('ui.runtime') }}</h2></div><div>
         <div v-if="systemLoading" role="status" aria-live="polite" class="py-8 text-center app-muted">{{ $t('settings.loading') }}</div>
         <div v-else-if="systemLoadError" role="alert" class="flex flex-wrap items-center justify-between gap-3 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200"><span>{{ systemLoadError }}</span><button type="button" class="app-button-secondary app-touch-target" @click="loadSystemConfig">{{ $t('common.retry') }}</button></div>
         <div v-else class="grid gap-3 text-sm text-stone-600 dark:text-gray-400 md:grid-cols-2">
@@ -120,7 +115,7 @@
           <div>{{ $t('settings.db') }}: {{ systemConfig?.runtime?.database_engine || '-' }}</div>
           <div>{{ $t('settings.cache') }}: {{ systemConfig?.runtime?.cache_backend ? $t(`settings.cacheBackends.${systemConfig.runtime.cache_backend}`, systemConfig.runtime.cache_backend) : '-' }}</div>
         </div>
-      </section>
+      </div></section>
     </div>
   </div>
 </template>

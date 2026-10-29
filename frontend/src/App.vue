@@ -89,6 +89,7 @@
           {{ t('app.retry') }}
         </button>
       </div>
+      <ResearchNavigation v-if="route.path === '/research' || route.path.startsWith('/research/')" />
       <router-view v-slot="{ Component }">
         <keep-alive :include="keepAliveRoutes">
           <component :is="Component" />
@@ -128,6 +129,7 @@ import {
   type AppNavIconName,
 } from '@/app/navigation'
 import { useTheme } from '@/composables/useTheme'
+import ResearchNavigation from '@/components/research/ResearchNavigation.vue'
 import { useMoney } from '@/composables/useMoney'
 import { useSymbolCatalog } from '@/modules/market'
 import { setAppLocale, toggleAppLocale } from '@/i18n/config'

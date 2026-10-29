@@ -1,13 +1,15 @@
 <template>
   <div class="app-page">
     <div class="app-page-inner-wide">
-      <div class="grid gap-6 xl:grid-cols-[20rem_minmax(0,1fr)]">
+      <header class="app-workspace-header"><h1 class="app-title">{{ t('portfolioBalance.title') }}</h1></header>
+      <div class="space-y-5">
         <PortfolioBalanceSidebar
           :portfolios="portfolios"
           :deleted-portfolios="deletedPortfolios"
           :has-more-deleted-portfolios="hasMoreDeletedPortfolios"
           :active-portfolio-id="activePortfolioId"
           :plan="plan"
+          :show-strategy="activeSection === 'allocation' && hasHoldings"
           :storage-ready="storageReady"
           :storage-loading="storageLoading"
           :storage-saving="storageSaving"
@@ -25,38 +27,41 @@
         />
 
         <div v-if="storageReady && !storageLoading && !portfolioTransitioning && activePortfolio" class="min-w-0 space-y-6">
-          <PortfolioBalanceSetup
+          <div v-if="sourceMessage || sourceError" :role="sourceError ? 'alert' : 'status'" class="app-inline-note" :class="sourceError ? 'text-amber-800 dark:text-amber-200' : ''">{{ sourceError || sourceMessage }}</div>
+          <AppTabs id="portfolio" v-model="activeSection" :label="t('portfolioBalance.title')" :tabs="portfolioTabs" />
+          <div v-show="activeSection === 'allocation'" id="portfolio-panel-allocation" role="tabpanel" aria-labelledby="portfolio-tab-allocation" tabindex="0" class="space-y-5">
+            <div v-if="!hasHoldings" class="app-inline-note flex flex-wrap items-center justify-between gap-3"><span>{{ t('ui.portfolioPlanHint') }}</span><button type="button" class="font-semibold underline underline-offset-4" @click="activeSection = 'ledger'">{{ t('ui.ledgerTab') }}</button></div>
+            <PortfolioAssetsTable
+            :assets="assets"
+            :plan="plan"
+            :holdings-source="activePortfolio.holdingsSource"
+            :can-remove-asset="canRemoveAsset"
+            :market-loading="marketLoading"
+            @add="addAsset"
+            @refresh="refreshMarketPrices"
+            @update-symbol="updateAssetSymbol"
+            @update-weight="updateAssetTargetWeight"
+            @remove="removeAsset"
+          />
+            <PortfolioBalanceSetup
             :active-portfolio="activePortfolio"
             :tracking="tracking"
             :strategy="strategy"
             :plan="plan"
-            :market-loading="marketLoading"
-            :source-message="sourceMessage"
-            :source-error="sourceError"
             @update-name="activePortfolio.name = $event"
             @update-inception-date="tracking.inceptionDate = $event"
-            @refresh-prices="refreshMarketPrices"
-            @add-asset="addAsset"
             @update-review-frequency="strategy.reviewFrequency = $event"
             @update-tracking-capital="tracking.virtualCapital = $event"
             @update-rebalance-band="strategy.rebalanceBand = $event"
             @update-min-trade-amount="strategy.minTradeAmount = $event"
           />
-          <PortfolioLedgerPanel
+          </div>
+          <div v-show="activeSection === 'ledger'" id="portfolio-panel-ledger" role="tabpanel" aria-labelledby="portfolio-tab-ledger" tabindex="0"><PortfolioLedgerPanel
             :portfolio-id="activePortfolio.id"
             :price-refresh-key="activePortfolio.lastPriceUpdatedAt"
             @ledger-updated="applyPortfolioLedger"
-          />
-          <PortfolioAssetsTable
-            :assets="assets"
-            :plan="plan"
-            :holdings-source="activePortfolio.holdingsSource"
-            :can-remove-asset="canRemoveAsset"
-            @update-symbol="updateAssetSymbol"
-            @update-weight="updateAssetTargetWeight"
-            @remove="removeAsset"
-          />
-          <PortfolioSimulationPanel
+          /></div>
+          <div v-show="activeSection === 'simulation'" id="portfolio-panel-simulation" role="tabpanel" aria-labelledby="portfolio-tab-simulation" tabindex="0"><PortfolioSimulationPanel
             :simulation="simulation"
             :result="simulationResult"
             :loading="simulationLoading"
@@ -64,11 +69,8 @@
             @run="runSimulation"
             @update-start-date="simulation.simulationStartDate = $event"
             @update-initial-capital="simulation.initialCapital = $event"
-          />
-          <PortfolioRiskPanel
-            :portfolio-id="activePortfolio.id"
-            :refresh-key="activePortfolio.lastPriceUpdatedAt"
-          />
+          /></div>
+          <div v-show="activeSection === 'risk'" id="portfolio-panel-risk" role="tabpanel" aria-labelledby="portfolio-tab-risk" tabindex="0"><PortfolioRiskPanel v-if="visitedRisk" :portfolio-id="activePortfolio.id" :refresh-key="activePortfolio.lastPriceUpdatedAt" /></div>
         </div>
         <section v-else-if="storageReady && !storageLoading && portfolioTransitioning" role="status" aria-live="polite" class="app-panel flex min-h-[24rem] min-w-0 items-center justify-center p-8 text-center">
           <div class="max-w-lg">
@@ -90,7 +92,8 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import AppTabs from '@/components/AppTabs.vue'
 import { useI18n } from 'vue-i18n'
 import PortfolioAssetsTable from '@/components/portfolio/PortfolioAssetsTable.vue'
 import PortfolioBalanceSetup from '@/components/portfolio/PortfolioBalanceSetup.vue'
@@ -145,6 +148,16 @@ const {
   loadMoreDeletedPortfolios,
 } = usePortfolioBalancePage()
 const { t } = useI18n()
+const activeSection = ref('allocation')
+const visitedRisk = ref(false)
+const hasHoldings = computed(() => assets.value.some(asset => Number(asset.units) > 0))
+const portfolioTabs = computed(() => [
+  { id: 'allocation', label: t('ui.allocationTab') },
+  { id: 'ledger', label: t('ui.ledgerTab') },
+  { id: 'simulation', label: t('ui.historicalSimulation') },
+  { id: 'risk', label: t('ui.riskTab') },
+])
+watch(activeSection, section => { if (section === 'risk') visitedRisk.value = true })
 const { loadSymbols } = useSymbolCatalog()
 const today = todayLocalIsoDate()
 const portfolioFileError = ref('')
@@ -192,3 +205,7 @@ const importBackup = async (file) => {
 
 onMounted(loadSymbols)
 </script>
+
+<style scoped>
+[role=tabpanel]:focus { outline: none; }
+</style>

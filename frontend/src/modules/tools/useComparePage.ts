@@ -12,11 +12,6 @@ import { apiErrorMessage } from '@/api/request'
 import { toolsApi } from './api'
 import { buildCompareSnapshot, createDefaultCompareSnapshot, createEmptyCompareSnapshot, normalizeCompareSnapshot } from './pageSnapshots'
 
-interface CompareLinePoint {
-  time: number
-  value: number
-}
-
 interface SyncableChart {
   timeScale: () => {
     setVisibleLogicalRange: (range: unknown) => void
@@ -56,7 +51,7 @@ export function useComparePage() {
   const errorMessage = ref('')
   const dataA = ref<CandlestickData[]>([])
   const dataB = ref<CandlestickData[]>([])
-  const dataRatio = ref<CompareLinePoint[]>([])
+  const dataRatio = ref<CandlestickData[]>([])
   const chartARef = ref<ChartComponentRef | null>(null)
   const chartBRef = ref<ChartComponentRef | null>(null)
   const chartRatioRef = ref<ChartComponentRef | null>(null)
@@ -121,10 +116,7 @@ export function useComparePage() {
       })
       dataA.value = response.data_a || []
       dataB.value = response.data_b || []
-      dataRatio.value = (response.ratio_ohlc || []).map((item) => ({
-        time: item.time,
-        value: item.close,
-      }))
+      dataRatio.value = response.ratio_ohlc || []
       resultSymbols.symbolA = config.symbolA
       resultSymbols.symbolB = config.symbolB
       statistics.value = response.statistics

@@ -9,7 +9,7 @@
           <button type="button" class="app-button-secondary" :disabled="loading" @click="load">
             {{ loading ? t('research.loading') : t('research.refresh') }}
           </button>
-          <button type="button" class="app-button-secondary" @click="enableDesktopNotifications">
+          <button v-if="activeTab === 'alerts' && activeItem" type="button" class="app-button-secondary" @click="enableDesktopNotifications">
             {{ t('research.enableDesktopNotifications') }}
           </button>
           <button type="button" class="app-button-primary" @click="showNewList = true">
@@ -28,8 +28,8 @@
       <section v-if="showNewList" class="app-panel p-5">
         <h2 class="app-section-title">{{ t('research.createWatchlist') }}</h2>
         <div class="mt-4 grid gap-3 md:grid-cols-[minmax(12rem,18rem)_minmax(0,1fr)_auto]">
-          <input v-model.trim="newListName" class="app-control" :placeholder="t('research.watchlistName')" maxlength="160" />
-          <input v-model.trim="newListDescription" class="app-control" :placeholder="t('research.watchlistDescription')" maxlength="4000" @keydown.enter.prevent="submitWatchlist" />
+          <label class="block min-w-0"><span class="label">{{ t('research.watchlistName') }}</span><input v-model.trim="newListName" class="app-control" :aria-label="t('research.watchlistName')" :placeholder="t('research.watchlistName')" maxlength="160" /></label>
+          <label class="block min-w-0"><span class="label">{{ t('ui.description') }}</span><input v-model.trim="newListDescription" class="app-control" :aria-label="t('research.watchlistDescription')" :placeholder="t('research.watchlistDescription')" maxlength="4000" @keydown.enter.prevent="submitWatchlist" /></label>
           <div class="flex gap-2">
             <button type="button" class="app-button-primary" :disabled="saving || !newListName" @click="submitWatchlist">{{ t('research.create') }}</button>
             <button type="button" class="app-button-secondary" @click="showNewList = false">{{ t('research.cancel') }}</button>
@@ -37,8 +37,10 @@
         </div>
       </section>
 
-      <div class="grid min-h-[40rem] gap-5 xl:grid-cols-[16rem_minmax(20rem,0.85fr)_minmax(28rem,1.45fr)]">
-        <aside class="app-panel min-h-0">
+      <AppLoadingState v-if="loading && !activeWatchlists.length" :label="t('research.loading')" />
+      <AppEmptyState v-else-if="!activeWatchlists.length && !archivedWatchlists.length && !showNewList" :title="t('ui.researchEmptyTitle')" :description="t('ui.researchEmptyHint')" :icon="BookmarkSquareIcon"><button type="button" class="app-button-primary" @click="showNewList = true">{{ t('research.newWatchlist') }}</button></AppEmptyState>
+      <div v-if="activeWatchlists.length || archivedWatchlists.length" class="research-workspace" :class="{ 'has-detail': activeItem }">
+        <aside class="research-list-pane min-w-0">
           <div class="app-panel-header flex items-center justify-between">
             <div>
               <h2 class="app-section-title">{{ t('research.watchlists') }}</h2>
@@ -70,7 +72,7 @@
           </details>
         </aside>
 
-        <section class="app-panel min-h-0">
+        <section class="app-panel min-w-0 research-assets-pane">
           <template v-if="activeWatchlist">
             <div class="app-panel-header">
               <div class="flex items-start justify-between gap-3">
@@ -87,22 +89,23 @@
               <SymbolSearchBox
                 v-model="itemForm.symbol"
                 :allowed-classes="['crypto', 'index']"
+                :aria-label="t('research.selectAsset')"
                 :placeholder="t('research.selectAsset')"
                 @select="onCatalogSelect"
               />
-              <textarea v-model.trim="itemForm.thesis" class="app-control min-h-24 w-full" :placeholder="t('research.initialThesis')" maxlength="20000" />
+              <label class="block min-w-0"><span class="label">{{ t('research.thesis') }}</span><textarea v-model.trim="itemForm.thesis" class="app-control min-h-24 w-full" :aria-label="t('research.initialThesis')" :placeholder="t('research.initialThesis')" maxlength="20000" /></label>
               <div class="grid grid-cols-2 gap-3">
-                <input v-model="itemForm.targetPrice" class="app-control" inputmode="decimal" :placeholder="t('research.targetPrice')" />
-                <input v-model="itemForm.invalidationPrice" class="app-control" inputmode="decimal" :placeholder="t('research.invalidationPrice')" />
+                <label class="block min-w-0"><span class="label">{{ t('research.targetPrice') }}</span><input v-model="itemForm.targetPrice" class="app-control" inputmode="decimal" :aria-label="t('research.targetPrice')" :placeholder="t('research.targetPrice')" /></label>
+                <label class="block min-w-0"><span class="label">{{ t('research.invalidationPrice') }}</span><input v-model="itemForm.invalidationPrice" class="app-control" inputmode="decimal" :aria-label="t('research.invalidationPrice')" :placeholder="t('research.invalidationPrice')" /></label>
               </div>
-              <input v-model.trim="itemForm.tags" class="app-control w-full" :placeholder="t('research.tagsPlaceholder')" />
+              <label class="block min-w-0"><span class="label">{{ t('research.tags') }}</span><input v-model.trim="itemForm.tags" class="app-control w-full" :aria-label="t('research.tagsPlaceholder')" :placeholder="t('research.tagsPlaceholder')" /></label>
               <div class="flex gap-2">
                 <button type="submit" class="app-button-primary flex-1" :disabled="saving || !itemForm.symbol">{{ t('research.add') }}</button>
                 <button type="button" class="app-button-secondary" @click="showNewItem = false">{{ t('research.cancel') }}</button>
               </div>
             </form>
 
-            <div class="max-h-[42rem] overflow-y-auto p-3">
+            <div class="research-asset-list p-3">
               <button
                 v-for="item in activeItems"
                 :key="item.id"
@@ -113,7 +116,7 @@
               >
                 <div class="flex items-start justify-between gap-3">
                   <div>
-                    <router-link :to="`/research/assets/${encodeURIComponent(item.symbol)}`" class="font-semibold text-emerald-700 hover:underline dark:text-emerald-300" @click.stop>{{ item.symbol }}</router-link>
+                    <span class="font-semibold text-emerald-700 dark:text-emerald-300">{{ item.symbol }}</span>
                     <p class="mt-1 text-xs app-muted">{{ item.displayName || item.assetClass }}</p>
                   </div>
                   <span class="app-chip">{{ item.tags?.length || 0 }} {{ t('research.tags') }}</span>
@@ -124,7 +127,7 @@
                   <span>{{ t('research.invalidationShort') }} {{ item.invalidationPrice ?? '--' }}</span>
                 </div>
               </button>
-              <p v-if="!activeItems.length" class="p-6 text-center text-sm app-muted">{{ t('research.noAssets') }}</p>
+              <AppEmptyState v-if="!activeItems.length" :title="t('research.noAssets')" :description="t('ui.researchAssetHint')"><button type="button" class="app-button-secondary" @click="showNewItem = true">{{ t('research.addAsset') }}</button></AppEmptyState>
             </div>
 
             <details v-if="archivedItems.length" class="border-t px-4 py-3 dark:border-slate-700" style="border-color:var(--app-border)">
@@ -142,24 +145,24 @@
           </div>
         </section>
 
-        <section class="app-panel min-h-0">
+        <section v-if="activeItem" class="app-panel min-w-0 research-detail-pane">
           <template v-if="activeItem">
             <div class="app-panel-header">
               <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p class="text-xs app-muted">{{ activeItem.assetClass }}</p>
-                  <h2 class="mt-1 text-2xl font-semibold text-stone-950 dark:text-white">{{ activeItem.symbol }}</h2>
+
+                  <h2 class="mt-1 text-2xl font-semibold text-stone-950 dark:text-white"><router-link :to="`/research/assets/${encodeURIComponent(activeItem.symbol)}`" class="hover:underline underline-offset-4">{{ activeItem.symbol }}</router-link></h2>
                   <p class="mt-1 text-sm app-muted">{{ activeItem.displayName }}</p>
                 </div>
                 <button type="button" class="text-sm text-rose-600 underline dark:text-rose-300" :disabled="saving" @click="setItemArchived(activeItem, true)">{{ t('research.archiveAsset') }}</button>
               </div>
 
               <form class="mt-5 space-y-3" @submit.prevent="saveActiveItem">
-                <textarea v-model.trim="editItem.thesis" class="app-control min-h-28 w-full" :placeholder="t('research.thesis')" maxlength="20000" />
+                <label class="block min-w-0"><span class="label">{{ t('research.thesis') }}</span><textarea v-model.trim="editItem.thesis" class="app-control min-h-28 w-full" :aria-label="t('research.thesis')" :placeholder="t('research.thesis')" maxlength="20000" /></label>
                 <div class="grid gap-3 sm:grid-cols-3">
-                  <input v-model="editItem.targetPrice" class="app-control" inputmode="decimal" :placeholder="t('research.targetPrice')" />
-                  <input v-model="editItem.invalidationPrice" class="app-control" inputmode="decimal" :placeholder="t('research.invalidationPrice')" />
-                  <input v-model.trim="editItem.tags" class="app-control" :placeholder="t('research.tagsPlaceholder')" />
+                  <label class="block min-w-0"><span class="label">{{ t('research.targetPrice') }}</span><input v-model="editItem.targetPrice" class="app-control" inputmode="decimal" :aria-label="t('research.targetPrice')" :placeholder="t('research.targetPrice')" /></label>
+                  <label class="block min-w-0"><span class="label">{{ t('research.invalidationPrice') }}</span><input v-model="editItem.invalidationPrice" class="app-control" inputmode="decimal" :aria-label="t('research.invalidationPrice')" :placeholder="t('research.invalidationPrice')" /></label>
+                  <label class="block min-w-0"><span class="label">{{ t('research.tags') }}</span><input v-model.trim="editItem.tags" class="app-control" :aria-label="t('research.tagsPlaceholder')" :placeholder="t('research.tagsPlaceholder')" /></label>
                 </div>
                 <button type="submit" class="app-button-primary" :disabled="saving">{{ saving ? t('research.saving') : t('research.saveThesis') }}</button>
               </form>
@@ -175,15 +178,15 @@
             <div v-if="activeTab === 'journal'" class="space-y-5 p-5">
               <form class="space-y-3 border p-4 dark:border-slate-700" style="border-color:var(--app-border)" @submit.prevent="submitNote">
                 <div class="grid gap-3 sm:grid-cols-[10rem_minmax(0,1fr)]">
-                  <select v-model="noteForm.kind" class="app-control">
+                  <select :aria-label="t('ui.noteType')" v-model="noteForm.kind" class="app-control">
                     <option value="thesis">{{ t('research.noteKinds.thesis') }}</option>
                     <option value="update">{{ t('research.noteKinds.update') }}</option>
                     <option value="review">{{ t('research.noteKinds.review') }}</option>
                     <option value="decision">{{ t('research.noteKinds.decision') }}</option>
                   </select>
-                  <input v-model.trim="noteForm.title" class="app-control" :placeholder="t('research.noteTitle')" maxlength="240" />
+                  <label class="block min-w-0"><span class="label">{{ t('research.noteTitle') }}</span><input v-model.trim="noteForm.title" class="app-control" :aria-label="t('research.noteTitle')" :placeholder="t('research.noteTitle')" maxlength="240" /></label>
                 </div>
-                <textarea v-model.trim="noteForm.content" class="app-control min-h-28 w-full" :placeholder="t('research.noteContent')" maxlength="100000" />
+                <label class="block min-w-0"><span class="label">{{ t('ui.noteBody') }}</span><textarea v-model.trim="noteForm.content" class="app-control min-h-28 w-full" :aria-label="t('research.noteContent')" :placeholder="t('research.noteContent')" maxlength="100000" /></label>
                 <button type="submit" class="app-button-primary" :disabled="saving || !noteForm.title">{{ t('research.addNote') }}</button>
               </form>
               <article v-for="note in itemNotes" :key="note.id" class="border p-4 dark:border-slate-700" style="border-color:var(--app-border)">
@@ -215,16 +218,16 @@
                 <button type="button" class="app-button-secondary shrink-0" :disabled="saving" @click="evaluateNow">{{ t('research.evaluateNow') }}</button>
               </div>
               <form class="space-y-3 border p-4 dark:border-slate-700" style="border-color:var(--app-border)" @submit.prevent="submitAlert">
-                <input v-model.trim="alertForm.name" class="app-control w-full" :placeholder="t('research.alertName')" maxlength="200" />
+                <label class="block min-w-0"><span class="label">{{ t('research.alertName') }}</span><input v-model.trim="alertForm.name" class="app-control w-full" :aria-label="t('research.alertName')" :placeholder="t('research.alertName')" maxlength="200" /></label>
                 <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <select v-model="alertForm.metric" class="app-control">
+                  <select :aria-label="t('ui.alertMetric')" v-model="alertForm.metric" class="app-control">
                     <option v-for="metric in alertMetrics" :key="metric" :value="metric">{{ t(`research.alertMetrics.${metric}`) }}</option>
                   </select>
-                  <select v-model="alertForm.operator" class="app-control">
+                  <select :aria-label="t('ui.alertCondition')" v-model="alertForm.operator" class="app-control">
                     <option v-for="operator in alertOperators" :key="operator" :value="operator">{{ t(`research.alertOperators.${operator}`) }}</option>
                   </select>
-                  <input v-model="alertForm.threshold" class="app-control" inputmode="decimal" :placeholder="t('research.threshold')" />
-                  <input v-if="['between', 'outside'].includes(alertForm.operator)" v-model="alertForm.secondaryThreshold" class="app-control" inputmode="decimal" :placeholder="t('research.secondaryThreshold')" />
+                  <label class="block min-w-0"><span class="label">{{ t('research.threshold') }}</span><input v-model="alertForm.threshold" class="app-control" inputmode="decimal" :aria-label="t('research.threshold')" :placeholder="t('research.threshold')" /></label>
+                  <label v-if="['between', 'outside'].includes(alertForm.operator)" class="block min-w-0"><span class="label">{{ t('research.secondaryThreshold') }}</span><input v-model="alertForm.secondaryThreshold" class="app-control" inputmode="decimal" :aria-label="t('research.secondaryThreshold')" :placeholder="t('research.secondaryThreshold')" /></label>
                 </div>
                 <div class="flex flex-wrap items-center gap-5 text-sm text-stone-600 dark:text-slate-300">
                   <label class="flex items-center gap-2"><input v-model="alertForm.windows" type="checkbox" /> {{ t('research.windowsNotification') }}</label>
@@ -258,7 +261,7 @@
             </div>
 
             <div v-else class="space-y-3 p-5">
-              <article v-for="event in filteredEvents" :key="event.id" class="border-l-2 p-4" :class="event.acknowledgedAt ? 'border-stone-300 bg-stone-50/60 dark:border-slate-600 dark:bg-slate-900/30' : 'border-emerald-700 bg-emerald-50/70 dark:bg-emerald-950/20'">
+              <article v-for="event in filteredEvents" :key="event.id" class="border-l p-4" :class="event.acknowledgedAt ? 'border-stone-300 bg-stone-50/60 dark:border-slate-600 dark:bg-slate-900/30' : 'border-emerald-700 bg-emerald-50/70 dark:bg-emerald-950/20'">
                 <div class="flex items-start justify-between gap-4">
                   <div>
                     <p class="font-semibold text-stone-950 dark:text-white">{{ event.title }}</p>
@@ -282,6 +285,9 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { BookmarkSquareIcon } from '@heroicons/vue/24/outline'
+import AppEmptyState from '@/components/AppEmptyState.vue'
+import AppLoadingState from '@/components/AppLoadingState.vue'
 import { useI18n } from 'vue-i18n'
 import SymbolSearchBox from '@/components/SymbolSearchBox.vue'
 import { useDateTime } from '@/composables/useDateTime'
@@ -449,3 +455,24 @@ watch(activeItem, (item) => {
 
 onMounted(load)
 </script>
+
+<style scoped>
+.research-workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
+.research-list-pane { border-bottom: 1px solid var(--ui-border); }
+.research-list-pane > .app-panel-header { border: 0; padding: 0 0 8px; }
+.research-list-pane > .p-3 { display: flex; overflow-x: auto; gap: 8px; padding-inline: 0; }
+.research-list-pane > .p-3 > button { flex: 0 0 180px; border: 0; border-radius: 5px; padding: 12px; margin: 0; }
+.research-list-pane > .p-3 > button span:nth-child(2) { display: none; }
+@container app-content (min-width: 60rem) {
+  .research-workspace.has-detail { grid-template-columns: minmax(260px, .7fr) minmax(0, 1.3fr); }
+  .research-list-pane { grid-column: 1 / -1; }
+  .research-asset-list { max-height: 640px; overflow-y: auto; }
+}
+@container app-content (min-width: 88rem) {
+  .research-workspace { grid-template-columns: 200px minmax(0, 1fr); }
+  .research-workspace.has-detail { grid-template-columns: 200px minmax(280px, .7fr) minmax(0, 1.3fr); }
+  .research-list-pane { grid-column: auto; border: 0; }
+  .research-list-pane > .p-3 { display: block; }
+  .research-list-pane > .p-3 > button { width: 100%; margin-bottom: 8px; }
+}
+</style>

@@ -60,7 +60,11 @@
     "scope": "读取各平台完整交易目录，按底层股票代码合并。保留股票、股票 ETF、杠杆及反向股票 ETF 和股票指数；剔除普通加密代币、贵金属、原油、债券等非股票产品。同一标的的不同产品和计价币可展开查看。",
     "availability": "支持标签表示平台目录中存在该产品，实际可交易范围以账号地区和平台状态为准。目录每 5 分钟缓存一次，也可手动刷新。",
     "sourceNotVerified": "完整名单尚未核实，未计入",
-    "sourceStatus": { "ok": "已更新", "stale": "更新失败，保留上次记录", "unavailable": "暂时无法读取" }
+    "sourceStatus": {
+      "ok": "已更新",
+      "stale": "更新失败，保留上次记录",
+      "unavailable": "暂时无法读取"
+    }
   },
   "pages": {
     "notFound": "页面未找到"
@@ -872,7 +876,7 @@
     "price": "实时价格 ({currency})",
     "unitsHeld": "持仓数量",
     "allocationTitle": "目标配置与实际持仓",
-    "allocationSubtitle": "持仓数量由上方交易流水推导；调整目标权重不会改变实际持仓。",
+    "allocationSubtitle": "持仓数量由交易流水推导；调整目标权重不会改变实际持仓。",
     "legacyVirtualHoldings": "这是旧版本生成的虚拟持仓。录入第一笔交易流水后，系统会改用流水推导的真实持仓，并停止自动改写数量。",
     "ledgerSymbolLocked": "该标的已有流水持仓，请先在流水中卖出或转出后再移除。",
     "currentWeight": "当前占比",
@@ -1023,7 +1027,8 @@
     "noHistory": "暂无历史数据",
     "waitingData": "等待后台采集数据...",
     "error": "出错了",
-    "horizontalScrollHint": "左右滑动或滚动可查看全部列"
+    "horizontalScrollHint": "左右滑动或滚动可查看全部列",
+    "retry": "重试"
   },
   "notFound": {
     "message": "页面未找到",
@@ -1330,5 +1335,43 @@
     "capConversion": "强平价格与跨币种换算",
     "capFinancial": "财报与经济数据",
     "capLibraries": "外部 Pine 库"
+  },
+  "ui": {
+    "filters": "筛选",
+    "executionSettings": "执行时间与时区",
+    "unavailable": "暂无数据",
+    "dcaEmptyHint": "设置资产、金额和策略后开始计算，查看收益、平均成本和每日投入。",
+    "historicalSimulation": "历史模拟",
+    "managePortfolios": "管理组合",
+    "portfolioPlanHint": "当前是目标配置，尚无流水持仓。记录交易后可查看实际持仓与偏离。",
+    "importMode": "流水导入方式",
+    "period": "分析区间",
+    "daysCount": "{count} 天",
+    "riskEmptyHint": "记录交易并形成持仓后，再分析收益、相关性与压力情景。",
+    "scenarioHint": "输入各资产假设的涨跌幅，空白资产保持不变。",
+    "needsAttention": "需要处理",
+    "sourcesReady": "当前数据源均已就绪。",
+    "readySources": "已就绪的数据源 · {count}",
+    "working": "处理中…",
+    "healthLoadFailed": "无法读取数据状态，请重试。",
+    "repairFailed": "处理失败，请检查数据状态后重试。",
+    "preferences": "显示偏好",
+    "preferencesHint": "修改后立即生效。",
+    "modelSettingsHint": "供已有研究分析功能使用，修改后保存。",
+    "runtime": "运行信息",
+    "researchEmptyHint": "创建列表，集中记录资产、研究判断和跟进事项。",
+    "researchAssetHint": "添加一个资产，再记录判断、笔记或价格提醒。",
+    "noteType": "笔记类型",
+    "alertMetric": "提醒指标",
+    "alertCondition": "触发条件",
+    "allSignals": "全部指标",
+    "heatRank": "热度榜",
+    "addressActivity": "地址表现",
+    "allocationTab": "目标配置",
+    "ledgerTab": "流水与业绩",
+    "riskTab": "风险与情景",
+    "researchEmptyTitle": "还没有研究列表",
+    "description": "说明",
+    "noteBody": "内容"
   }
 }

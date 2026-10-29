@@ -6,10 +6,11 @@
     </div>
     <div v-if="result" class="mt-5 space-y-5">
       <div class="border border-stone-200 bg-[#fbfaf7] p-4 dark:border-slate-700 dark:bg-slate-900/60"><div class="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t('portfolioBalance.equityCurve') }}</div><div class="h-[320px]"><PortfolioEquityChart :points="result.equityCurve" /></div></div>
-      <div class="grid grid-cols-2 gap-3 xl:grid-cols-8">
-        <div v-for="metric in metrics" :key="metric.label" class="border border-stone-200 bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/60"><div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ metric.label }}</div><div class="mt-1 font-semibold" :class="metric.className">{{ metric.value }}</div></div>
+      <div class="portfolio-simulation-metrics app-metric-strip">
+        <div v-for="metric in metrics" :key="metric.label"><div class="app-metric-label">{{ metric.label }}</div><div class="mt-2 break-words font-semibold" :class="metric.className">{{ metric.value }}</div></div>
       </div>
     </div>
+    <AppLoadingState v-else-if="loading" :label="$t('portfolioBalance.simulating')" :rows="3" />
     <div v-else class="mt-5 border border-stone-200 bg-[#fbfaf7] px-4 py-6 text-center text-sm text-stone-500 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-400">{{ $t('portfolioBalance.noSimulation') }}</div>
   </section>
 </template>
@@ -19,6 +20,7 @@ import { computed } from 'vue'
 import { ArrowPathIcon } from '@heroicons/vue/24/outline'
 import { useI18n } from 'vue-i18n'
 import AppDateField from '@/components/AppDateField.vue'
+import AppLoadingState from '@/components/AppLoadingState.vue'
 import PortfolioEquityChart from '@/components/PortfolioEquityChart.vue'
 import { formatDate, formatPercent, formatSignedPercent } from '@/modules/format'
 import { useMoney } from '@/composables/useMoney'
@@ -41,3 +43,7 @@ const metrics = computed(() => props.result ? [
   { label: t('portfolioBalance.rebalanceCount'), value: props.result.rebalanceCount, className: 'text-slate-900 dark:text-white' },
 ] : [])
 </script>
+<style scoped>
+.portfolio-simulation-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@container app-content (max-width: 48rem) { .portfolio-simulation-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+</style>

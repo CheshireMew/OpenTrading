@@ -55,6 +55,9 @@ export const apiErrorMessage = (error: unknown, fallback: string): string => {
     const normalized = normalizeApiError(error, fallback)
     if (normalized.status === 422) return fallback
     const message = normalized.detail.trim()
+    // A transport failure has no useful task context; use the caller's recovery copy.
+    // Preserve the backend's specific detail when it supplied one.
+    if (!normalized.payload && /^(?:Network Error|Request failed(?: with status code \d+)?|timeout of \d+ms exceeded|Request aborted)$/i.test(message)) return fallback
     return message || fallback
 }
 

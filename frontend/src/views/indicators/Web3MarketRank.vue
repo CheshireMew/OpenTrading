@@ -23,7 +23,9 @@
         {{ error }}
       </section>
 
-      <article class="app-panel overflow-hidden">
+<AppTabs id="web3" v-model="activeView" :label="t('web3Rank.title')" :tabs="viewTabs" />
+      <section v-show="activeView === 'heat'" id="web3-panel-heat" role="tabpanel" aria-labelledby="web3-tab-heat" tabindex="0">
+            <article class="app-panel app-responsive-table overflow-hidden">
         <div class="app-panel-header flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 class="app-section-title">{{ t('web3Rank.heatRank.title') }}</h3>
@@ -39,7 +41,7 @@
         </div>
         <div v-if="web3Error" class="border-b border-rose-100 bg-rose-50 px-5 py-3 text-sm text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">{{ web3Error }}</div>
         <div class="app-table-scroll" tabindex="0" :aria-label="t('web3Rank.heatRank.title')">
-          <table class="min-w-[72rem] text-left text-sm">
+          <table class="app-data-table w-full min-w-[66rem] text-left text-sm">
             <thead class="app-table-head">
               <tr>
                 <th class="px-5 py-3 font-semibold">{{ t('web3Rank.columns.rank') }}</th>
@@ -88,8 +90,8 @@
                 :key="`${item.chain_id}-${item.contract_address}`"
                 class="app-table-row"
               >
-                <td class="px-5 py-4 text-slate-500 dark:text-slate-400">{{ item.rank ?? '--' }}</td>
-                <td class="px-5 py-4">
+                <td class="px-5 py-4 text-slate-500 dark:text-slate-400" :data-label="t('web3Rank.columns.rank')">{{ item.rank ?? '--' }}</td>
+                <td class="px-5 py-4 app-table-primary" :data-label="t('web3Rank.columns.token')">
                   <div class="flex items-center gap-3">
                     <Web3TokenIcon :src="item.icon_url" :symbol="item.symbol" />
                     <div>
@@ -100,8 +102,8 @@
                     </div>
                   </div>
                 </td>
-                <td class="px-5 py-4 font-semibold text-[#0f6b4f] dark:text-emerald-300">{{ formatScore(item.heat_score) }}</td>
-                <td class="px-5 py-4">
+                <td class="px-5 py-4 font-semibold text-[#0f6b4f] dark:text-emerald-300" :data-label="t('web3Rank.columns.heat')">{{ formatScore(item.heat_score) }}</td>
+                <td class="px-5 py-4" :data-label="t('web3Rank.columns.signal')">
                   <div class="flex max-w-[24rem] flex-wrap gap-1.5 text-xs">
                     <span v-if="item.ranks?.top_search" class="app-chip">{{ t('web3Rank.signals.search') }} #{{ item.ranks.top_search }}</span>
                     <span v-if="item.ranks?.trending" class="app-chip">{{ t('web3Rank.signals.trending') }} #{{ item.ranks.trending }}</span>
@@ -110,10 +112,10 @@
                     <span v-if="item.ranks?.meme" class="rounded-full bg-amber-500/10 px-2 py-1 text-amber-600 dark:text-amber-300">Meme #{{ item.ranks.meme }}</span>
                   </div>
                 </td>
-                <td class="px-5 py-4" :class="changeClass(item.metrics?.percent_change_24h)">{{ formatPercent(item.metrics?.percent_change_24h) }}</td>
-                <td class="px-5 py-4 text-stone-600 dark:text-slate-300">{{ formatCompact(item.metrics?.market_cap) }}</td>
-                <td class="px-5 py-4 text-stone-600 dark:text-slate-300">{{ formatCompact(item.metrics?.liquidity) }}</td>
-                <td class="px-5 py-4 text-stone-600 dark:text-slate-300">{{ formatCompact(item.metrics?.smart_money_inflow) }}</td>
+                <td class="px-5 py-4" :class="changeClass(item.metrics?.percent_change_24h)" :data-label="t('web3Rank.columns.change24h')">{{ formatPercent(item.metrics?.percent_change_24h) }}</td>
+                <td class="px-5 py-4 text-stone-600 dark:text-slate-300" :data-label="t('web3Rank.columns.marketCap')">{{ formatCompact(item.metrics?.market_cap) }}</td>
+                <td class="px-5 py-4 text-stone-600 dark:text-slate-300" :data-label="t('web3Rank.columns.liquidity')">{{ formatCompact(item.metrics?.liquidity) }}</td>
+                <td class="px-5 py-4 text-stone-600 dark:text-slate-300" :data-label="t('web3Rank.columns.smartMoney')">{{ formatCompact(item.metrics?.smart_money_inflow) }}</td>
               </tr>
               <tr v-if="!web3HeatRank.length">
                 <td colspan="8" class="px-5 py-8 text-center text-sm text-slate-400 dark:text-slate-500">{{ t('web3Rank.heatRank.noRows') }}</td>
@@ -123,12 +125,15 @@
         </div>
       </article>
 
-      <article class="app-panel">
+
+      </section>
+      <section v-show="activeView === 'addresses'" id="web3-panel-addresses" role="tabpanel" aria-labelledby="web3-tab-addresses" tabindex="0">
+            <article class="app-panel app-responsive-table">
         <div class="app-panel-header">
           <h3 class="app-section-title">{{ t('web3Rank.addressPnlTitle') }}</h3>
         </div>
         <div class="app-table-scroll" tabindex="0" :aria-label="t('web3Rank.addressPnlTitle')">
-          <table class="min-w-[52rem] text-left text-sm">
+          <table class="app-data-table w-full min-w-[52rem] text-left text-sm">
             <thead class="app-table-head">
               <tr>
                 <th class="px-5 py-3 font-semibold">{{ t('web3Rank.columns.address') }}</th>
@@ -140,16 +145,17 @@
             </thead>
             <tbody>
               <tr v-for="(item, index) in addressPnl" :key="item.address || `address-${index}`" class="app-table-row">
-                <td class="px-5 py-4 font-medium text-stone-950 dark:text-white">{{ item.address_label || item.address }}</td>
-                <td class="px-5 py-4" :class="changeClass(item.realized_pnl)">{{ formatCompact(item.realized_pnl) }}</td>
-                <td class="px-5 py-4 text-stone-600 dark:text-slate-300">{{ formatPercent(item.win_rate) }}</td>
-                <td class="px-5 py-4 text-stone-600 dark:text-slate-300">{{ formatCompact(item.total_volume) }}</td>
-                <td class="px-5 py-4 text-stone-600 dark:text-slate-300">{{ item.total_tx_cnt ?? '--' }}</td>
+                <td class="px-5 py-4 font-medium text-stone-950 dark:text-white app-table-primary" :data-label="t('web3Rank.columns.address')">{{ item.address_label || item.address }}</td>
+                <td class="px-5 py-4" :class="changeClass(item.realized_pnl)" :data-label="t('web3Rank.columns.pnl')">{{ formatCompact(item.realized_pnl) }}</td>
+                <td class="px-5 py-4 text-stone-600 dark:text-slate-300" :data-label="t('web3Rank.columns.winRate')">{{ formatPercent(item.win_rate) }}</td>
+                <td class="px-5 py-4 text-stone-600 dark:text-slate-300" :data-label="t('web3Rank.columns.volume')">{{ formatCompact(item.total_volume) }}</td>
+                <td class="px-5 py-4 text-stone-600 dark:text-slate-300" :data-label="t('web3Rank.columns.trades')">{{ item.total_tx_cnt ?? '--' }}</td>
               </tr>
             </tbody>
           </table>
         </div>
       </article>
+      </section>
     </div>
 
     <BinanceWeb3TokenDialog
@@ -181,9 +187,13 @@ defineOptions({ name: 'Web3MarketRank' })
 import { useWeb3MarketRankPage } from '@/modules/market'
 import BinanceWeb3TokenDialog from '@/components/market/BinanceWeb3TokenDialog.vue'
 import Web3TokenIcon from '@/components/market/Web3TokenIcon.vue'
+import { computed, ref } from 'vue'
+import AppTabs from '@/components/AppTabs.vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
+const activeView = ref('heat')
+const viewTabs = computed(() => [{ id: 'heat', label: t('ui.heatRank'), count: web3HeatRank.value.length }, { id: 'addresses', label: t('ui.addressActivity'), count: addressPnl.value.length }])
 
 const {
   error,
@@ -217,3 +227,7 @@ const {
   changeClass,
 } = useWeb3MarketRankPage()
 </script>
+
+<style scoped>
+[role=tabpanel]:focus { outline: none; }
+</style>

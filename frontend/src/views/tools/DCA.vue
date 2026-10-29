@@ -1,230 +1,55 @@
 <template>
   <div class="app-page">
-    <div class="app-page-inner-wide flex flex-col space-y-4">
-    <!-- Configuration -->
-    <div class="app-hero-panel transition-colors">
-      <h1 class="app-section-title mb-4 flex items-center">
-        <BanknotesIcon class="mr-2 h-6 w-6 text-[#0f6b4f] dark:text-green-400" />
-        {{ $t('dca.config') }}
-      </h1>
-      
-      <div class="dca-config-grid grid gap-4 items-start">
-        <div>
-          <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400">{{ $t('dca.pair') }}</label>
-          <SymbolSearchBox v-model="config.symbol" :aria-label="$t('dca.pair')" />
-        </div>
-        <div>
-          <AppDateField
-            v-model="config.start_date"
-            :label="$t('dca.startDate')"
-            :min="dcaStartMin"
-            :max="dcaStartMax"
-            input-class="app-control w-full"
-            label-class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400"
-          />
-          <p class="mt-1 text-xs text-stone-500 dark:text-slate-400">{{ $t('dca.startDateHint') }}</p>
-        </div>
-        <div>
-          <label for="dca-investment-time" class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400">{{ $t('dca.investTime') }}</label>
-          <select id="dca-investment-time" v-model="config.investment_time" class="app-control w-full">
-            <option value="00:00">00:00</option>
-            <option value="02:00">02:00</option>
-            <option value="04:00">04:00</option>
-            <option value="06:00">06:00</option>
-            <option value="08:00">08:00</option>
-            <option value="10:00">10:00</option>
-            <option value="12:00">12:00</option>
-            <option value="14:00">14:00</option>
-            <option value="16:00">16:00</option>
-            <option value="18:00">18:00</option>
-            <option value="20:00">20:00</option>
-            <option value="22:00">22:00</option>
-            <option value="23:00">23:00</option>
-          </select>
-        </div>
-        
-        <!-- Strategy Selector -->
-        <div>
-           <label for="dca-strategy" class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400">{{ $t('dca.strategy') }}</label>
-           <select id="dca-strategy" v-model="config.strategy" class="app-control w-full">
-             <option value="standard">{{ $t('dca.strategies.standard') }}</option>
-             <option value="ema_deviation">{{ $t('dca.strategies.ema20') }}</option>
-             <option value="rsi_dynamic">{{ $t('dca.strategies.rsi') }}</option>
-             <option v-if="!isIndexSelected" value="ahr999">{{ $t('dca.strategies.ahr999') }}</option>
-             <option v-if="!isIndexSelected" value="fear_greed">{{ $t('dca.strategies.fg') }}</option>
-             <option value="value_averaging">{{ $t('dca.strategies.va') }}</option>
-           </select>
-        </div>
-
-        <div>
-           <label for="dca-timezone" class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400">{{ $t('dca.timezone') }}</label>
-           <AppTimezoneSelect id="dca-timezone" :aria-label="$t('dca.timezone')" />
-        </div>
-
-        <div>
-          <label for="dca-amount" class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400">
-              {{ config.strategy === 'value_averaging' ? $t('dca.dailyTarget', { currency: displayCurrency }) : $t('dca.dailyBase', { currency: displayCurrency }) }}
-          </label>
-          <input id="dca-amount" v-model.number="displayAmount" type="number" min="0" class="app-control w-full" />
-        </div>
-
-        <!-- Strategy Params (Conditional) -->
-        <div v-if="config.strategy !== 'standard' && config.strategy !== 'value_averaging'">
-           <label for="dca-strength" class="mb-1 flex justify-between text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400">
-              <span>{{ $t('dca.strength') }}</span>
-              <span class="text-gray-500 font-normal">
-                  {{
-                      config.strategy === 'ema_deviation' ? `${$t('dca.recommended')}: 2.0 - 5.0` :
-                      config.strategy === 'rsi_dynamic' ? `${$t('dca.recommended')}: 1.0 - 3.0` :
-                      config.strategy === 'ahr999' ? `${$t('dca.recommended')}: 0.5 - 2.0` :
-                      config.strategy === 'fear_greed' ? `${$t('dca.recommended')}: 1.0 - 3.0` : ''
-                  }}
-              </span>
-           </label>
-           <input id="dca-strength" v-model.number="config.strategy_params.multiplier" type="number" min="0" step="0.1" class="app-control w-full" />
-        </div>
-        
-        <button type="button" @click="runSimulation" :disabled="loading || !canRunSimulation" class="dca-config-submit app-button-primary app-touch-target flex items-center justify-center px-6 py-2">
-          <ArrowPathIcon v-if="loading" class="h-4 w-4 animate-spin" aria-hidden="true" />
-          {{ loading ? $t('dca.calculating') : $t('dca.calculate') }}
-        </button>
+    <div class="app-page-inner-wide">
+      <header class="app-workspace-header"><h1 class="app-title">{{ $t('nav.dca') }}</h1></header>
+      <div class="dca-workspace">
+        <aside class="dca-configuration min-w-0 space-y-6">
+          <form class="app-panel p-5" @submit.prevent="runSimulation">
+            <h2 class="app-section-title mb-5">{{ $t('dca.config') }}</h2>
+            <div class="dca-primary-fields">
+              <div><label class="label">{{ $t('dca.pair') }}</label><SymbolSearchBox v-model="config.symbol" :aria-label="$t('dca.pair')" /></div>
+              <label><span class="label">{{ config.strategy === 'value_averaging' ? $t('dca.dailyTarget', { currency: displayCurrency }) : $t('dca.dailyBase', { currency: displayCurrency }) }}</span><input id="dca-amount" v-model.number="displayAmount" type="number" min="0" step="any" class="app-control w-full" /></label>
+              <div><AppDateField v-model="config.start_date" :label="$t('dca.startDate')" :min="dcaStartMin" :max="dcaStartMax" input-class="app-control w-full" label-class="label" /><p class="app-muted mt-1 text-xs">{{ $t('dca.startDateHint') }}</p></div>
+              <label><span class="label">{{ $t('dca.strategy') }}</span><select id="dca-strategy" v-model="config.strategy" class="app-control w-full"><option value="standard">{{ $t('dca.strategies.standard') }}</option><option value="ema_deviation">{{ $t('dca.strategies.ema20') }}</option><option value="rsi_dynamic">{{ $t('dca.strategies.rsi') }}</option><option v-if="!isIndexSelected" value="ahr999">{{ $t('dca.strategies.ahr999') }}</option><option v-if="!isIndexSelected" value="fear_greed">{{ $t('dca.strategies.fg') }}</option><option value="value_averaging">{{ $t('dca.strategies.va') }}</option></select></label>
+              <label v-if="config.strategy !== 'standard' && config.strategy !== 'value_averaging'"><span class="label">{{ $t('dca.strength') }}</span><input id="dca-strength" v-model.number="config.strategy_params.multiplier" type="number" min="0" step="0.1" class="app-control w-full" /></label>
+            </div>
+            <details class="dca-execution-settings"><summary>{{ $t('ui.executionSettings') }}</summary><div class="mt-4 grid gap-4 sm:grid-cols-2"><label><span class="label">{{ $t('dca.investTime') }}</span><select id="dca-investment-time" v-model="config.investment_time" class="app-control w-full"><option v-for="time in ['00:00','02:00','04:00','06:00','08:00','10:00','12:00','14:00','16:00','18:00','20:00','22:00','23:00']" :key="time" :value="time">{{ time }}</option></select></label><label><span class="label">{{ $t('dca.timezone') }}</span><AppTimezoneSelect id="dca-timezone" :aria-label="$t('dca.timezone')" /></label></div></details>
+            <div v-if="errorMessage" role="alert" class="app-inline-note mt-4 text-rose-700 dark:text-rose-300">{{ errorMessage }}</div>
+            <button type="submit" :disabled="loading || !canRunSimulation" class="app-button-primary mt-5 w-full"><ArrowPathIcon v-if="loading" class="h-4 w-4 animate-spin" aria-hidden="true" />{{ loading ? $t('dca.calculating') : $t('dca.calculate') }}</button>
+          </form>
+          <section class="dca-market-context">
+            <div class="mb-4 flex items-center justify-between gap-3"><h2 class="app-section-title">{{ $t('dca.market') }}</h2><button type="button" class="text-xs underline underline-offset-4 app-muted" :disabled="marketData.loading" @click="fetchMarketIndicators">{{ marketData.loading ? $t('dca.marketLoading') : $t('dca.refreshMarket') }}</button></div>
+            <div v-if="marketData.error" role="alert" class="app-inline-note mb-4 text-amber-800 dark:text-amber-200">{{ marketData.error }}</div>
+            <dl class="dca-context-values"><div><dt>{{ $t('dca.currentPrice') }}</dt><dd>{{ result ? formatMoney(result.current_price, result.pricing_currency || 'USDT') : marketData.currentPrice != null ? formatMoney(marketData.currentPrice, marketData.pricingCurrency) : '—' }}</dd><span v-if="result?.pricing_symbol || marketData.pricingSymbol" class="app-muted text-xs">{{ result?.pricing_symbol || marketData.pricingSymbol }}</span></div><div><dt>{{ $t('dca.rsi14') }}</dt><dd>{{ marketData.rsi ?? '—' }}</dd></div><div><dt>{{ $t('dca.fgIndex') }}</dt><dd :class="marketData.sentiment != null ? sentimentClass : 'app-muted'">{{ marketData.sentiment ?? $t('ui.unavailable') }}</dd><span v-if="marketData.sentimentLabel" class="app-muted text-xs">{{ marketData.sentimentLabel }}</span></div></dl>
+            <p v-if="marketData.updatedAt" class="app-muted mt-4 text-xs">{{ $t('dca.marketUpdated', { time: new Date(marketData.updatedAt).toLocaleString() }) }}</p>
+          </section>
+        </aside>
+        <section class="dca-results min-w-0 space-y-5" :aria-label="$t('dca.asset')" :aria-busy="loading">
+          <div v-if="result?.data_quality === 'synthetic_and_exchange_proxy'" role="note" class="app-inline-note text-amber-800 dark:text-amber-200">{{ $t('dca.syntheticHistoryWarning') }}</div>
+          <template v-if="result">
+            <dl class="dca-output-values app-metric-strip">
+              <div><dt>{{ $t('dca.roi') }}</dt><dd :class="isPositiveRoi ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'">{{ (result.roi || 0).toFixed(2) }}%</dd></div>
+              <div><dt>{{ $t('dca.currentValue') }}</dt><dd>{{ formatMoney(result.final_value, result.pricing_currency || 'USDT') }}</dd></div>
+              <div><dt>{{ $t('dca.totalInvested') }}</dt><dd>{{ formatMoney(result.total_invested, result.pricing_currency || 'USDT') }}</dd></div>
+              <div><dt>{{ $t('dca.avgCost') }}</dt><dd>{{ formatMoney(result.average_cost, result.pricing_currency || 'USDT') }}</dd></div>
+              <div><dt>{{ $t('dca.holdings') }}</dt><dd>{{ (result.total_coins || 0).toFixed(6) }}</dd></div>
+              <div><dt>{{ $t('dca.dcaDays') }}</dt><dd>{{ result.total_days || 0 }}</dd></div>
+            </dl>
+            <section class="app-panel p-5"><h2 class="app-section-title mb-4">{{ $t('dca.roiTrend') }}</h2><div class="h-80"><canvas ref="roiChartCanvas" role="img" :aria-label="$t('dca.roiTrend')" /></div></section>
+            <div class="dca-supporting-charts"><section class="app-panel p-5"><h2 class="app-section-title mb-4">{{ $t('dca.priceVsCost') }}</h2><div class="h-64"><canvas ref="priceChartCanvas" role="img" :aria-label="$t('dca.priceVsCost')" /></div></section><section class="app-panel p-5"><h2 class="app-section-title mb-4">{{ $t('dca.dailyAmount') }}</h2><div class="h-64"><canvas ref="investmentChartCanvas" role="img" :aria-label="$t('dca.dailyAmount')" /></div></section></div>
+          </template>
+          <div v-else-if="loading" class="app-panel"><AppLoadingState :label="$t('dca.calculating')" :rows="6" /></div>
+          <div v-else class="dca-empty"><AppEmptyState :title="$t('dca.emptyResultTitle')" :description="$t('ui.dcaEmptyHint')" :icon="PresentationChartLineIcon" /></div>
+        </section>
       </div>
-    </div>
-
-    <div v-if="errorMessage" role="alert" class="border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200">
-      {{ errorMessage }}
-    </div>
-
-    <div v-if="result?.data_quality === 'synthetic_and_exchange_proxy'" role="note" class="border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
-      {{ $t('dca.syntheticHistoryWarning') }}
-    </div>
-
-    <!-- Market Indicators Card -->
-    <div class="app-panel p-4 transition-colors">
-       <div class="mb-3 flex flex-wrap items-start justify-between gap-3">
-       <h3 class="flex items-center text-sm font-bold text-stone-950 dark:text-white">
-         <ChartBarIcon class="mr-1.5 h-5 w-5 text-[#0f6b4f] dark:text-emerald-300" />
-         {{ $t('dca.market') }}
-       </h3>
-       <button type="button" class="app-button-secondary app-touch-target" :disabled="marketData.loading" @click="fetchMarketIndicators">{{ marketData.loading ? $t('dca.marketLoading') : $t('dca.refreshMarket') }}</button>
-       </div>
-       <div v-if="marketData.error" role="alert" class="mb-4 border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">{{ marketData.error }}</div>
-       
-       <div class="dca-market-grid grid gap-4">
-          <!-- 当前币价 -->
-          <div class="text-center">
-             <div class="mb-1 text-xs uppercase text-stone-500 dark:text-slate-400">{{ $t('dca.currentPrice') }}</div>
-             <div class="text-2xl font-bold text-[#0f6b4f] dark:text-emerald-300">{{ result ? formatMoney(result.current_price, result.pricing_currency || 'USDT') : marketData.currentPrice != null ? formatMoney(marketData.currentPrice, marketData.pricingCurrency) : '--' }}</div>
-             <div v-if="result?.pricing_symbol || marketData.pricingSymbol" class="text-xs text-gray-500 mt-0.5">{{ result?.pricing_symbol || marketData.pricingSymbol }}</div>
-          </div>
-          
-          <!-- RSI -->
-          <div class="text-center">
-             <div class="mb-1 text-xs uppercase text-stone-500 dark:text-slate-400">{{ $t('dca.rsi14') }}</div>
-             <div class="text-2xl font-bold text-[#8a6a24] dark:text-purple-400">{{ marketData.rsi || '--' }}</div>
-          </div>
-          
-          <!-- 恐惧贪婪指数 -->
-          <div class="text-center">
-             <div class="mb-1 text-xs uppercase text-stone-500 dark:text-slate-400">{{ $t('dca.fgIndex') }}</div>
-             <div class="text-2xl font-bold" :class="sentimentClass">
-               {{ marketData.sentiment ?? '--' }}
-             </div>
-             <div class="text-xs text-gray-500 mt-0.5">{{ marketData.sentimentLabel || '' }}</div>
-          </div>
-       </div>
-       <p v-if="marketData.updatedAt" class="mt-4 text-right text-xs text-stone-500 dark:text-slate-400">{{ $t('dca.marketUpdated', { time: new Date(marketData.updatedAt).toLocaleString() }) }}</p>
-    </div>
-
-    <template v-if="result">
-    <div class="app-panel p-4 transition-colors">
-       <h3 class="mb-3 flex items-center border-b border-stone-200 pb-2 text-sm font-bold text-stone-950 dark:border-slate-700 dark:text-white">
-         <WalletIcon class="mr-1.5 h-5 w-5 text-[#8a6a24] dark:text-yellow-400" />
-         {{ $t('dca.asset') }}
-       </h3>
-       
-       <div class="dca-result-metrics grid gap-4">
-          <!-- 1. 平均成本 -->
-          <div class="text-center">
-             <div class="mb-1 text-xs uppercase text-stone-500 dark:text-slate-400">{{ $t('dca.avgCost') }}</div>
-             <div class="text-xl font-bold text-yellow-600 dark:text-yellow-400">{{ formatMoney(result.average_cost, result.pricing_currency || 'USDT') }}</div>
-          </div>
-          
-          <!-- 2. ROI -->
-          <div class="text-center">
-             <div class="mb-1 text-xs uppercase text-stone-500 dark:text-slate-400">{{ $t('dca.roi') }}</div>
-             <div class="text-xl font-bold" :class="isPositiveRoi ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
-               {{ (result.roi || 0).toFixed(2) }}%
-             </div>
-          </div>
-          
-          <!-- 3. 总投入 -->
-          <div class="text-center">
-             <div class="mb-1 text-xs uppercase text-stone-500 dark:text-slate-400">{{ $t('dca.totalInvested') }}</div>
-             <div class="text-xl font-bold text-gray-900 dark:text-white">{{ formatMoney(result.total_invested, result.pricing_currency || 'USDT') }}</div>
-          </div>
-          
-          <!-- 4. 当前价值 -->
-          <div class="text-center">
-             <div class="mb-1 text-xs uppercase text-stone-500 dark:text-slate-400">{{ $t('dca.currentValue') }}</div>
-             <div class="text-xl font-bold text-gray-900 dark:text-white">{{ formatMoney(result.final_value, result.pricing_currency || 'USDT') }}</div>
-          </div>
-          
-          <!-- 5. 持仓数量 -->
-          <div class="text-center">
-             <div class="mb-1 text-xs uppercase text-stone-500 dark:text-slate-400">{{ $t('dca.holdings') }}</div>
-             <div class="text-xl font-bold text-gray-900 dark:text-white">{{ (result.total_coins || 0).toFixed(6) }}</div>
-          </div>
-          
-          <!-- 6. 定投天数 -->
-          <div class="text-center">
-             <div class="mb-1 text-xs uppercase text-stone-500 dark:text-slate-400">{{ $t('dca.dcaDays') }}</div>
-             <div class="text-xl font-bold text-gray-700 dark:text-gray-300">{{ result.total_days || 0 }}</div>
-          </div>
-       </div>
-    </div>
-
-    <!-- Charts Area - 3 Charts Layout (Always visible) -->
-    <div class="dca-chart-grid grid gap-4">
-        <!-- 1. ROI Trend Chart -->
-        <div class="app-panel p-3 transition-colors">
-            <h3 class="mb-2 text-xs font-bold text-stone-500 dark:text-slate-400">{{ $t('dca.roiTrend') }}</h3>
-            <div class="h-72">
-                <canvas ref="roiChartCanvas" role="img" :aria-label="$t('dca.roiTrend')"></canvas>
-            </div>
-        </div>
-        
-        <!-- 2. Price vs Avg Cost Chart -->
-        <div class="app-panel p-3 transition-colors">
-            <h3 class="mb-2 text-xs font-bold text-stone-500 dark:text-slate-400">{{ $t('dca.priceVsCost') }}</h3>
-            <div class="h-72">
-                <canvas ref="priceChartCanvas" role="img" :aria-label="$t('dca.priceVsCost')"></canvas>
-            </div>
-        </div>
-        
-        <!-- 3. Daily Investment Amount Chart -->
-        <div class="app-panel p-3 transition-colors">
-            <h3 class="mb-2 text-xs font-bold text-stone-500 dark:text-slate-400">{{ $t('dca.dailyAmount') }}</h3>
-            <div class="h-72">
-                <canvas ref="investmentChartCanvas" role="img" :aria-label="$t('dca.dailyAmount')"></canvas>
-            </div>
-        </div>
-    </div>
-    </template>
-    <div v-else-if="loading" role="status" aria-live="polite" class="app-panel flex min-h-[18rem] items-center justify-center gap-3 p-8 text-center app-muted">
-      <ArrowPathIcon class="h-5 w-5 animate-spin" aria-hidden="true" />
-      {{ $t('dca.calculating') }}
-    </div>
-    <div v-else class="app-panel flex min-h-[18rem] items-center justify-center p-8 text-center">
-      <h3 class="app-section-title">{{ $t('dca.emptyResultTitle') }}</h3>
-    </div>
-
     </div>
   </div>
 </template>
 
 <script setup>
-import { ArrowPathIcon, BanknotesIcon, ChartBarIcon, WalletIcon } from '@heroicons/vue/24/outline'
+import { ArrowPathIcon, PresentationChartLineIcon } from '@heroicons/vue/24/outline'
+import AppEmptyState from '@/components/AppEmptyState.vue'
+import AppLoadingState from '@/components/AppLoadingState.vue'
 import AppDateField from '@/components/AppDateField.vue'
 import AppTimezoneSelect from '@/components/AppTimezoneSelect.vue'
 import SymbolSearchBox from '@/components/SymbolSearchBox.vue'
@@ -252,3 +77,36 @@ const {
   formatMoney,
 } = useDcaPage()
 </script>
+
+<style scoped>
+.dca-workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; align-items: start; }
+.dca-primary-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.dca-execution-settings { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--ui-border); }
+.dca-execution-settings summary { cursor: pointer; font-size: 13px; color: var(--ui-muted); }
+.dca-context-values { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 16px; }
+.dca-context-values dt { color: var(--ui-muted); font-size: 12px; }
+.dca-context-values dd { margin-top: 6px; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.dca-output-values { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.dca-output-values > * { padding: 16px 12px; }
+.dca-output-values > :nth-child(3n + 1) { padding-left: 0; }
+.dca-output-values dd { font-size: 22px; }
+.dca-supporting-charts { display: grid; gap: 20px; }
+.dca-empty { border-block: 1px solid var(--ui-border); background: var(--ui-toolbar); }
+@container app-content (min-width: 68rem) {
+  .dca-workspace { grid-template-columns: 320px minmax(0, 1fr); }
+  .dca-primary-fields { grid-template-columns: minmax(0, 1fr); }
+  .dca-configuration { position: sticky; top: 24px; }
+  .dca-context-values { grid-template-columns: 1fr 1fr; }
+  .dca-context-values > :first-child { grid-column: 1 / -1; }
+  .dca-supporting-charts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dca-empty { min-height: 400px; display: grid; align-items: center; }
+}
+@container app-content (max-width: 34rem) {
+  .dca-primary-fields { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .dca-output-values { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dca-output-values > * { padding: 14px 8px; }
+  .dca-output-values dd { font-size: 19px; }
+  .dca-context-values { gap: 12px; }
+  .dca-context-values dd { font-size: 16px; }
+}
+</style>

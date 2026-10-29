@@ -15,16 +15,16 @@
         <button type="button" class="app-button-secondary app-touch-target" :disabled="loading" @click="refresh">{{ t('app.retry') }}</button>
       </div>
 
-      <div v-if="!error || totalCount > 0" class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <div class="summary-card summary-card--primary">
+      <div v-if="!error || totalCount > 0" class="signal-navigation app-metric-strip">
+        <button type="button" class="summary-card" :aria-pressed="activeGroup === 'all'" @click="activeGroup = 'all'">
           <span>{{ t('marketSignals.currentIndicators') }}</span>
           <strong>{{ totalCount }}</strong>
-        </div>
-        <div v-for="group in groups" :key="group.definition.id" class="summary-card">
+        </button>
+        <button v-for="group in groups" :key="group.definition.id" type="button" class="summary-card" :aria-pressed="activeGroup === group.definition.id" @click="activeGroup = group.definition.id">
           <span>{{ group.definition.title }}</span>
           <strong>{{ group.cards.length }}</strong>
           <em>{{ t('marketSignals.lastUpdated', { time: group.latestUpdatedLabel }) }}</em>
-        </div>
+        </button>
       </div>
 
       <div v-if="loading" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -32,7 +32,7 @@
       </div>
 
       <template v-else-if="totalCount > 0">
-        <section v-for="group in groups" :key="group.definition.id" class="space-y-3">
+        <section v-for="group in visibleGroups" :key="group.definition.id" class="space-y-3">
           <div :class="['category-heading', `category-heading--${group.definition.accent}`]">
             <div>
               <h2 class="text-lg font-semibold text-slate-950 dark:text-white">{{ group.definition.title }}</h2>
@@ -86,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import IndicatorChart from '@/components/IndicatorChart.vue'
 import { useTheme } from '@/composables/useTheme'
@@ -95,6 +95,9 @@ import { useMarketSignalIndicators } from '@/modules/market'
 const { theme } = useTheme()
 const { t } = useI18n()
 const { loading, error, groups, totalCount, load, refresh } = useMarketSignalIndicators()
+
+const activeGroup = ref('all')
+const visibleGroups = computed(() => activeGroup.value === 'all' ? groups.value : groups.value.filter(group => group.definition.id === activeGroup.value))
 
 const changeToneClass = (value: number | null) => {
   if (typeof value !== 'number' || Math.abs(value) < 0.01) {
@@ -122,4 +125,12 @@ onMounted(() => {
 .metric-card { padding: 18px; }
 .change-pill { flex-shrink: 0; border-width: 1px; border-radius: 4px; padding: 3px 6px; font-size: 12px; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .empty-row { border: 1px solid var(--ui-border); border-radius: 6px; background: var(--ui-panel); padding: 32px 20px; text-align: center; color: var(--ui-muted); }
+</style>
+
+<style scoped>
+.signal-navigation .summary-card { border: 0; border-radius: 0; padding: 16px 20px; background: transparent; text-align: left; }
+.signal-navigation .summary-card:first-child { padding-left: 0; }
+.signal-navigation .summary-card:hover { background: var(--ui-elevated); }
+.signal-navigation .summary-card[aria-pressed=true] { background: color-mix(in srgb, var(--ui-accent) 8%, var(--ui-canvas)); }
+.signal-navigation .summary-card[aria-pressed=true] strong { color: var(--ui-accent); }
 </style>

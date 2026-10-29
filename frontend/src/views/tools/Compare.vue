@@ -1,7 +1,7 @@
 <template>
   <div class="app-page">
     <div class="app-page-inner-wide flex min-h-full flex-col">
-    <h1 class="app-title">{{ $t('nav.compare') }}</h1>
+    <header class="app-workspace-header"><h1 class="app-title">{{ $t('nav.compare') }}</h1></header>
     <!-- Configuration Panel -->
     <div class="app-hero-panel flex flex-wrap items-end gap-4 transition-colors">
       <div class="flex-1 min-w-[200px]">
@@ -47,14 +47,14 @@
       <button v-if="initialized" type="button" class="app-button-secondary app-touch-target" :disabled="loading || !canCompare" @click="fetchComparisonData">{{ $t('common.retry') }}</button>
     </div>
 
-    <section v-if="statistics" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+    <section v-if="statistics" class="app-metric-strip compare-metrics">
       <article v-for="card in [
         [$t('compare.returnA'), statistics.symbol_a_return_pct],
         [$t('compare.returnB'), statistics.symbol_b_return_pct],
         [$t('compare.excessReturn'), statistics.excess_return_pct],
         [$t('compare.correlation'), statistics.return_correlation],
         [$t('compare.alignedPoints'), statistics.aligned_points],
-      ]" :key="card[0]" class="app-panel p-4"><p class="text-xs app-muted">{{ card[0] }}</p><p class="mt-2 text-xl font-semibold">{{ card[1] ?? '--' }}</p></article>
+      ]" :key="card[0]" class="py-4"><p class="text-xs app-muted">{{ card[0] }}</p><p class="app-metric-value">{{ formatStatistic(card[1]) }}</p></article>
     </section>
 
     <div v-if="(loading || !initialized) && !hasData" role="status" aria-live="polite" class="app-panel flex min-h-[28rem] items-center justify-center p-8 text-center app-muted">
@@ -66,9 +66,21 @@
     </div>
 
     <!-- Charts Grid -->
-    <div v-else-if="hasData" class="grid min-h-[600px] flex-1 grid-cols-1 gap-4 lg:grid-cols-2 lg:grid-rows-2">
+    <div v-else-if="hasData" class="compare-charts">
 
-      <!-- Chart A -->
+      <!-- Ratio Chart (Full Width) -->
+      <div class="app-panel relative flex flex-col overflow-hidden transition-colors compare-ratio-chart">
+        <div class="absolute top-2 left-2 z-10 border border-[#b8d2c4] bg-white/90 px-2 py-1 text-sm font-bold text-[#0f6b4f] dark:border-green-500/30 dark:bg-gray-900/80 dark:text-green-400">
+          {{ $t('compare.ratio') }}: {{ resultSymbols.symbolA }} / {{ resultSymbols.symbolB }}
+        </div>
+        <TradingViewChart
+          ref="chartRatioRef"
+          :data="dataRatio"
+          chart-type="area"
+          :colors="chartColors"
+        />
+      </div>
+<div class="compare-price-charts">      <!-- Chart A -->
       <div class="app-panel relative flex flex-col overflow-hidden transition-colors">
         <div class="absolute top-2 left-2 z-10 border border-[#b8d2c4] bg-white/90 px-2 py-1 text-sm font-bold text-[#0f6b4f] dark:border-emerald-500/30 dark:bg-gray-900/80 dark:text-emerald-300">
           {{ symbolLabel(resultSymbols.symbolA) }}
@@ -92,18 +104,7 @@
         />
       </div>
 
-      <!-- Ratio Chart (Full Width) -->
-      <div class="app-panel relative flex flex-col overflow-hidden transition-colors lg:col-span-2">
-        <div class="absolute top-2 left-2 z-10 border border-[#b8d2c4] bg-white/90 px-2 py-1 text-sm font-bold text-[#0f6b4f] dark:border-green-500/30 dark:bg-gray-900/80 dark:text-green-400">
-          {{ $t('compare.ratio') }}: {{ resultSymbols.symbolA }} / {{ resultSymbols.symbolB }}
-        </div>
-        <TradingViewChart
-          ref="chartRatioRef"
-          :data="dataRatio"
-          chart-type="area"
-          :colors="chartColors"
-        />
-      </div>
+</div>
 
     </div>
     </div>
@@ -111,6 +112,7 @@
 </template>
 
 <script setup>
+const formatStatistic = value => value == null ? '—' : typeof value === 'number' ? value.toLocaleString(undefined, { maximumFractionDigits: 3 }) : value
 import { ArrowPathIcon } from '@heroicons/vue/24/outline'
 import TradingViewChart from '@/components/TradingViewChart.vue'
 import SymbolSearchBox from '@/components/SymbolSearchBox.vue'
@@ -137,3 +139,12 @@ const {
   canCompare,
 } = useComparePage()
 </script>
+
+<style scoped>
+.compare-charts { display: grid; gap: 20px; }
+.compare-ratio-chart { min-height: 360px; }
+.compare-price-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.compare-price-charts > div { min-height: 300px; }
+.compare-metrics { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@container app-content (max-width: 48rem) { .compare-price-charts { grid-template-columns: minmax(0, 1fr); } .compare-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+</style>

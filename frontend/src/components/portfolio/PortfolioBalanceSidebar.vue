@@ -1,91 +1,26 @@
 <template>
-  <aside class="min-w-0 space-y-6">
-    <section class="app-panel p-5">
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <h1 class="text-2xl font-semibold text-stone-950 dark:text-white">{{ $t('portfolioBalance.title') }}</h1>
-        </div>
-        <button
-          type="button"
-          class="inline-flex h-11 w-11 items-center justify-center border border-[#b8d2c4] bg-[#edf3ee] text-[#0f6b4f] transition hover:bg-[#e1ece4] dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200 dark:hover:bg-emerald-900/50"
-          :disabled="!storageReady || storageLoading || storageSaving"
-          :aria-label="$t('portfolioBalance.createPortfolio')"
-          :title="$t('portfolioBalance.createPortfolio')"
-          @click="$emit('create')"
-        >
-          <PlusIcon class="h-5 w-5" />
-        </button>
+  <div class="portfolio-switcher space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="flex min-w-0 flex-wrap items-center gap-3">
+        <label class="min-w-0"><span class="sr-only">{{ $t('portfolioBalance.title') }}</span><select :value="activePortfolioId" class="app-control portfolio-select" :disabled="!storageReady || storageLoading || storageSaving || !portfolios.length" @change="$emit('select', $event.target.value)"><option v-if="!portfolios.length" value="">{{ $t('portfolioBalance.emptyTitle') }}</option><option v-for="portfolio in portfolios" :key="portfolio.id" :value="portfolio.id">{{ portfolio.name }}</option></select></label>
+        <span v-if="storageLoading || storageSaving" role="status" class="app-muted text-xs">{{ storageLoading ? $t('portfolioBalance.loadingSavedPortfolios') : $t('portfolioBalance.saving') }}</span>
       </div>
-
-      <div class="mt-4 grid grid-cols-2 gap-2">
-        <button type="button" class="app-button-secondary inline-flex items-center justify-center px-3 py-2 text-sm" :disabled="!storageReady || storageLoading || storageSaving" @click="openImportPicker">
-          <ArrowUpTrayIcon class="mr-2 h-4 w-4" />
-          {{ $t('portfolioBalance.importBackup') }}
-        </button>
-        <button type="button" class="app-button-secondary inline-flex items-center justify-center px-3 py-2 text-sm" :disabled="!storageReady || storageLoading || storageSaving" @click="$emit('export')">
-          <ArrowDownTrayIcon class="mr-2 h-4 w-4" />
-          {{ $t('portfolioBalance.exportBackup') }}
-        </button>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" class="app-button-secondary" :disabled="!storageReady || storageLoading || storageSaving" @click="$emit('create')"><PlusIcon class="h-4 w-4" />{{ $t('portfolioBalance.createPortfolio') }}</button>
+        <details class="portfolio-management">
+          <summary class="app-button-secondary">{{ $t('ui.managePortfolios') }}</summary>
+          <div class="portfolio-management-content">
+            <div class="flex flex-wrap gap-2"><button type="button" class="app-button-secondary" :disabled="!storageReady || storageLoading || storageSaving" @click="openImportPicker"><ArrowUpTrayIcon class="h-4 w-4" />{{ $t('portfolioBalance.importBackup') }}</button><button type="button" class="app-button-secondary" :disabled="!storageReady || storageLoading || storageSaving" @click="$emit('export')"><ArrowDownTrayIcon class="h-4 w-4" />{{ $t('portfolioBalance.exportBackup') }}</button></div>
+            <div v-for="portfolio in portfolios" :key="portfolio.id" class="portfolio-management-row"><span class="min-w-0 truncate text-sm font-medium">{{ portfolio.name }}</span><div class="flex gap-2"><button type="button" class="app-icon-button" :aria-label="$t('portfolioBalance.copyPortfolio') + ': ' + portfolio.name" :title="$t('portfolioBalance.copyPortfolio')" :disabled="storageSaving" @click="$emit('copy', portfolio.id)"><DocumentDuplicateIcon class="h-4 w-4" /></button><button type="button" class="app-icon-button" :aria-label="$t('portfolioBalance.deletePortfolio') + ': ' + portfolio.name" :title="$t('portfolioBalance.deletePortfolio')" :disabled="storageSaving" @click="$emit('delete', portfolio.id)"><TrashIcon class="h-4 w-4" /></button></div></div>
+            <div v-if="deletedPortfolios.length" class="space-y-3 border-t pt-3" style="border-color:var(--ui-border)"><h2 class="app-section-title">{{ $t('portfolioBalance.recycleBin') }}</h2><div v-for="portfolio in deletedPortfolios" :key="portfolio.id" class="flex items-center justify-between gap-3"><span class="truncate text-sm">{{ portfolio.name }}</span><button type="button" class="text-sm underline app-muted" :disabled="storageSaving" @click="$emit('restore', portfolio.id)">{{ $t('portfolioBalance.restore') }}</button></div><button v-if="hasMoreDeletedPortfolios" type="button" class="app-button-secondary" :disabled="storageSaving" @click="$emit('load-more-deleted')">{{ $t('portfolioBalance.loadMoreDeleted') }}</button></div>
+          </div>
+        </details>
         <input ref="importInput" type="file" accept="application/json,.json" class="hidden" @change="handleImportFile" />
       </div>
-
-      <div v-if="storageLoading" class="mt-4 text-sm text-stone-500 dark:text-slate-400">{{ $t('portfolioBalance.loadingSavedPortfolios') }}</div>
-      <div v-else-if="storageSaving" class="mt-4 text-sm text-stone-500 dark:text-slate-400">{{ $t('portfolioBalance.saving') }}</div>
-      <div v-if="storageError || portfolioFileError" role="alert" class="mt-4 border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-200">
-        <div>{{ portfolioFileError || storageError }}</div>
-        <button v-if="storageError" type="button" class="mt-2 font-semibold underline" :disabled="storageLoading" @click="$emit('reload')">{{ $t('portfolioBalance.reload') }}</button>
-      </div>
-
-      <div v-if="storageReady && !storageLoading" class="mt-5 space-y-3">
-        <div
-          v-for="portfolio in portfolios"
-          :key="portfolio.id"
-          class="w-full border px-4 py-4 text-left transition"
-          :class="portfolio.id === activePortfolioId ? 'border-[#b8d2c4] bg-[#edf3ee] dark:border-emerald-700 dark:bg-emerald-950/30' : 'border-stone-200 bg-[#fbfaf7] hover:border-stone-300 dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-slate-600'"
-        >
-          <div class="flex items-start justify-between gap-3">
-            <button type="button" class="min-w-0 flex-1 text-left" @click="$emit('select', portfolio.id)"><div class="truncate text-base font-semibold text-slate-900 dark:text-white">{{ portfolio.name }}</div></button>
-            <button type="button" class="inline-flex h-8 w-8 items-center justify-center border border-transparent text-slate-400 transition hover:border-[#b8d2c4] hover:text-[#0f6b4f] dark:hover:border-emerald-800 dark:hover:text-emerald-300" :aria-label="$t('portfolioBalance.copyPortfolio')" :title="$t('portfolioBalance.copyPortfolio')" :disabled="storageSaving" @click.stop="$emit('copy', portfolio.id)"><DocumentDuplicateIcon class="h-4 w-4" /></button>
-            <button type="button" class="inline-flex h-8 w-8 items-center justify-center border border-transparent text-slate-400 transition hover:border-rose-200 hover:text-rose-600 dark:hover:border-rose-800 dark:hover:text-rose-300" :aria-label="$t('portfolioBalance.deletePortfolio')" :title="$t('portfolioBalance.deletePortfolio')" :disabled="storageSaving" @click.stop="$emit('delete', portfolio.id)"><TrashIcon class="h-4 w-4" /></button>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="storageReady && deletedPortfolios.length" class="mt-6 border-t border-stone-200 pt-4 dark:border-slate-700">
-        <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-slate-400"><ArchiveBoxIcon class="h-4 w-4" />{{ $t('portfolioBalance.recycleBin') }}</div>
-        <div class="mt-3 space-y-2">
-          <div v-for="portfolio in deletedPortfolios" :key="portfolio.id" class="flex items-center justify-between gap-3 border border-stone-200 bg-[#fbfaf7] px-3 py-2 dark:border-slate-700 dark:bg-slate-900/60">
-            <span class="min-w-0 truncate text-sm text-slate-700 dark:text-slate-200">{{ portfolio.name }}</span>
-            <button type="button" class="text-sm font-medium text-[#0f6b4f] hover:underline disabled:opacity-50 dark:text-emerald-300" :disabled="storageSaving" @click="$emit('restore', portfolio.id)">{{ $t('portfolioBalance.restore') }}</button>
-          </div>
-          <button
-            v-if="hasMoreDeletedPortfolios"
-            type="button"
-            class="app-button-secondary w-full px-3 py-2 text-sm"
-            :disabled="storageSaving"
-            @click="$emit('load-more-deleted')"
-          >
-            {{ $t('portfolioBalance.loadMoreDeleted') }}
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <section v-if="storageReady && portfolios.length" class="app-panel p-5">
-      <h2 class="app-section-title">{{ $t('portfolioBalance.strategyTitle') }}</h2>
-      <div class="mt-4 space-y-3">
-        <div class="px-4 py-4" :class="strategyCardClass(plan.suggestedAction)">
-          <div class="text-xs font-semibold uppercase tracking-wide">{{ $t('portfolioBalance.nextAction') }}</div>
-          <div class="mt-2 text-lg font-semibold">{{ $t(`portfolioBalance.suggestedActions.${plan.suggestedAction}`) }}</div>
-          <div class="mt-1 text-sm opacity-80">{{ $t(`portfolioBalance.reasons.${plan.suggestedReason}`) }}</div>
-        </div>
-        <div class="grid grid-cols-2 gap-3 text-sm">
-          <div class="border border-stone-200 bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/60"><div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.nextReviewDate') }}</div><div class="mt-1 font-semibold text-slate-900 dark:text-white">{{ formatDate(plan.nextReviewDate) }}</div></div>
-          <div class="border border-stone-200 bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/60"><div class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t('portfolioBalance.daysUntilReview') }}</div><div class="mt-1 font-semibold text-slate-900 dark:text-white">{{ plan.daysUntilReview }}</div></div>
-        </div>
-      </div>
-    </section>
-  </aside>
+    </div>
+    <div v-if="storageError || portfolioFileError" role="alert" class="app-inline-note text-rose-700 dark:text-rose-300">{{ portfolioFileError || storageError }}<button v-if="storageError" type="button" class="ml-3 underline" :disabled="storageLoading" @click="$emit('reload')">{{ $t('portfolioBalance.reload') }}</button></div>
+    <div v-if="showStrategy && storageReady && portfolios.length" class="portfolio-strategy-note app-inline-note"><div><strong>{{ $t('portfolioBalance.suggestedActions.' + plan.suggestedAction) }}</strong><span class="ml-3 app-muted">{{ $t('portfolioBalance.reasons.' + plan.suggestedReason) }}</span></div><span class="shrink-0 app-muted">{{ $t('portfolioBalance.nextReviewDate') }} · {{ formatDate(plan.nextReviewDate) }}</span></div>
+  </div>
 </template>
 
 <script setup>
@@ -99,6 +34,7 @@ defineProps({
   hasMoreDeletedPortfolios: Boolean,
   activePortfolioId: { type: String, default: '' },
   plan: { type: Object, required: true },
+  showStrategy: Boolean,
   storageReady: Boolean,
   storageLoading: Boolean,
   storageSaving: Boolean,
@@ -120,3 +56,13 @@ const strategyCardClass = (action) => {
   return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200'
 }
 </script>
+
+<style scoped>
+.portfolio-select { width: min(100%, 320px); min-width: 220px; font-weight: 600; }
+.portfolio-management[open] { display: contents; }
+.portfolio-management-content { order: 3; flex: 1 0 100%; margin-top: 12px; padding: 20px; border: 1px solid var(--ui-border); background: var(--ui-panel); border-radius: 8px; }
+.portfolio-management-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 8px; border-bottom: 1px solid var(--ui-border); }
+.portfolio-management-row:last-of-type { border-bottom: 0; }
+.portfolio-strategy-note { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+@container app-content (max-width: 34rem) { .portfolio-select { width: 100%; } .portfolio-switcher > div > div:first-child { width: 100%; } }
+</style>

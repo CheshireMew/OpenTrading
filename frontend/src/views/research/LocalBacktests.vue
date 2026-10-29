@@ -41,7 +41,7 @@
           <div class="pager"><button :disabled="listOffset === 0" @click="listOffset -= 30; refresh()">上一页</button><span>{{ listOffset + runs.length }} / {{ totalRuns }}</span><button :disabled="listOffset + 30 >= totalRuns" @click="listOffset += 30; refresh()">下一页</button></div>
         </section>
       </aside>
-      <main class="min-w-0 space-y-5">
+      <div class="min-w-0 space-y-5">
         <section v-if="selected" class="app-panel p-5 space-y-4">
           <div class="flex flex-wrap justify-between gap-3"><div><h2 class="text-xl font-semibold">{{ selected.config.symbol }} · {{ selected.config.timeframe }}</h2><p class="app-muted text-sm">{{ status(selected.status) }} · {{ selected.id }}</p></div>
             <div class="flex flex-wrap gap-2">
@@ -99,7 +99,7 @@
           <section class="app-panel p-5"><h3 class="font-semibold">完整信号记录</h3><div class="table-scroll"><table><thead><tr><th>产生时间 UTC</th><th>指令</th><th>结果</th><th>理由</th></tr></thead><tbody><tr v-for="(s, i) in signals" :key="i"><td>{{ date(s.decision_time) }}</td><td>{{ s.action }}</td><td>{{ signalStatus(s.status) }}</td><td>{{ s.reason }}</td></tr></tbody></table></div><div class="pager"><button :disabled="signalOffset === 0" @click="signalOffset -= 50; loadSignals()">上一页</button><span>{{ signalOffset + signals.length }} / {{ totalSignals }}</span><button :disabled="signalOffset + 50 >= totalSignals" @click="signalOffset += 50; loadSignals()">下一页</button></div></section>
         </template>
         <section v-else-if="!selected" class="app-panel p-12 app-muted text-center">创建或选择一次回测，查看资金曲线与交易过程。</section>
-      </main>
+      </div>
     </div>
   </div>
 </template>

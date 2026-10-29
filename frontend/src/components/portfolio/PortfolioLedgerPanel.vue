@@ -44,7 +44,7 @@
           <label class="space-y-1"><span class="label">{{ t('portfolioLedger.occurredAt') }}</span><input v-model="form.occurredAt" type="datetime-local" class="app-control w-full" /></label>
           <label class="space-y-1"><span class="label">{{ t('portfolioLedger.externalId') }}</span><input v-model.trim="form.externalId" class="app-control w-full" maxlength="200" /></label>
         </div>
-        <textarea v-model.trim="form.note" class="app-control min-h-20 w-full" :placeholder="t('portfolioLedger.note')" maxlength="10000" />
+        <textarea :aria-label="t('portfolioLedger.note')" v-model.trim="form.note" class="app-control min-h-20 w-full" :placeholder="t('portfolioLedger.note')" maxlength="10000" />
         <button type="submit" class="app-button-primary" :disabled="saving">{{ saving ? t('portfolioLedger.saving') : t('portfolioLedger.save') }}</button>
       </form>
 
@@ -57,7 +57,7 @@
         </div>
 
         <div class="min-w-0">
-          <div class="flex items-center justify-between gap-3"><h3 class="font-semibold text-stone-950 dark:text-white">{{ t('portfolioLedger.transactions') }}</h3><select v-model="importMode" class="app-control"><option value="append">{{ t('portfolioLedger.importAppend') }}</option><option value="replace">{{ t('portfolioLedger.importReplace') }}</option></select></div>
+          <div class="flex flex-wrap items-center justify-between gap-3"><h3 class="font-semibold text-stone-950 dark:text-white">{{ t('portfolioLedger.transactions') }}</h3><select :aria-label="t('ui.importMode')" v-model="importMode" class="app-control"><option value="append">{{ t('portfolioLedger.importAppend') }}</option><option value="replace">{{ t('portfolioLedger.importReplace') }}</option></select></div>
           <div class="app-table-scroll mt-3 border dark:border-slate-700" style="border-color:var(--app-border)">
             <table class="min-w-[760px] w-full text-sm"><thead class="app-table-head"><tr><th class="px-3 py-2 text-left">{{ t('portfolioLedger.occurredAt') }}</th><th class="px-3 py-2 text-left">{{ t('portfolioLedger.type') }}</th><th class="px-3 py-2 text-left">{{ t('portfolioLedger.symbol') }}</th><th class="px-3 py-2 text-right">{{ t('portfolioLedger.quantity') }}</th><th class="px-3 py-2 text-right">{{ t('portfolioLedger.amount') }}</th><th class="px-3 py-2 text-right">{{ t('portfolioLedger.actions') }}</th></tr></thead><tbody><tr v-for="transaction in (ledger.transactions || [])" :key="transaction.id" class="app-table-row"><td class="px-3 py-3">{{ formatDateTime(transaction.occurredAt) }}</td><td class="px-3 py-3">{{ t(`portfolioLedger.types.${transaction.transactionType}`) }}</td><td class="px-3 py-3 font-semibold">{{ transaction.symbol || transaction.currency }}</td><td class="px-3 py-3 text-right">{{ transaction.quantity ? formatNumber(transaction.quantity) : '--' }}</td><td class="px-3 py-3 text-right">{{ formatMoney(transaction.cashAmount || transaction.quantity * transaction.unitPrice, transaction.currency) }}</td><td class="px-3 py-3 text-right"><button type="button" class="mr-3 text-emerald-700 underline dark:text-emerald-300" @click="beginEdit(transaction)">{{ t('portfolioLedger.edit') }}</button><button type="button" class="text-rose-600 underline dark:text-rose-300" @click="setArchived(transaction, true)">{{ t('portfolioLedger.archive') }}</button></td></tr><tr v-if="!ledger.transactions?.length"><td colspan="6" class="px-4 py-8 text-center app-muted">{{ t('portfolioLedger.noTransactions') }}</td></tr></tbody></table>
           </div>

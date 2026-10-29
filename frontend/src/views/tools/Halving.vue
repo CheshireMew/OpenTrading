@@ -74,16 +74,16 @@
                <button 
                   type="button"
                   @click="scaleType = 'logarithmic'" 
-                  class="app-touch-target px-3 py-1 text-xs font-medium transition-all"
-                  :class="scaleType === 'logarithmic' ? 'bg-[#edf3ee] text-[#0f6b4f] dark:bg-emerald-950/40 dark:text-emerald-300' : 'text-stone-500 hover:text-stone-700 dark:text-gray-400 dark:hover:text-gray-200'"
+                  class="app-segment-button" :aria-pressed="scaleType === 'logarithmic'"
+                  :class="{ 'is-active': scaleType === 'logarithmic' }"
                >
                   {{ $t('halving.log') }}
                </button>
                <button 
                   type="button"
                   @click="scaleType = 'linear'" 
-                  class="app-touch-target px-3 py-1 text-xs font-medium transition-all"
-                  :class="scaleType === 'linear' ? 'bg-[#edf3ee] text-[#0f6b4f] dark:bg-emerald-950/40 dark:text-emerald-300' : 'text-stone-500 hover:text-stone-700 dark:text-gray-400 dark:hover:text-gray-200'"
+                  class="app-segment-button" :aria-pressed="scaleType === 'linear'"
+                  :class="{ 'is-active': scaleType === 'linear' }"
                >
                   {{ $t('halving.linear') }}
                </button>
@@ -92,7 +92,7 @@
            <!-- Phases Toggle -->
            <label class="inline-flex items-center cursor-pointer">
               <input type="checkbox" v-model="showPhases" class="sr-only peer">
-              <div class="peer relative h-6 w-11 bg-stone-200 peer-checked:bg-[#0f6b4f] peer-focus:outline-none dark:bg-gray-700 dark:peer-checked:bg-emerald-500 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white rtl:peer-checked:after:-translate-x-full dark:border-gray-600"></div>
+              <div class="peer relative h-6 w-11 bg-stone-200 peer-checked:bg-[#0f6b4f] peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-600 peer-focus-visible:ring-offset-2 dark:bg-gray-700 dark:peer-checked:bg-emerald-500 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white rtl:peer-checked:after:-translate-x-full dark:border-gray-600"></div>
               <span class="ms-3 text-sm font-medium text-stone-900 dark:text-gray-300">{{ $t('halving.phases') }}</span>
             </label>
         </div>

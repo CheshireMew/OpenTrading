@@ -60,7 +60,11 @@
     "scope": "Full exchange catalogs are merged by underlying ticker. Includes stocks, equity ETFs, leveraged and inverse equity ETFs, and equity indices. Crypto, metals, oil, bonds and other non-equity products are excluded. Expand an asset to see individual products and quote currencies.",
     "availability": "Labels reflect products listed by the platform. Account region and exchange restrictions still apply. Catalogs are cached for 5 minutes and can be refreshed manually.",
     "sourceNotVerified": "Complete catalog not verified; not included",
-    "sourceStatus": { "ok": "Updated", "stale": "Refresh failed; previous data retained", "unavailable": "Currently unavailable" }
+    "sourceStatus": {
+      "ok": "Updated",
+      "stale": "Refresh failed; previous data retained",
+      "unavailable": "Currently unavailable"
+    }
   },
   "pages": {
     "notFound": "Page not found"
@@ -872,7 +876,7 @@
     "price": "Live Price ({currency})",
     "unitsHeld": "Units Held",
     "allocationTitle": "Target Allocation and Actual Holdings",
-    "allocationSubtitle": "Units are derived from the transaction ledger above. Changing a target weight never changes actual holdings.",
+    "allocationSubtitle": "Holdings are derived from the transaction ledger. Changing target weights does not change actual positions.",
     "legacyVirtualHoldings": "These are legacy virtual holdings. After the first transaction is recorded, ledger-derived holdings become authoritative and units will no longer be rewritten automatically.",
     "ledgerSymbolLocked": "This asset has a ledger position. Sell or transfer it out in the ledger before removing it.",
     "currentWeight": "Current Weight",
@@ -1023,7 +1027,8 @@
     "noHistory": "No historical data yet",
     "waitingData": "Waiting for background data collection...",
     "error": "An error occurred",
-    "horizontalScrollHint": "Swipe or scroll horizontally to see all columns"
+    "horizontalScrollHint": "Swipe or scroll horizontally to see all columns",
+    "retry": "Retry"
   },
   "notFound": {
     "message": "Page not found",
@@ -1330,5 +1335,43 @@
     "capConversion": "Liquidation prices and currency conversion",
     "capFinancial": "Financial and economic data",
     "capLibraries": "External Pine libraries"
+  },
+  "ui": {
+    "filters": "Filters",
+    "executionSettings": "Execution time and timezone",
+    "unavailable": "Unavailable",
+    "dcaEmptyHint": "Choose an asset, amount and strategy to compare returns, average cost and daily investments.",
+    "historicalSimulation": "Historical simulation",
+    "managePortfolios": "Manage portfolios",
+    "portfolioPlanHint": "This is a target allocation without ledger holdings. Record transactions to track positions and drift.",
+    "importMode": "Ledger import mode",
+    "period": "Analysis period",
+    "daysCount": "{count} days",
+    "riskEmptyHint": "Record transactions and build positions before analyzing returns, correlations and stress scenarios.",
+    "scenarioHint": "Enter an assumed percentage change for each asset. Blank assets remain unchanged.",
+    "needsAttention": "Needs attention",
+    "sourcesReady": "All data sources are ready.",
+    "readySources": "Ready sources · {count}",
+    "working": "Working…",
+    "healthLoadFailed": "Unable to read data status. Please retry.",
+    "repairFailed": "The operation failed. Check the data status and retry.",
+    "preferences": "Display preferences",
+    "preferencesHint": "Changes apply immediately.",
+    "modelSettingsHint": "Used by existing research analysis. Save after making changes.",
+    "runtime": "Runtime",
+    "researchEmptyHint": "Create a list to keep assets, research ideas and follow-ups together.",
+    "researchAssetHint": "Add an asset to record a thesis, notes or price alerts.",
+    "noteType": "Note type",
+    "alertMetric": "Alert metric",
+    "alertCondition": "Trigger condition",
+    "allSignals": "All indicators",
+    "heatRank": "Heat ranking",
+    "addressActivity": "Address performance",
+    "allocationTab": "Allocation",
+    "ledgerTab": "Ledger & performance",
+    "riskTab": "Risk & scenarios",
+    "researchEmptyTitle": "No research lists yet",
+    "description": "Description",
+    "noteBody": "Content"
   }
 }

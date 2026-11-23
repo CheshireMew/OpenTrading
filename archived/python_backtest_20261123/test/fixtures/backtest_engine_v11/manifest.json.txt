@@ -1,9 +1,0 @@
-{
-  "version": 1,
-  "files": {
-    "local_backtest.py": "e8ee6c3142b169c48ccc2ff2173d336982925f56d7bab42960f528fff432a491",
-    "backtest_history.py": "c08eb330648129dcd9dcb800860a089d9efa1bd95cdba60f656a403905bb36fd",
-    "backtest_execution.py": "7124d8252d9e58be77afff7cece86708ff2e7024b74d8d3378bc89fe7d62cf1f"
-  },
-  "hash": "1b46ab976f6f568c6e64d349fe9e3628c81ca77311b0be514e517c9049ff6b7b"
-}

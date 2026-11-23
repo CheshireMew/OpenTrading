@@ -1,5 +1,6 @@
 # User requested
 _references/
+/archived/
 example/
 output/
 test_output*.txt

@@ -1,1 +1,0 @@
-"""Factor domain services."""

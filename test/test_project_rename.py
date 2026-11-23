@@ -1,6 +1,7 @@
 from app.contracts.chart_workspace import WorkspaceWrite
 from app.infra import research_files
-from app.services.chart_workspace_store import ChartWorkspaceStore
+from app.services.chart_workspace_seed import seed_workspace
+from app.infra.persistence.chart_workspace_repository import ChartWorkspaceStore
 
 
 def test_saved_absolute_paths_resolve_after_project_and_runtime_rename(tmp_path, monkeypatch):
@@ -31,11 +32,11 @@ def test_renamed_builtin_preserves_saved_revisions_and_custom_scripts(tmp_path):
     original = store.put('scripts', 'heimdall-v7-2', WorkspaceWrite(
         name='Heimdall original', data={'source': 'original source'}), readonly=True)
     custom = store.put('scripts', 'custom', WorkspaceWrite(name='My script', data={'source': 'my source'}))
-    store.seed()
-    store.seed()
+    seed_workspace(store)
+    seed_workspace(store)
 
     scripts = store.list('scripts')
-    assert {item.id for item in scripts} == {'opentrading-v7-2', 'custom'}
+    assert {item.id for item in scripts} == {'opentrading-v7-2', 'ema-zigzag-glow', 'custom'}
     assert store.get('scripts', 'opentrading-v7-2').name.startswith('OpenTrading')
     assert store.get('scripts', 'heimdall-v7-2', original.version) == original
     assert store.get('scripts', 'custom') == custom

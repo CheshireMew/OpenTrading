@@ -37,7 +37,9 @@ def test_background_collection_only_builds_current_signal_providers():
     assert {type(provider).__name__ for provider in _build_indicator_providers()} == {
         "OnchainProvider", "SentimentProvider", "TechCalculatorProvider",
     }
-    assert not any(name.startswith("FRED_") for name in AppSettings.model_fields)
+    # Only the history client's credential remains; retired macro collection
+    # settings do not return to the background indicator job.
+    assert {name for name in AppSettings.model_fields if name.startswith("FRED_")} == {"FRED_API_KEY"}
 
 
 def test_retired_fred_configuration_routes_are_unavailable(api_harness):

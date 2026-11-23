@@ -20,7 +20,7 @@ class ExchangeGateway:
             "enableRateLimit": True,
             "timeout": settings.EXCHANGE_REQUEST_TIMEOUT_MS,
             "options": {
-                "defaultType": "spot",
+                "defaultType": "future" if exchange_id == "binanceusdm" else "spot",
             },
         }
 

@@ -55,7 +55,8 @@ async def test_expiry_excludes_later_target_and_requires_complete_prior_history(
     start = int(datetime(2026, 1, 1, tzinfo=timezone.utc).timestamp() * 1000)
     signal = {"symbol": "BTC/USDT", "timeframe": "1h", "entryTime": start, "entry": 100, "target": 110,
               "stop": 90, "side": "long", "expiresAt": datetime(2026, 1, 1, 1)}
-    row = lambda offset, high: SimpleNamespace(timestamp=start + offset * 3_600_000, open=100, high=high, low=99, close=100, volume=1)
+    def row(offset, high):
+        return SimpleNamespace(timestamp=start + offset * 3_600_000, open=100, high=high, low=99, close=100, volume=1)
     market = FakeMarketQuery([row(0, 105), row(2, 120)])
     runtime = TradeSignalEvaluationRuntime(repository=None, market_query_service=market)
     result = await runtime._evaluate_signal(signal, datetime(2026, 1, 1, 3))

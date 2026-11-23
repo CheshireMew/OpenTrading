@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-import httpx
+from app.infra.market_data.currency import CurrencyRatesClient
 
 from app.services.market.symbol_catalog import get_usd_equivalent_symbols
 from app.infra.executor import run_external_io
@@ -35,7 +35,8 @@ DISPLAY_CURRENCY_META: dict[str, dict[str, Any]] = {
 
 
 class CurrencyRateService:
-    def __init__(self) -> None:
+    def __init__(self, client: CurrencyRatesClient | None = None) -> None:
+        self._client = client or CurrencyRatesClient()
         self._cache: dict[str, Any] | None = None
         self._expires_at: datetime | None = None
         self._refresh_task = None
@@ -87,10 +88,7 @@ class CurrencyRateService:
         supported_codes = self._supported_codes()
         fallback = self._build_fallback_payload(now)
         try:
-            with httpx.Client(timeout=settings.CURRENCY_RATES_TIMEOUT) as client:
-                response = client.get(settings.CURRENCY_RATES_URL)
-            response.raise_for_status()
-            data = response.json()
+            data = self._client.fetch()
         except Exception as exc:
             logger.warning(f"Currency rate fetch failed, using fallback rates: {exc}")
             return fallback

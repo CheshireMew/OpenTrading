@@ -5,7 +5,7 @@ import asyncio
 from config import settings
 from app.application.persistence_ports import CacheServicePort, BinanceMarketResearchStorePort
 
-from .binance_api_support import BinanceApiSupport
+from app.infra.market_data.binance_api import BinanceApiSupport
 from .binance_market_page_service import BinanceMarketPageService
 from .binance_market_snapshot_service import BinanceMarketSnapshotService
 from .binance_spot_market import BinanceSpotMarketService

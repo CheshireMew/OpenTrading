@@ -65,6 +65,17 @@ def test_inner_layers_do_not_import_service_orchestration():
     assert violations == []
 
 
+def test_service_orchestration_has_no_network_or_database_drivers():
+    drivers = {"httpx", "requests", "ccxt", "websockets", "sqlite3", "sqlalchemy", "akshare", "yfinance", "baostock"}
+    violations = [
+        f"{path.relative_to(ROOT)} -> {module}"
+        for path in (APP / "services").rglob("*.py")
+        for module in imported_modules(path)
+        if module.split(".")[0] in drivers
+    ]
+    assert violations == []
+
+
 def test_replaced_architecture_is_absent_from_active_tree():
     retired_paths = (
         APP / "services" / "market" / "kline_range_loader.py",

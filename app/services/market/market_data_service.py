@@ -9,7 +9,7 @@ from app.domain.market.constants import KEY_PREFIX_KLINE
 from app.domain.market.candles import RecentCandles, candle_end_ms, closed_candles, current_candle_open_ms
 from app.application.persistence_ports import KlineStorePort
 from app.services.market.exchange_kline_fetcher import ExchangeKlineFetcher
-from app.services.market.exchange_gateway import ExchangeGateway
+from app.infra.market_data.exchange import ExchangeGateway
 from app.domain.market.constants import timeframe_to_milliseconds
 from app.services.market.history_ranges import is_recent_cache_usable
 from app.services.market.history_range_coordinator import (
@@ -181,6 +181,8 @@ class MarketDataService:
         start_date: datetime,
         end_date: datetime,
         persist_klines: Callable[[str, str, list[list[float]]], None] | None = None,
+        *,
+        strict: bool = False,
     ) -> OhlcvRangeResult:
         start_ts = int(start_date.timestamp() * 1000)
         end_ts_exclusive = min(int(end_date.timestamp() * 1000) + 1, current_candle_open_ms(int(time.time() * 1000), timeframe))
@@ -189,6 +191,8 @@ class MarketDataService:
             try:
                 (persist_klines or self.kline_store.save)(storage_symbol, current_timeframe, rows)
             except Exception as exc:
+                if strict:
+                    raise
                 logger.warning(f"历史 K 线回写缓存失败: {exc}")
 
         return self.history_ranges.load(
@@ -198,7 +202,7 @@ class MarketDataService:
             end_ts_exclusive=end_ts_exclusive,
             fetch_gap=lambda since, until: self.exchange_history.fetch_gap(symbol, timeframe, since, until),
             persist=persist,
-            fallback_on_cache_error=True,
+            fallback_on_cache_error=not strict,
         )
 
     def load_cached_ohlcv_range(

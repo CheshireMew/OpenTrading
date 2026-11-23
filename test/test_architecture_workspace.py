@@ -11,7 +11,8 @@ from app.contracts.chart_workspace import WorkspaceWrite
 from app.infra.executor import run_workspace
 from app.routers.chart_workspace import services, chart_save_document
 from app.services.chart_workspace_runtime import ChartWorkspaceRuntime
-from app.services.chart_workspace_store import ChartWorkspaceStore
+from app.services.chart_workspace_seed import seed_workspace
+from app.infra.persistence.chart_workspace_repository import ChartWorkspaceStore
 from httpx import AsyncClient, ASGITransport
 from contextlib import asynccontextmanager
 from app.main import create_app
@@ -20,8 +21,9 @@ from app.main import create_app
 def test_seed_is_idempotent_under_concurrent_startup(tmp_path):
     store = ChartWorkspaceStore(tmp_path)
     with ThreadPoolExecutor(4) as pool:
-        list(pool.map(lambda _: store.seed(), range(4)))
-    assert len(store.list("scripts")) == len(store.list("watchlists")) == 1
+        list(pool.map(lambda _: seed_workspace(store), range(4)))
+    assert len(store.list("scripts")) == 2
+    assert len(store.list("watchlists")) == 1
     assert store.get("scripts", "opentrading-v7-2").version == 1
 
 

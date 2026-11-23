@@ -4,6 +4,11 @@ from __future__ import annotations
 from typing import Any, Literal
 from pydantic import BaseModel, Field
 
+from app.domain.chart_workspace import (
+    WorkspaceDocument as WorkspaceDocument,
+    WorkspaceWrite as WorkspaceWrite,
+)
+
 
 class ChartSymbol(BaseModel):
     id: str
@@ -47,19 +52,8 @@ class ChartQuote(BaseModel):
     error: str | None = None
 
 
-class WorkspaceDocument(BaseModel):
-    id: str
-    name: str
-    version: int
-    data: dict[str, Any]
-    updated_at: int
-    readonly: bool = False
 
 
-class WorkspaceWrite(BaseModel):
-    name: str = Field(min_length=1, max_length=160)
-    data: dict[str, Any]
-    expected_version: int = Field(0, ge=0)
 
 
 class PineRunRequest(BaseModel):

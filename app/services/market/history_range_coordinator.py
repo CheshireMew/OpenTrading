@@ -52,8 +52,14 @@ class OhlcvRangeResult:
 class HistoryRangeCoordinator:
     """The only owner of cached OHLCV range hydration and merge semantics."""
 
-    def __init__(self, store: KlineStorePort) -> None:
+    def __init__(self, store: KlineStorePort, *, storage_runner=None) -> None:
         self._store = store
+        self._storage_runner = storage_runner
+
+    async def _run_storage(self, operation):
+        if self._storage_runner is not None:
+            return await self._storage_runner(operation)
+        return operation()
 
     def load(
         self,
@@ -108,20 +114,20 @@ class HistoryRangeCoordinator:
         fallback_on_cache_error: bool = False,
         cached_rows: list[list[float]] | None = None,
     ) -> OhlcvRangeResult:
-        cached = list(cached_rows) if cached_rows is not None else self._read_cached(
+        cached = list(cached_rows) if cached_rows is not None else await self._run_storage(lambda: self._read_cached(
             storage_symbol=storage_symbol,
             timeframe=timeframe,
             start_ts=start_ts,
             end_ts_exclusive=end_ts_exclusive,
             fallback_on_error=fallback_on_cache_error,
-        )
+        ))
         missing = self._missing(cached, timeframe, start_ts, end_ts_exclusive)
         fetched: list[list[float]] = []
         observed_at = int(time.time() * 1000)
         for gap_start, gap_end in missing:
             fetched.extend(await fetch_gap(gap_start, gap_end))
         fetched = closed_candles(fetched, timeframe, observed_at)
-        self._persist(storage_symbol, timeframe, fetched, persist)
+        await self._run_storage(lambda: self._persist(storage_symbol, timeframe, fetched, persist))
         return self._result(cached, fetched, timeframe, start_ts, end_ts_exclusive)
 
     def read_cached(

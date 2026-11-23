@@ -6,14 +6,7 @@ import sqlite3
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from app.contracts.chart_workspace import WorkspaceDocument, WorkspaceWrite
-
-ROOT = Path(__file__).resolve().parents[2]
-
-
-class WorkspaceConflict(ValueError):
-    pass
-
+from app.domain.chart_workspace import WorkspaceDocument, WorkspaceWrite, WorkspaceConflict as WorkspaceConflict
 
 class ChartWorkspaceStore:
     def __init__(self, root: Path | None = None):
@@ -112,24 +105,18 @@ class ChartWorkspaceStore:
                 raise WorkspaceConflict("原版脚本只读")
             db.execute("UPDATE documents SET archived=1 WHERE kind=? AND id=?", (kind,key))
 
-    def seed(self):
-        # Idempotent even when two startup attempts overlap in separate processes.
+    def ensure_defaults(self, scripts, watchlist: WorkspaceWrite, *, retired_scripts=()):
+        """Insert defaults atomically while retaining all user revisions and archives."""
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
-            if not db.execute("SELECT 1 FROM documents WHERE kind='scripts' AND id='opentrading-v7-2'").fetchone():
-                self._put(db, "scripts", "opentrading-v7-2", WorkspaceWrite(name="OpenTrading ETH · EMA55 · v7.2",
-                    data={"source": (ROOT / "strategies/pine/eth_ema55_manual_chart_v7_2.pine").read_text(encoding="utf-8"),
-                          "language": "pine", "kind": "indicator"}), readonly=True)
-            db.execute("UPDATE documents SET archived=1 WHERE kind='scripts' AND id=? AND readonly=1", ("heimdall-v7-2",))
-            if not db.execute("SELECT 1 FROM documents WHERE kind='scripts' AND id='ema-zigzag-glow'").fetchone():
-                self._put(db, "scripts", "ema-zigzag-glow", WorkspaceWrite(name="EMA + ZigZag++（发光特效版）",
-                    data={"source": (ROOT / "strategies/pine/ema_zigzag_glow.pine").read_text(encoding="utf-8"),
-                          "language": "pine", "kind": "indicator", "libraries": ["DevLucem/ZigLib/1"]}), readonly=True)
+            for key, write in scripts:
+                if not db.execute("SELECT 1 FROM documents WHERE kind='scripts' AND id=?", (key,)).fetchone():
+                    self._put(db, "scripts", key, write, readonly=True)
+            for key in retired_scripts:
+                db.execute("UPDATE documents SET archived=1 WHERE kind='scripts' AND id=? AND readonly=1", (key,))
             if not db.execute("SELECT 1 FROM documents WHERE kind='watchlists' AND archived=0").fetchone():
-                # An archived default remains archived; seed a separate new list.
-                key = 'default'
+                key = "default"
                 if db.execute("SELECT 1 FROM documents WHERE kind='watchlists' AND id=?", (key,)).fetchone():
-                    import uuid
-                    key = uuid.uuid4().hex
-                self._put(db, "watchlists", key, WorkspaceWrite(name="我的自选", data={"symbols": [
-                    "binance:spot:BTCUSDT", "binance:spot:ETHUSDT", "binance:spot:SOLUSDT"]}))
+                    from uuid import uuid4
+                    key = uuid4().hex
+                self._put(db, "watchlists", key, watchlist)

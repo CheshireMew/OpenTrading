@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Callable
 
 from app.contracts.dto.binance.usdm import BinanceContractResearchDetailResponse
-from .binance_api_support import BinanceApiSupport, compact_query
+from app.infra.market_data.binance_api import BinanceApiSupport, compact_query
 from .binance_market_normalizers import (
     normalize_basis,
     normalize_derivatives_ticker_list,

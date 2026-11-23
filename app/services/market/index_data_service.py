@@ -14,7 +14,7 @@ from app.domain.market.index_catalog import (
 from app.infra.executor import run_external_io
 from app.services.market.history_range_coordinator import HistoryRangeCoordinator
 from app.services.market.index_currency_conversion import convert_ohlcv_rows_to_usd
-from app.services.market.index_history_models import MarketIndexHistoryRecord, OhlcvRecord
+from app.domain.market.index_history import MarketIndexHistoryRecord, OhlcvRecord
 from app.services.market.index_history_sources import IndexFetchResult, IndexHistorySources
 from app.application.persistence_ports import KlineStorePort
 

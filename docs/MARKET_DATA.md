@@ -18,6 +18,17 @@ OpenTrading 的「美元流动性」位于 `/indicators/market-data`。页面展
 
 `prices update` 用于增量更新。`prices snapshots` 可以导出、检查和导入离线快照。`prices datasets build` 支持批量构建分区数据集，`prices indicators materialize` 保存版本化技术指标产物。`instruments classifications` 支持导入和查询按日期生效的分类。`data liquidity-sync` 和 `jobs status` 可在命令行刷新和检查流动性数据。
 
+加密货币分钟行情使用共享 K 线入口，结果写入与图表相同的 `klines`，重复执行时只补缺口。默认同步 15 分钟行情，小时线由共享规则合成，不另存重复行情。现货和永续合约分别保存，未收盘 K 线不会作为确认历史写入。命令输出 `opentrading.crypto-sync.v1` JSON，包含缓存、新下载数量和缺口；未完成时退出码为 1，重新运行可继续补齐。
+
+```powershell
+.\venv\Scripts\python.exe -m scripts.market_data_cli data crypto-sync --symbol BTC/USDT --start 2026-01-01T00:00:00Z --end 2026-02-01T00:00:00Z
+.\venv\Scripts\python.exe -m scripts.market_data_cli data crypto-sync --symbol BTC/USDT:PERPETUAL --start 2026-01-01T00:00:00Z --end 2026-02-01T00:00:00Z
+```
+
+跨资产日线快照继续用于保存可复现的历史证据，不承担另一套分钟行情缓存。
+
+旧版命令留下的分钟和小时快照会在同步时优先用于填补共享缓存缺口，不覆盖共享缓存中已有的行情修正，也不删除原始快照。
+
 ## 从 Signal Lab 导入
 
 结构化数据使用主项目的 `DATABASE_URL`。原始接口响应和 Parquet 文件默认继续保存在 `RUNTIME_ROOT_DIR/signal-lab`，以沿用已有数据；可用 `MARKET_DATA_DIR` 指定文件位置。旧的 `SIGNAL_LAB_DATA_DIR` 和存储配额变量仍作为配置别名支持，新变量优先。公开流动性数据无需密钥，Tiingo 和带密钥的 FRED 数据入口可分别配置 `TIINGO_API_TOKEN` 和 `FRED_API_KEY`。

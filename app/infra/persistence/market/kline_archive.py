@@ -16,6 +16,7 @@ from sqlalchemy import select
 from app.infra.db.schema import KlineArchiveSegment
 
 FIELDS = ("timestamp", "open", "high", "low", "close", "volume", "finalized")
+ARCHIVE_LOCK_KEY = 485374620219
 RECORD = struct.Struct("<q5d?")
 SCHEMA = pa.schema([(name, pa.int64() if name == "timestamp" else
                      pa.bool_() if name == "finalized" else pa.float64()) for name in FIELDS])

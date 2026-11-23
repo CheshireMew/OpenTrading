@@ -104,7 +104,10 @@ async def test_cache_connects_before_starting_concurrent_market_tasks(monkeypatc
     async def market_start():
         events.append("market")
 
-    def workspace_start(*args):
+    shared_store = object()
+
+    def workspace_start(*args, kline_store):
+        assert kline_store is shared_store
         events.append("workspace")
         return SimpleNamespace()
 
@@ -114,7 +117,7 @@ async def test_cache_connects_before_starting_concurrent_market_tasks(monkeypatc
         indicators=IndicatorRuntimeServices(object(), object()),
     )
     services.api = SimpleNamespace(
-        market=SimpleNamespace(binance_intel=SimpleNamespace(start=market_start), indexes=None),
+        market=SimpleNamespace(binance_intel=SimpleNamespace(start=market_start), indexes=None, kline_store=shared_store),
         research_alerts=None,
         trade_signal_evaluations=None,
     )
@@ -204,7 +207,7 @@ async def test_google_trends_handles_future_pandas_fillna_without_warning(monkey
     import warnings
     import pandas as pd
     from pytrends.request import TrendReq
-    from app.services.indicators.sentiment_provider import SentimentProvider
+    from app.infra.market_data.indicators.sentiment_provider import SentimentProvider
 
     index = pd.DatetimeIndex(["2026-10-18"])
 

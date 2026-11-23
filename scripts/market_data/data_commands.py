@@ -10,29 +10,33 @@ from scripts.market_data.registry import data_app
 from scripts.market_data.support import parse_datetime
 from config.market_data import MarketDataConfig
 from app.infra.persistence.market.history.database import MarketHistoryDatabase
+from app.infra.structured_data import dumps_json
+from app.services.market.crypto_history_sync import CryptoHistorySync
 
 
 @data_app.command("crypto-sync")
 def crypto_sync(
+    ctx: typer.Context,
     symbols: Annotated[list[str], typer.Option("--symbol", help="Repeat for multiple symbols.")] = ["BTC/USDT", "ETH/USDT"],
     start: Annotated[str, typer.Option(help="ISO-8601 UTC start.")] = "2024-01-01T00:00:00Z",
-    end: Annotated[str, typer.Option(help="ISO-8601 UTC end.")] = datetime.now(timezone.utc).isoformat(),
-    root: Annotated[Path | None, typer.Option(help="Override MARKET_DATA_DIR.")] = None,
+    end: Annotated[str | None, typer.Option(help="ISO-8601 UTC end, defaulting to now.")] = None,
 ) -> None:
-    from app.infra.market_data.binance import BinanceDataClient
-    from app.domain.market.history.resampling import resample_completed
-    from app.infra.persistence.market.history.market import MarketDataStore
-
-    store = MarketDataStore(MarketDataConfig.load().resolve_data_dir(root))
-    client = BinanceDataClient()
-    for symbol in symbols:
-        series = client.sync(symbol, parse_datetime(start), parse_datetime(end), "15m")
-        path = store.save(series)
-        hourly_path = store.save(resample_completed(series, "1h"))
-        typer.echo(f"{symbol}: {len(series.candles)} candles -> {path} ({series.price_source})")
-        typer.echo(f"{symbol}: derived completed 1h candles -> {hourly_path}")
-        if series.missing_ranges:
-            typer.echo(f"warning: {len(series.missing_ranges)} missing ranges detected")
+    """Hydrate shared confirmed klines; repeated calls reuse stored history."""
+    results, warnings = [], []
+    try:
+        first = parse_datetime(start)
+        last = parse_datetime(end) if end else datetime.now(timezone.utc)
+        service = CryptoHistorySync(ctx.obj)
+        for symbol in symbols:
+            results.append(service.sync(symbol, first, last))
+    except Exception as exc:
+        warnings.append(str(exc))
+    complete = not warnings and all(item["status"] == "complete" for item in results)
+    typer.echo(dumps_json({"schema_version": "opentrading.crypto-sync.v1",
+                          "status": "complete" if complete else "partial" if results else "error",
+                          "results": results, "warnings": warnings}, compact=True))
+    if not complete:
+        raise typer.Exit(1)
 
 
 @data_app.command("liquidity-sync")

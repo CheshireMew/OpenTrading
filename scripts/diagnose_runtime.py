@@ -9,8 +9,8 @@ from app.runtime import build_app_runtime_services
 async def check_external_sources() -> None:
     print("\nExternal data sources")
 
-    from app.services.indicators.onchain_provider import OnchainProvider
-    from app.services.indicators.sentiment_provider import SentimentProvider
+    from app.infra.market_data.indicators.onchain_provider import OnchainProvider
+    from app.infra.market_data.indicators.sentiment_provider import SentimentProvider
 
     checks = [
         ("Mempool.space", lambda: OnchainProvider()._fetch_mempool_data()),

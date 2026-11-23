@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from app.services.market.binance_web3_heat_rank_service import BinanceWeb3HeatRankService
     from app.services.market.binance_web3_rank_gateway import BinanceWeb3RankGateway
     from app.services.market.binance_web3_tokens import BinanceWeb3TokenService
-    from app.services.market.exchange_gateway import ExchangeGateway
+    from app.infra.market_data.exchange import ExchangeGateway
     from app.services.market.index_data_service import IndexDataService
     from app.services.market.equity_catalog_service import EquityCatalogService
     from app.services.market.indicator_service import IndicatorService
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from app.services.market.realtime_service import RealtimeService
     from app.services.market.websocket_service import MarketWebSocketService
     from app.services.market_scheduler_runtime import MarketSchedulerRuntime
-    from app.services.sentiment_client import SentimentApiClient
+    from app.infra.market_data.sentiment import SentimentApiClient
     from app.services.sentiment_service import SentimentService
     from app.services.tools.app_service import ToolsAppService
     from app.services.tools.dca_service import DCAService
@@ -164,6 +164,7 @@ class AppRuntimeServices:
                 lambda: ChartWorkspaceRuntime(
                     self.api.market.binance_intel,
                     self.api.market.indexes,
+                    kline_store=self.api.market.kline_store,
                 )
             )
             await self.api.market.binance_intel.start()
@@ -253,12 +254,12 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
         from app.infra.llm_client import LLMClientFactory
         from app.services.currency_service import CurrencyRateService
         from app.services.llm_config_service import LlmConfigService
-        from app.services.market.binance_api_support import BinanceApiSupport
+        from app.infra.market_data.binance_api import BinanceApiSupport
         from app.services.market.binance_market_intel_service import BinanceMarketIntelService
         from app.services.market.binance_web3_heat_rank_service import BinanceWeb3HeatRankService
         from app.services.market.binance_web3_rank_gateway import BinanceWeb3RankGateway
         from app.services.market.binance_web3_tokens import BinanceWeb3TokenService
-        from app.services.market.exchange_gateway import ExchangeGateway
+        from app.infra.market_data.exchange import ExchangeGateway
         from app.services.market.index_data_service import IndexDataService
         from app.services.market.equity_catalog_service import EquityCatalogService
         from app.services.market.insight_app_service import MarketInsightAppService
@@ -266,7 +267,7 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
         from app.services.market.query_app_service import MarketQueryAppService
         from app.services.market.realtime_service import RealtimeService
         from app.services.market.websocket_service import MarketWebSocketService
-        from app.services.sentiment_client import SentimentApiClient
+        from app.infra.market_data.sentiment import SentimentApiClient
         from app.services.sentiment_service import SentimentService
         from app.services.tools.app_service import ToolsAppService
         from app.services.tools.dca_service import DCAService

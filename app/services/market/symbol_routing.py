@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from app.services.market.symbol_catalog import get_market_symbol_source
-from app.services.market.exchange_gateway import ExchangeGateway
+from app.infra.market_data.exchange import ExchangeGateway
+from app.domain.market.symbol_catalog import MarketSymbolSource
 
 
 class MarketSymbolRouting:
@@ -30,4 +31,14 @@ class MarketSymbolRouting:
         return gateway
 
     def _resolve_market_source(self, symbol: str):
+        value = symbol.strip().upper()
+        if value.endswith(":PERPETUAL"):
+            pair = value.removesuffix(":PERPETUAL")
+            if "/" not in pair:
+                raise ValueError("perpetual symbols must use BASE/QUOTE:PERPETUAL")
+            base, quote = pair.split("/", 1)
+            return MarketSymbolSource(
+                symbol=f"{pair}:{quote}", exchange_id="binanceusdm",
+                storage_symbol=f"binance:usdm:{base}{quote}",
+            )
         return get_market_symbol_source(symbol) or get_market_symbol_source(f"{symbol}/USDT")

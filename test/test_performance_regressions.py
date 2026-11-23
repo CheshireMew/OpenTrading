@@ -20,7 +20,7 @@ from app.infra.persistence.data_retention import cleanup_old_data
 from app.infra.persistence.market.kline_store import KlineStore
 from app.infra.persistence.market.indicator_repository import MarketIndicatorRepository
 from app.infra.persistence.market.binance_market_research_store import BinanceMarketResearchStore
-from app.services.market.binance_api_support import BinanceApiSupport
+from app.infra.market_data.binance_api import BinanceApiSupport
 from app.services.market.binance_market_intel_service import BinanceMarketIntelService
 from app.services.market.binance_market_page_state import BinanceMarketPageState
 from app.services.market.history_query_service import MarketHistoryQueryService

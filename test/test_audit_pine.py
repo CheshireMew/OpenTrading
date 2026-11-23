@@ -4,7 +4,7 @@ import pytest
 
 from app.contracts.chart_workspace import ChartBars, ChartBar, ChartSymbol, PineRunRequest, WorkspaceWrite
 from app.services.chart_workspace_runs import ChartPineRuns, PineCapacityError
-from app.services.chart_workspace_store import ChartWorkspaceStore
+from app.infra.persistence.chart_workspace_repository import ChartWorkspaceStore
 from test.test_chart_workspace import worker_input
 
 

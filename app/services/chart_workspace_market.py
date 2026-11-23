@@ -3,28 +3,31 @@ from __future__ import annotations
 import asyncio
 import json
 import time
-from datetime import datetime, timedelta, timezone
-import httpx
-import websockets
+from datetime import datetime, timezone
+from app.infra.market_data.chart import ChartMarketClient, MarketHttpError
 
 from app.contracts.chart_workspace import ChartBar, ChartBars, ChartQuote, ChartSymbol
 from app.services.market.symbol_catalog import list_market_search_items
+from app.domain.market.candles import candle_end_ms, current_candle_open_ms
+from app.domain.market.constants import timeframe_to_milliseconds
+from app.domain.market.symbol_catalog import build_market_symbol_source
+from app.infra.executor import run_database
+from app.services.market.history_range_coordinator import HistoryRangeCoordinator, merge_ohlcv_rows
+from config import settings
 
 TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w", "1M"]
 
 
 def close_boundary(open_time: int, timeframe: str) -> int:
-    if timeframe == "1M":
-        dt = datetime.fromtimestamp(open_time / 1000, timezone.utc)
-        return int(dt.replace(year=dt.year + (dt.month == 12), month=dt.month % 12 + 1, day=1).timestamp() * 1000)
-    return open_time + int(timeframe[:-1]) * {"m": 60000, "h": 3600000, "d": 86400000, "w": 604800000}[timeframe[-1]]
+    return candle_end_ms(open_time, timeframe)
 
 
 class ChartWorkspaceMarket:
-    def __init__(self, binance, index):
+    def __init__(self, binance, index, *, kline_store=None):
         self.binance = binance
         self.index = index
-        self.http = httpx.AsyncClient(timeout=25)
+        self.http = ChartMarketClient()
+        self.history_ranges = HistoryRangeCoordinator(kline_store, storage_runner=run_database) if kline_store else None
         self.catalog: dict[str, ChartSymbol] = {}
         self.catalog_at = 0.0
         self.catalog_lock = asyncio.Lock()
@@ -67,15 +70,13 @@ class ChartWorkspaceMarket:
                         market="index", currency=row["currency"], timeframes=["1d"], close_only=True,
                         session="regular", metadata={"price_basis": "index", "capability_pending": True})
             try:
-                response = await self.http.get("https://www.okx.com/api/v5/public/instruments", params={"instType":"SPOT", "instId":"OKB-USDT"})
-                response.raise_for_status()
-                row = response.json()["data"][0]
+                row = await self.http.okx_symbol("OKB-USDT")
                 tick = float(row["tickSz"])
                 key = "okx:spot:OKB-USDT"
                 collected[key] = ChartSymbol(id=key, symbol="OKB-USDT", name="OKB/USDT", exchange="okx", market="spot",
                     currency="USDT", timeframes=TIMEFRAMES, metadata={"mintick":tick, "minmove":1,
                     "pricescale":round(1/tick), "pointvalue":1, "mincontract":float(row["lotSz"]), "basecurrency":"OKB"})
-            except (httpx.HTTPError, KeyError, IndexError, ValueError):
+            except (MarketHttpError, KeyError, IndexError, ValueError):
                 if "okx:spot:OKB-USDT" in self.catalog:
                     collected["okx:spot:OKB-USDT"] = self.catalog["okx:spot:OKB-USDT"]
             self.catalog = collected
@@ -105,41 +106,79 @@ class ChartWorkspaceMarket:
             info = info.model_copy(update={"close_only": result.is_close_only,
                 "currency":result.native_currency, "metadata": {"price_basis":result.price_basis, "source":source}})
             self.catalog[key] = info
-        elif info.exchange == "binance":
+        else:
+            rows = (await self._shared_crypto_bars(info, timeframe, limit, start, end, now)
+                    if self.history_ranges is not None
+                    else await self._fetch_crypto_rows(info, timeframe, limit, start, end))
+        unique = {int(r[0]):r for r in rows if r[0] <= end and (start is None or r[0] >= start)}
+        bars = [ChartBar(time=t, open=r[1], high=r[2], low=r[3], close=r[4], volume=r[5],
+                closeTime=close_boundary(t,timeframe), closed=close_boundary(t,timeframe) <= now)
+                for t,r in sorted(unique.items())][-limit:]
+        return ChartBars(symbol=info, timeframe=timeframe, bars=bars, source=source)
+
+    async def _fetch_crypto_rows(self, info, timeframe, limit, start, end):
+        rows = []
+        if info.exchange == "binance":
             loader = self.binance.spot if info.market == "spot" else self.binance.usdm
             result = await loader.get_klines(symbol=info.symbol, interval=timeframe,
                 limit=min(limit,1000), start_time=start, end_time=end)
             for row in result["items"]:
                 rows.append([int(row["open_time"]), *[float(row[k]) for k in ("open","high","low","close","volume")]])
         else:
-            tf = {"1h":"1H", "4h":"4H", "1d":"1Dutc", "1w":"1Wutc", "1M":"1Mutc"}.get(timeframe,timeframe)
-            # OKX pages backwards. Bound a forward request to its first `limit`
-            # candles, then page backwards inside that window before sorting.
-            upper = end
-            if start is not None:
-                boundary = start
-                for _ in range(limit):
-                    boundary = close_boundary(boundary,timeframe)
-                upper = min(upper,boundary-1)
-            while len(rows) < limit:
-                r = await self.http.get("https://www.okx.com/api/v5/market/history-candles",
-                    params={"instId":info.symbol, "bar":tf, "after":upper+1, "limit":min(limit-len(rows),100)})
-                r.raise_for_status()
-                if r.json().get("code") != "0":
-                    raise ValueError("OKX 历史数据暂不可用")
-                batch = [[int(item[0]), *map(float,item[1:6])] for item in r.json()["data"]]
+            rows = await self.http.okx_history(info.symbol, timeframe, limit, start, end)
+        return rows
+
+    @staticmethod
+    def _storage_symbol(info):
+        if info.market == "usdm":
+            return f"{info.exchange}:usdm:{info.symbol}"
+        pair = (info.symbol.replace("-", "/") if "-" in info.symbol
+                else f"{info.symbol.removesuffix(info.currency)}/{info.currency}")
+        return build_market_symbol_source(pair, info.exchange, default_exchange_id=settings.EXCHANGE_ID).storage_symbol
+
+    async def _shared_crypto_bars(self, info, timeframe, limit, start, end, now):
+        if limit < 1:
+            return []
+        final_open = current_candle_open_ms(end, timeframe)
+        if start is None:
+            if timeframe.endswith("M"):
+                anchor = datetime.fromtimestamp(final_open / 1000, timezone.utc)
+                month = anchor.year * 12 + anchor.month - limit
+                start = int(anchor.replace(year=month // 12, month=month % 12 + 1).timestamp() * 1000)
+            else:
+                start = final_open - (limit - 1) * timeframe_to_milliseconds(timeframe)
+        else:
+            aligned = current_candle_open_ms(start, timeframe)
+            start = aligned if aligned == start else candle_end_ms(aligned, timeframe)
+        upper = start
+        for _ in range(limit):
+            upper = candle_end_ms(upper, timeframe)
+        upper = min(upper, candle_end_ms(final_open, timeframe))
+        current_open = current_candle_open_ms(now, timeframe)
+        closed_upper = min(upper, current_open)
+
+        async def fetch_gap(since, until):
+            output = []
+            while since < until:
+                batch = await self._fetch_crypto_rows(info, timeframe, min(limit, 1000), since, until - 1)
+                batch = [row for row in batch if since <= int(row[0]) < until]
                 if not batch:
                     break
-                rows.extend(batch)
-                next_upper = min(item[0] for item in batch)-1
-                if next_upper >= upper or (start is not None and next_upper < start):
+                output.extend(batch)
+                following = candle_end_ms(max(int(row[0]) for row in batch), timeframe)
+                if following <= since:
                     break
-                upper = next_upper
-        unique = {int(r[0]):r for r in rows if r[0] <= end and (start is None or r[0] >= start)}
-        bars = [ChartBar(time=t, open=r[1], high=r[2], low=r[3], close=r[4], volume=r[5],
-                closeTime=close_boundary(t,timeframe), closed=close_boundary(t,timeframe) <= now)
-                for t,r in sorted(unique.items())][-limit:]
-        return ChartBars(symbol=info, timeframe=timeframe, bars=bars, source=source)
+                since = following
+            return output
+
+        result = await self.history_ranges.load_async(
+            storage_symbol=self._storage_symbol(info), timeframe=timeframe,
+            start_ts=start, end_ts_exclusive=closed_upper, fetch_gap=fetch_gap,
+        )
+        live = []
+        if start <= current_open < upper and current_open <= end:
+            live = await self._fetch_crypto_rows(info, timeframe, 1, current_open, end)
+        return merge_ohlcv_rows(result.rows, live, start_ts=start, end_ts_exclusive=min(upper, end + 1))
 
     async def quotes(self, keys: list[str]) -> list[ChartQuote]:
         now = int(time.time()*1000)
@@ -169,9 +208,7 @@ class ChartWorkspaceMarket:
                     return ChartQuote(id=key, price=float(r["lastPrice"]), change=float(r["priceChange"]),
                         change_pct=float(r["priceChangePercent"]), updated_at=int(r["closeTime"]))
                 if info.exchange == "okx":
-                    r = await self.http.get("https://www.okx.com/api/v5/market/ticker", params={"instId":info.symbol})
-                    r.raise_for_status()
-                    data = r.json()["data"][0]
+                    data = await self.http.okx_ticker(info.symbol)
                     price, prior = float(data["last"]), float(data["open24h"])
                     return ChartQuote(id=key, price=price, change=price-prior, change_pct=(price/prior-1)*100,
                         updated_at=int(data["ts"]))
@@ -234,7 +271,7 @@ class ChartWorkspaceMarket:
                 # Binance moved USD-M klines to /market in April 2026. The old
                 # socket can accept the connection without delivering any bars.
                 host = "wss://stream.binance.com:9443/ws" if info.market == "spot" else "wss://fstream.binance.com/market/ws"
-                async with websockets.connect(f"{host}/{info.symbol.lower()}@kline_{timeframe}", open_timeout=15, ping_interval=20) as stream:
+                async with self.http.websocket(f"{host}/{info.symbol.lower()}@kline_{timeframe}") as stream:
                     live = False
                     while True:
                         raw = await asyncio.wait_for(stream.recv(),timeout=30)

@@ -4,7 +4,7 @@ import json
 import time
 from functools import lru_cache
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import or_, select
+from sqlalchemy import or_, select, text
 from typing import List
 
 from config import settings
@@ -14,7 +14,7 @@ from app.infra.db.schema import Kline
 from app.domain.market.candles import candle_end_ms, current_candle_open_ms
 from app.domain.market.constants import timeframe_to_milliseconds
 from app.domain.market.resampling import aggregate_complete, synthesis_sources
-from app.infra.persistence.market.kline_archive import KlineArchive, record_bytes
+from app.infra.persistence.market.kline_archive import KlineArchive, record_bytes, ARCHIVE_LOCK_KEY
 from utils.logger import logger
 
 
@@ -142,6 +142,38 @@ class KlineStore:
                     merged.setdefault(int(row[0]), row)
             missing = [t for t in missing if t not in merged]
         return [merged[t] for t in sorted(merged) if start <= t <= end]
+
+    def save_missing(self, symbol: str, timeframe: str, klines: list[list[float]]) -> int:
+        """Warm legacy history without replacing hot, archived or synthesized corrections."""
+        if not klines:
+            return 0
+        with self.database_runtime.session_scope() as session:
+            dialect = session.bind.dialect.name
+            if dialect == "postgresql":
+                from sqlalchemy.dialects.postgresql import insert
+                session.execute(text("SELECT pg_advisory_xact_lock(:key)"), {"key": ARCHIVE_LOCK_KEY})
+            elif dialect == "sqlite":
+                from sqlalchemy.dialects.sqlite import insert
+                session.execute(text("BEGIN IMMEDIATE"))
+            else:
+                raise RuntimeError(f"Legacy history warming does not support {dialect}")
+            start, end = min(int(row[0]) for row in klines), max(int(row[0]) for row in klines)
+            known = {int(row[0]) for row in self._exact(session, symbol, timeframe, start, end)}
+            known.update(int(row[0]) for row in self._fill_from_smaller(session, symbol, timeframe, start, end, []))
+            now = int(time.time() * 1000)
+            pending = {int(row[0]): row for row in klines
+                       if int(row[0]) not in known and candle_end_ms(int(row[0]), timeframe) <= now}
+            saved = 0
+            batch_size = max(int(settings.KLINE_UPSERT_BATCH_SIZE), 1)
+            rows = list(pending.values())
+            for offset in range(0, len(rows), batch_size):
+                values = [{"symbol": symbol, "timeframe": timeframe, "timestamp": int(row[0]),
+                           **dict(zip(("open", "high", "low", "close", "volume"), row[1:6])), "finalized": True}
+                          for row in rows[offset:offset + batch_size]]
+                statement = insert(Kline).values(values).on_conflict_do_nothing(
+                    index_elements=["symbol", "timeframe", "timestamp"])
+                saved += max(session.execute(statement).rowcount, 0)
+            return saved
 
     def save(self, symbol: str, timeframe: str, klines: list[list[float]]) -> None:
         if not klines:

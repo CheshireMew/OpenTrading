@@ -8,7 +8,7 @@ from app.contracts.frontend import FrontendContractRouter
 from app.contracts.chart_workspace import (ChartSymbol, ChartBars, ChartQuote, WorkspaceDocument, WorkspaceWrite,
     PineRun, PineRunRequest, PineRecords, PineCapabilities)
 from app.infra.executor import run_workspace
-from app.services.chart_workspace_store import WorkspaceConflict
+from app.infra.persistence.chart_workspace_repository import WorkspaceConflict
 from app.services.chart_workspace_runs import PineCapacityError
 
 router = FrontendContractRouter(frontend_contract_target="chartWorkspace",prefix="/chart-workspace",tags=["图表工作台"])

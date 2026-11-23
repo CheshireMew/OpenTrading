@@ -15,7 +15,7 @@ from app.services.market.history_range_coordinator import HistoryRangeCoordinato
 from app.services.market.history_ranges import is_recent_cache_usable
 from app.application.persistence_ports import KlineStorePort
 
-from .binance_api_support import BinanceApiSupport, compact_query
+from app.infra.market_data.binance_api import BinanceApiSupport, compact_query
 from .binance_numbers import to_float, to_int
 from .binance_web3_support import normalize_token_dynamic
 

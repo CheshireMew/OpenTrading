@@ -19,10 +19,12 @@ def compare_cloud(observations, reference, step_ms):
         ts = sample['timestamp']
         j = bisect_left(times, ts)
         if not observed or j == len(times) or (j == 0 and times[j] != ts):
-            unavailable.append(sample); continue
+            unavailable.append(sample)
+            continue
         a, b = (observed[j], observed[j]) if times[j] == ts else (observed[j-1], observed[j])
         if b['timestamp']-a['timestamp'] not in (0, step_ms):
-            unavailable.append(sample); continue
+            unavailable.append(sample)
+            continue
         fraction = 0 if a is b else (ts-a['timestamp'])/step_ms
         delta = {}
         for key in ('upper','lower'):
@@ -30,7 +32,8 @@ def compare_cloud(observations, reference, step_ms):
                 raise ValueError('对数图的云带价格必须大于零')
             y = (1-fraction)*(scale*log(a['cloud'][key])+bias) + fraction*(scale*log(b['cloud'][key])+bias)
             d = y-sample[key+'_y']
-            errors.append(d); delta[key+'_error_px'] = d
+            errors.append(d)
+            delta[key+'_error_px'] = d
         used.append({'timestamp':ts, **delta})
     return {'sample_count':len(used), 'unavailable_count':len(unavailable),
         'rmse_px':sqrt(sum(e*e for e in errors)/len(errors)) if errors else None,
@@ -74,13 +77,17 @@ def compare_signals(result, reference, step_ms, tolerance_bars=0):
         while i<len(refs) and j<len(events):
             d=events[j]['timestamp']-refs[i]['timestamp']
             if d < -tolerance_bars*step_ms:
-                extra.append(events[j]); j+=1
+                extra.append(events[j])
+                j += 1
             elif d > tolerance_bars*step_ms:
-                missing.append(refs[i]); i+=1
+                missing.append(refs[i])
+                i += 1
             else:
                 matched.append({'reference':refs[i], 'actual':events[j], 'difference_bars':d//step_ms})
-                i+=1; j+=1
-        missing.extend(refs[i:]); extra.extend(events[j:])
+                i += 1
+                j += 1
+        missing.extend(refs[i:])
+        extra.extend(events[j:])
     observed={r['timestamp']:r for r in result.get('indicators',[])}
     return {'run_id':result['run']['id'], 'reference_context':reference.get('context'),
         'scope':'仅核验提供的时间区间与信号位置；匹配不证明原始公式相同，也不检验区间外表现',

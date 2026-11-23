@@ -16,12 +16,16 @@ The chart workspace is initialized once by `AppRuntimeServices.start` and closed
 
 Quotes carry observation time separately from request time, source and validity. Expired quotes remain explicitly stale. Daily simulation and analytics consume closed history and preserve coverage failures; continuous markets require each daily observation, while exchange-session histories can carry a verified previous close across non-trading dates. Pine document operations bind responses to the original document and selection generation.
 
+Workspace repositories live in `app/infra/persistence`; their value objects live in `app/domain/chart_workspace`. Services load the two active built-in scripts and submit transactional defaults. Network and database drivers belong to infrastructure, including exchange, index, indicator, currency, equity-catalog and websocket clients; services do not import those drivers directly.
+
+Chart history and `scripts.market_data_cli data crypto-sync` share `KlineStore` and `HistoryRangeCoordinator`. Closed history is reused before requesting gaps; current chart candles remain live observations. Spot and perpetual histories have separate storage identities. Larger periods use the shared synthesis rules without storing duplicate derived rows. Cross-asset daily snapshots remain immutable research evidence rather than an alternative intraday cache.
+
 Migration `021_confirmed_candle_history` preserves old OHLCV rows as unconfirmed. Reads hydrate only requested windows to confirm final closes; they never treat a cached open bar as final merely because time passed. Live observations stay separate from finalized history. Index coverage uses XNYS, XSHG and XHKG calendars and exposes missing sessions and verified non-trading dates. Unknown calendar ranges fail closed. Signal evaluations require continuous, closed history inside the entry/expiry window, and horizon returns use candle close times.
 
 
 ## Responsibility owners after the cohesion refactor
 
-Directories `archived/`, `docs/archive/`, `docs/verification/` and `docs/design/` contain local historical material and are excluded from the repository. Required Pine regression fixtures live in `frontend/test/fixtures/pine-runtime/`.
+Historical source, strategy versions, design drafts and verification material are retained only in ignored `archived/`. `.runtime/` owns tests, tool caches and task artifacts; `.opentrading_runtime/` owns current application data and runtime state. Required Pine regression fixtures live in `frontend/test/fixtures/pine-runtime/` and do not depend on local archives.
 
 Strategy simulation has one active owner: the chart workspace Pine/PineTS strategy tester. Python strategy execution, parameter sweeps, granular research diagnostics and their result indexes are archived under `archived/python_backtest_20261123`. Their HTTP and frontend routes, CLI commands and background queue workers are unregistered. Application startup no longer creates research-result SQLite indexes. Migration 024 removes the retired backtest, portfolio and report tables and their data at the user’s explicit request. Shared OHLCV history, its compressed archive, Pine and DCA remain independent.
 

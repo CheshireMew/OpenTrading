@@ -3,9 +3,9 @@ from __future__ import annotations
 from datetime import datetime
 
 from app.domain.market.index_catalog import IndexInstrument
-from app.services.market.index_history_contracts import IndexFetchResult
-from app.services.market.index_history_parsing import IndexHistoryParsing
-from app.services.market.index_source_catalog import IndexSourceBinding
+from app.domain.market.index_fetch import IndexFetchResult
+from app.infra.market_data.index_history_parsing import IndexHistoryParsing
+from app.infra.market_data.index_source_catalog import IndexSourceBinding
 
 
 class SinaIndexHistoryProvider(IndexHistoryParsing):

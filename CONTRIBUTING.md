@@ -17,7 +17,7 @@
 | `docs/` | 当前功能、架构和维护说明 |
 | `data/` | 随仓库提供的数据及来源说明 |
 
-`archived/`、`docs/archive/`、`docs/verification/`、`docs/design/` 和历史项目复盘只保存在本地，不随仓库发布；`.agents/`、`.impeccable/` 和 `skills-lock.json` 也是本机开发工具材料。测试所需的固定样本保存在 `frontend/test/fixtures/`，不依赖这些本地目录。架构分层见 [ARCHITECTURE.md](docs/ARCHITECTURE.md)。
+`archived/` 保存本地历史源码、旧版本、设计与验证材料，不随仓库发布。测试和任务产物统一放在 `.runtime/`：pytest 使用 `.runtime/tests/pytest`，Ruff 使用 `.runtime/cache/ruff`，临时任务放在 `.runtime/tasks/`。`.opentrading_runtime/` 专门保存当前应用数据、引擎快照和运行状态，不能混入测试项目副本或依赖环境。`.agents/` 和 `skills-lock.json` 是本机开发工具材料。测试所需的固定样本保存在 `frontend/test/fixtures/`，不依赖本地归档。架构分层见 [ARCHITECTURE.md](docs/ARCHITECTURE.md)。
 
 ## 验证改动
 

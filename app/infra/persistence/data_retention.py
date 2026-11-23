@@ -7,7 +7,7 @@ from sqlalchemy import delete, select, text
 
 from app.infra.db import DatabaseRuntime
 from app.infra.db.schema import Kline, KlineArchiveSegment
-from app.infra.persistence.market.kline_archive import KlineArchive, FIELDS
+from app.infra.persistence.market.kline_archive import KlineArchive, FIELDS, ARCHIVE_LOCK_KEY
 from config import settings
 from utils.logger import logger
 
@@ -21,7 +21,7 @@ def archive_batch(database_runtime: DatabaseRuntime, *, cutoff_ts: int, batch_si
     with database_runtime.session_scope() as session:
         postgres = database_runtime.engine.dialect.name == "postgresql"
         if postgres:
-            if not session.scalar(text("SELECT pg_try_advisory_xact_lock(485374620219)")):
+            if not session.scalar(text("SELECT pg_try_advisory_xact_lock(:key)"), {"key": ARCHIVE_LOCK_KEY}):
                 raise RuntimeError("Another K-line archival transaction is running; retry later")
         else:
             session.execute(text("BEGIN IMMEDIATE"))

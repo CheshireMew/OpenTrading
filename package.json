@@ -2,7 +2,6 @@
   "name": "opentrading",
   "version": "2.0.0",
   "description": "Market research, charting, and portfolio analysis.",
-  "main": ".codex_browser_check.js",
   "directories": {
     "doc": "docs",
     "test": "test"

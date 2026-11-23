@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from .base_provider import BaseIndicatorProvider, logger
 from config import settings
 from app.infra.executor import run_external_io
-from app.services.market.ttl_cache import TtlMemoryCache
+from app.infra.ttl_cache import TtlMemoryCache
 
 class TechCalculatorProvider(BaseIndicatorProvider):
     """

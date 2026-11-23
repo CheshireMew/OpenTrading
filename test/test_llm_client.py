@@ -9,6 +9,9 @@ import pytest
 
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+from app.infra.llm_client import LLMClient, LLMClientFactory
+from config import settings
+from utils.logger import logger
 
 class StructuredOutputFixture(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -28,11 +31,6 @@ class StructuredOutputFixture(BaseModel):
         if self.side != "HOLD" and any(value is None for value in levels):
             raise ValueError("LONG and SHORT require entry, target, and stop")
         return self
-
-from app.infra.llm_client import LLMClient, LLMClientFactory
-from config import settings
-from utils.logger import logger
-
 
 def llm_config(provider: str, structured_output_mode: str) -> dict[str, str]:
     return {

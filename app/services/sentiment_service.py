@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from app.services.sentiment_client import SentimentApiClient
+from app.infra.market_data.sentiment import SentimentApiClient
 from app.application.persistence_ports import SentimentRepositoryPort
 from utils.logger import logger
 from utils.time import now_in_timezone

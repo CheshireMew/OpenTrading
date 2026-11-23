@@ -4,18 +4,18 @@ from collections.abc import Callable
 from datetime import datetime
 
 from app.domain.market.index_catalog import IndexInstrument
-from app.services.market.index_history_contracts import IndexFetchResult
-from app.services.market.index_history_fx import IndexCurrencyHistoryProvider
-from app.services.market.index_history_http import (
+from app.domain.market.index_fetch import IndexFetchResult
+from app.infra.market_data.index_history_fx import IndexCurrencyHistoryProvider
+from app.infra.market_data.index_history_http import (
     BaostockIndexHistoryProvider,
     CboeIndexHistoryProvider,
     EastmoneyIndexHistoryProvider,
     SohuIndexHistoryProvider,
     YFinanceIndexHistoryProvider,
 )
-from app.services.market.index_history_parsing import redact_exception_message
-from app.services.market.index_history_sina import SinaIndexHistoryProvider
-from app.services.market.index_source_catalog import (
+from app.infra.market_data.index_history_parsing import redact_exception_message
+from app.infra.market_data.index_history_sina import SinaIndexHistoryProvider
+from app.infra.market_data.index_source_catalog import (
     IndexSourceBinding,
     get_index_source_binding,
 )

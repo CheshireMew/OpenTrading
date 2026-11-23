@@ -30,6 +30,7 @@ def open_trading_database(ctx: typer.Context) -> None:
     from app.infra.persistence.market.history.database import bind_database
 
     runtime = build_database_runtime(settings)
+    ctx.obj = runtime
     ctx.call_on_close(runtime.dispose)
     ctx.with_resource(bind_database(runtime.engine, MarketDataConfig.load().data_dir))
 

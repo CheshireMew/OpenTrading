@@ -5,7 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from app.services.chart_workspace_store import ROOT
+from config.settings import BASE_DIR as ROOT
 
 
 BUNDLED_LIBRARIES = (

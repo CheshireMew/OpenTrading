@@ -13,7 +13,7 @@ from app.domain.market.constants import KLINE_SYMBOL_MAX_LENGTH
 from app.domain.market.index_catalog import INDEX_CATALOG, get_index_instrument, get_supported_index_symbols
 from app.services.market.index_data_service import IndexDataService
 from app.services.market.index_history_sources import IndexHistorySources
-from app.services.market.index_source_catalog import get_index_source_binding
+from app.infra.market_data.index_source_catalog import get_index_source_binding
 
 
 def ohlcv_row(point) -> list[float]:
@@ -120,7 +120,7 @@ def test_benchmark_currency_history_remains_available_without_fred(monkeypatch):
             "2024-01-04": {},
         }})
 
-    monkeypatch.setattr("app.services.market.index_history_fx.requests.get", fetch_rates)
+    monkeypatch.setattr("app.infra.market_data.index_history_fx.requests.get", fetch_rates)
     rates = IndexHistorySources().fetch_usd_fx_rates("HKD", datetime(2024, 1, 1), datetime(2024, 1, 5))
     assert rates == {"2024-01-02": 0.128, "2024-01-03": 0.129}
     assert requests == [("https://api.frankfurter.app/2024-01-01..2024-01-05", {"from": "HKD", "to": "USD"})]
@@ -188,7 +188,7 @@ def test_eastmoney_history_is_normalized_and_cached(monkeypatch):
             }
         )
 
-    monkeypatch.setattr("app.services.market.index_history_http.requests.get", fake_get)
+    monkeypatch.setattr("app.infra.market_data.index_history_http.requests.get", fake_get)
 
     result = service.get_history(
         symbol="CN_CSI300",
@@ -504,9 +504,9 @@ def test_open_ended_index_history_excludes_the_unclosed_daily_bar():
 
 
 def test_hstech_prefers_longer_index_history_and_keeps_sina_fallback(monkeypatch):
-    from app.services.market.index_history_contracts import IndexFetchResult
-    from app.services.market.index_history_http import EastmoneyIndexHistoryProvider
-    from app.services.market.index_history_sina import SinaIndexHistoryProvider
+    from app.domain.market.index_fetch import IndexFetchResult
+    from app.infra.market_data.index_history_http import EastmoneyIndexHistoryProvider
+    from app.infra.market_data.index_history_sina import SinaIndexHistoryProvider
 
     calls = []
     def eastmoney(self, *args):

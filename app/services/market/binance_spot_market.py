@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .binance_api_support import BinanceApiSupport, compact_query, encode_symbol_list
+from app.infra.market_data.binance_api import BinanceApiSupport, compact_query, encode_symbol_list
 from app.application.persistence_ports import BinanceMarketResearchStorePort
 from .binance_market_normalizers import normalize_kline_response, normalize_ticker_item
 from .binance_research_series import BinanceResearchSeriesLoader

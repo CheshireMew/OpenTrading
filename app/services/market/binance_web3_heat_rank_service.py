@@ -10,7 +10,7 @@ from .binance_web3_heat_rank import BinanceWeb3HeatRankComposer
 from .binance_web3_rank_gateway import BinanceWeb3RankGateway
 from .binance_web3_support import SUPPORTED_WEB3_CHAIN_IDS, WEB3_ALL_CHAINS_ID, normalize_web3_chain_id
 from .market_board_support import board_key, compare_text, sort_rows_by_number
-from .ttl_cache import TtlMemoryCache
+from app.infra.ttl_cache import TtlMemoryCache
 
 
 HEAT_RANK_BOARDS_CACHE_TTL_SECONDS = 20.0

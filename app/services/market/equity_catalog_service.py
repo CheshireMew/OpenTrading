@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import quote
 
-import httpx
+from app.infra.market_data.equity_catalog import EquityCatalogClient
 
 from app.contracts.dto.equity_catalog import EquityCatalogResponse, EquityCatalogSourceResponse
 from app.infra.cache import optional_cache_aget, optional_cache_aset
@@ -75,14 +75,9 @@ class EquityCatalogService:
     No account access or order endpoints are used.
     """
 
-    def __init__(self, *, cache_service=None, transport: httpx.AsyncBaseTransport | None = None):
+    def __init__(self, *, cache_service=None, transport=None):
         self.cache_service = cache_service
-        self._client = httpx.AsyncClient(
-            timeout=httpx.Timeout(25, connect=10), transport=transport,
-            headers={"Accept": "application/json", "User-Agent": "OpenTrading/2.0 (public market catalog)"},
-            limits=httpx.Limits(max_connections=12, max_keepalive_connections=6),
-            follow_redirects=True,
-        )
+        self._client = EquityCatalogClient(transport)
         self._lock = asyncio.Lock()
         self._inflight: asyncio.Task | None = None
         self._snapshot: EquityCatalogResponse | None = None
@@ -106,17 +101,7 @@ class EquityCatalogService:
         return await asyncio.shield(task)
 
     async def _get(self, url: str, **params) -> Any:
-        response = await self._client.get(url, params=params or None)
-        response.raise_for_status()
-        payload = response.json()
-        if not isinstance(payload, dict):
-            raise ValueError("Exchange catalog has an unexpected schema")
-        code = str(payload.get("code", ""))
-        if code not in {"", "0", "00000", "000000"}:
-            raise ValueError(f"Exchange rejected market catalog request ({code})")
-        if payload.get("success") is False:
-            raise ValueError("Exchange rejected market catalog request")
-        return payload
+        return await self._client.get(url, **params)
 
     async def _refresh(self) -> EquityCatalogResponse:
         if not self._cached_sources_loaded:

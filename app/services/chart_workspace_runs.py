@@ -10,11 +10,11 @@ from app.contracts.chart_workspace import PineRun, PineRunRequest, WorkspaceWrit
 from app.infra.worker_process import start_worker
 from app.infra.node_runtime import resolve_node
 from app.infra.executor import run_workspace
-from app.services.chart_workspace_store import ROOT
+from config.settings import BASE_DIR as ROOT
 from app.services.chart_workspace_market import close_boundary
 from app.services.chart_workspace_engine import freeze_engine, engine_worker
 from config import settings
-from app.services.chart_workspace_records import PineRecordStore
+from app.infra.persistence.pine_record_repository import PineRecordStore
 
 
 class PineCapacityError(ValueError):

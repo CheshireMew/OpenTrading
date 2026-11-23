@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.contracts.dto.binance.web3 import BinanceWeb3AddressPnlResponse
-from .binance_api_support import BinanceApiSupport, compact_query
+from app.infra.market_data.binance_api import BinanceApiSupport, compact_query
 from .binance_numbers import to_float, to_int
 from .binance_web3_support import asset_url, normalize_rank_token
 

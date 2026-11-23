@@ -151,9 +151,9 @@ class MarketSchedulerRuntime:
 
 
 def _build_indicator_providers():
-    from app.services.indicators.onchain_provider import OnchainProvider
-    from app.services.indicators.sentiment_provider import SentimentProvider
-    from app.services.indicators.tech_calculator import TechCalculatorProvider
+    from app.infra.market_data.indicators.onchain_provider import OnchainProvider
+    from app.infra.market_data.indicators.sentiment_provider import SentimentProvider
+    from app.infra.market_data.indicators.tech_calculator import TechCalculatorProvider
 
     return [
         OnchainProvider(),

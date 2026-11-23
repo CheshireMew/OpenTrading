@@ -5,7 +5,9 @@ import subprocess
 import pytest
 
 from app.contracts.chart_workspace import WorkspaceWrite, ChartSymbol, ChartBar, ChartBars, PineRunRequest
-from app.services.chart_workspace_store import ChartWorkspaceStore, WorkspaceConflict, ROOT
+from app.services.chart_workspace_seed import seed_workspace
+from app.infra.persistence.chart_workspace_repository import ChartWorkspaceStore, WorkspaceConflict
+from config.settings import BASE_DIR as ROOT
 from app.services.chart_workspace_market import close_boundary, ChartWorkspaceMarket
 from app.services.chart_workspace_runs import ChartPineRuns
 from app.main import create_app
@@ -34,6 +36,29 @@ def test_market_identity_and_month_boundary():
     end=int(datetime(2024,3,1,tzinfo=timezone.utc).timestamp()*1000)
     assert close_boundary(start,'1M')==end
     assert close_boundary(start,'1m')==start+60000
+
+
+@pytest.mark.asyncio
+async def test_okx_client_bounds_backward_pages_to_the_requested_forward_window():
+    import httpx
+    from app.infra.market_data.chart import ChartMarketClient
+
+    requests = []
+
+    def respond(request):
+        requests.append(request)
+        return httpx.Response(200, json={"code": "0", "data": [
+            [str(timestamp), "100", "103", "98", "101", "10"] for timestamp in (120000, 60000, 0)
+        ]})
+
+    client = ChartMarketClient(httpx.MockTransport(respond))
+    try:
+        rows = await client.okx_history("OKB-USDT", "1m", 3, 0, 9_999_999)
+        assert [row[0] for row in rows] == [120000, 60000, 0]
+        assert requests[0].url.params["after"] == "180000"
+        assert requests[0].url.params["limit"] == "3"
+    finally:
+        await client.aclose()
 
 
 def test_retired_order_route_and_new_contracts():
@@ -112,7 +137,7 @@ async def test_usdm_stream_waits_for_data_and_heals_after_silence(monkeypatch):
 
     monkeypatch.setattr(market, 'resolve', resolve)
     monkeypatch.setattr(market, 'bars', bars)
-    monkeypatch.setattr(module.websockets, 'connect', connect)
+    monkeypatch.setattr(market.http, 'websocket', connect)
     monkeypatch.setattr(module.asyncio, 'wait_for', wait_for)
     monkeypatch.setattr(module.asyncio, 'sleep', sleep)
     try:
@@ -256,7 +281,7 @@ async def test_report_streams_results_without_json_or_engine_snapshots(tmp_path,
 def test_report_sampling_keeps_equity_extremes_and_incomplete_stream_rolls_back(tmp_path):
     from io import BytesIO
     import sqlite3
-    from app.services.chart_workspace_records import PineRecordStore
+    from app.infra.persistence.pine_record_repository import PineRecordStore
 
     rows = [{"time": i + 1, "equity": 1000 + i % 23} for i in range(5000)]
     rows[234]["equity"], rows[345]["equity"] = 0, 5000
@@ -288,12 +313,12 @@ def test_engine_snapshot_detects_changed_files(tmp_path):
 
 def test_ema_zigzag_seed_keeps_source_and_is_idempotent(tmp_path):
     store = ChartWorkspaceStore(tmp_path)
-    store.seed()
+    seed_workspace(store)
     first = store.get("scripts", "ema-zigzag-glow")
     assert first.readonly
     assert "import DevLucem/ZigLib/1 as ZigZag" in first.data["source"]
     assert "plotarrow(direction" in first.data["source"]
-    store.seed()
+    seed_workspace(store)
     assert store.get("scripts", "ema-zigzag-glow") == first
 
 

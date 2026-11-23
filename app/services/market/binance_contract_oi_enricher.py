@@ -8,7 +8,7 @@ from app.domain.market.math import percentage_change
 from config import settings
 
 from .binance_numbers import safe_float
-from .ttl_cache import TtlMemoryCache
+from app.infra.ttl_cache import TtlMemoryCache
 
 if TYPE_CHECKING:
     from .binance_usdm_market import BinanceUsdmMarketService

@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 
 from config.settings import AppSettings, BASE_DIR
-from app.services.chart_workspace_store import ChartWorkspaceStore
-from app.services.chart_workspace_records import PineRecordStore
+from app.infra.persistence.chart_workspace_repository import ChartWorkspaceStore
+from app.infra.persistence.pine_record_repository import PineRecordStore
 from app.services.tools.dca_calculator import prepare_dca_dataset, simulate_dca_schedule
 from app.services.tools.pair_compare_service import PairCompareService
 

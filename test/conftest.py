@@ -3,6 +3,7 @@ Shared pytest fixtures for OpenTrading tests.
 """
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
@@ -29,6 +30,15 @@ from test.regression_support import (
     StubMarketQueryAppService,
     StubToolsAppService,
 )
+
+
+def pytest_configure(config):
+    if config.option.basetemp:
+        folder = Path(config.option.basetemp)
+        if not folder.is_absolute():
+            folder = Path(config.rootpath) / folder
+        config.option.basetemp = str(folder)
+        folder.parent.mkdir(parents=True, exist_ok=True)
 
 
 
@@ -74,7 +84,13 @@ class StubLlmConfigService:
 
 
 @pytest.fixture(autouse=True)
-def installed_database_runtime(tmp_path):
+def installed_database_runtime(tmp_path, monkeypatch):
+    from config import settings
+
+    isolated = AppSettings(_env_file=None, RUNTIME_ROOT_DIR=tmp_path / "runtime")
+    for name in ("RUNTIME_ROOT_DIR", "LOG_DIR", "TEMP_DIR", "CHART_WORKSPACE_DIR", "MARKET_DATA_DIR",
+                 "KLINE_ARCHIVE_DIR", "BACKGROUND_RUNTIME_LOCK_PATH", "LLM_CONFIG_PATH"):
+        monkeypatch.setattr(settings, name, getattr(isolated, name))
     database_url = f"sqlite:///{(tmp_path / 'test.db').as_posix()}"
     runtime = build_database_runtime(AppSettings(DATABASE_URL=database_url))
     prepare_db(runtime)

@@ -5,7 +5,7 @@ import json
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-import websockets
+from app.infra.market_data import streams
 
 from config import settings
 from utils.logger import logger
@@ -200,7 +200,7 @@ class BinanceMarketSnapshotService:
     ) -> None:
         while self._running:
             try:
-                async with websockets.connect(url, ping_interval=20, ping_timeout=20) as websocket:
+                async with streams.connect(url, ping_interval=20, ping_timeout=20) as websocket:
                     logger.info("Binance snapshot WebSocket connected: %s", label)
                     async for message in websocket:
                         payload = json.loads(message)

@@ -1,0 +1,326 @@
+[
+  {
+    "name": "equal weight",
+    "now": "2026-11-01T00:00:00+00:00",
+    "assets": [
+      {
+        "symbol": "BTC",
+        "units": 8,
+        "currentPrice": 10,
+        "targetWeight": 0,
+        "priceValidUntil": "2026-11-02T00:00:00Z"
+      },
+      {
+        "symbol": "ETH",
+        "units": 2,
+        "currentPrice": 10,
+        "targetWeight": 0,
+        "priceValidUntil": "2026-11-02T00:00:00Z"
+      }
+    ],
+    "totalValue": 100,
+    "targetWeights": [
+      0.5,
+      0.5
+    ],
+    "currentWeights": [
+      0.8,
+      0.2
+    ],
+    "complete": true,
+    "equalWeight": true,
+    "requireFresh": true
+  },
+  {
+    "name": "explicit weight",
+    "now": "2026-11-01T00:00:00+00:00",
+    "assets": [
+      {
+        "symbol": "BTC",
+        "units": 8,
+        "currentPrice": 10,
+        "targetWeight": 50,
+        "priceValidUntil": "2026-11-02T00:00:00Z"
+      },
+      {
+        "symbol": "ETH",
+        "units": 2,
+        "currentPrice": 10,
+        "targetWeight": 50,
+        "priceValidUntil": "2026-11-02T00:00:00Z"
+      }
+    ],
+    "totalValue": 100,
+    "targetWeights": [
+      0.5,
+      0.5
+    ],
+    "currentWeights": [
+      0.8,
+      0.2
+    ],
+    "complete": true,
+    "equalWeight": false,
+    "requireFresh": true
+  },
+  {
+    "name": "expired held quote",
+    "now": "2026-11-01T00:00:00+00:00",
+    "assets": [
+      {
+        "symbol": "BTC",
+        "units": 8,
+        "currentPrice": 10,
+        "targetWeight": 50,
+        "priceValidUntil": "2000-01-01T00:00:00Z"
+      },
+      {
+        "symbol": "ETH",
+        "units": 2,
+        "currentPrice": 10,
+        "targetWeight": 50,
+        "priceValidUntil": "2026-11-02T00:00:00Z"
+      }
+    ],
+    "totalValue": 20,
+    "targetWeights": [
+      0.5,
+      0.5
+    ],
+    "currentWeights": [
+      0,
+      1
+    ],
+    "complete": false,
+    "equalWeight": false,
+    "requireFresh": true
+  },
+  {
+    "name": "missing held price",
+    "now": "2026-11-01T00:00:00+00:00",
+    "assets": [
+      {
+        "symbol": "BTC",
+        "units": 1,
+        "currentPrice": 0,
+        "targetWeight": 50,
+        "priceValidUntil": "2026-11-02T00:00:00Z"
+      },
+      {
+        "symbol": "USD",
+        "units": 100,
+        "currentPrice": 0,
+        "targetWeight": 50,
+        "priceValidUntil": "2026-11-02T00:00:00Z"
+      }
+    ],
+    "totalValue": 100,
+    "targetWeights": [
+      0.5,
+      0.5
+    ],
+    "currentWeights": [
+      0,
+      1
+    ],
+    "complete": false,
+    "equalWeight": false,
+    "requireFresh": true
+  },
+  {
+    "name": "zero unpriced holding",
+    "now": "2026-11-01T00:00:00+00:00",
+    "assets": [
+      {
+        "symbol": "BTC",
+        "units": 0,
+        "currentPrice": 0,
+        "targetWeight": 50,
+        "priceValidUntil": "2026-11-02T00:00:00Z"
+      },
+      {
+        "symbol": "USD",
+        "units": 100,
+        "currentPrice": 0,
+        "targetWeight": 50,
+        "priceValidUntil": "2026-11-02T00:00:00Z"
+      }
+    ],
+    "totalValue": 100,
+    "targetWeights": [
+      0.5,
+      0.5
+    ],
+    "currentWeights": [
+      0,
+      1
+    ],
+    "complete": true,
+    "equalWeight": false,
+    "requireFresh": true
+  },
+  {
+    "name": "cash synthetic price",
+    "now": "2026-11-01T00:00:00+00:00",
+    "assets": [
+      {
+        "symbol": "USD",
+        "units": 80,
+        "currentPrice": 0,
+        "targetWeight": 80,
+        "priceValidUntil": null
+      },
+      {
+        "symbol": "USDT",
+        "units": 20,
+        "currentPrice": 0,
+        "targetWeight": 20,
+        "priceValidUntil": null
+      }
+    ],
+    "totalValue": 100,
+    "targetWeights": [
+      0.8,
+      0.2
+    ],
+    "currentWeights": [
+      0.8,
+      0.2
+    ],
+    "complete": true,
+    "equalWeight": false,
+    "requireFresh": true
+  },
+  {
+    "name": "empty portfolio",
+    "now": "2026-11-01T00:00:00+00:00",
+    "assets": [],
+    "totalValue": 0,
+    "targetWeights": [],
+    "currentWeights": [],
+    "complete": true,
+    "equalWeight": false,
+    "requireFresh": true
+  },
+  {
+    "name": "no capital",
+    "now": "2026-11-01T00:00:00+00:00",
+    "assets": [
+      {
+        "symbol": "BTC",
+        "units": 0,
+        "currentPrice": 0,
+        "targetWeight": 100,
+        "priceValidUntil": "2026-11-02T00:00:00Z"
+      }
+    ],
+    "totalValue": 0,
+    "targetWeights": [
+      1
+    ],
+    "currentWeights": [
+      0
+    ],
+    "complete": true,
+    "equalWeight": false,
+    "requireFresh": true
+  },
+  {
+    "name": "future observation",
+    "now": "2026-11-01T00:00:00+00:00",
+    "assets": [
+      {
+        "symbol": "BTC",
+        "units": 1,
+        "currentPrice": 10,
+        "targetWeight": 100,
+        "priceValidUntil": "2026-11-02T00:00:00Z",
+        "priceObservedAt": "2026-11-01T00:00:06Z"
+      }
+    ],
+    "totalValue": 0,
+    "targetWeights": [
+      1
+    ],
+    "currentWeights": [
+      0
+    ],
+    "complete": false,
+    "equalWeight": false,
+    "requireFresh": true
+  },
+  {
+    "name": "historical preview",
+    "now": "2026-11-01T00:00:00+00:00",
+    "assets": [
+      {
+        "symbol": "BTC",
+        "units": 1,
+        "currentPrice": 10,
+        "targetWeight": 100,
+        "priceValidUntil": "2000-01-01T00:00:00Z"
+      }
+    ],
+    "totalValue": 10,
+    "targetWeights": [
+      1
+    ],
+    "currentWeights": [
+      1
+    ],
+    "complete": true,
+    "equalWeight": false,
+    "requireFresh": false
+  },
+  {
+    "name": "fractional currency",
+    "now": "2026-11-01T00:00:00+00:00",
+    "assets": [
+      {
+        "symbol": "BTC",
+        "units": 1,
+        "currentPrice": 0.125,
+        "targetWeight": 100,
+        "priceValidUntil": "2026-11-02T00:00:00Z"
+      }
+    ],
+    "totalValue": 0.13,
+    "targetWeights": [
+      1
+    ],
+    "currentWeights": [
+      1
+    ],
+    "complete": true,
+    "equalWeight": false,
+    "requireFresh": true
+  },
+  {
+    "name": "empty editor row",
+    "now": "2026-11-01T00:00:00+00:00",
+    "assets": [
+      {
+        "symbol": "",
+        "units": 0,
+        "currentPrice": 0,
+        "targetWeight": 0
+      },
+      {
+        "symbol": "USD",
+        "units": 100,
+        "currentPrice": 1,
+        "targetWeight": 0
+      }
+    ],
+    "totalValue": 100,
+    "targetWeights": [
+      1
+    ],
+    "currentWeights": [
+      1
+    ],
+    "complete": true,
+    "equalWeight": true,
+    "requireFresh": true
+  }
+]

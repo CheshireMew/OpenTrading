@@ -1,0 +1,108 @@
+import json
+from app.infra.research_files import file_hash, relocated_project_path
+from app.application.research_result_ports import ResultIndexPort
+from app.services.research_result_entries import legacy_entries, legacy_identity, make_entry, legacy_metadata, identity
+
+
+class ManifestImporter:
+    def __init__(self, index: ResultIndexPort):
+        self.index = index
+
+    def reset_manifest(self, path, max_json_bytes):
+        """Withdraw old declarations before checking a changed context map."""
+        with self.index.transaction() as db:
+            ids = db.source_results(str(path.resolve()))
+            targets = [(p, t) for rid in ids for p, t, _ in db.references(rid, exclude_source=str(path.resolve()))]
+            for rid in ids:
+                db.discard(rid, legacy_only=True)
+                db.forget_result_references(rid)
+            # Restore only context present in the source itself. If it is no
+            # longer a recognizable result it stays out of the ranking.
+            for name, pointer in targets:
+                target = relocated_project_path(name)
+                if not target.is_file() or target.stat().st_size > max_json_bytes:
+                    continue
+                try:
+                    document = json.loads(target.read_text(encoding="utf-8-sig"))
+                    for item in legacy_entries(document):
+                        if item["pointer"] == pointer:
+                            rid = legacy_identity(item, name)
+                            entry = make_entry(
+                                rid,
+                                item["config"],
+                                item["report"],
+                                item["metadata"],
+                                "legacy",
+                                item["label"],
+                                family=item["family"],
+                            )
+                            db.put(entry)
+                            db.link(name, pointer, rid, file_hash(target))
+                except (OSError, ValueError, TypeError):
+                    continue
+
+    def import_manifest(self, path, document, max_json_bytes):
+        """A small, reviewable map can connect old report files to saved plans.
+
+        It cannot supply a report or invent replay evidence. Every input file is
+        hash checked; the declared context remains distinct from engine metadata.
+        """
+        source = str(path.resolve())
+        digest = file_hash(path)
+        entries = []
+
+        def read_pointer(node, pointer):
+            for part in pointer.strip("/").split("/") if pointer.strip("/") else []:
+                part = part.replace("~1", "/").replace("~0", "~")
+                node = node[int(part)] if isinstance(node, list) else node[part]
+            return node
+
+        for i, item in enumerate(document.get("entries", [])):
+            target = (path.parent / item["source"]["path"]).resolve(strict=True)
+            if target.stat().st_size > max_json_bytes:
+                raise ValueError(f"来源超过摘要读取上限：{target}")
+            actual_hash = file_hash(target)
+            if actual_hash != item["source"]["sha256"]:
+                raise ValueError(f"来源已变化，请重新核对映射：{target}")
+            for evidence in item.get("context_sources", []):
+                evidence_path = (path.parent / evidence["path"]).resolve(strict=True)
+                if file_hash(evidence_path) != evidence["sha256"]:
+                    raise ValueError(f"上下文证据已变化：{evidence_path}")
+            if not item.get("context_sources"):
+                raise ValueError("上下文映射必须提供原计划或规则文件及其校验值")
+            raw = json.loads(target.read_text(encoding="utf-8-sig"))
+            pointer = item["source"].get("pointer", "/")
+            owner = read_pointer(raw, pointer)
+            report = owner.get("report", owner)
+            if not all(k in report for k in ("return_pct", "total_trades", "initial_cash", "final_equity")):
+                raise ValueError("映射必须指向实际回测摘要，不能使用预期收益或事后筛选统计")
+            config = {**owner.get("config", {}), **item.get("config", {})}
+            for key, value in owner.get("config", {}).items():
+                if key in item.get("config", {}) and value != item["config"][key]:
+                    raise ValueError(f"映射与报告原配置冲突：{key}")
+            with self.index.transaction() as db:
+                indexed = db.source_result(str(target), pointer)
+            rid = (
+                indexed
+                if indexed and indexed.startswith("legacy:")
+                else "legacy:" + identity([str(target), pointer])[:24]
+            )
+            entry = make_entry(
+                rid,
+                config,
+                report,
+                legacy_metadata(owner),
+                "legacy",
+                item.get("label") or owner.get("name") or pointer,
+                family=item.get("family"),
+            )
+            entry["context_note"] = item.get("note", "配置由独立旧计划关联；缺失执行证据仍保留为未知。")
+            entries.append((entry, target, pointer, actual_hash, i))
+        with self.index.transaction() as db:
+            # A changed map never leaves its previous annotations behind.
+            db.forget_source(source)
+            for entry, target, pointer, actual_hash, i in entries:
+                db.put(entry)
+                db.link(str(target), pointer, entry["id"], actual_hash)
+                db.link(source, f"/entries/{i}", entry["id"], digest)
+        return len(entries)

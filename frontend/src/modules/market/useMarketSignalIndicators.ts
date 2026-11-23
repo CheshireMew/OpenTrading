@@ -132,6 +132,7 @@ export function useMarketSignalIndicators(days = 365, changeDays = 30) {
   const populatedGroupCount = computed(() => groups.value.filter((group) => group.cards.length > 0).length)
 
   return {
+    changeDays,
     loading,
     error,
     groups,

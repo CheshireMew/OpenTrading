@@ -3,17 +3,12 @@ import { useI18n } from 'vue-i18n'
 import type { Chart } from 'chart.js'
 
 import { createPersistentPageSnapshot, PAGE_SNAPSHOT_KEYS } from '@/composables/pageSnapshot'
+import { useDateTime } from '@/composables/useDateTime'
 import { useMoney } from '@/composables/useMoney'
 import { useTheme } from '@/composables/useTheme'
 import { formatMoney as formatDisplayMoney } from '@/modules/format'
 import { loadHalvingChartRuntime } from './halvingChartRuntime'
-import {
-  buildHalvingChartConfig,
-  LAST_HALVING_DATE,
-  NEXT_HALVING_DATE_TEXT,
-  NEXT_HALVING_ESTIMATE,
-  ONE_DAY_MS,
-} from './halvingTimeline'
+import { buildHalvingChartConfig, buildHalvingTimeline, daysUntil } from './halvingTimeline'
 import { buildHalvingSnapshot, createDefaultHalvingSnapshot, normalizeHalvingSnapshot } from './pageSnapshots'
 import { useHalvingMarketData } from './useHalvingMarketData'
 
@@ -24,6 +19,7 @@ export function useHalvingPage() {
   const { t } = useI18n()
   const translate = (key: string, params?: Record<string, unknown>) => String(t(key, params ?? {}))
   const { theme } = useTheme()
+  const { formatDate } = useDateTime()
   const { displayCurrency, toDisplayAmount, formatMoney } = useMoney()
   const marketData = useHalvingMarketData(translate)
   const snapshot = createPersistentPageSnapshot(
@@ -32,18 +28,26 @@ export function useHalvingPage() {
     createDefaultHalvingSnapshot(),
   )
   const chartCanvas = ref<HTMLCanvasElement | null>(null)
+  const chartHeight = ref<number>()
   const showPhases = ref(snapshot.initial.showPhases)
   const scaleType = ref<'logarithmic' | 'linear'>(snapshot.initial.scaleType)
   const compactChart = ref(false)
+  const now = ref(Date.now())
+  let clockTimer: number | null = null
   let chartInstance: Chart | null = null
   let renderToken = 0
   let resizeObserver: ResizeObserver | null = null
+  let resizeFrame = 0
 
-  const nextHalvingDate = computed(() => NEXT_HALVING_DATE_TEXT)
-  const daysToHalving = computed(() => Math.ceil((NEXT_HALVING_ESTIMATE.getTime() - Date.now()) / ONE_DAY_MS))
+  const timeline = computed(() => buildHalvingTimeline(marketData.halvingEstimate.value))
+  const lastHalvingDate = computed(() => new Date(timeline.value.last.timestamp).toISOString().slice(0, 10))
+  const nextHalvingDate = computed(() => timeline.value.next ? formatDate(timeline.value.next.timestamp) : null)
+  const daysToHalving = computed(() => timeline.value.next ? daysUntil(timeline.value.next.timestamp, now.value) : null)
   const cycleProgress = computed(() => {
-    const totalDuration = NEXT_HALVING_ESTIMATE.getTime() - LAST_HALVING_DATE.getTime()
-    const elapsed = Date.now() - LAST_HALVING_DATE.getTime()
+    const { last, next } = timeline.value
+    if (!next) return null
+    const totalDuration = next.timestamp - last.timestamp
+    const elapsed = now.value - last.timestamp
     return Math.min(Math.max((elapsed / totalDuration) * 100, 0), 100).toFixed(1)
   })
   const seriesData = computed(() => marketData.historyData.value.map((row) => ({
@@ -63,6 +67,8 @@ export function useHalvingPage() {
     if (!context) return
 
     const config = buildHalvingChartConfig({
+      timeline: timeline.value,
+      now: now.value,
       t: translate,
       isDark: theme.value === 'dark',
       showPhases: showPhases.value,
@@ -80,14 +86,33 @@ export function useHalvingPage() {
     chartInstance.update('none')
   }
 
-  watch([seriesData, showPhases, scaleType, theme, displayCurrency, compactChart], () => { void syncChart() }, { deep: true })
+  watch([seriesData, showPhases, scaleType, theme, displayCurrency, compactChart, timeline, now], () => {
+    void syncChart()
+  }, { deep: true })
   onMounted(() => {
+    clockTimer = window.setInterval(() => { now.value = Date.now() }, 60_000)
     const container = chartCanvas.value?.parentElement
     if (container) {
-      const updateCompact = () => { compactChart.value = container.clientWidth < 640 }
-      updateCompact()
-      resizeObserver = new ResizeObserver(updateCompact)
+      const scrollport = container.closest<HTMLElement>('.app-main')
+      const page = container.closest<HTMLElement>('.app-page-inner-wide')
+      const updateSize = () => {
+        cancelAnimationFrame(resizeFrame)
+        resizeFrame = requestAnimationFrame(() => {
+          compactChart.value = container.clientWidth < 640
+          if (!scrollport || !page || !container.clientWidth) return
+          const top = container.getBoundingClientRect().top - scrollport.getBoundingClientRect().top + scrollport.scrollTop
+          const panelStyle = getComputedStyle(container.parentElement!)
+          const bottom = parseFloat(panelStyle.paddingBottom) + parseFloat(panelStyle.borderBottomWidth) + parseFloat(getComputedStyle(page).paddingBottom)
+          const preferred = window.innerWidth >= 1024 ? 600 : window.innerWidth >= 640 ? 520 : 420
+          // Keep the chart readable when the content above it fills a small screen.
+          chartHeight.value = Math.floor(Math.min(preferred, Math.max(260, scrollport.clientHeight - top - bottom)))
+        })
+      }
+      updateSize()
+      resizeObserver = new ResizeObserver(updateSize)
       resizeObserver.observe(container)
+      if (scrollport) resizeObserver.observe(scrollport)
+      if (page) resizeObserver.observe(page)
     }
     void loadHalvingChartRuntime().then(syncChart)
   })
@@ -96,8 +121,10 @@ export function useHalvingPage() {
     () => buildHalvingSnapshot({ showPhases: showPhases.value, scaleType: scaleType.value }),
   )
   onBeforeUnmount(() => {
+    if (clockTimer !== null) window.clearInterval(clockTimer)
     renderToken += 1
     resizeObserver?.disconnect()
+    cancelAnimationFrame(resizeFrame)
     resizeObserver = null
     chartInstance?.destroy()
     chartInstance = null
@@ -108,13 +135,16 @@ export function useHalvingPage() {
     error: marketData.error,
     retry: marketData.retry,
     chartCanvas,
+    chartHeight,
     currentPrice: marketData.currentPrice,
     currentPriceUpdatedAt: marketData.currentPriceUpdatedAt,
     showPhases,
     scaleType,
+    halvingEstimateFailed: marketData.halvingEstimateFailed,
+    lastHalvingDate,
     nextHalvingDate,
     daysToHalving,
     cycleProgress,
-    formatPrice: (price: number) => formatDisplayMoney(price, 'USDT', { maximumFractionDigits: 2 }),
+    formatPrice: (price: number | null) => price === null ? '—' : formatDisplayMoney(price, 'USDT', { maximumFractionDigits: 2 }),
   }
 }

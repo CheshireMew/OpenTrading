@@ -5,6 +5,9 @@ import types
 from datetime import datetime, timezone
 
 import pandas as pd
+import pytest
+from datetime import date
+from app.domain.market.session_history import daily_session_prices, SessionHistoryCoverage
 
 from app.domain.market.constants import KLINE_SYMBOL_MAX_LENGTH
 from app.domain.market.index_catalog import INDEX_CATALOG, get_index_instrument, get_supported_index_symbols
@@ -74,6 +77,36 @@ class FakeResponse:
 
     def json(self):
         return self._payload
+
+
+def test_missing_trading_day_is_not_a_holiday():
+    def row(day):
+        return [int(datetime(2024, 1, day, tzinfo=timezone.utc).timestamp() * 1000), 100, 100, 100, 100, 10]
+    source = FakeIndexHistorySources({})
+    result = IndexDataService(FakeKlineStore([row(2), row(4), row(5)]), source).get_history(
+        symbol="US_SP500", timeframe="1d", start_date="2024-01-01", end_date="2024-01-07")
+    assert result.coverage.complete is False
+    assert result.coverage.missing_sessions == ["2024-01-03"]
+    assert result.coverage.non_trading_dates == ["2024-01-01", "2024-01-06", "2024-01-07"]
+    assert source.calls == [("2024-01-03", "2024-01-03")]
+
+
+def test_verified_weekend_can_be_filled_but_missing_session_cannot():
+    coverage = SessionHistoryCoverage(complete=True, calendar="XNYS", start_date="2024-01-05", end_date="2024-01-08",
+        expected_sessions=["2024-01-05", "2024-01-08"], non_trading_dates=["2024-01-06", "2024-01-07"], error=None)
+    result = daily_session_prices({"2024-01-05": 100, "2024-01-08": 105}, coverage, date(2024, 1, 5), date(2024, 1, 8))
+    assert list(result.values()) == [100, 100, 100, 105]
+    with pytest.raises(ValueError, match="2024-01-08"):
+        daily_session_prices({"2024-01-05": 100}, coverage, date(2024, 1, 5), date(2024, 1, 8))
+
+
+def test_holiday_only_calendar_range_is_complete_without_fetching():
+    source = FakeIndexHistorySources({})
+    result = IndexDataService(FakeKlineStore(), source).get_history(
+        symbol="CN_CSI300", timeframe="1d", start_date="2026-10-01", end_date="2026-10-07")
+    assert result.coverage.complete and not result.coverage.expected_sessions
+    assert len(result.coverage.non_trading_dates) == 7
+    assert source.calls == []
 
 
 def test_benchmark_currency_history_remains_available_without_fred(monkeypatch):
@@ -183,8 +216,8 @@ def test_sina_hk_history_is_normalized_and_cached(monkeypatch):
 
     fake_akshare = types.SimpleNamespace(
         stock_hk_index_daily_sina=lambda symbol: pd.DataFrame([
-            {"date": "2024-01-01", "open": 10, "high": 12, "low": 9, "close": 11, "volume": 1000},
-            {"date": "2024-01-02", "open": 11, "high": 13, "low": 10, "close": 12, "volume": 1100},
+            {"date": "2024-01-02", "open": 10, "high": 12, "low": 9, "close": 11, "volume": 1000},
+            {"date": "2024-01-03", "open": 11, "high": 13, "low": 10, "close": 12, "volume": 1100},
         ])
     )
     monkeypatch.setitem(sys.modules, "akshare", fake_akshare)
@@ -200,7 +233,7 @@ def test_sina_hk_history_is_normalized_and_cached(monkeypatch):
     assert result.is_close_only is False
     assert result.count == 2
     assert ohlcv_row(result.data[0]) == [
-        int(datetime(2024, 1, 1, tzinfo=timezone.utc).timestamp() * 1000),
+        int(datetime(2024, 1, 2, tzinfo=timezone.utc).timestamp() * 1000),
         10.0,
         12.0,
         9.0,
@@ -323,7 +356,7 @@ def test_close_only_history_is_normalized_and_cached(monkeypatch):
         0.0,
     ]
     history_sources = FakeIndexHistorySources({
-        ("2024-01-01", "2024-01-10"): [close_only_row],
+        ("2024-01-02", "2024-01-10"): [close_only_row],
     })
     service = IndexDataService(kline_store=FakeKlineStore(), history_sources=history_sources)
 
@@ -444,3 +477,48 @@ def test_index_history_repairs_middle_gap():
         missing_row[0],
         cached_rows[1][0],
     ]
+
+
+def test_verified_weekends_do_not_trigger_redundant_hydration():
+    def row(day):
+        return [int(datetime(2024, 1, day, tzinfo=timezone.utc).timestamp() * 1000), 10, 11, 9, 10, 0]
+
+    sources = FakeIndexHistorySources({("2024-01-06", "2024-01-14"): []})
+    service = IndexDataService(kline_store=FakeKlineStore([row(5), row(8), row(9), row(10), row(11), row(12), row(15)]), history_sources=sources)
+    result = service.get_history(symbol="HK_HSTECH", timeframe="1d", start_date="2024-01-05", end_date="2024-01-15")
+    assert sources.calls == []
+    assert result.coverage.complete
+    assert result.count == 7
+
+
+def test_open_ended_index_history_excludes_the_unclosed_daily_bar():
+    today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    day = today.strftime("%Y-%m-%d")
+    stamp = int(today.timestamp() * 1000)
+    updated = [stamp, 10, 15, 9, 14, 1]
+    sources = FakeIndexHistorySources({(day, day): [updated]})
+    service = IndexDataService(kline_store=FakeKlineStore([[stamp, 10, 11, 9, 10, 0]]), history_sources=sources)
+    result = service.get_history(symbol="HK_HSTECH", timeframe="1d", start_date=day)
+    assert sources.calls == []
+    assert result.data == []
+
+
+def test_hstech_prefers_longer_index_history_and_keeps_sina_fallback(monkeypatch):
+    from app.services.market.index_history_contracts import IndexFetchResult
+    from app.services.market.index_history_http import EastmoneyIndexHistoryProvider
+    from app.services.market.index_history_sina import SinaIndexHistoryProvider
+
+    calls = []
+    def eastmoney(self, *args):
+        calls.append("eastmoney")
+        return IndexFetchResult(data=[], source="eastmoney")
+    def sina(self, *args):
+        calls.append("sina")
+        return IndexFetchResult(data=[[1, 10, 11, 9, 10, 0]], source="sina_hk")
+    monkeypatch.setattr(EastmoneyIndexHistoryProvider, "fetch_history", eastmoney)
+    monkeypatch.setattr(SinaIndexHistoryProvider, "fetch_hk_history", sina)
+    sources = IndexHistorySources()
+    now = datetime.now(timezone.utc)
+    result = sources.fetch_history(INDEX_CATALOG["HK_HSTECH"], now, now)
+    assert calls == ["eastmoney", "sina"]
+    assert result.source == "sina_hk"

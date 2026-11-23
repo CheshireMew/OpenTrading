@@ -6,8 +6,8 @@ if (false) {
   // @ts-expect-error dca_simulate requires its generated request body.
   void apiPost('dca_simulate')
 
-  // @ts-expect-error restore_portfolio requires its generated portfolio_id path value.
-  void apiPost('restore_portfolio', { expectedRevision: 1 })
+  // @ts-expect-error restore_research_watchlist requires its generated watchlist_id path value.
+  void apiPost('restore_research_watchlist', { expectedVersion: 1 })
 
-  void apiPost('restore_portfolio', { expectedRevision: 1 }, { path: { portfolio_id: 'core' } })
+  void apiPost('restore_research_watchlist', { expectedVersion: 1 }, { path: { watchlist_id: 'list' } })
 }

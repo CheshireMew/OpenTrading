@@ -12,8 +12,8 @@
 .equities-page .eq-layout-picker { display: inline-flex; border: 1px solid var(--ui-borderStrong); border-radius: 6px; padding: 3px; gap: 2px; }
 .equities-page .eq-layout-picker button { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 32px; padding: 5px 10px; border-radius: 3px; font-size: 12px; white-space: nowrap; color: var(--ui-muted); }
 .equities-page .eq-layout-picker button:hover { background: var(--ui-hover); color: var(--ui-title); }
-.equities-page .eq-layout-picker button[aria-pressed=true] { background: var(--ui-accent); color: var(--ui-panel); }
-html.dark .equities-page .eq-layout-picker button[aria-pressed=true] { color: #09231f; }
+.equities-page .eq-layout-picker button[aria-pressed=true] { background: var(--ui-accent); color: var(--ui-onAccent); }
+html.dark .equities-page .eq-layout-picker button[aria-pressed=true] { color: var(--ui-onAccent); }
 .equities-page :is(.eq-layout-picker, .eq-refresh, .eq-control, .eq-search, .eq-stock-trigger, .eq-list-item) svg { width: 17px; height: 17px; flex: 0 0 auto; }
 .equities-page :is(.eq-refresh, .eq-control) { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 7px 12px; border: 1px solid var(--ui-borderStrong); border-radius: 5px; font-size: 12px; background: var(--ui-toolbar); color: var(--ui-text); }
 .equities-page button:disabled { color: var(--ui-faint); opacity: .65; }

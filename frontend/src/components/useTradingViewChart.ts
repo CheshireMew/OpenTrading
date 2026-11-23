@@ -107,6 +107,14 @@ export const useTradingViewChart = (
   let volumeSeries: ISeriesApi<'Histogram'> | null = null
   let strategyMarkerPlugin: ISeriesMarkersPluginApi<Time> | null = null
   let resizeObserver: ResizeObserver | null = null
+  let visibleRange: { from: number; to: number } | null = null
+  let resizing = false
+  let resizeFrame = 0
+  const isVisible = () => !!chartContainer.value?.clientWidth && !!chartContainer.value?.clientHeight
+  const setVisibleLogicalRange = (range: { from: number; to: number }) => {
+    visibleRange = { ...range }
+    if (isVisible()) chart?.timeScale().setVisibleLogicalRange(range)
+  }
 
   const createMainSeries = (): TradingViewMainSeries | null => {
     if (!chart) return null
@@ -209,7 +217,7 @@ export const useTradingViewChart = (
       height: container.clientHeight,
       layout: { background: { color: props.colors.bg }, textColor: props.colors.text },
       grid: { vertLines: { color: props.colors.grid }, horzLines: { color: props.colors.grid } },
-      timeScale: { borderColor: props.colors.grid, timeVisible: true },
+      timeScale: { borderColor: props.colors.grid, timeVisible: true, lockVisibleTimeRangeOnResize: true },
       rightPriceScale: { borderColor: props.colors.grid },
     })
     mainSeries = createMainSeries()
@@ -242,17 +250,31 @@ export const useTradingViewChart = (
       resizeObserver = new ResizeObserver((entries) => {
         if (!entries.length || entries[0].target !== chartContainer.value || !chart) return
         const rect = entries[0].contentRect
+        // A v-show panel has no viewport. Resizing it to zero changes its time
+        // range and can feed that artificial range back into linked charts.
+        if (rect.width <= 0 || rect.height <= 0) return
+        resizing = true
+        cancelAnimationFrame(resizeFrame)
         chart.applyOptions({ width: rect.width, height: rect.height })
+        // A chart created inside a hidden panel has no native logical range.
+        // Restore its requested viewport after it first gains real dimensions.
+        if (visibleRange) chart.timeScale().setVisibleLogicalRange(visibleRange)
+        resizeFrame = requestAnimationFrame(() => {
+          resizeFrame = requestAnimationFrame(() => { resizing = false })
+        })
       })
       resizeObserver.observe(container)
     }
     chart?.timeScale().subscribeVisibleLogicalRangeChange(() => {
       const logicalRange = chart?.timeScale().getVisibleLogicalRange()
+      if (resizing || !isVisible()) return
+      if (logicalRange) visibleRange = { ...logicalRange }
       if (logicalRange && logicalRange.from < 10) emit('load-more')
     })
   })
 
   onUnmounted(() => {
+    cancelAnimationFrame(resizeFrame)
     strategyMarkerPlugin?.detach()
     strategyMarkerPlugin = null
     chart?.remove()
@@ -272,5 +294,8 @@ export const useTradingViewChart = (
     chartContainer,
     chartPriceText,
     getChart: () => chart,
+    isVisible,
+    isResizing: () => resizing,
+    setVisibleLogicalRange,
   }
 }

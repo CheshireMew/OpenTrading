@@ -27,7 +27,7 @@ def prepare_db(database_runtime: DatabaseRuntime) -> None:
     _version_unmanaged_database(alembic_config, database_runtime)
     command.upgrade(alembic_config, "head")
     _prepared_urls.add(database_url)
-    db_logger.info(f"数据库迁移完成: {database_url}")
+    db_logger.info("数据库迁移完成: dialect=%s, revision=head", database_runtime.engine.dialect.name)
 
 
 def verify_database_schema(database_runtime: DatabaseRuntime) -> None:
@@ -42,7 +42,7 @@ def verify_database_schema(database_runtime: DatabaseRuntime) -> None:
     with database_runtime.engine.connect() as connection:
         migration_context = MigrationContext.configure(
             connection,
-            opts={"compare_type": True},
+            opts={"compare_type": True, "include_object": include_app_schema_object},
         )
         current = migration_context.get_current_revision()
         diffs = _relevant_schema_diffs(
@@ -103,6 +103,8 @@ def _alembic_config(database_url: str):
     config.set_main_option("script_location", str(BASE_DIR / "alembic"))
     config.set_main_option("sqlalchemy.url", database_url)
     config.attributes["use_configured_database_url"] = True
+    # Embedded migration must preserve the launcher's handlers and application loggers.
+    config.attributes["configure_logger"] = False
     return config
 
 
@@ -118,16 +120,22 @@ def _version_unmanaged_database(alembic_config, database_runtime: DatabaseRuntim
 
 
 def _assert_model_tables_present(database_runtime: DatabaseRuntime) -> None:
+    from signal_lab.storage.sql import TABLES
+
     inspector = inspect(database_runtime.engine)
-    missing = [
-        table.name
-        for table in Base.metadata.sorted_tables
-        if table.name not in inspector.get_table_names()
-    ]
+    expected = set(Base.metadata.tables) | {f"signal_lab_{name}" for name in TABLES}
+    missing = sorted(expected - set(inspector.get_table_names()))
     if missing:
         raise RuntimeError(
             f"数据库表缺失: {', '.join(missing)}. 请先运行 python -m scripts.prepare_db"
         )
+
+
+def include_app_schema_object(obj, name, type_, reflected, compare_to) -> bool:
+    from signal_lab.storage.sql import owns_table
+
+    # Signal Lab's prefixed tables use their own versioned SQL contract.
+    return type_ != "table" or not reflected or not owns_table(name)
 
 
 if __name__ == "__main__":

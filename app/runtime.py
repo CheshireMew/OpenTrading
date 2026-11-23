@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Literal
 from config import settings
 
 if TYPE_CHECKING:
+    from app.services.signal_lab_runtime import SignalLabRuntime
     from app.infra.cache import RedisService
     from app.infra.db.database import DatabaseRuntime
     from app.infra.persistence.market.binance_market_research_store import BinanceMarketResearchStore
@@ -37,8 +38,6 @@ if TYPE_CHECKING:
     from app.services.tools.app_service import ToolsAppService
     from app.services.tools.dca_service import DCAService
     from app.services.tools.pair_compare_service import PairCompareService
-    from app.services.tools.portfolio_service import PortfolioService
-    from app.services.tools.portfolio_analytics_service import PortfolioAnalyticsService
     from app.services.research_service import ResearchService
     from app.services.research_alert_runtime import ResearchAlertRuntime
     from app.services.trade_signal_service import TradeSignalService
@@ -46,7 +45,6 @@ if TYPE_CHECKING:
     from app.services.asset_research_service import AssetResearchService
     from app.services.market_screener_service import MarketScreenerService
     from app.services.data_health_service import DataHealthService
-    from app.services.research_report_service import ResearchReportService
 
 
 RuntimeRole = Literal["all", "api", "background"]
@@ -72,6 +70,7 @@ class InfraRuntimeServices:
     database_runtime: "DatabaseRuntime"
     cache_service: "RedisService"
     runtime_status: "RuntimeStatusRepository | None" = None
+    signal_lab: "SignalLabRuntime | None" = None
 
 
 @dataclass(slots=True)
@@ -114,8 +113,6 @@ class ToolRuntimeServices:
     dca: "DCAService"
     pair_compare: "PairCompareService"
     app: "ToolsAppService"
-    portfolios: "PortfolioService"
-    portfolio_analytics: "PortfolioAnalyticsService | None" = None
 
 
 @dataclass(slots=True)
@@ -130,7 +127,7 @@ class ApiRuntimeServices:
     asset_research: "AssetResearchService | None" = None
     market_screeners: "MarketScreenerService | None" = None
     data_health: "DataHealthService | None" = None
-    research_reports: "ResearchReportService | None" = None
+    chart_workspace: object | None = None
 
 
 @dataclass(slots=True)
@@ -160,20 +157,32 @@ class AppRuntimeServices:
         if connect_cache is not None:
             await connect_cache()
         if self.api is not None:
+            from app.infra.executor import run_workspace
+            from app.services.chart_workspace_runtime import ChartWorkspaceRuntime
+
+            self.api.chart_workspace = await run_workspace(
+                lambda: ChartWorkspaceRuntime(
+                    self.api.market.binance_intel,
+                    self.api.market.indexes,
+                )
+            )
             await self.api.market.binance_intel.start()
             if self.api.research_alerts is not None:
-                await self.api.research_alerts.start()
+                await self.api.research_alerts.start(chart_market=self.api.chart_workspace.market)
             if self.api.trade_signal_evaluations is not None:
                 await self.api.trade_signal_evaluations.start()
 
     async def shutdown(self) -> None:
         close_actions = []
         if self.api is not None:
+            if self.api.research_alerts is not None:
+                await self.api.research_alerts.shutdown()
+            if self.api.chart_workspace is not None:
+                await self.api.chart_workspace.close()
+                self.api.chart_workspace = None
             close_actions.append(self.api.market.binance_intel.shutdown())
             if self.api.market.equity_catalog is not None:
                 close_actions.append(self.api.market.equity_catalog.aclose())
-            if self.api.research_alerts is not None:
-                close_actions.append(self.api.research_alerts.shutdown())
             if self.api.trade_signal_evaluations is not None:
                 close_actions.append(self.api.trade_signal_evaluations.shutdown())
             if self.api.system.llm_clients is not None:
@@ -212,6 +221,7 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
     from app.infra.persistence.market.indicator_repository import MarketIndicatorRepository
     from app.infra.persistence.runtime_status_repository import RuntimeStatusRepository
     from app.services.market.indicator_service import IndicatorService
+    from app.services.signal_lab_runtime import SignalLabRuntime
 
     database_runtime = build_database_runtime(settings)
     cache_service = build_cache_service(settings)
@@ -222,6 +232,7 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
         database_runtime=database_runtime,
         cache_service=cache_service,
         runtime_status=runtime_status,
+        signal_lab=SignalLabRuntime(database_runtime),
     )
     indicators = IndicatorRuntimeServices(
         repository=indicator_repository,
@@ -234,12 +245,10 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
         from app.infra.persistence.market.binance_market_research_store import BinanceMarketResearchStore
         from app.infra.persistence.market.kline_store import KlineStore
         from app.infra.persistence.sentiment_repository import SentimentRepository
-        from app.infra.persistence.portfolio_repository import PortfolioRepository
         from app.infra.persistence.research_repository import ResearchRepository
         from app.infra.persistence.trade_signal_repository import TradeSignalRepository
         from app.infra.persistence.market_screener_repository import MarketScreenerRepository
         from app.infra.persistence.data_health_repository import DataHealthRepository
-        from app.infra.persistence.research_report_repository import ResearchReportRepository
         from app.infra.db.schema_runtime import verify_database_schema
         from app.infra.llm_client import LLMClientFactory
         from app.services.currency_service import CurrencyRateService
@@ -262,8 +271,6 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
         from app.services.tools.app_service import ToolsAppService
         from app.services.tools.dca_service import DCAService
         from app.services.tools.pair_compare_service import PairCompareService
-        from app.services.tools.portfolio_service import PortfolioService
-        from app.services.tools.portfolio_analytics_service import PortfolioAnalyticsService
         from app.services.research_service import ResearchService
         from app.services.research_alert_runtime import ResearchAlertRuntime
         from app.services.trade_signal_service import TradeSignalService
@@ -271,7 +278,6 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
         from app.services.asset_research_service import AssetResearchService
         from app.services.market_screener_service import MarketScreenerService
         from app.services.data_health_service import DataHealthService
-        from app.services.research_report_service import ResearchReportService
 
         exchange_gateway = ExchangeGateway(exchange_id=settings.EXCHANGE_ID)
         kline_store = KlineStore(database_runtime=database_runtime)
@@ -338,20 +344,13 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
             pair_compare_service=pair_compare,
             cache_service=cache_service,
         )
-        portfolio_repository = PortfolioRepository(database_runtime)
         research_repository = ResearchRepository(database_runtime)
-        portfolio_service = PortfolioService(portfolio_repository)
-        portfolio_analytics_service = PortfolioAnalyticsService(
-            portfolio_service=portfolio_service,
-            market_query_service=market_query,
-            index_data_service=index_data,
-        )
         research_service = ResearchService(research_repository)
         research_alert_runtime = ResearchAlertRuntime(
-            research_repository=research_repository,
+            research_repository=research_repository.alerts,
             market_query_service=market_query,
             binance_market_service=binance_intel,
-            portfolio_repository=portfolio_repository,
+
         )
         trade_signal_service = TradeSignalService(trade_signal_repository)
         trade_signal_evaluation_runtime = TradeSignalEvaluationRuntime(
@@ -359,7 +358,7 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
             market_query_service=market_query,
         )
         asset_research_service = AssetResearchService(
-            research_repository=research_repository,
+            research_repository=research_repository.workbench,
             signal_repository=trade_signal_repository,
             market_query_service=market_query,
             index_data_service=index_data,
@@ -384,15 +383,7 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
             trade_signal_runtime=trade_signal_evaluation_runtime,
             cache_service=cache_service,
         )
-        research_report_service = ResearchReportService(
-            repository=ResearchReportRepository(database_runtime),
-            research_repository=research_repository,
-            signal_repository=trade_signal_repository,
-            portfolio_service=portfolio_service,
-            data_health_service=data_health_service,
-            asset_research_service=asset_research_service,
-            portfolio_analytics_service=portfolio_analytics_service,
-        )
+
         api_runtime = ApiRuntimeServices(
             system=SystemRuntimeServices(
                 currency_rates=currency_rates,
@@ -423,8 +414,8 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
                 dca=dca,
                 pair_compare=pair_compare,
                 app=tools_app,
-                portfolios=portfolio_service,
-                portfolio_analytics=portfolio_analytics_service,
+
+
             ),
             research=research_service,
             research_alerts=research_alert_runtime,
@@ -433,7 +424,7 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
             asset_research=asset_research_service,
             market_screeners=market_screener_service,
             data_health=data_health_service,
-            research_reports=research_report_service,
+
         )
 
     if runtime_role_has_target(resolved_role, "background"):

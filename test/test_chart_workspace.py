@@ -1,8 +1,6 @@
 import asyncio
 import json
 import subprocess
-from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 
@@ -11,6 +9,7 @@ from app.services.chart_workspace_store import ChartWorkspaceStore, WorkspaceCon
 from app.services.chart_workspace_market import close_boundary, ChartWorkspaceMarket
 from app.services.chart_workspace_runs import ChartPineRuns
 from app.main import create_app
+from app.infra.node_runtime import resolve_node
 
 
 def test_workspace_revisions_conflict_and_readonly(tmp_path):
@@ -149,7 +148,7 @@ if bar_index == 6
 def execute_worker(folder,payload):
     folder.mkdir(parents=True,exist_ok=True)
     (folder/'input.json').write_text(json.dumps(payload),encoding='utf-8')
-    result=subprocess.run([r'D:\Tools\NodeJS\node.exe',str(ROOT/'frontend/scripts/pine-workspace-worker.mjs'),str(folder)],
+    result=subprocess.run([resolve_node(),str(ROOT/'frontend/scripts/pine-workspace-worker.mjs'),str(folder)],
         capture_output=True,text=True,timeout=30)
     return result,json.loads((folder/('result.json' if result.returncode==0 else 'error.json')).read_text(encoding='utf-8'))
 
@@ -198,19 +197,84 @@ async def test_runs_complete_and_snapshot_rerun(tmp_path,monkeypatch):
             selected=[ChartBar.model_validate(b) for b in payload['bars'] if b['time'] >= kwargs.get('start',0)]
             return ChartBars(symbol=await self.resolve(''),timeframe='1m',bars=selected,source='fixture')
     runs=ChartPineRuns(store,Market())
-    first=runs.create(PineRunRequest.model_validate(payload['request']),'http://127.0.0.1:1')
+    first=await runs.create(PineRunRequest.model_validate(payload['request']),'http://127.0.0.1:1')
     await runs.tasks[first.id]
     assert runs.get(first.id).status=='completed',runs.get(first.id).error
     assert len(runs.get(first.id).provenance['engine_snapshot'])==64
     def changed_installation(_):
         raise AssertionError('Rerun must not select the current installed runtime')
     monkeypatch.setattr('app.services.chart_workspace_runs.freeze_engine',changed_installation)
-    second=runs.create(first.request,'http://127.0.0.1:1',frozen_from=first.id)
+    second=await runs.create(first.request,'http://127.0.0.1:1',frozen_from=first.id)
     await runs.tasks[second.id]
     assert runs.get(second.id).status=='completed',runs.get(second.id).error
     assert runs.get(second.id).provenance==runs.get(first.id).provenance
     assert not (tmp_path/'research').exists()
     await runs.close()
+
+
+@pytest.mark.asyncio
+async def test_report_streams_results_without_json_or_engine_snapshots(tmp_path, monkeypatch):
+    import sqlite3
+    payload = worker_input()
+    _, original = execute_worker(tmp_path / "reference", payload)
+    store = ChartWorkspaceStore(tmp_path / "workspace")
+    store.put("scripts", "test", WorkspaceWrite(name="S", data={"source": payload["source"]}))
+
+    class Market:
+        async def resolve(self, _):
+            return ChartSymbol.model_validate(payload["symbol"])
+
+        async def bars(self, *args, **kwargs):
+            return ChartBars(symbol=await self.resolve(""), timeframe="1m", source="fixture", bars=[
+                ChartBar.model_validate(row) for row in payload["bars"] if row["time"] >= kwargs.get("start", 0)])
+
+    monkeypatch.setattr("app.services.chart_workspace_runs.freeze_engine", lambda _: pytest.fail("普通回测不复制引擎"))
+    runs = ChartPineRuns(store, Market())
+    first = await runs.create(PineRunRequest.model_validate(payload["request"]), "http://127.0.0.1:1", recording="report")
+    try:
+        await runs.tasks[first.id]
+        saved = runs.get(first.id)
+        assert saved.status == "completed", saved.error
+        assert saved.summary == original["summary"]
+        assert saved.recording == "report"
+        for kind in ("trades", "equity", "open_trades", "warnings"):
+            assert runs.records(first.id, kind, 0, 100)["items"] == original[kind]
+        assert runs.records(first.id, "bars", 0, 100)["total"] == 0
+        assert runs.records(first.id, "orders", 0, 100)["total"] == 0
+        assert not (store.root / "engines").exists()
+        for name in ("input.json", "result.json", "series.json", "metadata.json"):
+            assert not (runs.folder(first.id) / name).exists()
+        with sqlite3.connect(store.path) as db:
+            assert db.execute("SELECT count(*) FROM revisions WHERE kind='runs'").fetchone()[0] == 0
+            assert db.execute("SELECT count(*) FROM revisions WHERE kind='scripts'").fetchone()[0] == 1
+        with pytest.raises(ValueError, match="仅保存回测报告"):
+            await runs.create(first.request, "http://127.0.0.1:1", frozen_from=first.id)
+    finally:
+        await runs.close()
+
+
+def test_report_sampling_keeps_equity_extremes_and_incomplete_stream_rolls_back(tmp_path):
+    from io import BytesIO
+    import sqlite3
+    from app.services.chart_workspace_records import PineRecordStore
+
+    rows = [{"time": i + 1, "equity": 1000 + i % 23} for i in range(5000)]
+    rows[234]["equity"], rows[345]["equity"] = 0, 5000
+    def frame(value):
+        return b"OPENTRADING_REPORT\t" + json.dumps(value).encode() + b"\n"
+    stream = frame({"kind": "equity", "items": rows})
+    store = PineRecordStore(tmp_path)
+    with pytest.raises(ValueError, match="完整报告"):
+        store.consume_report(BytesIO(stream))
+    with sqlite3.connect(store.path) as db:
+        assert db.execute("SELECT count(*) FROM records").fetchone()[0] == 0
+    store.consume_report(BytesIO(stream + frame({"kind": "summary", "summary": {}, "provenance": {}})))
+    sampled = store.sampled_equity(1000)
+    assert sampled["total"] == 5000 and len(sampled["items"]) <= 1000
+    assert sampled["items"][0] == rows[0] and sampled["items"][-1] == rows[-1]
+    assert min(row["equity"] for row in sampled["items"]) == 0
+    assert max(row["equity"] for row in sampled["items"]) == 5000
+    assert store.page("equity", 0, 10000)["items"] == rows
 
 
 def test_engine_snapshot_detects_changed_files(tmp_path):
@@ -220,6 +284,35 @@ def test_engine_snapshot_detects_changed_files(tmp_path):
     worker.write_text('// changed',encoding='utf-8')
     with pytest.raises(ValueError,match='已改变'):
         engine_worker(tmp_path,identity)
+
+
+def test_ema_zigzag_seed_keeps_source_and_is_idempotent(tmp_path):
+    store = ChartWorkspaceStore(tmp_path)
+    store.seed()
+    first = store.get("scripts", "ema-zigzag-glow")
+    assert first.readonly
+    assert "import DevLucem/ZigLib/1 as ZigZag" in first.data["source"]
+    assert "plotarrow(direction" in first.data["source"]
+    store.seed()
+    assert store.get("scripts", "ema-zigzag-glow") == first
+
+
+def test_engine_keeps_pre_library_snapshots_readable(tmp_path):
+    import hashlib
+    from app.services.chart_workspace_engine import FILES, BUNDLED_LIBRARIES, engine_worker
+
+    names = [name for name in FILES if name not in BUNDLED_LIBRARIES]
+    content = b"frozen previous runtime"
+    manifest = {name: hashlib.sha256(content).hexdigest() for name in names}
+    encoded = json.dumps(manifest, sort_keys=True).encode()
+    identity = hashlib.sha256(encoded).hexdigest()
+    root = tmp_path / "engines" / identity
+    for name in names:
+        target = root / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(content)
+    (root / "manifest.json").write_bytes(encoded)
+    assert engine_worker(tmp_path, identity) == root / names[0]
 
 
 def test_cancelled_order_in_same_bar_is_recorded(tmp_path):
@@ -262,7 +355,7 @@ async def test_gap_inside_page_fails_without_results(tmp_path):
         async def bars(self,*args,**kwargs):
             return ChartBars(symbol=await self.resolve(''),timeframe='1m',bars=[ChartBar.model_validate(b) for i,b in enumerate(payload['bars']) if i!=5],source='fixture')
     runs=ChartPineRuns(store,Market())
-    item=runs.create(PineRunRequest.model_validate(payload['request']),'http://127.0.0.1:1')
+    item=await runs.create(PineRunRequest.model_validate(payload['request']),'http://127.0.0.1:1')
     await runs.tasks[item.id]
     assert runs.get(item.id).status=='failed' and '缺口' in runs.get(item.id).error
     assert not (runs.folder(item.id)/'result.json').exists()
@@ -306,7 +399,7 @@ async def test_cancel_loading_and_recover_interrupted(tmp_path):
             started.set()
             await asyncio.Event().wait()
     runs=ChartPineRuns(store,Market())
-    item=runs.create(PineRunRequest.model_validate(payload['request']),'http://127.0.0.1:1')
+    item=await runs.create(PineRunRequest.model_validate(payload['request']),'http://127.0.0.1:1')
     await started.wait()
     assert (await runs.cancel(item.id)).status=='cancelled'
     assert not runs.tasks and not runs.processes

@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Annotated, Any
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -46,6 +46,9 @@ class AppSettings(BaseSettings):
 
     DATABASE_URL: str = ""
     DATABASE_CONNECT_TIMEOUT: int = 3
+    BLOCKING_WORKSPACE_MAX_WORKERS: int = 2
+    MARKET_QUOTE_MAX_AGE_SECONDS: float = 120
+    MARKET_STREAM_STALE_SECONDS: float = 120
 
     EMA_PERIOD: int = 20
     RSI_PERIOD: int = 14
@@ -100,10 +103,6 @@ class AppSettings(BaseSettings):
     DCA_STANDARD_MAX_MULTIPLE: int = 5
     DCA_COIN_PRECISION: float = 1e-8
     DCA_CACHE_TTL: int = 600
-    PORTFOLIO_CHANGE_MAX_BYTES: int = 6 * 1024 * 1024
-    PORTFOLIO_SIMULATION_MAX_BYTES: int = 4 * 1024 * 1024
-    PORTFOLIO_IMPORT_MAX_BYTES: int = 128 * 1024 * 1024
-    PORTFOLIO_TRANSACTION_IMPORT_MAX_BYTES: int = 32 * 1024 * 1024
 
     PAIR_COMPARE_BASE_TIMEFRAME: str = "5m"
 
@@ -137,9 +136,9 @@ class AppSettings(BaseSettings):
     BINANCE_PUBLIC_RETRY_DELAY: float = 1.0
     BINANCE_PUBLIC_MAX_CONNECTIONS: int = 32
     BINANCE_PUBLIC_MAX_KEEPALIVE_CONNECTIONS: int = 16
-    BINANCE_SPOT_WS_URL: str = "wss://stream.binance.com:9443/ws/!ticker@arr"
-    BINANCE_FUTURES_USDM_TICKER_WS_URL: str = "wss://fstream.binance.com/ws/!ticker@arr"
-    BINANCE_FUTURES_USDM_MARK_WS_URL: str = "wss://fstream.binance.com/ws/!markPrice@arr"
+    BINANCE_SPOT_WS_URL: str = "wss://stream.binance.com:9443/ws/!ticker_1d@arr"
+    BINANCE_FUTURES_USDM_TICKER_WS_URL: str = "wss://fstream.binance.com/market/ws/!ticker@arr"
+    BINANCE_FUTURES_USDM_MARK_WS_URL: str = "wss://fstream.binance.com/market/ws/!markPrice@arr"
     BINANCE_MARKET_SNAPSHOT_RECONNECT_DELAY: float = 3.0
     BINANCE_MARKET_PAGE_REFRESH_INTERVAL: float = 60.0
     RESEARCH_ALERT_INTERVAL_SECONDS: int = 60
@@ -168,12 +167,31 @@ class AppSettings(BaseSettings):
 
     KLINE_RETENTION_DAYS: int = 365
     KLINE_RETENTION_BATCH_SIZE: int = 5000
+    KLINE_ARCHIVE_DIR: Path = Field(default_factory=lambda: _default_runtime_root() / "market_archive")
 
     RUNTIME_ROOT_DIR: Path = Field(default_factory=_default_runtime_root)
     LOG_DIR: Path = Field(default_factory=lambda: _default_runtime_root() / "logs")
     TEMP_DIR: Path = Field(default_factory=lambda: _default_runtime_root() / "tmp")
     BACKGROUND_RUNTIME_LOCK_PATH: Path = Field(default_factory=lambda: _default_runtime_root() / "runtime" / "background.lock")
     LLM_CONFIG_PATH: Path = Field(default_factory=lambda: _default_runtime_root() / "config" / "llm_provider_config.json")
+    CHART_WORKSPACE_DIR: Path = Field(default_factory=lambda: _default_runtime_root() / "chart_workspace")
+    NODE_EXECUTABLE: str = ""
+    PINE_RUN_CONCURRENCY: int = Field(default=2, ge=1, le=16)
+    PINE_RUN_QUEUE_LIMIT: int = Field(default=8, ge=0, le=100)
+    PINE_RUN_TIMEOUT_SECONDS: float = Field(default=300, gt=0, le=3600)
+    PINE_RUN_QUEUE_TIMEOUT_SECONDS: float = Field(default=600, gt=0, le=7200)
+
+    @model_validator(mode="after")
+    def derive_runtime_paths(self):
+        self.RUNTIME_ROOT_DIR = self.RUNTIME_ROOT_DIR.expanduser().resolve()
+        defaults = {"LOG_DIR": "logs", "TEMP_DIR": "tmp",
+                    "BACKGROUND_RUNTIME_LOCK_PATH": "runtime/background.lock",
+                    "LLM_CONFIG_PATH": "config/llm_provider_config.json",
+                    "CHART_WORKSPACE_DIR": "chart_workspace", "KLINE_ARCHIVE_DIR": "market_archive"}
+        for name, suffix in defaults.items():
+            if name not in self.model_fields_set:
+                object.__setattr__(self, name, self.RUNTIME_ROOT_DIR / suffix)
+        return self
     BLOCKING_DATABASE_MAX_WORKERS: int = 8
     BLOCKING_COMPUTE_MAX_WORKERS: int = 2
     BLOCKING_EXTERNAL_IO_MAX_WORKERS: int = 8

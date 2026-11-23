@@ -1,0 +1,25 @@
+"""Discover candidate summaries; interpretation and persistence belong to other owners."""
+
+import os
+from pathlib import Path
+
+from app.infra.research_files import relocated_project_path
+
+
+def summary_paths(roots):
+    for root in roots:
+        root = relocated_project_path(root).resolve(strict=True)
+        if root.is_file():
+            if root.suffix.lower() == ".json":
+                yield root
+            continue
+        for folder, dirs, names in os.walk(root):
+            dirs[:] = sorted(d for d in dirs if d not in {"versions", "node_modules", ".git", "artifacts"})
+            for name in sorted(names):
+                if name.endswith(".json") and name not in {
+                    "data.json",
+                    "result.json",
+                    "execution_data.json",
+                    "execution-data.json",
+                }:
+                    yield Path(folder) / name

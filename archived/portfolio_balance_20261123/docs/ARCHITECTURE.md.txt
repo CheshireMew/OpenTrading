@@ -1,0 +1,38 @@
+# OpenTrading architecture boundaries
+
+OpenTrading uses a small inward-facing core and an explicit outer runtime shell.
+
+`app/domain` owns business values and rules. It cannot import HTTP contracts, runtime services, infrastructure, or routers. `app/application` owns use cases, ports, and application errors. It can depend on the domain, but not on contracts, infrastructure, services, routers, or FastAPI.
+
+`app/services` is deliberately the outer orchestration layer, not the application core. It adapts transport commands, schedules blocking work on the named executors, coordinates external clients, and returns transport-ready results. Its ability to use `app/contracts` and `app/infra` is intentional; inner layers must never import it.
+
+`app/infra` implements application ports and owns databases, caches, executors, and external clients. It may depend on `app/application` and `app/domain`, but never on transport contracts, routers, service orchestration, or application-wide HTTP exceptions. Infrastructure reports domain or application errors; `app/main.py` maps those errors to the single HTTP error contract.
+
+`app/contracts` and `app/routers` form the HTTP boundary. Generated frontend types and route maps come only from these FastAPI routes. `app/runtime.py` is the composition root that wires concrete outer adapters to inner ports.
+
+The chart workspace is initialized once by `AppRuntimeServices.start` and closed before the other API adapters. Its runtime owns an OS file lock for the workspace directory; requests only retrieve this runtime. Seeding is transactionally idempotent, and only the runtime owner recovers interrupted Pine runs. Workspace SQLite transactions, run metadata and record queries use the dedicated workspace executor, never the API event loop. Cancellation waits for any in-flight process creation to return its actual OS handles before reclaiming the worker.
+
+Editable ledger and research rows use database-enforced optimistic versions. `write_session` translates ORM stale-write failures into application conflicts, and an active external ledger identity has a partial unique index. Migration `019_atomic_ledger_identity` refuses pre-existing duplicate identities without changing the ledger. Replacement imports release and restore affected identities in the same transaction.
+
+Ledger create and batch-import commands require a stable `requestId`. Migration `020_ledger_request_receipts` stores the command hash and result in the same transaction as its entries. Concurrent retries return the original receipt; reusing a key with different content is rejected. The browser retains unresolved commands in per-window IndexedDB so a lost response or reload does not create another transaction.
+
+`app/domain/ledger_effects.py` defines the USD cash change, unit change, fee and external contribution of each transaction type. Both current accounting and historical performance use these rules. Portfolio transfers are external flows for each individual portfolio; their USD valuation is required. Historical drawdown uses cash-flow-adjusted unit value, and portfolio risk uses actual exposures divided by total equity, including cash.
+
+Quotes carry observation time separately from request time, source and validity. Expired quotes cannot value a portfolio. Daily simulation and analytics consume closed history and preserve coverage failures; continuous markets require each daily observation, while exchange-session histories can carry a verified previous close across non-trading dates. Pine document operations and portfolio ledger mutations bind responses to the original document/portfolio and selection generation. Portfolio revision conflicts retain per-window IndexedDB drafts and offer three-way recovery, copies, or the server version.
+
+Portfolio configuration excludes quotes and ledger-derived balances. The backend obtains its own quotes for ledger valuation, reports and drift alerts, and derives holdings from transactions even when no browser is open. Pine drafts retain their base version and source; conflicting or legacy unversioned drafts can be recovered as copies without overwriting the server document. A completed server mutation is not rolled back because a later read or local receipt write fails.
+
+Migration `021_confirmed_candle_history` preserves old OHLCV rows as unconfirmed. Reads hydrate only requested windows to confirm final closes; they never treat a cached open bar as final merely because time passed. Live observations stay separate from finalized history. Index coverage uses XNYS, XSHG and XHKG calendars and exposes missing sessions and verified non-trading dates. Unknown calendar ranges fail closed. Signal evaluations require continuous, closed history inside the entry/expiry window, and horizon returns use candle close times.
+
+
+## Responsibility owners after the cohesion refactor
+
+Portfolio allocation is defined in `app/domain/portfolio_allocation.py`. Equal-weight fallback, held-asset valuation and target/current weights share fixtures with the browser preview. Signed alert values retain their established meaning: positive means overweight, in percentage points. The page uses target shortfall as a fraction. Invalid or expired held-asset prices prevent alert evaluation and trade recommendations. The page invalidates cached plans at the next quote expiry even when a price refresh fails.
+
+Portfolio persistence separates collection, ledger, simulation and backup capabilities. Research persistence separates the workbench read model, record commands and alert evaluation. Compatibility facades have explicit forwarding methods, without business logic or dynamic attribute lookup. Readers receive narrow ports; complete-backup imports and research changes with their event stay inside one database transaction.
+
+Strategy simulation has one active owner: the chart workspace Pine/PineTS strategy tester. Python strategy execution, parameter sweeps, granular research diagnostics and their result indexes are archived under `archived/python_backtest_20261123`. Their HTTP and frontend routes, CLI commands and background queue workers are unregistered. Application startup no longer creates research-result SQLite indexes. Historical database tables remain mapped for data preservation and migration compatibility, with no active backtest writer. Shared OHLCV history, its compressed archive, DCA and portfolio analysis remain independent.
+
+The frontend chart page composes six owners: chart SDK lifecycle, layout persistence, watchlists and quote polling, Pine document drafts, Pine execution and panel interaction. Each owner controls its request generations, timers and cleanup. It receives only its required capability callbacks, not the entire page state. The two backend periodic evaluators share `PeriodicTask` lifecycle code while retaining independent business evaluation rules.
+
+Pine sources remain in `strategies/pine`; the old Python strategies, authoring templates and standalone-snapshot checks are archived with their engine. Generated portfolio contracts remain the source of browser normalized input types.

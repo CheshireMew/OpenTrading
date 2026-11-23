@@ -1,0 +1,371 @@
+import { PAGE_SNAPSHOT_KEYS, readPersistentPageSnapshotData } from '@/composables/pageSnapshot'
+import { ApiRequestError, apiErrorMessage, normalizeApiError } from '@/api/request'
+import { toolsApi } from '../api'
+import type {
+  PortfolioCollectionImportCommand,
+  PortfolioCollectionResponse,
+} from '../contracts'
+import { buildPortfolioChangeCommand, clonePortfolioSnapshot, portfolioConfiguration } from './changeSet'
+import { createPortfolioSaveState } from './saveState'
+import { readPortfolioRecovery, writePortfolioRecovery, mergePortfolioRecovery, type PortfolioRecovery } from './recovery'
+
+import {
+  createEmptyPortfolioBalanceSnapshot,
+  normalizePortfolioBalancePortfolio,
+  normalizePortfolioBalanceSnapshot,
+  normalizePortfolioSimulationSummary,
+} from './snapshot'
+import type { PortfolioBalancePageState } from './state'
+import type { PortfolioBalanceSnapshot, PortfolioSimulationSummary } from './types'
+
+const IMPORT_MAX_BYTES = 128 * 1024 * 1024
+
+export const parsePortfolioImportFile = async (
+  file: File,
+): Promise<PortfolioCollectionImportCommand['document']> => {
+  if (file.size > IMPORT_MAX_BYTES) throw new Error('Portfolio backup exceeds the 128 MB limit')
+  const text = await file.text()
+  const parsed: unknown = JSON.parse(text)
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    throw new Error('Portfolio backup must be a JSON object')
+  }
+  return parsed as PortfolioCollectionImportCommand['document']
+}
+
+export const createPortfolioPersistence = (
+  state: PortfolioBalancePageState,
+  defaultPortfolioName: string,
+) => {
+  let saveTimer: ReturnType<typeof setTimeout> | null = null
+  const saveState = createPortfolioSaveState()
+  let simulationLoadVersion = 0
+  let acknowledgedSnapshot: PortfolioBalanceSnapshot | null = null
+  let operationChain: Promise<void> = Promise.resolve()
+  let recoveryWrites: Promise<void> = Promise.resolve()
+  let pendingRecovery: PortfolioRecovery | undefined
+  const configurationSnapshot = () => {
+    const snapshot = state.buildSnapshot()
+    return { ...snapshot, portfolios: snapshot.portfolios.map(portfolioConfiguration) }
+  }
+  const captureRecovery = (): PortfolioRecovery => ({snapshot: configurationSnapshot(),
+    baseline: acknowledgedSnapshot || {activePortfolioId: '', portfolios: []}, revision: state.revision.value, pending: true})
+  const persistRecovery = (value: PortfolioRecovery) => {
+    const snapshot = JSON.parse(JSON.stringify(value)) as PortfolioRecovery
+    const operation = recoveryWrites.then(() => writePortfolioRecovery(snapshot))
+    recoveryWrites = operation.catch(() => undefined)
+    return operation
+  }
+
+  const serializeOperation = <T>(action: () => Promise<T>): Promise<T> => {
+    const operation = operationChain.then(action, action)
+    operationChain = operation.then(() => undefined, () => undefined)
+    return operation
+  }
+
+  const acknowledgeResponse = (response: PortfolioCollectionResponse) => {
+    acknowledgedSnapshot = clonePortfolioSnapshot({
+      activePortfolioId: response.snapshot.activePortfolioId || '',
+      portfolios: (response.snapshot.portfolios || []).map(normalizePortfolioBalancePortfolio).map(portfolioConfiguration),
+    })
+  }
+
+  const saveCurrent = async () => {
+    if (state.storageConflict.value) throw new ApiRequestError('Resolve the saved portfolio draft before saving', {status: 409})
+    const saveVersion = saveState.captureVersion()
+    const snapshot = state.buildSnapshot()
+    const baseline = acknowledgedSnapshot || { activePortfolioId: '', portfolios: [] }
+    const command = buildPortfolioChangeCommand(snapshot, baseline, state.revision.value)
+    if (!command) {
+      saveState.acknowledge(saveVersion)
+      pendingRecovery = {...captureRecovery(), pending: false}
+      await persistRecovery(pendingRecovery)
+      return null
+    }
+    state.storageSaving.value = true
+    state.storageError.value = ''
+    try {
+      const response = await toolsApi.changePortfolioCollection(command)
+      state.applySaveMetadata(response)
+      acknowledgeResponse(response)
+      saveState.acknowledge(saveVersion)
+      if (!saveState.isDirty()) {
+        pendingRecovery = {...captureRecovery(), pending: false}
+        // The server write is already committed. A failed local receipt must
+        // never turn it into a failed mutation or trigger a caller rollback.
+        await persistRecovery(pendingRecovery).catch(error => {
+          state.storageError.value = apiErrorMessage(error, 'Saved on server; local draft receipt could not be updated')
+        })
+      }
+      return response
+    } catch (error: unknown) {
+      state.storageError.value = apiErrorMessage(error, 'Failed to save portfolio changes')
+      if (normalizeApiError(error).status === 409) {
+        pendingRecovery = captureRecovery()
+        state.storageConflict.value = true
+        await persistRecovery(pendingRecovery).catch(() => undefined)
+      }
+      throw error
+    } finally {
+      state.storageSaving.value = false
+    }
+  }
+
+  const saveNow = (force = false) => serializeOperation(async () => {
+    if (!force && !saveState.isDirty()) return null
+    return saveCurrent()
+  })
+
+  const queueSave = () => {
+    if (!state.storageReady.value || state.storageLoading.value || state.storageConflict.value) return
+    if (!state.storageSaving.value && acknowledgedSnapshot &&
+        !buildPortfolioChangeCommand(state.buildSnapshot(), acknowledgedSnapshot, state.revision.value)) return
+    saveState.markDirty()
+    void persistRecovery(captureRecovery()).catch(error => {
+      state.storageError.value = apiErrorMessage(error, 'Local draft could not be saved')
+    })
+    if (saveTimer) clearTimeout(saveTimer)
+    saveTimer = setTimeout(() => {
+      saveTimer = null
+      void saveNow().catch(() => undefined)
+    }, 500)
+  }
+
+  const loadDeleted = async (reset = true) => {
+    const offset = reset ? 0 : state.deletedPortfolios.length
+    const response = await toolsApi.listDeletedPortfolios(offset, 20)
+    state.applyDeletedPage(response, !reset)
+    return response
+  }
+
+  const loadSimulation = async (portfolioId = state.activePortfolioId.value) => {
+    const loadVersion = ++simulationLoadVersion
+    state.clearSimulationResult()
+    if (!portfolioId) return null
+    try {
+      const response = await toolsApi.getPortfolioSimulation(portfolioId)
+      if (
+        loadVersion === simulationLoadVersion
+        && portfolioId === state.activePortfolioId.value
+      ) {
+        state.setSimulationResult(
+          portfolioId,
+          normalizePortfolioSimulationSummary(response.result),
+        )
+      }
+      return response
+    } catch (error: unknown) {
+      if (loadVersion === simulationLoadVersion) {
+        state.storageError.value = apiErrorMessage(error, 'Failed to load simulation result')
+      }
+      throw error
+    }
+  }
+
+  const saveSimulation = async (
+    portfolioId: string,
+    result: PortfolioSimulationSummary,
+  ) => {
+    const response = await toolsApi.savePortfolioSimulation(portfolioId, {
+      expectedRevision: state.revision.value,
+      result,
+    })
+    state.setSimulationResult(
+      portfolioId,
+      normalizePortfolioSimulationSummary(response.result),
+    )
+    return response
+  }
+
+  const initialize = async () => {
+    if (saveTimer) clearTimeout(saveTimer)
+    saveTimer = null
+    saveState.clear()
+    acknowledgedSnapshot = null
+    state.storageReady.value = false
+    state.storageLoading.value = true
+    state.storageError.value = ''
+    try {
+      const response = await toolsApi.getPortfolioCollection()
+      const recovered = await readPortfolioRecovery().catch(() => undefined)
+      if ((response.snapshot.portfolios || []).length > 0) {
+        state.applyCollection(response)
+        acknowledgeResponse(response)
+      } else {
+        const emptySnapshot = createEmptyPortfolioBalanceSnapshot()
+        const legacy = readPersistentPageSnapshotData(PAGE_SNAPSHOT_KEYS.portfolioBalance, true)
+        const legacySnapshot = normalizePortfolioBalanceSnapshot(legacy, emptySnapshot)
+        state.replaceSnapshot(legacySnapshot)
+        state.revision.value = response.revision
+        const emptyBaseline: PortfolioBalanceSnapshot = {
+          activePortfolioId: response.snapshot.activePortfolioId || '',
+          portfolios: [],
+        }
+        acknowledgedSnapshot = clonePortfolioSnapshot(emptyBaseline)
+        if (legacySnapshot.portfolios.length > 0) {
+          const command = buildPortfolioChangeCommand(state.buildSnapshot(), emptyBaseline, response.revision)
+          if (!command) throw new Error('Portfolio migration produced no changes')
+          const saved = await toolsApi.changePortfolioCollection(command)
+          state.applySaveMetadata(saved)
+          acknowledgeResponse(saved)
+        } else {
+          acknowledgeResponse(response)
+        }
+      }
+      if (recovered?.pending) {
+        pendingRecovery = recovered
+        await persistRecovery(recovered)
+        state.storageConflict.value = true
+      }
+      state.storageReady.value = true
+      await loadDeleted(true)
+      if (state.activePortfolioId.value) await loadSimulation(state.activePortfolioId.value)
+    } catch (error: unknown) {
+      state.storageError.value = apiErrorMessage(error, 'Failed to load portfolios')
+    } finally {
+      state.storageLoading.value = false
+    }
+  }
+
+  const restore = (portfolioId: string) => serializeOperation(async () => {
+    if (saveState.isDirty()) await saveCurrent()
+    state.storageSaving.value = true
+    try {
+      const response = await toolsApi.restorePortfolio(portfolioId, {
+        expectedRevision: state.revision.value,
+      })
+      state.applyCollection(response)
+      acknowledgeResponse(response)
+      await Promise.all([
+        loadDeleted(true),
+        loadSimulation(response.snapshot.activePortfolioId || ''),
+      ])
+      saveState.clear()
+      state.storageError.value = ''
+      return response
+    } catch (error: unknown) {
+      state.storageError.value = apiErrorMessage(error, 'Failed to restore portfolio')
+      throw error
+    } finally {
+      state.storageSaving.value = false
+    }
+  })
+
+  const importDocument = (
+    document: PortfolioCollectionImportCommand['document'],
+    mode: PortfolioCollectionImportCommand['mode'] = 'merge',
+  ) => serializeOperation(async () => {
+    if (saveState.isDirty()) await saveCurrent()
+    state.storageSaving.value = true
+    try {
+      const response = await toolsApi.importPortfolioCollection({
+        expectedRevision: state.revision.value,
+        mode,
+        document,
+      })
+      state.applyCollection(response)
+      acknowledgeResponse(response)
+      await Promise.all([
+        loadDeleted(true),
+        loadSimulation(response.snapshot.activePortfolioId || ''),
+      ])
+      saveState.clear()
+      state.storageError.value = ''
+      return response
+    } catch (error: unknown) {
+      state.storageError.value = apiErrorMessage(error, 'Failed to import portfolio backup')
+      throw error
+    } finally {
+      state.storageSaving.value = false
+    }
+  })
+
+  const exportDocument = () => serializeOperation(async () => {
+    if (saveState.isDirty()) await saveCurrent()
+    return toolsApi.exportPortfolioCollection()
+  })
+
+  const stop = () => {
+    if (saveTimer) clearTimeout(saveTimer)
+    saveTimer = null
+    return saveNow()
+  }
+
+  const reload = () => serializeOperation(async () => {
+    if (saveTimer) clearTimeout(saveTimer)
+    saveTimer = null
+    const draft = pendingRecovery?.pending ? pendingRecovery : saveState.isDirty() ? captureRecovery() : undefined
+    if (!draft) { await initialize(); return }
+    pendingRecovery = draft
+    await persistRecovery(draft)
+    state.storageLoading.value = true
+    try {
+      const remote = await toolsApi.getPortfolioCollection()
+      const merged = mergePortfolioRecovery(draft.snapshot, draft.baseline, normalizePortfolioBalanceSnapshot(remote.snapshot, createEmptyPortfolioBalanceSnapshot()))
+      state.applyCollection(remote)
+      acknowledgeResponse(remote)
+      saveState.clear()
+      state.storageConflict.value = merged.conflicts.length > 0
+      if (!merged.conflicts.length) {
+        state.replaceSnapshot(merged.snapshot)
+        saveState.markDirty()
+        await saveCurrent()
+        pendingRecovery = {...draft, pending: false}
+        await persistRecovery(pendingRecovery)
+      }
+      state.storageError.value = ''
+    } catch (error) {
+      state.storageConflict.value = true
+      state.storageError.value = apiErrorMessage(error, 'Failed to reload portfolios')
+      throw error
+    } finally { state.storageLoading.value = false }
+  })
+
+  const resolveConflict = (choice: 'copy' | 'remote', copyName: (name: string) => string) => serializeOperation(async () => {
+    const draft = pendingRecovery
+    if (!draft?.pending) return
+    await persistRecovery(draft)
+    state.storageLoading.value = true
+    try {
+      const remote = await toolsApi.getPortfolioCollection()
+      state.applyCollection(remote)
+      acknowledgeResponse(remote)
+      saveState.clear()
+      if (choice === 'copy') {
+        const base = new Map(draft.baseline.portfolios.map(item => [item.id, item]))
+        const copies = draft.snapshot.portfolios.filter(item => JSON.stringify(item) !== JSON.stringify(base.get(item.id)))
+          .map(item => ({...item, id: crypto.randomUUID(), name: copyName(item.name).slice(0, 160), holdingsSource: 'virtual' as const}))
+        if ((remote.snapshot.portfolios || []).length + copies.length > 100) throw new Error('Portfolio recovery would exceed the 100 portfolio limit')
+        state.replaceSnapshot({activePortfolioId: copies[0]?.id || remote.snapshot.activePortfolioId,
+          portfolios: [...(remote.snapshot.portfolios || []), ...copies]})
+        state.storageConflict.value = false
+        saveState.markDirty()
+        await saveCurrent()
+      }
+      state.storageConflict.value = false
+      pendingRecovery = {...draft, pending: false}
+      await persistRecovery(pendingRecovery)
+      state.storageError.value = ''
+    } catch (error) {
+      state.storageConflict.value = true
+      state.storageError.value = apiErrorMessage(error, 'Failed to recover portfolio draft')
+      throw error
+    } finally { state.storageLoading.value = false }
+  })
+
+  return {
+    initialize,
+    queueSave,
+    saveNow,
+    loadDeleted,
+    loadSimulation,
+    saveSimulation,
+    restore,
+    importDocument,
+    exportDocument,
+    reload,
+    resolveConflict,
+    stop,
+  }
+}
+
+export type PortfolioPersistence = ReturnType<typeof createPortfolioPersistence>

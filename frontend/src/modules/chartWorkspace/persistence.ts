@@ -2,6 +2,7 @@ import type { Vela,VisibleRange } from '@luxalgo/vela'
 import { registerStatePersistence, type ExternalIndicatorEntry } from '@luxalgo/vela/plugin'
 import type { VelaWorkspace } from '@luxalgo/vela/workspace'
 import { checkPine } from './pineCompatibility.mjs'
+import { WorkspaceRenderer } from './chartPresentation'
 
 const sources = new WeakMap<Vela,Map<string,{scriptId?:string;version?:number}>>()
 // Vela's cell snapshot reads its initial bars budget, while setMarket changes the
@@ -10,8 +11,22 @@ registerStatePersistence({key:'opentrading.historyDepth',scope:'cell',serialize:
   if(typeof payload==='number'&&Number.isFinite(payload)&&payload>0&&payload!==ctx.chart.market.bars)
     queueMicrotask(()=>{void ctx.chart.setMarket({bars:payload})})
 }})
-registerStatePersistence({key:'opentrading.viewport',scope:'cell',serialize:ctx=>ctx.chart.getVisibleRange(),restore:(payload,ctx)=>{
-  const range=payload as VisibleRange|null
+registerStatePersistence({key:'opentrading.viewport',scope:'cell',serialize:ctx=>{
+  const range=ctx.chart.getVisibleRange(),renderer=ctx.chart.renderer
+  // A renderer still alive during hot reload has not received the new default.
+  // Do not mark its old wide viewport as migrated when that instance saves.
+  return renderer instanceof WorkspaceRenderer&&renderer.hasReadableViewport?{version:3,range}:range
+},restore:(payload,ctx)=>{
+  // Replace old, overly wide startup views once. Subsequent user zoom/pan
+  // choices use the versioned payload and restore exactly as saved.
+  const saved=payload as {version?:number;range?:VisibleRange}|null
+  if(saved?.version!==3){
+    const frame=()=>{if(ctx.chart.renderer instanceof WorkspaceRenderer)ctx.chart.renderer.frameRecentCandles()}
+    frame()
+    const off=ctx.chart.on('load:end',()=>{off();frame()})
+    return
+  }
+  const range=saved.range
   if(!range||!Number.isFinite(range.from)||!Number.isFinite(range.to)||range.to<=range.from)return
   ctx.chart.setVisibleRange(range)
   const off=ctx.chart.on('load:end',()=>{off();ctx.chart.setVisibleRange(range)})

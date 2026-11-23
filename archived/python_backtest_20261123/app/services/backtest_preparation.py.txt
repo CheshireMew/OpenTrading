@@ -1,0 +1,123 @@
+from __future__ import annotations
+from datetime import datetime, timezone
+from pathlib import Path
+from app.infra.research_files import file_hash
+from app.services.backtest_provenance import (
+    current_bundle,
+)
+from app.contracts.local_backtest import LocalBacktestCommand
+from app.services.strategy_source import read_strategy_source
+from app.domain.local_backtest import DISCLAIMER
+from app.services.local_backtest_strategies import (
+    STRATEGIES_DIR,
+    environment,
+    inspect_strategy,
+    strategy_path,
+    validate_parameters,
+    resolve_warmup,
+    rules_summary,
+)
+from app.services.market.symbol_catalog import get_market_symbol_source, get_supported_crypto_symbols
+from app.services.market.exchange_gateway import ExchangeGateway
+from app.domain.market.constants import timeframe_to_milliseconds
+
+TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "4h", "1d"]
+
+
+class BacktestPreparation:
+    def __init__(self):
+        self._exchange_timeframes = {}
+
+    def catalog(self):
+        entries = []
+        for path in sorted(STRATEGIES_DIR.glob("*.py")):
+            try:
+                metadata = inspect_strategy(read_strategy_source(path), path.name)
+                if metadata.id != path.stem:
+                    raise ValueError("策略标识必须与文件名一致")
+                entries.append(metadata.model_dump())
+            except Exception as exc:
+                entries.append(
+                    dict(
+                        id=path.stem,
+                        name=path.stem,
+                        description="策略加载失败",
+                        api_version="1",
+                        warmup_bars=0,
+                        parameters={},
+                        error=str(exc),
+                    )
+                )
+        symbols = get_supported_crypto_symbols()
+        frames = {}
+        for symbol in symbols:
+            source = get_market_symbol_source(symbol)
+            supported = ExchangeGateway(source.exchange_id).exchange.timeframes or {}
+            frames[symbol] = [t for t in TIMEFRAMES if t in supported]
+        return {"strategies": entries, "symbols": symbols, "timeframes": frames}
+
+    def prepare(self, command: LocalBacktestCommand):
+        """Validate without queueing or downloading; used when freezing study plans."""
+        path = strategy_path(command.strategy)
+        source_bytes = read_strategy_source(path)
+        metadata = inspect_strategy(source_bytes, path.name)
+        if metadata.id != command.strategy:
+            raise ValueError("策略标识与文件名不一致")
+        values = validate_parameters(metadata, command.parameters)
+        warmup_bars, warmup_explanation = resolve_warmup(metadata, values)
+        source = get_market_symbol_source(command.symbol)
+        if source is None or ":" in command.symbol:
+            raise ValueError("仅支持现有目录中的加密货币现货交易对")
+        if source.exchange_id not in self._exchange_timeframes:
+            self._exchange_timeframes[source.exchange_id] = (
+                ExchangeGateway(source.exchange_id).exchange.timeframes or {}
+            )
+        supported = self._exchange_timeframes[source.exchange_id]
+        if command.timeframe not in supported:
+            raise ValueError("数据源不支持该周期")
+        step = timeframe_to_milliseconds(command.timeframe)
+        start, end = int(command.start.timestamp() * 1000), int(command.end.timestamp() * 1000)
+        if start % step or end % step or command.start.microsecond or command.end.microsecond:
+            raise ValueError("起止时间必须对齐所选周期")
+        if end > int(datetime.now(timezone.utc).timestamp() * 1000):
+            raise ValueError("不能包含未收盘 K 线，请调整结束时间")
+        config = command.model_dump(mode="json")
+        if command.execution_timeframe is None:
+            config.pop("execution_timeframe")
+            config.pop("intrabar_profit_protection")
+        config.update(parameters=values, symbol=source.symbol)
+        recipe = dict(
+            start_ms=start,
+            end_ms=end,
+            step_ms=step,
+            warmup_bars=warmup_bars,
+            execution_step_ms=timeframe_to_milliseconds(command.execution_timeframe)
+            if command.execution_timeframe
+            else None,
+            initial_cash=command.initial_cash,
+            position_pct=command.position_pct,
+            data_gap_policy=command.data_gap_policy,
+            execution_gap_policy=command.execution_gap_policy,
+            intrabar_profit_protection=command.intrabar_profit_protection,
+        )
+        return (
+            config,
+            source_bytes,
+            {
+                "strategy": metadata.model_dump(),
+                "environment": environment(),
+                "execution_bundle": current_bundle(),
+                "execution_recipe": recipe,
+                "warmup_bars": warmup_bars,
+                "warmup_explanation": warmup_explanation,
+                "rules_summary": rules_summary(metadata, values),
+                "engine_code_hash": file_hash(Path(__file__).parents[1] / "domain/local_backtest.py"),
+                "source": {
+                    "exchange": source.exchange_id,
+                    "symbol": source.symbol,
+                    "storage_symbol": source.storage_symbol,
+                    "price_type": "spot",
+                },
+                "disclaimer": DISCLAIMER,
+            },
+        )

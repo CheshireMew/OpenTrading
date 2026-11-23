@@ -1,0 +1,64 @@
+"""Obtain valuation inputs independently of any open browser or saved draft."""
+from __future__ import annotations
+
+import asyncio
+import math
+from datetime import datetime, timedelta, timezone
+
+from app.services.market.symbol_catalog import resolve_market_asset
+
+
+class PortfolioQuotes:
+    def __init__(self, market_query, index_data):
+        self._market = market_query
+        self._indexes = index_data
+
+    async def load(self, symbols: set[str]) -> dict[str, dict]:
+        semaphore = asyncio.Semaphore(8)
+        resolved = {symbol: resolve_market_asset(symbol) for symbol in symbols if symbol}
+        unique = {asset["symbol"]: asset for asset in resolved.values() if asset}
+
+        async def one(asset):
+            async with semaphore:
+                try:
+                    return await self._quote(asset)
+                except Exception:
+                    # Missing sources leave valuations incomplete; saved browser
+                    # prices are never promoted into live market observations.
+                    return {}
+
+        values = await asyncio.gather(*(one(asset) for asset in unique.values()))
+        quotes = dict(zip(unique, values))
+        now = datetime.now(timezone.utc)
+        result = {}
+        for symbol, asset in resolved.items():
+            quote = quotes.get(asset["symbol"], {}) if asset else {}
+            if quote and (asset["asset_class"] == "cash" or datetime.fromisoformat(quote["priceValidUntil"]) > now):
+                result[symbol.upper()] = quote
+                result[symbol.upper().split("/")[0]] = quote
+        return result
+
+    async def _quote(self, asset):
+        now = datetime.now(timezone.utc)
+        if asset["asset_class"] == "cash":
+            return {"currentPrice": 1.0}
+        if asset["asset_class"] == "index":
+            history = await self._indexes.get_pricing_history_async(
+                symbol=asset["symbol"], timeframe="1d", start_date=(now - timedelta(days=30)).date().isoformat(),
+                end_date=(now - timedelta(days=1)).date().isoformat(),
+            )
+            history.coverage.require_complete()
+            rows = [item for item in history.data if item.close > 0 and item.timestamp + 86_400_000 <= now.timestamp() * 1000]
+            if not rows:
+                return {}
+            latest = max(rows, key=lambda item: item.timestamp)
+            observed = datetime.fromtimestamp(latest.timestamp / 1000, timezone.utc)
+            return {"currentPrice": latest.close, "priceObservedAt": observed.isoformat(),
+                    "priceValidUntil": (observed + timedelta(days=4)).isoformat()}
+        response = await self._market.get_current_price(symbol=asset["symbol"], timeframe="1m")
+        if response.status != "fresh" or not response.timestamp or not response.valid_until:
+            return {}
+        if response.current_price is None or not math.isfinite(response.current_price) or response.current_price <= 0:
+            return {}
+        return {"currentPrice": response.current_price, "priceObservedAt": response.timestamp,
+                "priceValidUntil": response.valid_until}

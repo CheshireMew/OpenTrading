@@ -127,6 +127,7 @@ class MarketQueryAppService:
         symbol: str,
         timeframe: str,
         start_date: str,
+        end_date: str | None = None,
         fetch_policy: Literal["cache_only", "hydrate"] = "hydrate",
         persist_klines: Callable[[str, str, list[list[float]]], None] | None = None,
     ) -> MarketHistoryResponse:
@@ -134,6 +135,7 @@ class MarketQueryAppService:
             symbol=symbol,
             timeframe=timeframe,
             start_date=start_date,
+            end_date=end_date,
             fetch_policy=fetch_policy,
             persist_klines=persist_klines,
         )

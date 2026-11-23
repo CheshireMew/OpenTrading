@@ -23,9 +23,9 @@ export default {
                 zinc: neutralColors('zinc'),
                 neutral: neutralColors('neutral'),
                 stone: neutralColors('stone'),
-                'opentrading-dark': 'var(--app-bg, #0f172a)',
-                'opentrading-panel': 'var(--app-surface, #1e293b)',
-                'opentrading-accent': '#3b82f6',
+                'opentrading-dark': 'var(--app-bg, #0c0c0c)',
+                'opentrading-panel': 'var(--app-surface, #151515)',
+                'opentrading-accent': 'var(--ui-accent)',
             }
         },
     },

@@ -1,0 +1,127 @@
+from datetime import datetime
+from datetime import date
+from types import SimpleNamespace
+
+import pytest
+
+from app.domain.portfolio_accounting import calculate_portfolio_ledger
+from app.domain.portfolio_analytics import _build_performance, analyze_portfolio
+from app.services.tools.portfolio_analytics_service import PortfolioAnalyticsService
+from app.contracts.portfolios import PortfolioAnalyticsCommand, PortfolioTransactionCreateCommand
+
+
+def transaction(kind, **values):
+    return {"id": kind, "transaction_type": kind, "occurred_at": datetime(2026, 1, 1), **values}
+
+
+def test_transfers_are_external_flows_not_profit_and_every_fee_debits_cash():
+    transactions = [transaction("transfer_in", symbol="BTC", quantity=1, unit_price=100),
+                    transaction("deposit", cash_amount=20, fee=2),
+                    transaction("withdrawal", cash_amount=5, fee=1)]
+    result = calculate_portfolio_ledger(transactions, market_prices={"BTC": 100})
+    assert result["netContributions"] == 115
+    assert result["cashBalance"] == 12
+    assert result["totalEquity"] == 112
+    assert result["totalFees"] == 3
+    assert result["totalPnl"] == -3
+    result = calculate_portfolio_ledger(transactions + [transaction("transfer_out", symbol="BTC", quantity=1, unit_price=100)], market_prices={"BTC": 100})
+    assert result["totalPnl"] == -3
+    assert result["totalEquity"] == 12
+
+
+def test_unvalued_legacy_transfer_cannot_claim_a_complete_return():
+    result = calculate_portfolio_ledger([transaction("transfer_in", symbol="BTC", quantity=1)], market_prices={"BTC": 100})
+    assert result["netContributions"] is result["totalPnl"] is result["moneyWeightedReturnPct"] is None
+    assert result["reliability"] == "incomplete"
+    with pytest.raises(ValueError, match="估值"):
+        PortfolioTransactionCreateCommand(requestId="invalid-transfer", transactionType="transfer_in", symbol="BTC", quantity=1, occurredAt="2026-01-01")
+
+
+def test_transfer_out_recognizes_appreciation_at_the_portfolio_boundary():
+    result = calculate_portfolio_ledger([
+        transaction("transfer_in", symbol="BTC", quantity=1, unit_price=100),
+        transaction("transfer_out", symbol="BTC", quantity=1, unit_price=150,
+                    occurred_at=datetime(2026, 1, 2)),
+    ], market_prices={})
+    assert result["totalPnl"] == result["realizedPnl"] == 50
+    assert result["totalEquity"] == result["unrealizedPnl"] == 0
+
+
+def performance_tx(kind, day, **values):
+    return {"id": kind + day, "transactionType": kind, "occurredAt": datetime.fromisoformat(day), **values}
+
+
+def test_cash_withdrawal_never_creates_drawdown_and_fees_do():
+    transactions = [performance_tx("deposit", "2026-01-01", cashAmount=100),
+                    performance_tx("withdrawal", "2026-01-02", cashAmount=50),
+                    performance_tx("fee", "2026-01-03", cashAmount=5)]
+    points = _build_performance(transactions, {}, "2026-01-01", "2026-01-03")
+    assert [point["equity"] for point in points] == [100, 50, 45]
+    assert [point["drawdownPct"] for point in points] == pytest.approx([0, 0, 10])
+
+
+def test_missing_held_price_invalidates_performance_instead_of_zero_valuation():
+    transactions = [performance_tx("deposit", "2026-01-01", cashAmount=100),
+                    performance_tx("buy", "2026-01-01", symbol="BTC", quantity=1, unitPrice=100)]
+    issues = []
+    points = _build_performance(transactions, {"BTC": {"2026-01-01": 100, "2026-01-03": 110}}, "2026-01-01", "2026-01-03", issues=issues)
+    assert points == []
+    assert "2026-01-02" in issues[0]
+    points = _build_performance(transactions, {"BTC": {"2026-01-01": 100, "2026-01-03": 110}}, "2026-01-01", "2026-01-03", continuous_symbols=set())
+    assert points == []  # A market category alone cannot prove a holiday.
+    points = _build_performance(transactions, {"BTC": {"2026-01-01": 100, "2026-01-02": 100, "2026-01-03": 110}}, "2026-01-01", "2026-01-03", continuous_symbols=set())
+    assert [point["equity"] for point in points] == [100, 100, 110]
+
+
+def risk(total):
+    return analyze_portfolio(portfolio_id="p", transactions=[], ledger_summary={"totalEquity": total, "positions": [{"symbol": "BTC", "marketValue": 100}]},
+        price_history={"BTC": {"2026-01-01": 100, "2026-01-02": 110, "2026-01-03": 99, "2026-01-04": 108.9}},
+        benchmark_symbol="BTC", benchmark_history={}, period_days=90, custom_shocks={}, start_date="2026-01-01", end_date="2026-01-04", issues=[])
+
+
+def test_cash_reduces_percentage_risk_without_increasing_dollar_var():
+    invested, cash_added = risk(100), risk(1000)
+    assert cash_added["valueAtRisk95"] == pytest.approx(invested["valueAtRisk95"])
+    assert cash_added["annualizedVolatilityPct"] == pytest.approx(invested["annualizedVolatilityPct"] / 10)
+
+
+@pytest.mark.asyncio
+async def test_analytics_rejects_missing_closed_history_but_ignores_open_day_gap():
+    async def history(**kwargs):
+        return SimpleNamespace(items=[], coverage=SimpleNamespace(complete=False,
+            missing_ranges=[SimpleNamespace(start_ts=1767225600000, end_ts=1767312000000)]))
+    service = PortfolioAnalyticsService(portfolio_service=None, index_data_service=None,
+                                       market_query_service=SimpleNamespace(get_full_history=history))
+    with pytest.raises(ValueError, match="缺口"):
+        await service._load_history("BTC", date(2026, 1, 1), date(2026, 1, 2))
+    # The same reported gap lies outside this requested closed period.
+    assert await service._load_history("BTC", date(2025, 12, 1), date(2025, 12, 31)) == {}
+
+
+@pytest.mark.asyncio
+async def test_service_loads_closed_positions_and_builds_correct_history():
+    transactions = [performance_tx("deposit", "2026-01-01", cashAmount=200),
+        performance_tx("buy", "2026-01-01", symbol="BTC", quantity=1, unitPrice=100),
+        performance_tx("buy", "2026-01-01", symbol="ETH", quantity=1, unitPrice=100),
+        performance_tx("sell", "2026-01-03", symbol="BTC", quantity=1, unitPrice=200)]
+    ledger = SimpleNamespace(transactions=[SimpleNamespace(symbol=item.get("symbol", ""), model_dump=lambda item=item: item) for item in transactions],
+        summary=SimpleNamespace(positions=[SimpleNamespace(symbol="ETH", units=1)], issues=[], model_dump=lambda: {"totalEquity": 300, "positions": [{"symbol": "ETH", "marketValue": 100}]}))
+    requested = []
+
+    class Service(PortfolioAnalyticsService):
+        async def _load_history(self, symbol, start, end):
+            requested.append(symbol)
+            return {"2026-01-01": 100, "2026-01-02": 100, "2026-01-03": 200 if symbol == "BTC" else 100}
+
+    # Use an exact requested period for deterministic day-by-day assertions.
+    from unittest.mock import patch, AsyncMock
+    import app.services.tools.portfolio_analytics_service as module
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return cls(2026, 1, 4, tzinfo=tz)
+    with patch.object(module, "datetime", Clock):
+        result = await Service(portfolio_service=SimpleNamespace(get_valued_ledger=AsyncMock(return_value=ledger)), market_query_service=None, index_data_service=None).analyze("p", PortfolioAnalyticsCommand(periodDays=30))
+    assert "BTC" in requested
+    assert [point.equity for point in result.performance[-3:]] == [200, 200, 300]
+    assert result.timeWeightedReturnPct == pytest.approx(50)

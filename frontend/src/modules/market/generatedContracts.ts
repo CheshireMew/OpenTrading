@@ -31,13 +31,25 @@ export interface EquityCatalogResponse {
 
 export interface RealtimeResponse {
   symbol: string
-  timestamp: string
-  current_price: number
+  timestamp: string | null
+  current_price: number | null
+  queried_at?: string | null
+  valid_until?: string | null
+  source?: string
+  status?: "fresh" | "stale" | "unavailable"
   indicators: IndicatorSummaryResponse
   ai_analysis: string | number | boolean | Array<string | number | boolean | null> | { [key: string]: string | number | boolean | null } | Array<{ [key: string]: string | number | boolean | null }> | { [key: string]: Array<string | number | boolean | null> } | null
   kline_data?: Array<OhlcvPointResponse>
   timeframe?: string | null
   type?: string | null
+}
+
+export interface BitcoinHalvingResponse {
+  block_height: number
+  block_timestamp: number
+  next_halving_height: number
+  estimated_at: number
+  confirmed_halvings_after_2024: Array<number>
 }
 
 export interface MarketHistoryResponse {
@@ -50,16 +62,25 @@ export interface MarketHistoryResponse {
 export interface KlineTailResponse {
   symbol: string
   timeframe: string
-  timestamp: string
+  timestamp: string | null
   current_price: number | null
+  queried_at?: string | null
+  valid_until?: string | null
+  status?: "fresh" | "stale" | "unavailable"
   kline_data?: Array<OhlcvPointResponse>
 }
 
 export interface CurrentPriceResponse {
   symbol: string
   timeframe: string
-  timestamp: string
+  timestamp: string | null
   current_price: number | null
+  source?: string
+  received_at?: string | null
+  queried_at?: string | null
+  valid_until?: string | null
+  status?: "fresh" | "stale" | "unavailable"
+  market?: string
 }
 
 export interface CurrentPriceBatchResponse {
@@ -97,6 +118,7 @@ export interface MarketIndexHistoryResponse {
   is_close_only?: boolean
   count: number
   data?: Array<OhlcvPointResponse>
+  coverage: MarketSessionCoverageResponse
 }
 
 export interface MarketIndicatorResponse {
@@ -218,6 +240,55 @@ export interface BinanceWeb3TokenAuditResponse {
   sell_tax?: number | null
   is_verified?: boolean | null
   risk_items?: Array<{ [key: string]: string | number | boolean | Array<string | number | boolean | null> | { [key: string]: string | number | boolean | null } | Array<{ [key: string]: string | number | boolean | null }> | { [key: string]: Array<string | number | boolean | null> } | null }>
+}
+
+export interface SignalLabLiquidityResponse {
+  schema_version: "signal-lab.liquidity.v1"
+  score: number | null
+  raw_score: number | null
+  state: string
+  tone: string
+  coverage: number
+  updated_at: string | null
+  data_scope_note: string
+  thresholds: SignalLabPressureThresholds
+  history: Array<SignalLabPressurePoint>
+  alerts: Array<string>
+  indicators: Array<SignalLabIndicator>
+  components: Array<SignalLabPressureComponent>
+  [key: string]: unknown
+}
+
+export interface SignalLabInventoryResponse {
+  schema_version: "signal-lab.database.v1"
+  counts: { [key: string]: number }
+  price_options: Array<SignalLabMarketItem>
+  market: Array<SignalLabMarketItem>
+  macro: Array<SignalLabMacroItem>
+  [key: string]: unknown
+}
+
+export interface SignalLabPriceResponse {
+  schema_version: "signal-lab.history.v1"
+  status: "ok" | "partial" | "ambiguous" | "error"
+  records?: Array<SignalLabBar>
+  recent_records?: Array<SignalLabBar>
+  records_total?: number | null
+  coverage: SignalLabCoverage
+  artifact?: SignalLabDownload | null
+  classifications?: Array<SignalLabClassification>
+  warnings: Array<string>
+  [key: string]: unknown
+}
+
+export interface SignalLabRefreshResponse {
+  schema_version: "signal-lab.liquidity-refresh.v1"
+  refresh: SignalLabRefreshSummary
+  liquidity: SignalLabLiquidityResponse
+  [key: string]: unknown
+}
+
+export interface SignalLabRefreshRequest {
 }
 
 export interface BinanceBasisItemResponse {
@@ -491,9 +562,14 @@ export interface BinanceWeb3TokenKlineItemResponse {
 export interface CurrentPriceBatchItemResponse {
   symbol: string
   timeframe: string
-  timestamp: string
+  timestamp: string | null
   current_price: number | null
   source: string
+  received_at?: string | null
+  queried_at?: string | null
+  valid_until?: string | null
+  status?: "fresh" | "stale" | "unavailable"
+  market?: string
 }
 
 export interface EquityCatalogItemResponse {
@@ -568,6 +644,17 @@ export interface MarketHistoryMissingRangeResponse {
   end_ts: number
 }
 
+export interface MarketSessionCoverageResponse {
+  complete: boolean
+  calendar: string | null
+  start_date: string
+  end_date: string
+  expected_sessions?: Array<string>
+  missing_sessions?: Array<string>
+  non_trading_dates?: Array<string>
+  error?: string | null
+}
+
 export interface OhlcvPointResponse {
   timestamp: number
   open: number
@@ -575,6 +662,104 @@ export interface OhlcvPointResponse {
   low: number
   close: number
   volume: number
+}
+
+export interface SignalLabBar {
+  date: string
+  observed_at: string
+  display_price: number | null
+  sma_20: number | null
+  sma_50: number | null
+  sma_200: number | null
+  rsi_14: number | null
+  open: number
+  high: number
+  low: number
+  close: number
+  adjusted_close: number
+  volume: number | null
+}
+
+export interface SignalLabClassification {
+  classification_id: string
+  name: string
+}
+
+export interface SignalLabCoverage {
+  complete?: boolean | null
+  missing_dates?: Array<string>
+  duplicate_dates?: Array<string>
+  incomplete_reasons?: Array<string>
+}
+
+export interface SignalLabDownload {
+  download_url?: string | null
+}
+
+export interface SignalLabIndicator {
+  indicator_id: string
+  name: string
+  group_label: string
+  group_description: string
+  unit: string
+  current_value: number | null
+  last_updated: string | null
+  data_lag_days: number | null
+  is_stale: boolean
+  is_scored: boolean
+  description: string
+  history: Array<SignalLabPoint>
+}
+
+export interface SignalLabMacroItem {
+  indicator_id: string
+  name: string
+  provider: string
+  frequency: string
+  start_at: string | null
+  end_at: string | null
+  row_count: number
+}
+
+export interface SignalLabMarketItem {
+  symbol: string
+  timeframe: string
+  price_source: string
+  data_hash: string
+  first_opened_at: string | null
+  last_opened_at: string | null
+  row_count: number
+}
+
+export interface SignalLabPoint {
+  date: string
+  value: number
+}
+
+export interface SignalLabPressureComponent {
+  indicator_id: string
+  score: number | null
+  z_score: number | null
+  percentile: number | null
+  effective_weight: number
+  contribution: number | null
+}
+
+export interface SignalLabPressurePoint {
+  date: string
+  score: number
+}
+
+export interface SignalLabPressureThresholds {
+  p20: number
+  p50: number
+  p80: number
+  sample_size: number
+}
+
+export interface SignalLabRefreshSummary {
+  series_count: number
+  row_count: number
 }
 
 export interface GetBinanceMarketContractDetailQueryParams {
@@ -701,4 +886,26 @@ export interface GetRealtimeAnalysisQueryParams {
   symbol: string
   timeframe?: string | null
   limit?: number | null
+}
+
+export interface SignalLabLiquidityQueryParams {
+  days?: number
+  change_days?: number
+}
+
+export interface SignalLabPriceDownloadQueryParams {
+  instrument: string
+  start: string
+  end: string
+  basis?: "raw" | "adjusted"
+  snapshot?: string | null
+}
+
+export interface SignalLabPriceHistoryQueryParams {
+  instrument: string
+  start: string
+  end: string
+  basis?: "raw" | "adjusted"
+  snapshot?: string | null
+  limit?: number
 }

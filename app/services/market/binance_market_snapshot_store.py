@@ -5,6 +5,8 @@ import time
 from typing import Any
 
 from .binance_numbers import safe_float
+from app.domain.market.quotes import MarketQuote
+from config import settings
 
 
 class BinanceMarketSnapshotStore:
@@ -14,6 +16,7 @@ class BinanceMarketSnapshotStore:
         self._usdm_mark: dict[str, dict[str, Any]] = {}
         self._loaded_sources: set[str] = set()
         self._updated_at: dict[str, int] = {}
+        self._quote_times: dict[tuple[str, str], tuple[int, int]] = {}
         self._lock = asyncio.Lock()
 
     async def market_page_snapshot(self) -> dict[str, Any]:
@@ -22,16 +25,16 @@ class BinanceMarketSnapshotStore:
     async def market_page_snapshot_data(self) -> dict[str, Any]:
         async with self._lock:
             load_errors: list[str] = []
-            if "spot_ticker" not in self._loaded_sources:
+            if not self.source_fresh("spot_ticker"):
                 load_errors.append("现货榜单")
-            if "usdm_ticker" not in self._loaded_sources:
+            if not self.source_fresh("usdm_ticker"):
                 load_errors.append("U本位24H")
-            if "usdm_mark" not in self._loaded_sources:
+            if not self.source_fresh("usdm_mark"):
                 load_errors.append("U本位Funding")
             return {
-                "spot_ticker": self._ticker_payload("spot", self._spot_ticker.values()),
-                "usdm_ticker": self._ticker_payload("usdm", self._usdm_ticker.values()),
-                "usdm_mark": self._mark_payload("usdm", self._usdm_mark.values()),
+                "spot_ticker": self._ticker_payload("spot", self._fresh_rows("spot_ticker", self._spot_ticker)),
+                "usdm_ticker": self._ticker_payload("usdm", self._fresh_rows("usdm_ticker", self._usdm_ticker)),
+                "usdm_mark": self._mark_payload("usdm", self._fresh_rows("usdm_mark", self._usdm_mark)),
                 "load_errors": load_errors,
                 "updated_at": max(self._updated_at.values(), default=0),
             }
@@ -44,21 +47,44 @@ class BinanceMarketSnapshotStore:
         async with self._lock:
             return {"spot_ticker", "usdm_ticker", "usdm_mark"}.issubset(self._loaded_sources)
 
-    async def current_price(self, symbol: str) -> float | None:
-        ticker_symbol = self._to_ticker_symbol(symbol)
-        if not ticker_symbol:
-            return None
+    def source_fresh(self, source):
+        return 0 <= int(time.time() * 1000) - self._updated_at.get(source, 0) <= settings.MARKET_STREAM_STALE_SECONDS * 1000
+
+    def freshness(self):
+        return {source: self.source_fresh(source) for source in ("spot_ticker", "usdm_ticker", "usdm_mark")}
+
+    def _fresh_rows(self, source, rows):
+        now = int(time.time() * 1000)
+        return [row for symbol, row in rows.items() if -5_000 <= now - self._quote_times.get((source, symbol), (0, 0))[0]
+                <= settings.MARKET_QUOTE_MAX_AGE_SECONDS * 1000]
+
+    async def current_quote(self, symbol: str) -> MarketQuote:
+        market = "usdm" if ":usdm:" in symbol or symbol.endswith(".P") else "spot"
+        plain = symbol.split(":")[-1].removesuffix(".P")
+        ticker_symbol = self._to_ticker_symbol(plain)
         async with self._lock:
-            spot = self._spot_ticker.get(ticker_symbol)
-            if spot is not None:
-                return safe_float(spot.get("last_price"))
-            mark = self._usdm_mark.get(ticker_symbol)
-            if mark is not None:
-                return safe_float(mark.get("mark_price"))
-            usdm = self._usdm_ticker.get(ticker_symbol)
-            if usdm is not None:
-                return safe_float(usdm.get("last_price"))
-        return None
+            stale = MarketQuote(market=market)
+            sources = [("spot_ticker", self._spot_ticker, "last_price")] if market == "spot" else [
+                ("usdm_mark", self._usdm_mark, "mark_price"), ("usdm_ticker", self._usdm_ticker, "last_price")]
+            for source, rows, price_field in sources:
+                row = rows.get(ticker_symbol)
+                if row is not None:
+                    observed, received = self._quote_times.get((source, ticker_symbol), (0, 0))
+                    quote = MarketQuote(safe_float(row.get(price_field)), observed, received, "websocket_snapshot", market)
+                    if quote.fresh(int(time.time() * 1000), settings.MARKET_QUOTE_MAX_AGE_SECONDS):
+                        return quote
+                    # A stale mark must not hide a fresh ticker for that venue.
+                    if quote.observed_at and (not stale.observed_at or quote.observed_at > stale.observed_at):
+                        stale = quote
+        return stale
+
+    async def current_price(self, symbol: str) -> float | None:
+        quote = await self.current_quote(symbol)
+        return quote.value if quote.fresh(int(time.time() * 1000), settings.MARKET_QUOTE_MAX_AGE_SECONDS) else None
+
+    def _record_time(self, source, symbol, row, now):
+        observed = row.get("event_time") or row.get("time") or row.get("close_time") or now
+        self._quote_times[(source, symbol)] = (int(observed), now)
 
     async def merge_tickers(self, source: str, rows: list[dict[str, Any]]) -> None:
         now = int(time.time() * 1000)
@@ -67,8 +93,14 @@ class BinanceMarketSnapshotStore:
             for row in rows:
                 symbol = str(row.get("symbol") or "").upper()
                 if symbol:
-                    target[symbol] = row
-            self._updated_at[source] = now
+                    observed = int(row.get("event_time") or row.get("time") or row.get("close_time") or now)
+                    if observed >= self._quote_times.get((source, symbol), (0, 0))[0]:
+                        target[symbol] = row
+                        self._record_time(source, symbol, row, now)
+            if rows:
+                self._updated_at[source] = max((min(now, value[0]) for (venue, _), value in self._quote_times.items() if venue == source), default=0)
+            else:
+                self._updated_at[source] = now
             self._loaded_sources.add(source)
 
     async def merge_marks(self, rows: list[dict[str, Any]]) -> None:
@@ -77,8 +109,14 @@ class BinanceMarketSnapshotStore:
             for row in rows:
                 symbol = str(row.get("symbol") or "").upper()
                 if symbol:
-                    self._usdm_mark[symbol] = row
-            self._updated_at["usdm_mark"] = now
+                    observed = int(row.get("time") or now)
+                    if observed >= self._quote_times.get(("usdm_mark", symbol), (0, 0))[0]:
+                        self._usdm_mark[symbol] = row
+                        self._record_time("usdm_mark", symbol, row, now)
+            if rows:
+                self._updated_at["usdm_mark"] = max((min(now, value[0]) for (venue, _), value in self._quote_times.items() if venue == "usdm_mark"), default=0)
+            else:
+                self._updated_at["usdm_mark"] = now
             self._loaded_sources.add("usdm_mark")
 
     def ticker_response(self, market: str, rows: Any) -> dict[str, Any]:

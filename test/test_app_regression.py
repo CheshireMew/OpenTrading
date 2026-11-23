@@ -148,7 +148,7 @@ def test_root_and_spa_fallback_serve_built_frontend(api_harness, monkeypatch):
         monkeypatch.setattr(web_module, "FRONTEND_INDEX_FILE", index_file)
 
         root_response = api_harness["client"].get("/")
-        route_response = api_harness["client"].get("/tools/portfolio-balance")
+        route_response = api_harness["client"].get("/tools/dca")
         asset_response = api_harness["client"].get("/assets/app.js")
 
         assert root_response.status_code == 200

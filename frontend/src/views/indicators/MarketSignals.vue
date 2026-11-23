@@ -35,7 +35,7 @@
       <template v-else-if="totalCount > 0">
         <section v-if="selectedCard" class="signal-detail app-panel p-5" aria-labelledby="signal-detail-title">
           <header class="flex flex-wrap items-center justify-between gap-3"><h2 id="signal-detail-title" class="app-section-title">{{ t('indicator.' + selectedCard.indicator.indicator_id, selectedCard.indicator.name) }}</h2><button type="button" class="app-button-secondary" @click="selectedId = ''">{{ t('workspaceViews.close') }}</button></header>
-          <div class="my-4 flex items-baseline gap-4"><strong class="text-3xl">{{ selectedCard.valueLabel }}</strong><span :class="changeToneClass(selectedCard.changeValue)">{{ selectedCard.changeLabel }}</span><span class="text-xs app-muted">{{ selectedCard.lastUpdatedLabel }}</span></div>
+          <div class="my-4 flex flex-wrap items-baseline gap-4"><strong class="text-3xl">{{ selectedCard.valueLabel }}</strong><span :class="changeToneClass(selectedCard.changeValue)">{{ t("marketSignals.changePeriod", { days: changeDays }) }} {{ selectedCard.changeLabel }}</span><span class="text-xs app-muted">{{ selectedCard.lastUpdatedLabel }}</span></div>
           <IndicatorChart v-if="selectedCard.indicator.history.length >= 2" :key="selectedId" :indicator="selectedCard.indicator" height="h-80" />
           <p v-else class="py-12 text-center app-muted">{{ t('marketSignals.collectingHistory', { count: selectedCard.indicator.history.length }) }}</p>
           <p v-if="selectedCard.indicator.description" class="mt-4 text-sm app-muted">{{ selectedCard.indicator.description }}</p>
@@ -57,7 +57,7 @@
                     {{ $t('indicator.' + card.indicator.indicator_id, card.indicator.name) }}
                   </h3>
                 </div>
-                <span :class="['change-pill', changeToneClass(card.changeValue)]">{{ card.changeLabel }}</span>
+                <span :class="['change-pill', changeToneClass(card.changeValue)]">{{ t("marketSignals.changePeriod", { days: changeDays }) }} {{ card.changeLabel }}</span>
               </button>
 
               <div class="mt-4 flex items-end justify-between gap-3">
@@ -80,7 +80,7 @@
 
           <div v-else-if="group.cards.length > 0" class="signal-compact-list">
             <button v-for="card in group.cards" :key="card.indicator.indicator_id" type="button" :aria-expanded="selectedId === card.indicator.indicator_id" @click="selectIndicator(card.indicator.indicator_id)">
-              <strong>{{ t('indicator.' + card.indicator.indicator_id, card.indicator.name) }}</strong><span class="signal-list-value">{{ card.valueLabel }}</span><span :class="changeToneClass(card.changeValue)">{{ card.changeLabel }}</span><time>{{ card.lastUpdatedLabel }}</time>
+              <strong>{{ t('indicator.' + card.indicator.indicator_id, card.indicator.name) }}</strong><span class="signal-list-value">{{ card.valueLabel }}</span><span :class="changeToneClass(card.changeValue)">{{ t("marketSignals.changePeriod", { days: changeDays }) }} {{ card.changeLabel }}</span><time>{{ card.lastUpdatedLabel }}</time>
             </button>
           </div>
           <div v-else class="empty-row">
@@ -110,7 +110,7 @@ import { useMarketSignalIndicators } from '@/modules/market'
 
 const { theme } = useTheme()
 const { t } = useI18n()
-const { loading, error, groups, totalCount, load, refresh } = useMarketSignalIndicators()
+const { loading, error, groups, totalCount, load, refresh, changeDays } = useMarketSignalIndicators()
 
 const activeGroup = ref('all')
 const visibleGroups = computed(() => activeGroup.value === 'all' ? groups.value : groups.value.filter(group => group.definition.id === activeGroup.value))
@@ -149,7 +149,7 @@ const selectIndicator = (id: string) => { selectedId.value = selectedId.value ==
 .empty-row { border: 1px solid var(--ui-border); border-radius: 6px; background: var(--ui-panel); padding: 32px 20px; text-align: center; color: var(--ui-muted); }
 
 .signal-compact-list { border-block:1px solid var(--ui-border); }
-.signal-compact-list button { display:grid; grid-template-columns:minmax(180px,1fr) minmax(100px,.6fr) 100px 140px; gap:18px; align-items:center; width:100%; padding:18px 12px; text-align:left; border-bottom:1px solid var(--ui-border); font-size:13px; }
+.signal-compact-list button { display:grid; grid-template-columns:minmax(180px,1fr) minmax(100px,.6fr) 170px 140px; gap:18px; align-items:center; width:100%; padding:18px 12px; text-align:left; border-bottom:1px solid var(--ui-border); font-size:13px; }
 .signal-compact-list button:hover,.signal-compact-list button[aria-expanded=true] { background:var(--ui-hover); }
 .signal-list-value { font-size:18px; font-weight:600; font-variant-numeric:tabular-nums; }
 .signal-compact-list time { color:var(--ui-muted); font-size:11px; text-align:right; }

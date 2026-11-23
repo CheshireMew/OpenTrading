@@ -2,13 +2,17 @@
   <div class="app-page">
     <div class="app-page-inner-wide">
       <header class="app-workspace-header"><h1 class="app-title">{{ $t('nav.dca') }}</h1><AppLayoutSwitch v-model="pageLayout" :options="layoutOptions" /></header>
-      <div class="dca-workspace" :class="{ 'dca-results-only': pageLayout === 'results' }">
+      <AppLoadingState v-if="initializing" :label="$t('ui.initializing')" :rows="2" />
+      <div v-if="initializationError" class="app-inline-note flex flex-wrap items-center justify-between gap-3" role="alert">
+        <span>{{ initializationError }}</span><button type="button" class="app-button-secondary" :disabled="initializing" @click="initialize">{{ $t('common.retry') }}</button>
+      </div>
+      <div v-if="ready" class="dca-workspace" :class="{ 'dca-results-only': pageLayout === 'results' }">
         <aside v-show="pageLayout === 'split'" class="dca-configuration min-w-0 space-y-6">
           <form class="app-panel p-5" @submit.prevent="runSimulation">
             <h2 class="app-section-title mb-5">{{ $t('dca.config') }}</h2>
             <div class="dca-primary-fields">
               <div><label class="label">{{ $t('dca.pair') }}</label><SymbolSearchBox v-model="config.symbol" :aria-label="$t('dca.pair')" /></div>
-              <label><span class="label">{{ config.strategy === 'value_averaging' ? $t('dca.dailyTarget', { currency: displayCurrency }) : $t('dca.dailyBase', { currency: displayCurrency }) }}</span><input id="dca-amount" v-model.number="displayAmount" type="number" min="0" step="any" class="app-control w-full" /></label>
+              <label><span class="label">{{ config.strategy === 'value_averaging' ? $t('dca.dailyTarget', { currency: displayCurrency }) : $t('dca.dailyBase', { currency: displayCurrency }) }}</span><input id="dca-amount" :aria-invalid="!Number.isFinite(Number(displayAmount)) || Number(displayAmount) <= 0" aria-describedby="dca-amount-hint" v-model.number="displayAmount" type="number" min="0" step="any" class="app-control w-full" /><p v-if="!Number.isFinite(Number(displayAmount)) || Number(displayAmount) <= 0" id="dca-amount-hint" class="mt-1 text-xs text-rose-700 dark:text-rose-300">{{ $t('dca.amountPositive') }}</p></label>
               <div><AppDateField v-model="config.start_date" :label="$t('dca.startDate')" :min="dcaStartMin" :max="dcaStartMax" input-class="app-control w-full" label-class="label" /><p class="app-muted mt-1 text-xs">{{ $t('dca.startDateHint') }}</p></div>
               <label><span class="label">{{ $t('dca.strategy') }}</span><select id="dca-strategy" v-model="config.strategy" class="app-control w-full"><option value="standard">{{ $t('dca.strategies.standard') }}</option><option value="ema_deviation">{{ $t('dca.strategies.ema20') }}</option><option value="rsi_dynamic">{{ $t('dca.strategies.rsi') }}</option><option v-if="!isIndexSelected" value="ahr999">{{ $t('dca.strategies.ahr999') }}</option><option v-if="!isIndexSelected" value="fear_greed">{{ $t('dca.strategies.fg') }}</option><option value="value_averaging">{{ $t('dca.strategies.va') }}</option></select></label>
               <label v-if="config.strategy !== 'standard' && config.strategy !== 'value_averaging'"><span class="label">{{ $t('dca.strength') }}</span><input id="dca-strength" v-model.number="config.strategy_params.multiplier" type="number" min="0" step="0.1" class="app-control w-full" /></label>
@@ -20,13 +24,17 @@
           <section class="dca-market-context">
             <div class="mb-4 flex items-center justify-between gap-3"><h2 class="app-section-title">{{ $t('dca.market') }}</h2><button type="button" class="text-xs underline underline-offset-4 app-muted" :disabled="marketData.loading" @click="fetchMarketIndicators">{{ marketData.loading ? $t('dca.marketLoading') : $t('dca.refreshMarket') }}</button></div>
             <div v-if="marketData.error" role="alert" class="app-inline-note mb-4 text-amber-800 dark:text-amber-200">{{ marketData.error }}</div>
-            <dl class="dca-context-values"><div><dt>{{ $t('dca.currentPrice') }}</dt><dd>{{ result ? formatMoney(result.current_price, result.pricing_currency || 'USDT') : marketData.currentPrice != null ? formatMoney(marketData.currentPrice, marketData.pricingCurrency) : '—' }}</dd><span v-if="result?.pricing_symbol || marketData.pricingSymbol" class="app-muted text-xs">{{ result?.pricing_symbol || marketData.pricingSymbol }}</span></div><div><dt>{{ $t('dca.rsi14') }}</dt><dd>{{ marketData.rsi ?? '—' }}</dd></div><div><dt>{{ $t('dca.fgIndex') }}</dt><dd :class="marketData.sentiment != null ? sentimentClass : 'app-muted'">{{ marketData.sentiment ?? $t('ui.unavailable') }}</dd><span v-if="marketData.sentimentLabel" class="app-muted text-xs">{{ marketData.sentimentLabel }}</span></div></dl>
-            <p v-if="marketData.updatedAt" class="app-muted mt-4 text-xs">{{ $t('dca.marketUpdated', { time: new Date(marketData.updatedAt).toLocaleString() }) }}</p>
+            <dl class="dca-context-values"><div><dt>{{ $t('dca.currentPrice') }}</dt><dd>{{ result ? formatMoney(result.current_price, result.pricing_currency || 'USDT') : marketData.currentPrice != null ? formatMoney(marketData.currentPrice, marketData.pricingCurrency) : '—' }}</dd><span v-if="result?.pricing_symbol || marketData.pricingSymbol" class="app-muted text-xs">{{ result?.pricing_symbol || marketData.pricingSymbol }}</span></div><div><dt>{{ $t('dca.rsi14') }}</dt><dd>{{ marketData.rsi ?? '—' }}</dd></div><div><dt>{{ $t('dca.fgIndex') }}</dt><dd :class="marketData.sentiment != null ? sentimentClass : 'app-muted'">{{ marketData.sentiment ?? $t('ui.unavailable') }}</dd><span v-if="marketData.sentimentLabel" class="app-muted text-xs">{{ backendText(marketData.sentimentLabel) }}</span></div></dl>
+            <p v-if="marketData.updatedAt" class="app-muted mt-4 text-xs">{{ $t('dca.marketUpdated', { time: formatDateTime(marketData.updatedAt) }) }}</p>
           </section>
         </aside>
         <section class="dca-results min-w-0 space-y-5" :aria-label="$t('dca.asset')" :aria-busy="loading">
           <div v-if="result?.data_quality === 'synthetic_and_exchange_proxy'" role="note" class="app-inline-note text-amber-800 dark:text-amber-200">{{ $t('dca.syntheticHistoryWarning') }}</div>
           <template v-if="result">
+            <div v-if="resultContext" class="dca-result-context">
+              <div><strong>{{ resultContext.symbol }}</strong><span>{{ resultStrategy }}</span><span>{{ $t('dca.resultDailyAmount', { amount: formatMoney(resultContext.amount, 'USDT') }) }}</span><span>{{ resultPeriod }}</span></div>
+              <button v-if="pageLayout === 'results'" type="button" class="app-button-secondary" @click="pageLayout = 'split'">{{ $t('dca.editInputs') }}</button>
+            </div>
             <dl class="dca-output-values app-metric-strip">
               <div><dt>{{ $t('dca.roi') }}</dt><dd :class="isPositiveRoi ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'">{{ (result.roi || 0).toFixed(2) }}%</dd></div>
               <div><dt>{{ $t('dca.currentValue') }}</dt><dd>{{ formatMoney(result.final_value, result.pricing_currency || 'USDT') }}</dd></div>
@@ -52,6 +60,8 @@ import AppLayoutSwitch from "@/components/AppLayoutSwitch.vue"
 import { usePageLayout } from "@/composables/usePageLayout"
 import { computed } from "vue"
 import { useI18n } from "vue-i18n"
+import { useDateTime } from '@/composables/useDateTime'
+import { backendText } from '@/i18n/backendText'
 import { ArrowPathIcon, PresentationChartLineIcon } from '@heroicons/vue/24/outline'
 import AppEmptyState from '@/components/AppEmptyState.vue'
 import AppLoadingState from '@/components/AppLoadingState.vue'
@@ -62,10 +72,15 @@ import { useDcaPage } from '@/modules/tools'
 
 const {
   config,
+  initializing,
+  initializationError,
+  initialize,
+  ready,
   displayAmount,
   loading,
   errorMessage,
   result,
+  resultContext,
   marketData,
   fetchMarketIndicators,
   roiChartCanvas,
@@ -83,11 +98,23 @@ const {
 } = useDcaPage()
 
 const { t } = useI18n()
+const { formatDateTime } = useDateTime()
+const resultStrategy = computed(() => {
+  const key = { standard:'standard', ema_deviation:'ema20', rsi_dynamic:'rsi', ahr999:'ahr999', fear_greed:'fg', value_averaging:'va' }[resultContext.value?.strategy]
+  return key ? t(`dca.strategies.${key}`) : ''
+})
+const resultPeriod = computed(() => {
+  const history = result.value?.history || []
+  return history.length ? `${history[0].date.slice(0,10)} — ${history[history.length-1].date.slice(0,10)}` : ''
+})
 const pageLayout = usePageLayout('dca', ['split', 'results'], 'split')
 const layoutOptions = computed(() => [{ value:'split', label:t('workspaceViews.configuration') }, { value:'results', label:t('workspaceViews.results') }])
 </script>
 
 <style scoped>
+.dca-result-context { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding-block:4px 12px; border-bottom:1px solid var(--ui-border); }
+.dca-result-context > div { display:flex; align-items:baseline; flex-wrap:wrap; gap:8px 16px; font-size:13px; color:var(--ui-muted); }
+.dca-result-context strong { font-size:16px; color:var(--ui-title); }
 .dca-workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; align-items: start; }
 .dca-primary-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .dca-execution-settings { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--ui-border); }
@@ -99,7 +126,9 @@ const layoutOptions = computed(() => [{ value:'split', label:t('workspaceViews.c
 .dca-output-values > * { padding: 16px 12px; }
 .dca-output-values > :nth-child(3n + 1) { padding-left: 0; }
 .dca-output-values dd { font-size: 22px; }
-.dca-supporting-charts { display: grid; gap: 20px; }
+.dca-supporting-charts { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; gap: 20px; }
+.dca-supporting-charts > section, .dca-supporting-charts > section > div { min-width: 0; }
+.dca-results .h-80, .dca-results .h-64 { max-height: calc(100dvh - 140px); }
 .dca-empty { border-block: 1px solid var(--ui-border); background: var(--ui-toolbar); }
 @container app-content (min-width: 68rem) {
   .dca-workspace { grid-template-columns: 320px minmax(0, 1fr); }

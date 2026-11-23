@@ -44,7 +44,7 @@
 
     <div v-if="errorMessage" role="alert" class="flex flex-wrap items-center justify-between gap-3 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200">
       <span>{{ errorMessage }}</span>
-      <button v-if="initialized" type="button" class="app-button-secondary app-touch-target" :disabled="loading || !canCompare" @click="fetchComparisonData">{{ $t('common.retry') }}</button>
+      <button v-if="initialized" type="button" class="app-button-secondary app-touch-target" :disabled="loading || initializing" @click="ready ? fetchComparisonData() : initialize()">{{ $t('common.retry') }}</button>
     </div>
 
     <section v-if="statistics" class="app-metric-strip compare-metrics">
@@ -71,7 +71,7 @@
 
       <!-- Ratio Chart (Full Width) -->
       <div class="app-panel relative flex flex-col overflow-hidden transition-colors compare-ratio-chart" v-show="pageLayout !== 'focus' || focusedChart === 'ratio'">
-        <div class="absolute top-2 left-2 z-10 border border-[#b8d2c4] bg-white/90 px-2 py-1 text-sm font-bold text-[#0f6b4f] dark:border-green-500/30 dark:bg-gray-900/80 dark:text-green-400">
+        <div class="absolute top-2 left-2 z-10 border border-[var(--ui-border)] bg-white/90 px-2 py-1 text-sm font-semibold text-[var(--ui-title)] dark:bg-gray-900/80">
           {{ $t('compare.ratio') }}: {{ resultSymbols.symbolA }} / {{ resultSymbols.symbolB }}
         </div>
         <TradingViewChart
@@ -83,7 +83,7 @@
       </div>
 <div class="compare-price-charts" v-show="pageLayout !== 'focus' || focusedChart !== 'ratio'">      <!-- Chart A -->
       <div class="app-panel relative flex flex-col overflow-hidden transition-colors" v-show="pageLayout !== 'focus' || focusedChart === 'a'">
-        <div class="absolute top-2 left-2 z-10 border border-[#b8d2c4] bg-white/90 px-2 py-1 text-sm font-bold text-[#0f6b4f] dark:border-emerald-500/30 dark:bg-gray-900/80 dark:text-emerald-300">
+        <div class="absolute top-2 left-2 z-10 border border-blue-500/30 bg-white/90 px-2 py-1 text-sm font-semibold text-blue-600 dark:bg-gray-900/80 dark:text-blue-400">
           {{ symbolLabel(resultSymbols.symbolA) }}
         </div>
         <TradingViewChart
@@ -95,7 +95,7 @@
 
       <!-- Chart B -->
       <div class="app-panel relative flex flex-col overflow-hidden transition-colors" v-show="pageLayout !== 'focus' || focusedChart === 'b'">
-        <div class="absolute top-2 left-2 z-10 border border-[#efc4b5] bg-white/90 px-2 py-1 text-sm font-bold text-[#c84c28] dark:border-purple-500/30 dark:bg-gray-900/80 dark:text-purple-400">
+        <div class="absolute top-2 left-2 z-10 border border-purple-500/30 bg-white/90 px-2 py-1 text-sm font-semibold text-purple-600 dark:border-purple-500/30 dark:bg-gray-900/80 dark:text-purple-400">
           {{ symbolLabel(resultSymbols.symbolB) }}
         </div>
         <TradingViewChart
@@ -128,6 +128,9 @@ const {
   config,
   loading,
   initialized,
+  initializing,
+  ready,
+  initialize,
   errorMessage,
   hasData,
   resultSymbols,
@@ -152,16 +155,16 @@ const layoutOptions = computed(() => ['ratio', 'prices', 'focus'].map(value => (
 
 <style scoped>
 .compare-charts { display: grid; gap: 20px; }
-.compare-ratio-chart { min-height: 360px; }
+.compare-ratio-chart { height: min(360px, calc(100dvh - 90px)); min-height: 0; }
 .compare-price-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
-.compare-price-charts > div { min-height: 300px; }
+.compare-price-charts > div { height: min(300px, calc(100dvh - 90px)); min-height: 0; min-width: 0; }
 .compare-metrics { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 @container app-content (max-width: 48rem) { .compare-price-charts { grid-template-columns: minmax(0, 1fr); } .compare-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 .compare-layout-prices .compare-price-charts { order:-1; }
-.compare-layout-prices .compare-price-charts > div { min-height:440px; }
-.compare-layout-prices .compare-ratio-chart { min-height:240px; }
+.compare-layout-prices .compare-price-charts > div { height:min(440px, calc(100dvh - 90px)); }
+.compare-layout-prices .compare-ratio-chart { height:min(240px, calc(100dvh - 90px)); }
 .compare-layout-focus .compare-price-charts { grid-template-columns:minmax(0,1fr); }
-.compare-layout-focus .compare-ratio-chart,.compare-layout-focus .compare-price-charts > div { min-height:560px; }
-@container app-content (max-width:48rem) { .compare-layout-focus .compare-ratio-chart,.compare-layout-focus .compare-price-charts > div { min-height:400px; } }
+.compare-layout-focus .compare-ratio-chart,.compare-layout-focus .compare-price-charts > div { height:min(560px, calc(100dvh - 90px)); }
+@container app-content (max-width:48rem) { .compare-layout-focus .compare-ratio-chart,.compare-layout-focus .compare-price-charts > div { height:min(400px, calc(100dvh - 90px)); } }
 </style>

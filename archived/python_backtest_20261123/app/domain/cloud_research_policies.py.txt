@@ -1,0 +1,96 @@
+"""Only the historical research differences; shared execution lives in the kernel."""
+
+from dataclasses import asdict
+from math import isfinite
+
+from app.domain.backtest_types import BarResult
+from app.domain.backtest_validation import observation_record
+from app.domain.cloud_adaptive_types_v1 import AdaptiveIntent, AdaptiveResult
+
+
+class ResearchPolicy:
+    def decode(self, result, bar, observations):
+        if isinstance(result, BarResult):
+            observations.append(observation_record(result, bar.timestamp))
+            return result.intent, None
+        return result, None
+
+    def on_entry(self, position, intent, price):
+        if intent.profit_protection is not None:
+            position.update(
+                profit_protection=asdict(intent.profit_protection), profit_peak_pct=0.0, protection_active=False
+            )
+
+    def candidate(self, distance):
+        return None
+
+    def finish(self, simulator, bars):
+        simulator.finish(bars)
+
+
+class AdaptivePolicy(ResearchPolicy):
+    def decode(self, result, bar, observations):
+        distance = None
+        if isinstance(result, AdaptiveResult):
+            distance = result.trailing_distance
+            if distance is not None and (not isfinite(distance) or distance <= 0):
+                raise ValueError("跟踪距离必须是有限正数")
+            if result.record_observation:
+                observations.append(observation_record(result, bar.timestamp))
+            intent = result.intent
+        else:
+            intent, distance = super().decode(result, bar, observations)
+        if isinstance(intent, AdaptiveIntent) and intent.activation_distance is not None:
+            if not isfinite(intent.activation_distance) or intent.activation_distance <= 0:
+                raise ValueError("保护启动距离必须是有限正数")
+        return intent, distance
+
+    def on_entry(self, position, intent, price):
+        super().on_entry(position, intent, price)
+        if (
+            intent.profit_protection is not None
+            and isinstance(intent, AdaptiveIntent)
+            and intent.activation_distance is not None
+        ):
+            position["profit_protection"]["activation_pct"] = 100 * intent.activation_distance / price
+
+    def candidate(self, distance):
+        if distance is None:
+            return None
+
+        def select(position, _baseline):
+            direction, entry = position["direction"], position["entry_price"]
+            peak = max(0.0, direction * (position["best"] - entry))
+            return entry + direction * max(0.0, peak - distance), "profit_protection"
+
+        return select
+
+
+class PeakPricePolicy(ResearchPolicy):
+    def __init__(self, cap):
+        if not isfinite(cap) or not 0 <= cap < 100:
+            raise ValueError("Price-peak drawdown must be in [0,100)")
+        self.cap = cap
+
+    def candidate(self, distance):
+        if not self.cap:
+            return None
+
+        def select(position, baseline):
+            direction = position["direction"]
+            capped = position["best"] * (1 - direction * self.cap / 100)
+            return (
+                (capped, "price_peak_protection")
+                if direction * (capped - baseline) > 0
+                else (baseline, "profit_protection")
+            )
+
+        return select
+
+
+class WindowPolicy(ResearchPolicy):
+    def __init__(self, transition_bar):
+        self.transition_bar = transition_bar
+
+    def finish(self, simulator, bars):
+        simulator.finish(bars, self.transition_bar)

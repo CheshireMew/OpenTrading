@@ -1,0 +1,160 @@
+from __future__ import annotations
+
+from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as postgres_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+import hashlib
+import json
+
+from app.domain.portfolios import PortfolioCollectionMismatchError, PortfolioRevisionConflictError
+
+from app.infra.db.database import DatabaseRuntime
+
+from app.infra.persistence.write_session import write_session
+
+from app.infra.db.schema import PortfolioLedgerRequest, PortfolioTransactionRecord
+
+from utils.time import utc_now_naive
+
+from uuid import uuid4
+
+from app.infra.persistence.portfolio_rows import (
+    require_active_portfolio,
+    require_transaction,
+    assert_external_id_available,
+    transaction_payload,
+)
+
+
+class PortfolioLedgerRepository:
+    def __init__(self, database_runtime: DatabaseRuntime) -> None:
+        self._database_runtime = database_runtime
+
+    @staticmethod
+    def _claim_request(session, portfolio_id: str, request_id: str | None, kind: str, payload):
+        if request_id is None:
+            return None, False
+        fingerprint = hashlib.sha256(json.dumps(payload, sort_keys=True, default=str, separators=(",", ":")).encode()).hexdigest()
+        insert = sqlite_insert if session.bind.dialect.name == "sqlite" else postgres_insert
+        inserted = session.execute(insert(PortfolioLedgerRequest).values(
+            portfolio_id=portfolio_id, request_id=request_id, kind=kind, payload_hash=fingerprint,
+            result={}, created_at=utc_now_naive(),
+        ).on_conflict_do_nothing(index_elements=["portfolio_id", "request_id"])).rowcount
+        receipt = session.get(PortfolioLedgerRequest, (portfolio_id, request_id))
+        if receipt.kind != kind or receipt.payload_hash != fingerprint:
+            raise PortfolioCollectionMismatchError("这个请求编号已用于另一笔操作，请先确认原操作结果")
+        return receipt, not inserted
+
+    def get_ledger_record(self, portfolio_id: str) -> dict:
+        with write_session(
+            self._database_runtime, PortfolioRevisionConflictError, PortfolioCollectionMismatchError
+        ) as session:
+            portfolio = require_active_portfolio(session, portfolio_id)
+            rows = list(
+                session.scalars(
+                    select(PortfolioTransactionRecord)
+                    .where(PortfolioTransactionRecord.portfolio_id == portfolio_id)
+                    .order_by(
+                        PortfolioTransactionRecord.archived_at.is_not(None),
+                        PortfolioTransactionRecord.occurred_at.desc(),
+                        PortfolioTransactionRecord.created_at.desc(),
+                    )
+                )
+            )
+            return {
+                "portfolio_payload": dict(portfolio.payload),
+                "transactions": [transaction_payload(row) for row in rows if row.archived_at is None],
+                "archived_transactions": [transaction_payload(row) for row in rows if row.archived_at is not None],
+            }
+
+    def create_transaction(self, portfolio_id: str, payload: dict, *, request_id: str | None = None) -> dict:
+        with write_session(
+            self._database_runtime, PortfolioRevisionConflictError, PortfolioCollectionMismatchError
+        ) as session:
+            require_active_portfolio(session, portfolio_id)
+            receipt, replay = self._claim_request(session, portfolio_id, request_id, "create", payload)
+            if replay:
+                return receipt.result
+            assert_external_id_available(session, portfolio_id, payload.get("external_id"))
+            now = utc_now_naive()
+            row = PortfolioTransactionRecord(
+                id=uuid4().hex, portfolio_id=portfolio_id, version=1, created_at=now, updated_at=now, **payload
+            )
+            session.add(row)
+            session.flush()
+            result = transaction_payload(row)
+            if receipt is not None:
+                receipt.result = json.loads(json.dumps(result, default=str))
+            return result
+
+    def update_transaction(self, portfolio_id: str, transaction_id: str, expected_version: int, payload: dict) -> dict:
+        with write_session(
+            self._database_runtime, PortfolioRevisionConflictError, PortfolioCollectionMismatchError
+        ) as session:
+            require_active_portfolio(session, portfolio_id)
+            row = require_transaction(session, portfolio_id, transaction_id, expected_version)
+            assert_external_id_available(session, portfolio_id, payload.get("external_id"), excluding_id=row.id)
+            for key, value in payload.items():
+                setattr(row, key, value)
+            row.version += 1
+            row.updated_at = utc_now_naive()
+            session.flush()
+            return transaction_payload(row)
+
+    def set_transaction_archived(
+        self, portfolio_id: str, transaction_id: str, expected_version: int, archived: bool
+    ) -> dict:
+        with write_session(
+            self._database_runtime, PortfolioRevisionConflictError, PortfolioCollectionMismatchError
+        ) as session:
+            require_active_portfolio(session, portfolio_id)
+            row = require_transaction(session, portfolio_id, transaction_id, expected_version)
+            if not archived:
+                assert_external_id_available(session, portfolio_id, row.external_id, excluding_id=row.id)
+            row.archived_at = utc_now_naive() if archived else None
+            row.version += 1
+            row.updated_at = utc_now_naive()
+            session.flush()
+            return transaction_payload(row)
+
+    def import_transactions(self, portfolio_id: str, payloads: list[dict], *, replace: bool, request_id: str | None = None) -> tuple[int, int]:
+        with write_session(
+            self._database_runtime, PortfolioRevisionConflictError, PortfolioCollectionMismatchError
+        ) as session:
+            require_active_portfolio(session, portfolio_id)
+            receipt, replay = self._claim_request(session, portfolio_id, request_id, "import", {"replace": replace, "transactions": payloads})
+            if replay:
+                return (receipt.result["imported"], receipt.result["archived"])
+            now = utc_now_naive()
+            archived_count = 0
+            if replace:
+                active_rows = list(
+                    session.scalars(
+                        select(PortfolioTransactionRecord).where(
+                            PortfolioTransactionRecord.portfolio_id == portfolio_id,
+                            PortfolioTransactionRecord.archived_at.is_(None),
+                        )
+                    )
+                )
+                for row in active_rows:
+                    row.archived_at = now
+                    row.version += 1
+                    row.updated_at = now
+                archived_count = len(active_rows)
+                session.flush()
+            batch_external_ids = [str(payload["external_id"]) for payload in payloads if payload.get("external_id")]
+            if len(batch_external_ids) != len(set(batch_external_ids)):
+                raise PortfolioCollectionMismatchError("导入文件中的外部流水编号不能重复")
+            if not replace:
+                for external_id in batch_external_ids:
+                    assert_external_id_available(session, portfolio_id, external_id)
+            for payload in payloads:
+                session.add(
+                    PortfolioTransactionRecord(
+                        id=uuid4().hex, portfolio_id=portfolio_id, version=1, created_at=now, updated_at=now, **payload
+                    )
+                )
+            session.flush()
+            if receipt is not None:
+                receipt.result = {"imported": len(payloads), "archived": archived_count}
+            return (len(payloads), archived_count)

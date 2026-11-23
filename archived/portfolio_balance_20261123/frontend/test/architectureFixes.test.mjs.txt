@@ -1,0 +1,295 @@
+import assert from 'node:assert/strict'
+import test from 'node:test'
+import fs from 'node:fs'
+import { createRequire } from 'node:module'
+import ts from 'typescript'
+import * as vue from 'vue'
+
+const require = createRequire(import.meta.url)
+const deferred = () => { let resolve; const promise = new Promise(done => { resolve = done }); return {promise, resolve} }
+const ref = value => ({value})
+const compile = source => ts.transpileModule(source, {compilerOptions: {module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText
+function load(file, modules={}) {
+  const exports = {}
+  new Function('require','exports',compile(fs.readFileSync(new URL(file,import.meta.url),'utf8')))(id => id in modules ? modules[id] : require(id),exports)
+  return exports
+}
+function actualFunction(name, state, file='../src/views/ChartWorkspace.vue') {
+  const source = fs.readFileSync(new URL(file,import.meta.url),'utf8').match(/<script setup(?: lang="ts")?>([\s\S]*?)<\/script>/)[1]
+  const ast = ts.createSourceFile('component.ts',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TS)
+  const node = ast.statements.find(node => ts.isFunctionDeclaration(node) && node.name.text === name ||
+    ts.isVariableStatement(node) && node.declarationList.declarations.some(value => value.name.getText(ast) === name))
+  return new Function('state',`with(state){${compile(node.getText(ast))};return ${name}}`)(state)
+}
+
+test('ledger replace import retains its original portfolio and mode after selection changes',async()=>{
+  const parsed=deferred(),writes=[],emissions=[]
+  const state={props:{portfolioId:'A'},selectionEpoch:1,disposed:false,saving:ref(false),error:ref(''),errorKind:ref('load'),ledger:ref(null),importMode:ref('replace'),
+    parsePortfolioLedgerFile:()=>parsed.promise,submitLedgerRequest:async(id,request)=>{writes.push({id,...request.body})},load:async()=>{},
+    emit:(...args)=>emissions.push(args),apiErrorMessage:error=>error.message,t:key=>key}
+  state.isCurrent=(id,epoch)=>id===state.props.portfolioId&&epoch===state.selectionEpoch&&!state.disposed
+  const running=actualFunction('importFile',state,'../src/components/portfolio/PortfolioLedgerPanel.vue')({target:{files:[{}],value:'x'}})
+  state.props.portfolioId='B';state.selectionEpoch++;state.importMode.value='append';state.saving.value=false
+  parsed.resolve([{transactionType:'deposit'}]);await running
+  assert.equal(writes[0].id,'A');assert.equal(writes[0].mode,'replace');assert.deepEqual(emissions,[])
+})
+
+const ledgerFiles=load('../src/modules/tools/portfolioBalance/ledgerFiles.ts')
+test('ledger import reports malformed files with actionable row and field details',async()=>{
+  const parse=(name,text)=>ledgerFiles.parsePortfolioLedgerFile({name,text:async()=>text})
+  for (const [name,text,code] of [['bad.json','{','jsonSyntax'],['shape.json','{}','jsonShape'],['bad.csv','transactionType,occurredAt\n"buy','csvQuotes']]) {
+    await assert.rejects(parse(name,text),error=>error instanceof ledgerFiles.LedgerFileError&&error.code===code)
+  }
+  await assert.rejects(parse('row.json',JSON.stringify([{transactionType:'buy',quantity:'bad',occurredAt:'2026-01-01'}])),error=>error.code==='number'&&error.details.row===1&&error.details.field==='quantity')
+  const rows=await parse('valid.csv','transactionType,occurredAt,cashAmount,note\ndeposit,2026-01-01,100,"a,b"')
+  assert.equal(rows[0].cashAmount,100);assert.equal(rows[0].note,'a,b')
+})
+
+test('import recovery opens the file chooser without clearing the error or loading an unrelated ledger',()=>{
+  let chosen=0,loads=0,saves=0
+  const state={errorKind:ref('import'),importInput:ref({click(){chosen++}}),load(){loads++},saveTransaction(){saves++}}
+  actualFunction('retryError',state,'../src/components/portfolio/PortfolioLedgerPanel.vue')()
+  assert.equal(chosen,1);assert.equal(loads,0);assert.equal(saves,0)
+})
+
+const number=load('../src/modules/tools/portfolioBalance/number.ts')
+const market={toBaseSymbol:value=>String(value).split('/')[0].toUpperCase(),isIndexSymbol:()=>false,readCashSymbolPrices:()=>({USD:1,USDT:1})}
+const assets=load('../src/modules/tools/portfolioBalance/assets.ts',{'./number':number,'@/modules/market':market})
+const {applyPortfolioLedgerHoldings}=load('../src/modules/tools/portfolioBalance/holdings.ts',{'./number':number,'./assets':assets,'@/modules/market':market})
+const {computePortfolioBalancePlan}=load('../src/modules/tools/portfolioBalance/plan.ts',{'./number':number,'./assets':assets,
+  './snapshot':{normalizePortfolioBalanceAsset:value=>value},'./schedule':{todayIso:()=> '2026-10-30',parseIsoDate:value=>new Date(value),shiftReviewDate:()=> '2026-11-30',diffDaysFromToday:()=>31}})
+test('ledger USD cash is counted once, separately from USDT, through buy and sell transitions',()=>{
+  const portfolio={assets:[{id:'btc',symbol:'BTC',units:0,currentPrice:100,seedValue:0,targetWeight:50},
+    {id:'usd',symbol:'USD',units:0,currentPrice:1,seedValue:0,targetWeight:50}]}
+  const apply=(cash,units)=>applyPortfolioLedgerHoldings(portfolio,{transactions:[{}],summary:{cashBalance:cash,costBasis:units*100,
+    positions:[{symbol:'BTC',units,costBasis:units*100,marketPrice:100}]}})
+  apply(200,0);assert.equal(portfolio.assets.find(a=>a.symbol==='USD').units,200)
+  apply(100,1);apply(100,1)
+  const plan=computePortfolioBalancePlan(portfolio.assets,{rebalanceBand:5,minTradeAmount:1,reviewFrequency:'monthly'},{virtualCapital:200,inceptionDate:'2026-10-30'})
+  assert.equal(plan.totalValue,200);assert.equal(plan.totalBuyAmount,0);assert.equal(plan.totalSellAmount,0)
+  apply(200,0);assert.equal(portfolio.assets.find(a=>a.symbol==='USD').units,200)
+  applyPortfolioLedgerHoldings(portfolio,{transactions:[{}],summary:{cashBalance:100,costBasis:10,positions:[{symbol:'USDT',units:10,costBasis:10,marketPrice:1}]}})
+  assert.equal(portfolio.assets.find(a=>a.symbol==='USD').units,100)
+  assert.equal(portfolio.assets.find(a=>a.symbol==='USDT').units,10)
+})
+
+test('unknown held prices prevent allocation trade recommendations',()=>{
+  const plan=computePortfolioBalancePlan([{id:'btc',symbol:'BTC',units:1,currentPrice:0,targetWeight:50,seedValue:100},
+    {id:'cash',symbol:'USD',units:100,currentPrice:1,targetWeight:50,seedValue:100}],
+    {rebalanceBand:5,minTradeAmount:1,reviewFrequency:'monthly'},{virtualCapital:200,inceptionDate:'2026-10-30'},true)
+  assert.equal(plan.valuationComplete,false)
+  assert.equal(plan.totalBuyAmount,0);assert.equal(plan.totalSellAmount,0)
+})
+
+const {createPortfolioSaveState}=load('../src/modules/tools/portfolioBalance/saveState.ts')
+const change=load('../src/modules/tools/portfolioBalance/changeSet.ts')
+const recovery=load('../src/modules/tools/portfolioBalance/recovery.ts')
+test('three-way recovery merges different portfolios and refuses conflicting edits',()=>{
+  const base={activePortfolioId:'a',portfolios:[{id:'a',name:'A',assets:[]},{id:'b',name:'B'}]}
+  const local=structuredClone(base);local.portfolios[0].name='mine'
+  const remote=structuredClone(base);remote.portfolios[1].name='theirs'
+  const result=recovery.mergePortfolioRecovery(local,base,remote)
+  assert.deepEqual(result.conflicts,[]);assert.deepEqual(result.snapshot.portfolios.map(p=>p.name),['mine','theirs'])
+  remote.portfolios[0].name='also theirs'
+  assert.deepEqual(recovery.mergePortfolioRecovery(local,base,remote).conflicts,['a'])
+})
+
+for (const choice of ['remote','copy']) test(`portfolio conflict recovery ${choice} reads remote without repeating rejected saves`,async()=>{
+  class ApiError extends Error {constructor(message,{status}={}){super(message);this.status=status}}
+  let gets=0,saves=0,stored
+  const initial={activePortfolioId:'a',portfolios:[{id:'a',name:'A',assets:[]}]}
+  const remote={activePortfolioId:'a',portfolios:[{id:'a',name:'server edit',assets:[]}]}
+  let snapshot=structuredClone(initial)
+  const state={revision:ref(1),activePortfolioId:ref('a'),storageReady:ref(false),storageLoading:ref(false),storageSaving:ref(false),storageError:ref(''),storageConflict:ref(false),deletedPortfolios:[],
+    buildSnapshot:()=>structuredClone(snapshot),applyCollection:response=>{snapshot=structuredClone(response.snapshot);state.revision.value=response.revision},
+    replaceSnapshot:value=>{snapshot=structuredClone(value)},applySaveMetadata:response=>{state.revision.value=response.revision},applyDeletedPage(){},clearSimulationResult(){},setSimulationResult(){}}
+  const api={getPortfolioCollection:async()=>{gets++;return {revision:gets===1?1:2,snapshot:gets===1?initial:remote}},
+    listDeletedPortfolios:async()=>({items:[],total:0}),getPortfolioSimulation:async()=>({result:null}),
+    changePortfolioCollection:async command=>{saves++;if(command.expectedRevision===1)throw new ApiError('conflict',{status:409});return {revision:3,snapshot}}}
+  const {createPortfolioPersistence}=load('../src/modules/tools/portfolioBalance/persistence.ts',{
+    '@/api/request':{ApiRequestError:ApiError,normalizeApiError:error=>error,apiErrorMessage:error=>error.message},
+    '@/composables/pageSnapshot':{PAGE_SNAPSHOT_KEYS:{},readPersistentPageSnapshotData(){}},'../api':{toolsApi:api},
+    './saveState':{createPortfolioSaveState},'./changeSet':change,'./recovery':{...recovery,readPortfolioRecovery:async()=>stored,writePortfolioRecovery:async value=>{stored=structuredClone(value)}},
+    './snapshot':{normalizePortfolioBalancePortfolio:value=>value,normalizePortfolioBalanceSnapshot:value=>value,createEmptyPortfolioBalanceSnapshot:()=>({activePortfolioId:'',portfolios:[]}),normalizePortfolioSimulationSummary:value=>value}})
+  const persistence=createPortfolioPersistence(state,'Portfolio');await persistence.initialize()
+  snapshot.portfolios[0].name='local edit';persistence.queueSave();await persistence.saveNow().catch(()=>{})
+  assert.equal(state.storageConflict.value,true);assert.equal(stored.snapshot.portfolios[0].name,'local edit')
+  await persistence.reload();assert.equal(gets,2);assert.equal(saves,1);assert.equal(state.storageConflict.value,true)
+  await persistence.resolveConflict(choice,name=>name+' copy');assert.equal(state.storageConflict.value,false)
+  assert.equal(stored.pending,false);assert.equal(snapshot.portfolios[0].name,'server edit')
+  if (choice === 'copy') {
+    assert.equal(snapshot.portfolios.length,2)
+    assert.equal(snapshot.portfolios[1].name,'local edit copy')
+    assert.notEqual(snapshot.portfolios[1].id,'a')
+    assert.equal(snapshot.portfolios[1].holdingsSource,'virtual')
+  }
+  await persistence.stop()
+})
+
+test('incomplete daily history cannot enter the portfolio simulator',async()=>{
+  const {createPromiseLruCache}=load('../src/modules/tools/portfolioBalance/promiseCache.ts')
+  const {loadPortfolioSimulationHistory}=load('../src/modules/tools/portfolioBalance/data.ts',{
+    '@/modules/market':{...market,ensureSymbolCatalogLoaded:async()=>{},marketHistoryApi:{getBatchPriceHistory:async()=>({items:[{symbol:'BTC/USDT',coverage:{complete:false,missing_ranges:[]},items:[]}]})}},
+    './simulation':{buildPortfolioSyntheticHistory:()=>[]},'./assets':assets,'./promiseCache':{createPromiseLruCache},'./errors':{PortfolioDataError:Error},
+    '@/utils/localDate':{toLocalIsoDate:date=>date.toISOString().slice(0,10),localIsoDateDaysAgo:()=> '2026-01-01'}})
+  await assert.rejects(loadPortfolioSimulationHistory({assets:[{symbol:'BTC',targetWeight:100}]},'2026-01-01'),/incompleteHistory/)
+})
+
+test('index history fills only verified holidays and preserves the original quote date', async () => {
+  const day = 86_400_000
+  const today = new Date().toISOString().slice(0, 10)
+  const end = Date.parse(`${today}T00:00:00Z`) - day
+  const date = time => new Date(time).toISOString().slice(0, 10)
+  const start = date(end - day), observed = date(end - 2 * day)
+  const { createPromiseLruCache } = load('../src/modules/tools/portfolioBalance/promiseCache.ts')
+  const makeLoader = complete => load('../src/modules/tools/portfolioBalance/data.ts', {
+    '@/modules/market': { ...market, ensureSymbolCatalogLoaded: async () => {}, isIndexSymbol: () => true,
+      marketIndexApi: { getIndexPricingHistory: async () => ({ data: [{ timestamp: end - 2 * day, close: 100 }],
+        coverage: { complete, start_date: observed, end_date: date(end), non_trading_dates: [start, date(end)] } }) } },
+    './simulation': { buildPortfolioSyntheticHistory: () => [] },
+    './assets': { collectPortfolioMarketTargets: () => [{ symbol: 'SPX', marketSymbol: 'SPX' }], readPortfolioSyntheticPrice: () => null },
+    './promiseCache': { createPromiseLruCache }, './errors': { PortfolioDataError: Error },
+    '@/utils/localDate': { toLocalIsoDate: date => date.toISOString().slice(0, 10) },
+  }).loadPortfolioSimulationHistory
+  const portfolio = { assets: [{ symbol: 'SPX', targetWeight: 100 }] }
+  await assert.rejects(makeLoader(false)(portfolio, start), /historySymbolsFailed/)
+  const history = await makeLoader(true)(portfolio, start)
+  assert.deepEqual(history.SPX, [
+    { date: start, close: 100, observedDate: observed },
+    { date: date(end), close: 100, observedDate: observed },
+  ])
+})
+
+test('portfolio simulation refuses missing start dates and internal gaps even for session-based rows', () => {
+  const { buildPortfolioSimulationSummary } = load('../src/modules/tools/portfolioBalance/simulation.ts', {
+    './assets': assets, './number': number, './snapshot': { normalizePortfolioBalanceAsset: value => value },
+    './schedule': { shiftReviewDate: () => '2024-02-01' },
+    '@/utils/localDate': { diffLocalIsoDateDays: () => 2 },
+  })
+  const run = dates => buildPortfolioSimulationSummary({ SPX: dates.map(date => ({ date, close: 100, sessionBased: true })) },
+    [{ symbol: 'SPX', targetWeight: 100 }], { reviewFrequency: 'monthly' }, { initialCapital: 100 }, '2024-01-01')
+  assert.equal(run(['2024-01-02', '2024-01-03']), null)
+  assert.equal(run(['2024-01-01', '2024-01-03']), null)
+  assert.equal(run(['2024-01-01', '2024-01-02', '2024-01-03']).finalValue, 100)
+})
+
+for (const action of ['createPortfolio', 'copyPortfolio']) test(`${action} retains a committed portfolio after simulation read failure`, async () => {
+  let snapshot = { activePortfolioId: 'a', portfolios: [{ id: 'a', name: 'A', assets: [] }] }
+  let committed
+  const state = { portfolios: snapshot.portfolios, activePortfolioId: ref('a'), portfolioTransitioning: ref(false),
+    sourceMessage: ref(''), sourceError: ref(''), clearSimulationResult() {}, buildSnapshot: () => structuredClone(snapshot),
+    replaceSnapshot: value => { snapshot = value } }
+  const add = portfolios => { portfolios.push({ id: 'b', name: 'B', assets: [] }); return 'b' }
+  const { createPortfolioBalancePageCommands } = load('../src/modules/tools/portfolioBalance/commands.ts', {
+    '@/modules/market': market, './simulation': {}, './data': {}, './holdings': {}, './assets': assets, './errors': {},
+    './portfolioCrud': { createPortfolioInCollection: add, copyPortfolioInCollection: add },
+  })
+  const commands = createPortfolioBalancePageCommands(state, key => key, {
+    saveNow: async () => { committed = structuredClone(snapshot) },
+    loadSimulation: async () => { throw Error('read failed') },
+  })
+  await assert.rejects(commands[action]('a'), /read failed/)
+  assert.equal(committed.portfolios.length, 2)
+  assert.equal(snapshot.portfolios.length, 2)
+  assert.equal(state.activePortfolioId.value, 'b')
+})
+
+test('unconfirmed ledger writes survive controller recreation and retry the exact request', async () => {
+  let stored, calls = [], first = true
+  const boundaries = {
+    '@/modules/chartWorkspace/drafts': { readDraft: async () => stored,
+      writeDraft: async (_key, value) => { stored = structuredClone(value) } },
+    '../api': { toolsApi: { createPortfolioTransaction: async (_id, body) => {
+      calls.push(body)
+      if (first) { first = false; throw Error('response lost after commit') }
+      return { id: 'saved-transaction' }
+    } } },
+  }
+  const firstController = load('../src/modules/tools/portfolioBalance/ledgerRequests.ts', boundaries)
+  const request = { kind: 'create', body: { transactionType: 'deposit', cashAmount: 100 } }
+  await assert.rejects(firstController.submitLedgerRequest('p', request), /response lost/)
+  const reopened = load('../src/modules/tools/portfolioBalance/ledgerRequests.ts', boundaries)
+  await assert.rejects(reopened.submitLedgerRequest('p', { kind: 'create', body: { cashAmount: 200 } }), /resolvePending/)
+  await reopened.retryPendingLedgerRequest('p')
+  assert.equal(calls.length, 2)
+  assert.deepEqual(calls[0], calls[1])
+  assert.equal(await reopened.readPendingLedgerRequest('p'), undefined)
+})
+
+function asyncPage(kind, api) {
+  let unmount
+  const page = load(`../src/modules/tools/use${kind}Page.ts`, {
+    vue: { ...vue, onMounted() {}, onBeforeUnmount: fn => { unmount = fn } },
+    '@/theme/palette.mjs': { DARK_PALETTE: {} }, '@/composables/useTheme': { useTheme: () => ({ theme: vue.ref('light') }) },
+    'vue-i18n': { useI18n: () => ({ t: key => key, locale: vue.ref('zh-CN') }) }, 'vue-router': { useRoute: () => ({ query: {} }) },
+    '@/composables/pageSnapshot': { PAGE_SNAPSHOT_KEYS: {}, createPersistentPageSnapshot: () => ({ initial: {} }) },
+    '@/modules/market': { ensureSymbolCatalogLoaded: async () => {}, isIndexSymbol: () => false },
+    '@/composables/useRequestError': { useRequestError: () => ({ error: vue.ref(''), setError() {}, clearError() {} }) },
+    '@/composables/useUserPreferences': { useUserPreferences: () => ({ timezone: vue.ref('UTC'), setTimezone() {} }) },
+    '@/composables/useMoney': { useMoney: () => ({ displayCurrency: vue.ref('USD') }) },
+    './pageSnapshots': { createEmptyCompareSnapshot: () => ({ config: { symbolA: 'BTC', symbolB: 'ETH', days: 30, timeframe: '1d' } }),
+      createEmptyDcaSnapshot: () => ({}), createEmptyDcaConfig: () => ({ symbol: 'BTC', amount: 100, start_date: '', investment_time: '12:00', timezone: 'UTC', strategy: 'standard', strategy_params: {} }) },
+    './useDcaMarketContext': { createEmptyMarketData: () => ({}), useDcaMarketContext: () => ({ marketData: {}, fetchMarketIndicators: async () => {} }) },
+    './useDcaCharts': { useDcaCharts: () => ({ renderCharts() {} }) },
+    '@/utils/localDate': { localIsoDateDaysAgo: () => '2020-01-01', todayLocalIsoDate: () => '2026-11-14' },
+    './api': { toolsApi: api },
+  })[`use${kind}Page`]()
+  if (kind === 'Dca') page.ready.value = true
+  return { page, unmount: () => unmount() }
+}
+
+for (const kind of ['Compare', 'Dca']) for (const action of ['change', 'unmount']) test(`${kind} ignores responses after ${action}`, async () => {
+  const pending = deferred()
+  const { page, unmount } = asyncPage(kind, { comparePairs: () => pending.promise, runSimulation: () => pending.promise })
+  const running = kind === 'Compare' ? page.fetchComparisonData() : page.runSimulation()
+  await Promise.resolve(); await Promise.resolve()
+  if (action === 'unmount') unmount()
+  else if (kind === 'Compare') page.config.symbolA = 'SOL'
+  else page.config.amount = 200
+  pending.resolve({ data_a: [{ close: 1 }], data_b: [{ close: 2 }], ratio_ohlc: [{ close: 0.5 }], history: [{ price: 1 }] })
+  await running
+  assert.equal(kind === 'Compare' ? page.hasData.value : Boolean(page.result.value), false)
+  assert.equal(page.loading.value, false)
+  unmount()
+})
+
+test('a rejected ledger command can be corrected without being stuck as an unknown commit', async () => {
+  let stored, rejected = true
+  const controller = load('../src/modules/tools/portfolioBalance/ledgerRequests.ts', {
+    '@/modules/chartWorkspace/drafts': { readDraft: async () => stored, writeDraft: async (_key, value) => { stored = structuredClone(value) } },
+    '../api': { toolsApi: { createPortfolioTransaction: async () => {
+      if (rejected) throw Object.assign(Error('invalid amount'), { status: 422 })
+      return { id: 'corrected' }
+    } } },
+  })
+  await assert.rejects(controller.submitLedgerRequest('p', { kind: 'create', body: { cashAmount: 0 } }), /invalid/)
+  assert.equal(await controller.readPendingLedgerRequest('p'), undefined)
+  rejected = false
+  assert.deepEqual(await controller.submitLedgerRequest('p', { kind: 'create', body: { cashAmount: 100 } }), { id: 'corrected' })
+})
+
+test('a local receipt failure cannot turn a committed portfolio save into a failed mutation', async () => {
+  const initial = { activePortfolioId: 'a', portfolios: [{ id: 'a', name: 'A', assets: [] }] }
+  let snapshot = structuredClone(initial), committed = false
+  const state = { revision: ref(1), activePortfolioId: ref('a'), storageReady: ref(false), storageLoading: ref(false),
+    storageSaving: ref(false), storageError: ref(''), storageConflict: ref(false), deletedPortfolios: [],
+    buildSnapshot: () => structuredClone(snapshot), applyCollection: response => { snapshot = structuredClone(response.snapshot) },
+    applySaveMetadata: response => { state.revision.value = response.revision }, applyDeletedPage() {}, clearSimulationResult() {}, setSimulationResult() {} }
+  const { createPortfolioPersistence } = load('../src/modules/tools/portfolioBalance/persistence.ts', {
+    '@/api/request': { ApiRequestError: Error, normalizeApiError: error => error, apiErrorMessage: error => error.message },
+    '@/composables/pageSnapshot': { PAGE_SNAPSHOT_KEYS: {}, readPersistentPageSnapshotData() {} },
+    '../api': { toolsApi: { getPortfolioCollection: async () => ({ revision: 1, snapshot: initial }), listDeletedPortfolios: async () => ({}),
+      getPortfolioSimulation: async () => ({ result: null }), changePortfolioCollection: async () => { committed = true; return { revision: 2, snapshot } } } },
+    './saveState': { createPortfolioSaveState }, './changeSet': change,
+    './recovery': { readPortfolioRecovery: async () => undefined, writePortfolioRecovery: async () => { if (committed) throw Error('receipt unavailable') } },
+    './snapshot': { normalizePortfolioBalancePortfolio: value => value, normalizePortfolioSimulationSummary: value => value },
+  })
+  const persistence = createPortfolioPersistence(state, 'Portfolio')
+  await persistence.initialize()
+  snapshot.portfolios[0].name = 'saved'
+  const response = await persistence.saveNow(true)
+  assert.equal(response.revision, 2)
+  assert.equal(state.revision.value, 2)
+  assert.equal(state.storageConflict.value, false)
+  assert.equal(state.storageError.value, 'receipt unavailable')
+})

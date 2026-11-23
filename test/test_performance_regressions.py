@@ -241,7 +241,7 @@ def test_postgresql_kline_upsert_never_builds_a_giant_statement():
         for statement in session.statements
     ]
     assert len(session.statements) == 14
-    assert max(parameter_counts) == 8_000
+    assert max(parameter_counts) == 9_000  # Nine stored fields, including finalized.
 
 
 def test_history_persistence_opens_bounded_transactions():

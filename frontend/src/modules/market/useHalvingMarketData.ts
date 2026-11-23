@@ -1,6 +1,6 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
-import type { OhlcvPointResponse } from './contracts'
+import type { BitcoinHalvingResponse, OhlcvPointResponse } from './contracts'
 import { marketHistoryApi } from './api'
 import { usePriceHistoryStore } from './priceHistoryStore'
 
@@ -9,14 +9,19 @@ export const HALVING_PRICE_SYMBOL = 'BTC/USDT'
 export const HALVING_PRICE_TIMEFRAME = '1d'
 export const HALVING_HISTORY_START_DATE = '2010-07-01'
 const CURRENT_PRICE_REFRESH_INTERVAL_MS = 15_000
+const HALVING_REFRESH_INTERVAL_MS = 30 * 60 * 1000
 
 export const useHalvingMarketData = (translate: (key: string) => string) => {
   const store = usePriceHistoryStore()
-  const currentPrice = ref(0)
+  const currentPrice = ref<number | null>(null)
   const currentPriceError = ref('')
   const currentPriceUpdatedAt = ref<string | null>(null)
   let refreshTimer: number | null = null
   let refreshPending = false
+  const halvingEstimate = ref<BitcoinHalvingResponse | null>(null)
+  const halvingEstimateFailed = ref(false)
+  let halvingTimer: number | null = null
+  let halvingRequest: AbortController | null = null
 
   const historyResponse = computed(() => store.readPriceHistory(
     HALVING_PRICE_SYMBOL,
@@ -34,7 +39,7 @@ export const useHalvingMarketData = (translate: (key: string) => string) => {
     )
     return key ? translate(key) : ''
   })
-  const error = computed(() => historyError.value || currentPriceError.value)
+  const error = computed(() => historyError.value || (currentPriceError.value ? translate(currentPriceError.value) : ''))
   const loading = computed(() => (
     store.isPriceHistoryLoading(HALVING_PRICE_SYMBOL, HALVING_PRICE_TIMEFRAME, HALVING_HISTORY_START_DATE)
     || (!historyResponse.value && !error.value)
@@ -51,10 +56,29 @@ export const useHalvingMarketData = (translate: (key: string) => string) => {
         currentPrice.value = price
         currentPriceError.value = ''
         currentPriceUpdatedAt.value = response.timestamp || new Date().toISOString()
+      } else {
+        currentPriceError.value = 'halving.currentPriceLoadFailed'
       }
     } catch (requestError) {
       console.error('Refresh halving current price failed', requestError)
-      currentPriceError.value = translate('halving.currentPriceLoadFailed')
+      currentPriceError.value = 'halving.currentPriceLoadFailed'
+    }
+  }
+
+  const refreshHalvingEstimate = async () => {
+    if (halvingRequest) return
+    const controller = new AbortController()
+    halvingRequest = controller
+    try {
+      const estimate = await marketHistoryApi.getBitcoinHalving(controller.signal)
+      if (!controller.signal.aborted) {
+        halvingEstimate.value = estimate
+        halvingEstimateFailed.value = false
+      }
+    } catch {
+      if (!controller.signal.aborted) halvingEstimateFailed.value = true
+    } finally {
+      halvingRequest = null
     }
   }
 
@@ -67,7 +91,7 @@ export const useHalvingMarketData = (translate: (key: string) => string) => {
         { force },
       )
       const history = (response?.items || []).filter((row) => row.close > 0)
-      if (currentPrice.value <= 0 && history.length) {
+      if (currentPrice.value === null && history.length) {
         currentPrice.value = Number(history[history.length - 1]?.close || 0)
         currentPriceUpdatedAt.value = new Date(history[history.length - 1].timestamp).toISOString()
       }
@@ -79,10 +103,14 @@ export const useHalvingMarketData = (translate: (key: string) => string) => {
   const stopRefresh = () => {
     if (refreshTimer !== null) window.clearInterval(refreshTimer)
     refreshTimer = null
+    if (halvingTimer !== null) window.clearInterval(halvingTimer)
+    halvingTimer = null
+    halvingRequest?.abort()
   }
 
   onMounted(() => {
-    void Promise.all([fetchHistory(), refreshCurrentPrice()])
+    void Promise.all([fetchHistory(), refreshCurrentPrice(), refreshHalvingEstimate()])
+    halvingTimer = window.setInterval(refreshHalvingEstimate, HALVING_REFRESH_INTERVAL_MS)
     refreshTimer = window.setInterval(() => {
       if (refreshPending) return
       refreshPending = true
@@ -91,7 +119,9 @@ export const useHalvingMarketData = (translate: (key: string) => string) => {
   })
   onBeforeUnmount(stopRefresh)
 
-  const retry = () => Promise.all([fetchHistory(true), refreshCurrentPrice()])
+  const retry = () => Promise.all([fetchHistory(true), refreshCurrentPrice(), refreshHalvingEstimate()])
 
-  return { currentPrice, currentPriceUpdatedAt, historyData, loading, error, retry }
+  return {
+    currentPrice, currentPriceUpdatedAt, historyData, loading, error, retry, halvingEstimate, halvingEstimateFailed,
+  }
 }

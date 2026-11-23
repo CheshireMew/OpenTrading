@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import argparse
 import json
 import re
 from collections import defaultdict
@@ -60,7 +61,7 @@ class QueryParamContract:
     route_name: str
 
 
-def main() -> None:
+def render_outputs() -> dict[Path, str]:
     grouped_models: dict[str, list[type[BaseModel]]] = defaultdict(list)
     grouped_query_params: dict[str, list[QueryParamContract]] = defaultdict(list)
     for contract in collect_route_contract_models():
@@ -68,18 +69,37 @@ def main() -> None:
     for contract in collect_route_query_param_contracts():
         grouped_query_params[contract.target_file].append(contract)
 
+    outputs: dict[Path, str] = {}
     for filename in TARGET_FILES:
         content = render_file(
             grouped_models.get(filename, []),
             grouped_query_params.get(filename, []),
         )
-        TARGET_PATHS[filename].write_text(content, encoding="utf-8")
-    (FRONTEND_API_DIR / "routes.ts").write_text(render_api_routes(), encoding="utf-8")
-    (FRONTEND_API_DIR / "errors.ts").write_text(render_file([ApiErrorResponse], []), encoding="utf-8")
-    (TARGET_PATHS["market.ts"].parent / "generatedWeb3Chains.ts").write_text(
-        render_web3_chain_catalog(),
-        encoding="utf-8",
-    )
+        outputs[TARGET_PATHS[filename]] = content
+    outputs[FRONTEND_API_DIR / "routes.ts"] = render_api_routes()
+    outputs[FRONTEND_API_DIR / "errors.ts"] = render_file([ApiErrorResponse], [])
+    outputs[TARGET_PATHS["market.ts"].parent / "generatedWeb3Chains.ts"] = render_web3_chain_catalog()
+    return outputs
+
+
+def stale_outputs(outputs: dict[Path, str]) -> list[Path]:
+    return [path for path, content in outputs.items()
+            if not path.exists() or path.read_text(encoding="utf-8") != content]
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--check", action="store_true", help="Check every generated output without modifying files")
+    args = parser.parse_args()
+    outputs = render_outputs()
+    if args.check:
+        stale = stale_outputs(outputs)
+        for path in stale:
+            print(f"Stale generated contract: {path.relative_to(REPO_ROOT)}")
+        return 1 if stale else 0
+    for path, content in outputs.items():
+        path.write_text(content, encoding="utf-8")
+    return 0
 
 
 def render_web3_chain_catalog() -> str:
@@ -561,4 +581,4 @@ def pascal_case(value: str) -> str:
     return "".join(token[:1].upper() + token[1:] for token in tokens if token)
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

@@ -47,6 +47,10 @@ class BinanceMarketPageState:
             self._last_requested_at.move_to_end(key)
             self._enforce_limit_locked(preserve=key)
             cached = self._responses.get(key)
+            if cached is not None and int(time.time() * 1000) - cached.updated_at > settings.MARKET_STREAM_STALE_SECONDS * 1000:
+                self._responses.pop(key, None)
+                cached = None
+                added = True
             if cached is not None:
                 self._responses.move_to_end(key)
             return (self.with_live_status(cached) if cached is not None else None, added)

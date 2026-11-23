@@ -1,0 +1,1737 @@
+[
+  {
+    "source": "app/application/backtest_ports.py",
+    "destination": "archived/python_backtest_20261123/app/application/backtest_ports.py.txt",
+    "bytes": 1678,
+    "sha256": "ea7d8916228f77b0d6d6622f2fc2e4ccfff17bdb643bafecc6dac98710dd6359"
+  },
+  {
+    "source": "app/application/research_result_ports.py",
+    "destination": "archived/python_backtest_20261123/app/application/research_result_ports.py.txt",
+    "bytes": 1351,
+    "sha256": "3bf3cb618d4c439ee1a15583fbe0afe4e4943b6bfc10a65e27f2ba3d9f925dbd"
+  },
+  {
+    "source": "app/contracts/backtest_diagnostics.py",
+    "destination": "archived/python_backtest_20261123/app/contracts/backtest_diagnostics.py.txt",
+    "bytes": 2966,
+    "sha256": "504d963b97aaee174e013e40eba982a7b0bc829203189c1cdce0b34bb200046f"
+  },
+  {
+    "source": "app/contracts/local_backtest.py",
+    "destination": "archived/python_backtest_20261123/app/contracts/local_backtest.py.txt",
+    "bytes": 5114,
+    "sha256": "b724e643bd8025ffefbd6a618978c8bab913f47aae9cfbf79dfe0111d40c0364"
+  },
+  {
+    "source": "app/contracts/parameter_sweep.py",
+    "destination": "archived/python_backtest_20261123/app/contracts/parameter_sweep.py.txt",
+    "bytes": 4345,
+    "sha256": "0a931386452d812515f0bd052ab6dc05f5a647b117182f2ad6bb91020c6b4034"
+  },
+  {
+    "source": "app/contracts/research_results.py",
+    "destination": "archived/python_backtest_20261123/app/contracts/research_results.py.txt",
+    "bytes": 1828,
+    "sha256": "ab65260bd3496ac272dc00a23efdda6e993e4e2ca7da8156c1ef5c484230a9ab"
+  },
+  {
+    "source": "app/contracts/research_study.py",
+    "destination": "archived/python_backtest_20261123/app/contracts/research_study.py.txt",
+    "bytes": 5061,
+    "sha256": "3f8f75f057de5835b0c765e1a04073f011e44e6e659c57a4e4cb304c9b932739"
+  },
+  {
+    "source": "app/domain/backtest_account.py",
+    "destination": "archived/python_backtest_20261123/app/domain/backtest_account.py.txt",
+    "bytes": 5368,
+    "sha256": "e5590a62898236547318dd3688dc671bf7fc10fff72ddc132a28eb778de9d664"
+  },
+  {
+    "source": "app/domain/backtest_accounting.py",
+    "destination": "archived/python_backtest_20261123/app/domain/backtest_accounting.py.txt",
+    "bytes": 2659,
+    "sha256": "0079d4d3baa16b6f0423fd49b6253bb39faf0c76bfddf1173f32bef77f7928f9"
+  },
+  {
+    "source": "app/domain/backtest_decisions.py",
+    "destination": "archived/python_backtest_20261123/app/domain/backtest_decisions.py.txt",
+    "bytes": 5750,
+    "sha256": "b22c616d338b2ee4ef6ef79f952888ad55585d2edd041bb611c2736493637a75"
+  },
+  {
+    "source": "app/domain/backtest_diagnostics.py",
+    "destination": "archived/python_backtest_20261123/app/domain/backtest_diagnostics.py.txt",
+    "bytes": 6615,
+    "sha256": "826e64824eeba52ac865dbcdda77dee58cfefbd7f406443fb7ec94d063bd681d"
+  },
+  {
+    "source": "app/domain/backtest_execution.py",
+    "destination": "archived/python_backtest_20261123/app/domain/backtest_execution.py.txt",
+    "bytes": 1915,
+    "sha256": "7124d8252d9e58be77afff7cece86708ff2e7024b74d8d3378bc89fe7d62cf1f"
+  },
+  {
+    "source": "app/domain/backtest_history.py",
+    "destination": "archived/python_backtest_20261123/app/domain/backtest_history.py.txt",
+    "bytes": 3065,
+    "sha256": "c08eb330648129dcd9dcb800860a089d9efa1bd95cdba60f656a403905bb36fd"
+  },
+  {
+    "source": "app/domain/backtest_orders.py",
+    "destination": "archived/python_backtest_20261123/app/domain/backtest_orders.py.txt",
+    "bytes": 7401,
+    "sha256": "6ab287ceaf1dc1c7691fd1ab3bd538d592aaedbfd32b38a2179ba77fcd61b519"
+  },
+  {
+    "source": "app/domain/backtest_protection.py",
+    "destination": "archived/python_backtest_20261123/app/domain/backtest_protection.py.txt",
+    "bytes": 2904,
+    "sha256": "a207a2369d9523066b98798bc3233593cb15dc6ffdd6dbe7636aa27842d0f550"
+  },
+  {
+    "source": "app/domain/backtest_report.py",
+    "destination": "archived/python_backtest_20261123/app/domain/backtest_report.py.txt",
+    "bytes": 1481,
+    "sha256": "05c876d2cdcb455fb2e8e41eb3c2d595898de2094563729bfac591042dfc1fe4"
+  },
+  {
+    "source": "app/domain/backtest_simulation.py",
+    "destination": "archived/python_backtest_20261123/app/domain/backtest_simulation.py.txt",
+    "bytes": 9910,
+    "sha256": "6081a35080e2636ce6d12eb740bdd992180cd5b2b9572d99c0190655c08732f0"
+  },
+  {
+    "source": "app/domain/backtest_state.py",
+    "destination": "archived/python_backtest_20261123/app/domain/backtest_state.py.txt",
+    "bytes": 1958,
+    "sha256": "8d1039c381c91d79f423de4e61a1948da3559ee2e8f6f58c24a7e746f53ac16b"
+  },
+  {
+    "source": "app/domain/backtest_types.py",
+    "destination": "archived/python_backtest_20261123/app/domain/backtest_types.py.txt",
+    "bytes": 3598,
+    "sha256": "83aab52ac185384212340ae5fec5e4c7748f87b410972f2f67e6badf20eaeb93"
+  },
+  {
+    "source": "app/domain/backtest_validation.py",
+    "destination": "archived/python_backtest_20261123/app/domain/backtest_validation.py.txt",
+    "bytes": 6796,
+    "sha256": "31c1234865b9875b13ece8855027eb1a87cdec9226996962f16e011a0443c921"
+  },
+  {
+    "source": "app/domain/cloud_adaptive_research_v1.py",
+    "destination": "archived/python_backtest_20261123/app/domain/cloud_adaptive_research_v1.py.txt",
+    "bytes": 806,
+    "sha256": "c02309dac7f8fed24c946f81e13caf67cc18c30f81a737a0688acf886b208437"
+  },
+  {
+    "source": "app/domain/cloud_adaptive_types_v1.py",
+    "destination": "archived/python_backtest_20261123/app/domain/cloud_adaptive_types_v1.py.txt",
+    "bytes": 411,
+    "sha256": "67c1d260e5f92c4bfe14b4ffb88dc5d09568d4de4b57f8d4e15cc5071e2a8be4"
+  },
+  {
+    "source": "app/domain/cloud_entry_path_audit.py",
+    "destination": "archived/python_backtest_20261123/app/domain/cloud_entry_path_audit.py.txt",
+    "bytes": 3989,
+    "sha256": "479f15e855f385981d7ee7c846afffcd7d196eb5ba50c196404f1fafb5b44920"
+  },
+  {
+    "source": "app/domain/cloud_intrabar_selection_v1.py",
+    "destination": "archived/python_backtest_20261123/app/domain/cloud_intrabar_selection_v1.py.txt",
+    "bytes": 3662,
+    "sha256": "9c4836bf773a9d5f357e502e9733f1acaa6528128c2581e16eaf62bc0321f1d7"
+  },
+  {
+    "source": "app/domain/cloud_protection_research_v1.py",
+    "destination": "archived/python_backtest_20261123/app/domain/cloud_protection_research_v1.py.txt",
+    "bytes": 872,
+    "sha256": "1c05d371052b015f05adb6f9118dfbbe48843f71b4d8df3032d3faa38ad9c0ee"
+  },
+  {
+    "source": "app/domain/cloud_research_kernel.py",
+    "destination": "archived/python_backtest_20261123/app/domain/cloud_research_kernel.py.txt",
+    "bytes": 8821,
+    "sha256": "484ae65e6c09dcbffe953b4ce94aa5deb34ccb9b2212effda93e208ccd3151e4"
+  },
+  {
+    "source": "app/domain/cloud_research_policies.py",
+    "destination": "archived/python_backtest_20261123/app/domain/cloud_research_policies.py.txt",
+    "bytes": 3526,
+    "sha256": "d7309d664bc4d9493c637016d3b0068978f0c4621532c019be1c82d9d0491238"
+  },
+  {
+    "source": "app/domain/cloud_trade_attribution.py",
+    "destination": "archived/python_backtest_20261123/app/domain/cloud_trade_attribution.py.txt",
+    "bytes": 13376,
+    "sha256": "a83b77f3d0fb20499b7c299c0b767ebc2c5d8c221d1c498fec401d90a25a9301"
+  },
+  {
+    "source": "app/domain/cloud_window_research_v1.py",
+    "destination": "archived/python_backtest_20261123/app/domain/cloud_window_research_v1.py.txt",
+    "bytes": 856,
+    "sha256": "a7162c4d9aa9ab51f466aace0c52e18665a59391e23d2d619434ad8f29b560fe"
+  },
+  {
+    "source": "app/domain/local_backtest.py",
+    "destination": "archived/python_backtest_20261123/app/domain/local_backtest.py.txt",
+    "bytes": 816,
+    "sha256": "69574efe803ddd03b30f31a6b075d8e4da4c8d55f9dd59f7100921406eb5ad5e"
+  },
+  {
+    "source": "app/infra/persistence/local_backtest_repository.py",
+    "destination": "archived/python_backtest_20261123/app/infra/persistence/local_backtest_repository.py.txt",
+    "bytes": 4660,
+    "sha256": "f0ca079aa5d778f65900837da5d69565a7e0827245bd3dcc45a8a1f54521f043"
+  },
+  {
+    "source": "app/infra/persistence/research_result_repository.py",
+    "destination": "archived/python_backtest_20261123/app/infra/persistence/research_result_repository.py.txt",
+    "bytes": 6028,
+    "sha256": "69268f07a9d70d2e5ff622c2b2f57aff90238261a4e858e9e859434b1cb1182d"
+  },
+  {
+    "source": "app/routers/local_backtests.py",
+    "destination": "archived/python_backtest_20261123/app/routers/local_backtests.py.txt",
+    "bytes": 9319,
+    "sha256": "846db968558126b0289da8f8f70adee7d4282c8e1370d3534edbd1d3103f5f37"
+  },
+  {
+    "source": "app/services/backtest_batch_data.py",
+    "destination": "archived/python_backtest_20261123/app/services/backtest_batch_data.py.txt",
+    "bytes": 2635,
+    "sha256": "b0fbe14b583bba3e2a476a4d95d580a7b5b529ccf131b069f71b4bbdf299cddb"
+  },
+  {
+    "source": "app/services/backtest_datasets.py",
+    "destination": "archived/python_backtest_20261123/app/services/backtest_datasets.py.txt",
+    "bytes": 2075,
+    "sha256": "bbbf59fa2e224372edf7c322d7b6ef980f990b201566ef82ac340387534f26dc"
+  },
+  {
+    "source": "app/services/backtest_diagnostics_service.py",
+    "destination": "archived/python_backtest_20261123/app/services/backtest_diagnostics_service.py.txt",
+    "bytes": 8081,
+    "sha256": "03f6e9dd8d0dec618845585b7e56e3892550878f5a63b8ed4ac8135f2a7bd670"
+  },
+  {
+    "source": "app/services/backtest_history_loader.py",
+    "destination": "archived/python_backtest_20261123/app/services/backtest_history_loader.py.txt",
+    "bytes": 2780,
+    "sha256": "0d3826f8a15abb712ba2cd0cde27e340edf89abb166ce2a2977955209d95df75"
+  },
+  {
+    "source": "app/services/backtest_preflight.py",
+    "destination": "archived/python_backtest_20261123/app/services/backtest_preflight.py.txt",
+    "bytes": 4733,
+    "sha256": "97ffb0bd47ee3fb8e2a1908b14d2793cf2cac445716210fe9bf4201059a70be4"
+  },
+  {
+    "source": "app/services/backtest_preparation.py",
+    "destination": "archived/python_backtest_20261123/app/services/backtest_preparation.py.txt",
+    "bytes": 5607,
+    "sha256": "c7a734275159da541ee523a25cfcab5325b72890e42313351ea5241ca42d84be"
+  },
+  {
+    "source": "app/services/backtest_provenance.py",
+    "destination": "archived/python_backtest_20261123/app/services/backtest_provenance.py.txt",
+    "bytes": 7104,
+    "sha256": "7b6789a0947d007ed76cc2cd1b3e82dfd4346246e1ce3131656b8dc4d6f76b8a"
+  },
+  {
+    "source": "app/services/backtest_record_store.py",
+    "destination": "archived/python_backtest_20261123/app/services/backtest_record_store.py.txt",
+    "bytes": 8458,
+    "sha256": "041da60528f5e15dd54f4b01fab0d4c7e54f1814b07726a436ab021929a043f3"
+  },
+  {
+    "source": "app/services/backtest_snapshots.py",
+    "destination": "archived/python_backtest_20261123/app/services/backtest_snapshots.py.txt",
+    "bytes": 16566,
+    "sha256": "95a2c118e6040a41941e4a9bc08968d329da5e5ee5b1da77b9225cdd99ce7fce"
+  },
+  {
+    "source": "app/services/local_backtest_runtime.py",
+    "destination": "archived/python_backtest_20261123/app/services/local_backtest_runtime.py.txt",
+    "bytes": 4037,
+    "sha256": "f196a10c0d541f8741b5ac2112aadacbbf158eaa1fba3438221486c84eec0edb"
+  },
+  {
+    "source": "app/services/local_backtest_service.py",
+    "destination": "archived/python_backtest_20261123/app/services/local_backtest_service.py.txt",
+    "bytes": 12459,
+    "sha256": "82fa7b18bb5752e3fd8670ea54a58032c70809470e1e04e2e550605943646e7e"
+  },
+  {
+    "source": "app/services/local_backtest_strategies.py",
+    "destination": "archived/python_backtest_20261123/app/services/local_backtest_strategies.py.txt",
+    "bytes": 8400,
+    "sha256": "a30e40ead88e821b6306784dd88f8335e84450fc8a2187e3006c355b788a2cf0"
+  },
+  {
+    "source": "app/services/local_research_runtime.py",
+    "destination": "archived/python_backtest_20261123/app/services/local_research_runtime.py.txt",
+    "bytes": 1020,
+    "sha256": "f971432ef0e5340d1efca013658f16ba830d7d27bf69ed8915cfcff971051960"
+  },
+  {
+    "source": "app/services/parameter_sweep_service.py",
+    "destination": "archived/python_backtest_20261123/app/services/parameter_sweep_service.py.txt",
+    "bytes": 16804,
+    "sha256": "d37cb581aba34e93494373628dc40651638c1ad65df0c5aa6b58828d51f07e62"
+  },
+  {
+    "source": "app/services/research_catalog.py",
+    "destination": "archived/python_backtest_20261123/app/services/research_catalog.py.txt",
+    "bytes": 8242,
+    "sha256": "e56ed84b06a2cd1e0c9390b00990302f2dc8a7506a40eed945be97165ad9f497"
+  },
+  {
+    "source": "app/services/research_comparison.py",
+    "destination": "archived/python_backtest_20261123/app/services/research_comparison.py.txt",
+    "bytes": 9281,
+    "sha256": "8fa86dca084b79e4bb4b1c5807d8202746fc2ecdc1c315d02ad3b16bbc69590e"
+  },
+  {
+    "source": "app/services/research_result_entries.py",
+    "destination": "archived/python_backtest_20261123/app/services/research_result_entries.py.txt",
+    "bytes": 10720,
+    "sha256": "d2974d19699b8bbe68a16622a0aa0213662c5dc4b927b43cdbcc529e5b1be10b"
+  },
+  {
+    "source": "app/services/research_result_importer.py",
+    "destination": "archived/python_backtest_20261123/app/services/research_result_importer.py.txt",
+    "bytes": 6440,
+    "sha256": "b1849fb4e4c858ff83bd223bd93747c2e1c4a01f1d778dfbb1cf7b7ca56da548"
+  },
+  {
+    "source": "app/services/research_result_manifests.py",
+    "destination": "archived/python_backtest_20261123/app/services/research_result_manifests.py.txt",
+    "bytes": 5791,
+    "sha256": "e79024279e513dc6688283039435a693056415613395987bbcc461384f71dc3c"
+  },
+  {
+    "source": "app/services/research_result_scanner.py",
+    "destination": "archived/python_backtest_20261123/app/services/research_result_scanner.py.txt",
+    "bytes": 902,
+    "sha256": "c874e6ef24ad39394db88b4280aac3ed79b0bb89a777bbfbdd11de683f24a72a"
+  },
+  {
+    "source": "app/services/research_results_catalog.py",
+    "destination": "archived/python_backtest_20261123/app/services/research_results_catalog.py.txt",
+    "bytes": 7116,
+    "sha256": "65a6ece56df442f4273b76ea5cfde0c9e042afb55d0534e40f7c405211c1d55b"
+  },
+  {
+    "source": "app/services/research_strategy_families.py",
+    "destination": "archived/python_backtest_20261123/app/services/research_strategy_families.py.txt",
+    "bytes": 1054,
+    "sha256": "7b6f141cfea845698d24d4608c16076aa0e20733acc2247c5960c0b66b3d9db4"
+  },
+  {
+    "source": "app/services/research_study_service.py",
+    "destination": "archived/python_backtest_20261123/app/services/research_study_service.py.txt",
+    "bytes": 21876,
+    "sha256": "597d48a729e3e3628a4b5722491ed89a4f14e95017e866000ed3050adc637f3a"
+  },
+  {
+    "source": "app/services/strategy_source.py",
+    "destination": "archived/python_backtest_20261123/app/services/strategy_source.py.txt",
+    "bytes": 4402,
+    "sha256": "3c247a777d0810e0289e198c91e3ee36c0187dc548927d60db83eaee740ef22f"
+  },
+  {
+    "source": "docs/LOCAL_BACKTESTS.md",
+    "destination": "archived/python_backtest_20261123/docs/LOCAL_BACKTESTS.md.txt",
+    "bytes": 27457,
+    "sha256": "4e239d73969f1c46696adb40b215b8a8b52b8a20f22d18bdd40d677b50843f4b"
+  },
+  {
+    "source": "docs/PARAMETER_SWEEPS.md",
+    "destination": "archived/python_backtest_20261123/docs/PARAMETER_SWEEPS.md.txt",
+    "bytes": 5999,
+    "sha256": "9cf7f402ea65ec265dea87b684a046b5ef12eb9ba09943e381df50697a7df823"
+  },
+  {
+    "source": "docs/STRATEGY_RESEARCH.md",
+    "destination": "archived/python_backtest_20261123/docs/STRATEGY_RESEARCH.md.txt",
+    "bytes": 10980,
+    "sha256": "ee99899767685f1cbb5f9b70e948aaf3b76ae47db1c10bbb0dc0511d91d504d8"
+  },
+  {
+    "source": "frontend/src/components/research/BacktestDiagnostics.vue",
+    "destination": "archived/python_backtest_20261123/frontend/src/components/research/BacktestDiagnostics.vue.txt",
+    "bytes": 11312,
+    "sha256": "ec4a5d94778e61b8e3d25300e44b60019eefa4a76d1ace6275d04d3f1d166cd6"
+  },
+  {
+    "source": "frontend/src/components/research/BacktestPreflight.vue",
+    "destination": "archived/python_backtest_20261123/frontend/src/components/research/BacktestPreflight.vue.txt",
+    "bytes": 2528,
+    "sha256": "55382f695e9d4dc332b8fe2c6ce06d8c021539088cf7bfb01cc4f725f77fe434"
+  },
+  {
+    "source": "frontend/src/components/research/BacktestPriceChart.vue",
+    "destination": "archived/python_backtest_20261123/frontend/src/components/research/BacktestPriceChart.vue.txt",
+    "bytes": 5521,
+    "sha256": "a408d36ac0252a27b4a273653330858c38fdbcca08064351b0c0d9f6cdd43c3e"
+  },
+  {
+    "source": "frontend/src/components/research/ExecutionSummary.vue",
+    "destination": "archived/python_backtest_20261123/frontend/src/components/research/ExecutionSummary.vue.txt",
+    "bytes": 3057,
+    "sha256": "2b0b7539aa875f8b1b1b8d644560d15bf6af336aa6c9fdc2ef4db0dce1189080"
+  },
+  {
+    "source": "frontend/src/components/research/signalLabelPrimitive.ts",
+    "destination": "archived/python_backtest_20261123/frontend/src/components/research/signalLabelPrimitive.ts.txt",
+    "bytes": 2686,
+    "sha256": "1415c8b4bfd1b749edb12dc467edd039cdfed7790e2e8b3430b6dd1798b1d84e"
+  },
+  {
+    "source": "frontend/src/components/research/TradeTimeline.vue",
+    "destination": "archived/python_backtest_20261123/frontend/src/components/research/TradeTimeline.vue.txt",
+    "bytes": 5142,
+    "sha256": "2d473cd58b21af6aa8e6dd4be6f2faa5c9cf1b62f927a907101a44888a966db3"
+  },
+  {
+    "source": "frontend/src/modules/research/localBacktestApi.ts",
+    "destination": "archived/python_backtest_20261123/frontend/src/modules/research/localBacktestApi.ts.txt",
+    "bytes": 2166,
+    "sha256": "3b3afabd533beea4801ceec1c6ea92e1891e0033e128269e9ce640057e5a9c9c"
+  },
+  {
+    "source": "frontend/src/modules/research/parameterSweepApi.ts",
+    "destination": "archived/python_backtest_20261123/frontend/src/modules/research/parameterSweepApi.ts.txt",
+    "bytes": 967,
+    "sha256": "08f63a369f05f76b1a6784b6504b5d224bd3fb1b2378a13fa818d76c3291d8c8"
+  },
+  {
+    "source": "frontend/src/modules/research/researchResultsApi.ts",
+    "destination": "archived/python_backtest_20261123/frontend/src/modules/research/researchResultsApi.ts.txt",
+    "bytes": 417,
+    "sha256": "4ab9273aab5c6c698fbe789a813b03dc3422a40dda33e9e9b395b3654f538166"
+  },
+  {
+    "source": "frontend/src/modules/research/strategyParameters.ts",
+    "destination": "archived/python_backtest_20261123/frontend/src/modules/research/strategyParameters.ts.txt",
+    "bytes": 736,
+    "sha256": "2ae9c55ebb8a8ddc2b852975d810352f2138365056aac78737ed5c09b11141bf"
+  },
+  {
+    "source": "frontend/src/modules/research/tradePresentation.ts",
+    "destination": "archived/python_backtest_20261123/frontend/src/modules/research/tradePresentation.ts.txt",
+    "bytes": 4385,
+    "sha256": "d1aa4e94507fec9048ee880b2a4ce635631e413058b736827268d502062c8756"
+  },
+  {
+    "source": "frontend/src/views/research/LocalBacktests.vue",
+    "destination": "archived/python_backtest_20261123/frontend/src/views/research/LocalBacktests.vue.txt",
+    "bytes": 26895,
+    "sha256": "3f260050b5a26163d0fe2fd3caf5692689e99f265fa9b94994d9fb401cfd97c9"
+  },
+  {
+    "source": "frontend/src/views/research/ParameterSweeps.vue",
+    "destination": "archived/python_backtest_20261123/frontend/src/views/research/ParameterSweeps.vue.txt",
+    "bytes": 37817,
+    "sha256": "dcb7fd199001fb8856f0ea05d6552b495c33627e15e5dfe67323e713b7f8f003"
+  },
+  {
+    "source": "frontend/src/views/research/ResearchResults.vue",
+    "destination": "archived/python_backtest_20261123/frontend/src/views/research/ResearchResults.vue.txt",
+    "bytes": 15214,
+    "sha256": "6a688f0b25bae6a5eed861110c26824ea1ae73bd78b7a22dc2baab2362cf5790"
+  },
+  {
+    "source": "frontend/test/tradePresentation.test.mjs",
+    "destination": "archived/python_backtest_20261123/frontend/test/tradePresentation.test.mjs.txt",
+    "bytes": 2352,
+    "sha256": "3ef9fe16063b67ca0caac5bef36be8030ffe8d5233362d85845701bf42216df0"
+  },
+  {
+    "source": "scripts/alt_cloud_parameter_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/alt_cloud_parameter_study.py.txt",
+    "bytes": 15083,
+    "sha256": "79e2b32a8230ae5207d7e811b636845d231d4ea2f11245dcb69d1a71d7afc1c6"
+  },
+  {
+    "source": "scripts/analyze_cloud_walkforward_exits.py",
+    "destination": "archived/python_backtest_20261123/scripts/analyze_cloud_walkforward_exits.py.txt",
+    "bytes": 3290,
+    "sha256": "1c9755d5f27b2543a0e754e029eb509e3520fb0ad54b249161fa60766289a255"
+  },
+  {
+    "source": "scripts/audit_cloud_cross_asset_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/audit_cloud_cross_asset_study.py.txt",
+    "bytes": 4797,
+    "sha256": "b2b43eb048ed7a437a5594eb2588eda658aabde71f9a088b9e33a481c6ae02db"
+  },
+  {
+    "source": "scripts/audit_cloud_joint_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/audit_cloud_joint_study.py.txt",
+    "bytes": 3819,
+    "sha256": "7f56750fe43b3b6e9f892c2b5988a7b36ce93ff4dfa83165070fda6f3f61557d"
+  },
+  {
+    "source": "scripts/audit_cloud_reentry_case.py",
+    "destination": "archived/python_backtest_20261123/scripts/audit_cloud_reentry_case.py.txt",
+    "bytes": 2708,
+    "sha256": "ba5ca0e22b4a6320bf778a8947917b6ed3e9a5504588c4406530b52dec5a2d77"
+  },
+  {
+    "source": "scripts/btc_cloud_parameter_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/btc_cloud_parameter_study.py.txt",
+    "bytes": 15924,
+    "sha256": "be71141c3a3528e79333eabf80f45454c0987836353523074e13b8670d007366"
+  },
+  {
+    "source": "scripts/build_pine_runtime_fixture.py",
+    "destination": "archived/python_backtest_20261123/scripts/build_pine_runtime_fixture.py.txt",
+    "bytes": 3198,
+    "sha256": "26d8897d6e6f198bacdffa23581933025b7e950cb5fd77addc48bb1dfbbf0b63"
+  },
+  {
+    "source": "scripts/check_cloud_timeframe_data.py",
+    "destination": "archived/python_backtest_20261123/scripts/check_cloud_timeframe_data.py.txt",
+    "bytes": 4286,
+    "sha256": "4ec799af00eab5aa86871f77fbff709d4fd712b38efe2305912ae1ca46526371"
+  },
+  {
+    "source": "scripts/cloud_context_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_context_study.py.txt",
+    "bytes": 16223,
+    "sha256": "0b1a431378e6cc0dcbe13dc35c7b4f82f73af768b4854cf42413efe71b3753dd"
+  },
+  {
+    "source": "scripts/cloud_cross_asset_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_cross_asset_study.py.txt",
+    "bytes": 21858,
+    "sha256": "6f546c07e588212275d64ac7e03a02b04b1280dd3637c8eac2ae0166f73fe531"
+  },
+  {
+    "source": "scripts/cloud_direct_adaptation_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_direct_adaptation_study.py.txt",
+    "bytes": 12342,
+    "sha256": "db006ee951599de297de37d79d8e31b1767a583bc30ed03e3466c94b0450a8bb"
+  },
+  {
+    "source": "scripts/cloud_entry_cause_audit.py",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_entry_cause_audit.py.txt",
+    "bytes": 13915,
+    "sha256": "8f5ee1eb952ed39217793735e15757fdede0b41670e1f9a30ec1a5b2e0e073bf"
+  },
+  {
+    "source": "scripts/cloud_entry_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_entry_study.py.txt",
+    "bytes": 13949,
+    "sha256": "ef735fde43c9778e8978fb74a0b05a1e0ad5c25d8be5c5d3ec5c27cdda85a5f7"
+  },
+  {
+    "source": "scripts/cloud_family_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_family_study.py.txt",
+    "bytes": 15703,
+    "sha256": "69e5ed908bbd5b3aa07713dc7cead28f1d4048bef0a61000d7f2274df45edc9c"
+  },
+  {
+    "source": "scripts/cloud_intrabar_confirmation_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_intrabar_confirmation_study.py.txt",
+    "bytes": 12358,
+    "sha256": "fe6cc48a82ef20d9d38fa9ca425f4b9cbfd99abe63c0fa1483fa3fdf39a4e574"
+  },
+  {
+    "source": "scripts/cloud_joint_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_joint_study.py.txt",
+    "bytes": 16486,
+    "sha256": "8021f221364d45063163a62274ee26cfcd686aaeab5201afcb5556cdb4af2bc5"
+  },
+  {
+    "source": "scripts/cloud_manual_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_manual_study.py.txt",
+    "bytes": 15278,
+    "sha256": "cc4c070fd58a4d3e84a36553a027f1d2eb5277dd7f30e6b9916d7fe6fe2f2e50"
+  },
+  {
+    "source": "scripts/cloud_parameter_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_parameter_study.py.txt",
+    "bytes": 14822,
+    "sha256": "2c8faba61bf356a86339cb1a90669e7850db33f039bb08d8a2e5c1baa05adb88"
+  },
+  {
+    "source": "scripts/cloud_profit_audit.py",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_profit_audit.py.txt",
+    "bytes": 7702,
+    "sha256": "6851a4ceb28d73cdf84d8948c8620e612edebc933f6b835ddaaee06bed6c6794"
+  },
+  {
+    "source": "scripts/cloud_robustness_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_robustness_study.py.txt",
+    "bytes": 18099,
+    "sha256": "ee04ad2b0157bcc348578864d70b405975bed76c47adc8dc0172279d7be3ffe1"
+  },
+  {
+    "source": "scripts/cloud_short_window_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_short_window_study.py.txt",
+    "bytes": 20369,
+    "sha256": "47115b73dab2415e9f931e801b0563c354343e6f6d0b8e23a88ff14c21edb5bd"
+  },
+  {
+    "source": "scripts/cloud_signal_confirmation_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_signal_confirmation_study.py.txt",
+    "bytes": 12146,
+    "sha256": "d8c17bf4e33ef0651b52fdf7b3e98508f30611dfe88d976544c11f6d8c91d582"
+  },
+  {
+    "source": "scripts/cloud_study_findings.py",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_study_findings.py.txt",
+    "bytes": 8246,
+    "sha256": "ebcf389e8e3ab07b41c439f37587379cfbad2350f22e961420eafb5bff141c28"
+  },
+  {
+    "source": "scripts/cloud_timeframe_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_timeframe_study.py.txt",
+    "bytes": 17729,
+    "sha256": "9ab6d78701d549f32e5041ca0d8131645a62fe0a04abb9c4adb6465333456481"
+  },
+  {
+    "source": "scripts/cloud_transfer_diagnosis.py",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_transfer_diagnosis.py.txt",
+    "bytes": 12601,
+    "sha256": "abcbb11789efb02a7e00f57c968000487d87ba1d87720c2dcdd860611140186a"
+  },
+  {
+    "source": "scripts/cloud_walkforward_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_walkforward_study.py.txt",
+    "bytes": 27407,
+    "sha256": "bad028c405b5a499e52af3f9efce694074e7c39044e20f95662d1e89b68709d0"
+  },
+  {
+    "source": "scripts/cloud_width_reentry_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_width_reentry_study.py.txt",
+    "bytes": 14158,
+    "sha256": "db95ff43b86e37831dcede5d3d58278b4f0b8817546e9f6dad0efec680f8aa6d"
+  },
+  {
+    "source": "scripts/cross_market_native_recheck.py",
+    "destination": "archived/python_backtest_20261123/scripts/cross_market_native_recheck.py.txt",
+    "bytes": 4147,
+    "sha256": "68a781e929da70b3dddd5985d4886ba522dbbf4166d40ade8f2fab31c88134aa"
+  },
+  {
+    "source": "scripts/cross_market_trend_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/cross_market_trend_study.py.txt",
+    "bytes": 23192,
+    "sha256": "25951647c82ea49c355d70925c59ca84b038186de4a6de130b62350d2f2864db"
+  },
+  {
+    "source": "scripts/diagnose_cloud_direct_entries.py",
+    "destination": "archived/python_backtest_20261123/scripts/diagnose_cloud_direct_entries.py.txt",
+    "bytes": 1802,
+    "sha256": "3e69edcd5c3ff6aef8f362bd671494b4c8823cf8ff4307ee987197ce188a6fa0"
+  },
+  {
+    "source": "scripts/diagnose_zec_intrabar_losses.py",
+    "destination": "archived/python_backtest_20261123/scripts/diagnose_zec_intrabar_losses.py.txt",
+    "bytes": 9440,
+    "sha256": "591a8672d7bffe4b17a8b76fd62601e9c61c1d8613473dd8082d01a891ad93b8"
+  },
+  {
+    "source": "scripts/eth_intrabar_methods_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/eth_intrabar_methods_study.py.txt",
+    "bytes": 15793,
+    "sha256": "8a089e838e1fbc783974804a9839113bb8d138bf812b412671b83932490b2bbb"
+  },
+  {
+    "source": "scripts/eth_intrabar_short_window_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/eth_intrabar_short_window_study.py.txt",
+    "bytes": 15262,
+    "sha256": "892ac7094222be36d753d8103b948d9a7dd9c6422511288654c4358e22b20839"
+  },
+  {
+    "source": "scripts/eth_no_reverse_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/eth_no_reverse_study.py.txt",
+    "bytes": 9920,
+    "sha256": "78e5a6968cfed308f30a01ce56b72d28cbcc6fb05d8506263723468f70dab6d3"
+  },
+  {
+    "source": "scripts/explain_cloud_entry.py",
+    "destination": "archived/python_backtest_20261123/scripts/explain_cloud_entry.py.txt",
+    "bytes": 11286,
+    "sha256": "1fda62549602857e73de84364b9c08699ff2d043d7f1d91caaa51454d2e2a402"
+  },
+  {
+    "source": "scripts/finalize_cloud_entry_cause.py",
+    "destination": "archived/python_backtest_20261123/scripts/finalize_cloud_entry_cause.py.txt",
+    "bytes": 2425,
+    "sha256": "ebb72afeb3fa919fb9a11ddbab5f23a65df247a581900d805c29f5e7a82fd00d"
+  },
+  {
+    "source": "scripts/generate_strategies.py",
+    "destination": "archived/python_backtest_20261123/scripts/generate_strategies.py.txt",
+    "bytes": 2554,
+    "sha256": "95f06edec64fcc7a3d74aea7f03fbcfb301745139e45a05d080f705c74228419"
+  },
+  {
+    "source": "scripts/intrabar_combined_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/intrabar_combined_study.py.txt",
+    "bytes": 15173,
+    "sha256": "31af8fcb98bed2f621cc804c6480bbc91e5c7a3cded3199e1db82c494b51a46b"
+  },
+  {
+    "source": "scripts/intrabar_requested_followups.py",
+    "destination": "archived/python_backtest_20261123/scripts/intrabar_requested_followups.py.txt",
+    "bytes": 15801,
+    "sha256": "5401a2dd155ba1dc724422510ee876ba0181c92f8bbf39d23687602c9dd54463"
+  },
+  {
+    "source": "scripts/local_backtest_cli.py",
+    "destination": "archived/python_backtest_20261123/scripts/local_backtest_cli.py.txt",
+    "bytes": 9486,
+    "sha256": "131fa41ca03b4fca5ff78934e670083ac67f3f63c0d9b1e29e2b49b2ecba940f"
+  },
+  {
+    "source": "scripts/local_backtest_worker.py",
+    "destination": "archived/python_backtest_20261123/scripts/local_backtest_worker.py.txt",
+    "bytes": 11029,
+    "sha256": "812fd51ffe9a0ae004c3252c15d680058f671618c9d34bf0b18785eb0446205e"
+  },
+  {
+    "source": "scripts/parameter_sweep_cli.py",
+    "destination": "archived/python_backtest_20261123/scripts/parameter_sweep_cli.py.txt",
+    "bytes": 2140,
+    "sha256": "db49e24b4fa0143754bbafee9f0dd520d08c270f7fa2ee0968f533154fb33cc8"
+  },
+  {
+    "source": "scripts/paxg_best_loss_diagnosis.py",
+    "destination": "archived/python_backtest_20261123/scripts/paxg_best_loss_diagnosis.py.txt",
+    "bytes": 13102,
+    "sha256": "eebe5a8dca7e4b56133c47dc50d091e4d40193d6536eb4bc77f9ec0f8ffdd4fc"
+  },
+  {
+    "source": "scripts/paxg_exit_comparison_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/paxg_exit_comparison_study.py.txt",
+    "bytes": 10734,
+    "sha256": "cd3856923f6871337e2f9ab0fd1cd4685d758cb1ab553bc1c34c46815d2b633f"
+  },
+  {
+    "source": "scripts/paxg_intrabar_combined_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/paxg_intrabar_combined_study.py.txt",
+    "bytes": 16629,
+    "sha256": "5cce62f6848f782f9596c5beafdf263f53bdf94148e44dc04e21cd6414a4d0ea"
+  },
+  {
+    "source": "scripts/paxg_zec_repair_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/paxg_zec_repair_study.py.txt",
+    "bytes": 16621,
+    "sha256": "fa9f64b32957d2b9496b9dba95806c7ade9da455e21b9586184b609ba2c53c59"
+  },
+  {
+    "source": "scripts/profit_protection_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/profit_protection_study.py.txt",
+    "bytes": 14933,
+    "sha256": "f869f34191be639fcdaba9c02bd5047ca15e08856f72d795e970761994399963"
+  },
+  {
+    "source": "scripts/publish_cloud_cross_asset_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/publish_cloud_cross_asset_study.py.txt",
+    "bytes": 3565,
+    "sha256": "5a8d8b99ec6b97013a1f5cc9a321da77c05adf33347083fb09540a8777c1cea7"
+  },
+  {
+    "source": "scripts/publish_cloud_robustness.py",
+    "destination": "archived/python_backtest_20261123/scripts/publish_cloud_robustness.py.txt",
+    "bytes": 2466,
+    "sha256": "33d929296884fd1d62dc38f88fd6b2c3dca6d972a2cfe90136b7f60b48376e52"
+  },
+  {
+    "source": "scripts/render_cloud_context_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/render_cloud_context_study.py.txt",
+    "bytes": 16965,
+    "sha256": "5ed5949d1f22bfbeee1855af851050be7ac373c3e0e03240d184380b072a7a1f"
+  },
+  {
+    "source": "scripts/render_cloud_cross_asset_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/render_cloud_cross_asset_study.py.txt",
+    "bytes": 20894,
+    "sha256": "199da2d7297de2a705787fe23a20fd4a9031ea14bbc18dfe2fefdc4fcce90a84"
+  },
+  {
+    "source": "scripts/render_cloud_entry_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/render_cloud_entry_study.py.txt",
+    "bytes": 15900,
+    "sha256": "f8b194fc95c0d535e22574f1ca4ae99168e33a7131ca5bf9b6dbeef9a7cb1720"
+  },
+  {
+    "source": "scripts/render_cloud_joint_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/render_cloud_joint_study.py.txt",
+    "bytes": 21287,
+    "sha256": "a9c48ca9024f4d3860e4ded8c1c64f9bac6d7e009bf4bd90fdb60c82b089bba4"
+  },
+  {
+    "source": "scripts/render_cloud_manual_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/render_cloud_manual_study.py.txt",
+    "bytes": 16615,
+    "sha256": "7a3386c86796e39398c87fe3242bb628623fcf769226051f71b681ab087490ee"
+  },
+  {
+    "source": "scripts/render_cloud_parameter_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/render_cloud_parameter_study.py.txt",
+    "bytes": 20853,
+    "sha256": "a0bf7ca35eb67ed806b9a7a823c0a304e034ade64e418c145befd258b274f602"
+  },
+  {
+    "source": "scripts/render_cloud_profit_audit.py",
+    "destination": "archived/python_backtest_20261123/scripts/render_cloud_profit_audit.py.txt",
+    "bytes": 13829,
+    "sha256": "b655964e535bced3eddf167841a5afc78f7c4cb5dfeb3a8f30f9605ceb72f89d"
+  },
+  {
+    "source": "scripts/render_cloud_robustness.py",
+    "destination": "archived/python_backtest_20261123/scripts/render_cloud_robustness.py.txt",
+    "bytes": 20932,
+    "sha256": "16d22000863e71c6a8f5f8008795fa7282e11c21f5146bfe7d4b53a69157f6aa"
+  },
+  {
+    "source": "scripts/render_profit_protection_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/render_profit_protection_study.py.txt",
+    "bytes": 21461,
+    "sha256": "939677f69e28a8121020407b75b55f126cd65d6f42945ae1f5e6b802a7a6071c"
+  },
+  {
+    "source": "scripts/render_trend_cloud_diagnostics.py",
+    "destination": "archived/python_backtest_20261123/scripts/render_trend_cloud_diagnostics.py.txt",
+    "bytes": 22127,
+    "sha256": "4c8dd6a6827fb058b8fac424f7906848950b6c7a5b883cb3e59f65a08ac1fd94"
+  },
+  {
+    "source": "scripts/report_alt_cloud_transfer.py",
+    "destination": "archived/python_backtest_20261123/scripts/report_alt_cloud_transfer.py.txt",
+    "bytes": 18406,
+    "sha256": "7f01fbba67e00288a2b9b92fd6afd8a7376d793b0d5a5bd09a5a0b68ded2fb5c"
+  },
+  {
+    "source": "scripts/report_btc_cloud_parameters.py",
+    "destination": "archived/python_backtest_20261123/scripts/report_btc_cloud_parameters.py.txt",
+    "bytes": 19652,
+    "sha256": "8aac05d1d0678295f6033dbd05831b18210578862999d8dcebb1ba4576f9e856"
+  },
+  {
+    "source": "scripts/report_cloud_direct_adaptation.py",
+    "destination": "archived/python_backtest_20261123/scripts/report_cloud_direct_adaptation.py.txt",
+    "bytes": 19536,
+    "sha256": "0771ad131972b71bfd475945e08c53db3b3dfb73ce3578cc977a6d1d5f95a07c"
+  },
+  {
+    "source": "scripts/report_cloud_entry_cause.py",
+    "destination": "archived/python_backtest_20261123/scripts/report_cloud_entry_cause.py.txt",
+    "bytes": 17027,
+    "sha256": "1dd54c7896c870a67d7490ea69ee34be8531628e908711c3e69abfa9c92ad748"
+  },
+  {
+    "source": "scripts/report_cloud_intrabar_confirmation.py",
+    "destination": "archived/python_backtest_20261123/scripts/report_cloud_intrabar_confirmation.py.txt",
+    "bytes": 3122,
+    "sha256": "d399d53f37aaf33abe5875d68b00d988dec2c9b0a8c3e8b5399b650d5854b021"
+  },
+  {
+    "source": "scripts/report_cloud_short_window.py",
+    "destination": "archived/python_backtest_20261123/scripts/report_cloud_short_window.py.txt",
+    "bytes": 24012,
+    "sha256": "02c35c7171200d5e3ac13c8e32140dee07d7cb5021a64ad7e586e4e222949a09"
+  },
+  {
+    "source": "scripts/report_cloud_signal_confirmation.py",
+    "destination": "archived/python_backtest_20261123/scripts/report_cloud_signal_confirmation.py.txt",
+    "bytes": 4930,
+    "sha256": "0cda360c5f8e2bf107dec437116981bbdcc2f9589b322091db474b2b51a3c026"
+  },
+  {
+    "source": "scripts/report_cloud_timeframe.py",
+    "destination": "archived/python_backtest_20261123/scripts/report_cloud_timeframe.py.txt",
+    "bytes": 21086,
+    "sha256": "0367a4d2642c3b2c24e69ba4a6341fe6c673b43dea47f50a85c8d96a5b518bad"
+  },
+  {
+    "source": "scripts/report_cloud_transfer_diagnosis.py",
+    "destination": "archived/python_backtest_20261123/scripts/report_cloud_transfer_diagnosis.py.txt",
+    "bytes": 32747,
+    "sha256": "8e75c52311ddf0d0b6c5dcb8044bf1831d66d191b5b0f53516ebf37fbd6e37b2"
+  },
+  {
+    "source": "scripts/report_cloud_walkforward.py",
+    "destination": "archived/python_backtest_20261123/scripts/report_cloud_walkforward.py.txt",
+    "bytes": 19030,
+    "sha256": "b526f2f065a99ab3b7d67aa75af3d7c3e5e64f319458fa6a21dfb6883f37743c"
+  },
+  {
+    "source": "scripts/report_cloud_width_reentry.py",
+    "destination": "archived/python_backtest_20261123/scripts/report_cloud_width_reentry.py.txt",
+    "bytes": 6276,
+    "sha256": "ab7bfe77b6434241a2104d3aa16b6c5e36229337c3990e7fd82ec7dc16e1735d"
+  },
+  {
+    "source": "scripts/report_cross_market_trend.py",
+    "destination": "archived/python_backtest_20261123/scripts/report_cross_market_trend.py.txt",
+    "bytes": 27260,
+    "sha256": "4d85218f81e7e25f8397a2b6a8fad7eee4b6187ce5ef1e5cfc2cddcbbe3becb2"
+  },
+  {
+    "source": "scripts/report_paxg_zec_repair.py",
+    "destination": "archived/python_backtest_20261123/scripts/report_paxg_zec_repair.py.txt",
+    "bytes": 26299,
+    "sha256": "c21af1cc3971d4e422fc89b7162d2592973dddd99f11146d510916c1b116b405"
+  },
+  {
+    "source": "scripts/report_zec_intrabar_no_stop.py",
+    "destination": "archived/python_backtest_20261123/scripts/report_zec_intrabar_no_stop.py.txt",
+    "bytes": 7453,
+    "sha256": "f04a1d8a5e69320485100acf6b055ba401dee84c7c62b16b0d04dc7fb769ca71"
+  },
+  {
+    "source": "scripts/research_catalog_cli.py",
+    "destination": "archived/python_backtest_20261123/scripts/research_catalog_cli.py.txt",
+    "bytes": 3758,
+    "sha256": "209f597aab26fcaa27dc0c1c4935b11300ea2b43de7e1f3e1d1ae41be694c00c"
+  },
+  {
+    "source": "scripts/research_study_cli.py",
+    "destination": "archived/python_backtest_20261123/scripts/research_study_cli.py.txt",
+    "bytes": 4442,
+    "sha256": "6b54a2ddb172429c1f4ad88646ff63ca66fa3e198293727d464921fdc701a2ab"
+  },
+  {
+    "source": "scripts/trend_cloud_diagnostics.py",
+    "destination": "archived/python_backtest_20261123/scripts/trend_cloud_diagnostics.py.txt",
+    "bytes": 14054,
+    "sha256": "854872da141e10026f443552865f541be20d3f81c4e6e2b6ff98a2bfd06d482d"
+  },
+  {
+    "source": "scripts/trend_cloud_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/trend_cloud_study.py.txt",
+    "bytes": 10544,
+    "sha256": "19cb07e7e1ada61736381557000ddcf76d0bdc04bc7d4d5c21f0daa414f76e07"
+  },
+  {
+    "source": "scripts/verify_pine_contract.py",
+    "destination": "archived/python_backtest_20261123/scripts/verify_pine_contract.py.txt",
+    "bytes": 4387,
+    "sha256": "7962c2c94f135893a92bcdadf2a587a3bd7060144d26b840caacbaeea4485e91"
+  },
+  {
+    "source": "scripts/zec_hourly_volatility.py",
+    "destination": "archived/python_backtest_20261123/scripts/zec_hourly_volatility.py.txt",
+    "bytes": 15500,
+    "sha256": "5d565fe9a0811ccec7400e69011941e9f44f3fcb48190147423a0bf4e0134f38"
+  },
+  {
+    "source": "scripts/zec_intrabar_methods_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/zec_intrabar_methods_study.py.txt",
+    "bytes": 23461,
+    "sha256": "7205c6c13d5833ef10e93847c3c13d16ae1cba7fe9abce8e702adfed7b68a8f2"
+  },
+  {
+    "source": "scripts/zec_intrabar_no_stop_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/zec_intrabar_no_stop_study.py.txt",
+    "bytes": 14702,
+    "sha256": "64ac4e2a93a298c8ddb4d2db10ea6287718c9482b1da0722b8c977d590b2db1d"
+  },
+  {
+    "source": "scripts/zec_paxg_entry_parameters_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/zec_paxg_entry_parameters_study.py.txt",
+    "bytes": 20048,
+    "sha256": "d188da2c3a0f81dd101d5c82dbdfbac8899c189f963b27dba348ab00960a9584"
+  },
+  {
+    "source": "strategies/adaptive_cloud.py",
+    "destination": "archived/python_backtest_20261123/strategies/adaptive_cloud.py.txt",
+    "bytes": 9418,
+    "sha256": "37d356cca6845570ece8dc932b45f82bc31dca874e53f8bfbb8a861e15046b16"
+  },
+  {
+    "source": "strategies/authoring/manifest.json",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/manifest.json.txt",
+    "bytes": 4540,
+    "sha256": "5aab415c1e090d4353ab51b96f2551fc9450c9403d95d5efc6d9632a976787e4"
+  },
+  {
+    "source": "strategies/authoring/README.md",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/README.md.txt",
+    "bytes": 1346,
+    "sha256": "b03c92349239efaa13ea0088dcf3e6efd2361e562e4e46bbc4eef9737319c799"
+  },
+  {
+    "source": "strategies/authoring/shared/completed_bar_aggregation.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/completed_bar_aggregation.inc.txt",
+    "bytes": 1024,
+    "sha256": "b566ab174db2378606b51e998486261efafc12888894cb82681e37f8a36506ed"
+  },
+  {
+    "source": "strategies/authoring/shared/entry_cloud_output.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/entry_cloud_output.inc.txt",
+    "bytes": 532,
+    "sha256": "b6c4053e278a116c192600cd96d4cb57f334a1b2b40226face6acd22711b1f21"
+  },
+  {
+    "source": "strategies/authoring/shared/intrabar_confirmation_output.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/intrabar_confirmation_output.inc.txt",
+    "bytes": 1692,
+    "sha256": "6f95318d5a030ef8eaddf81dc1c3daa06c9e5063e870c8be12cc67d97d5d80ae"
+  },
+  {
+    "source": "strategies/authoring/shared/intrabar_confirmation_parameters.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/intrabar_confirmation_parameters.inc.txt",
+    "bytes": 3530,
+    "sha256": "31e1610134827c9c61eb1f7b04d1360902fe196249a7f20e72d5f9b78680805f"
+  },
+  {
+    "source": "strategies/authoring/shared/intrabar_confirmation_state.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/intrabar_confirmation_state.inc.txt",
+    "bytes": 4199,
+    "sha256": "bc130a1ac99ac65d78597e7b86fa2c47291130254f2c2284b4ce414602bbba27"
+  },
+  {
+    "source": "strategies/authoring/shared/intrabar_entry_state.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/intrabar_entry_state.inc.txt",
+    "bytes": 4876,
+    "sha256": "ee6f865b88377b9dae7608f6655951dae38af9d701136dd820ad1dae50761e0f"
+  },
+  {
+    "source": "strategies/authoring/shared/intrabar_exit_execution.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/intrabar_exit_execution.inc.txt",
+    "bytes": 3590,
+    "sha256": "ce84554bf9f83cf6f6ac4bd156726ca29aa6101af68e51f8d15c6b6fd0bc341a"
+  },
+  {
+    "source": "strategies/authoring/shared/intrabar_stop_parameters.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/intrabar_stop_parameters.inc.txt",
+    "bytes": 5709,
+    "sha256": "706b4f3048a8cd7dc69551e91823b18a398872045d6c444414e67434cdf4e0cf"
+  },
+  {
+    "source": "strategies/authoring/shared/intrabar_support_parameters.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/intrabar_support_parameters.inc.txt",
+    "bytes": 5413,
+    "sha256": "c6254e555f8ddd99e30396fcecabc6e02a57bd479e84b12395151fd441d5ba09"
+  },
+  {
+    "source": "strategies/authoring/shared/parameter_cloud_update.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/parameter_cloud_update.inc.txt",
+    "bytes": 797,
+    "sha256": "ffbfc1f7ade1bbd20b18970fd7c450873b3ac82af49151314573ea929a3ffe50"
+  },
+  {
+    "source": "strategies/authoring/shared/parameter_length_constraints.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/parameter_length_constraints.inc.txt",
+    "bytes": 663,
+    "sha256": "d3560965afd7e9f98320120a2bfdbed1ba1f50721a0e68988c3905eaa7857611"
+  },
+  {
+    "source": "strategies/authoring/shared/parameter_observations.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/parameter_observations.inc.txt",
+    "bytes": 665,
+    "sha256": "4d2f1655f598a3aa9aac142da0921ec3fe6c9ea64cfa85b57b0d1f126e918915"
+  },
+  {
+    "source": "strategies/authoring/shared/parameter_warmup_state.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/parameter_warmup_state.inc.txt",
+    "bytes": 745,
+    "sha256": "bfbfdaffd96212c914953f8f898023f4d0f50fb87bd305af88bd4cb2ed89fe59"
+  },
+  {
+    "source": "strategies/authoring/shared/profit_protection_parameters.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/profit_protection_parameters.inc.txt",
+    "bytes": 758,
+    "sha256": "5c3def5b75eeea15cfc7a4e7b10c414f3371afcd5993dd02284083cdd212145a"
+  },
+  {
+    "source": "strategies/authoring/shared/stop_confirmation_execution.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/stop_confirmation_execution.inc.txt",
+    "bytes": 7982,
+    "sha256": "6237361a5debdc0e40e6dce8bdd554c7c4063396372d785c2400b2ee48482196"
+  },
+  {
+    "source": "strategies/authoring/shared/stop_confirmation_output.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/stop_confirmation_output.inc.txt",
+    "bytes": 2283,
+    "sha256": "56a7a68e2924922ba7ef196f6fd116a770586d7f77f6b482eb0d7a0580e1c286"
+  },
+  {
+    "source": "strategies/authoring/shared/stop_confirmation_parameters.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/stop_confirmation_parameters.inc.txt",
+    "bytes": 7417,
+    "sha256": "c54a64fece9a8a4d1a65967544b885209e2dbded5f9ddfe95c8297aca0ae0077"
+  },
+  {
+    "source": "strategies/authoring/shared/support_cloud_update.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/support_cloud_update.inc.txt",
+    "bytes": 1044,
+    "sha256": "39128053d3f53e108c64038c05c2e7be05c65d62c71920f17d031de63c88b891"
+  },
+  {
+    "source": "strategies/authoring/shared/support_entry_execution.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/support_entry_execution.inc.txt",
+    "bytes": 1946,
+    "sha256": "5afa5e15c48c13febf769bcc80f5e6ac15bb7e81cdf9a82b4f22c4dcd0c5ad14"
+  },
+  {
+    "source": "strategies/authoring/shared/support_observations.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/support_observations.inc.txt",
+    "bytes": 853,
+    "sha256": "429f16c5015eeffaa338976c0a6dcaaa223e331047ccdb988596f9c87bd029c0"
+  },
+  {
+    "source": "strategies/authoring/shared/support_signal_and_exit.inc",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/shared/support_signal_and_exit.inc.txt",
+    "bytes": 1917,
+    "sha256": "84993ac885bc6b2a7a0248a515e64f841dba3f50dd7dce84f0b48c49792841f2"
+  },
+  {
+    "source": "strategies/authoring/templates/adaptive_cloud.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/adaptive_cloud.py.in.txt",
+    "bytes": 9418,
+    "sha256": "37d356cca6845570ece8dc932b45f82bc31dca874e53f8bfbb8a861e15046b16"
+  },
+  {
+    "source": "strategies/authoring/templates/cross_market_trend_v1.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/cross_market_trend_v1.py.in.txt",
+    "bytes": 8950,
+    "sha256": "f5444b52bde5ebb4ba28c85b838ab06ef7cd2016541b577954f9a02c8c08a922"
+  },
+  {
+    "source": "strategies/authoring/templates/ma_cross.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/ma_cross.py.in.txt",
+    "bytes": 2422,
+    "sha256": "db80d1572808cef4a09f092b4613837f75ff99298c68b5ce81f1de300c6e18e7"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_atr_confirm_v5.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_atr_confirm_v5.py.in.txt",
+    "bytes": 4630,
+    "sha256": "e8c0b18de96d22e8fdb528fdc920db036f7bc7a8d78c25aaa05ffec691e87174"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_comparison.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_comparison.py.in.txt",
+    "bytes": 9550,
+    "sha256": "dc164d5fa7701d398868fdfa7c48dd148381fa1f201ac791aa5315fe7af8d94d"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_context_v3.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_context_v3.py.in.txt",
+    "bytes": 11995,
+    "sha256": "71cc9f85ea6c6296e6ffb8bcda168b2ec04d0efa7fd22c3c6f06ce94f05fcc74"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_direct_v7.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_direct_v7.py.in.txt",
+    "bytes": 5466,
+    "sha256": "b17b73ef92843c450e69372c860ecdfb36e6e14b6a649be66428e1544a6d0fe5"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_entry_v2.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_entry_v2.py.in.txt",
+    "bytes": 6510,
+    "sha256": "e23743dc921f079836db3a28a5580912ecbabcf4c55664077045b86a87e9c1af"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_experiments.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_experiments.py.in.txt",
+    "bytes": 8873,
+    "sha256": "341672d7dc50a641faa419146bb80bc60cc754d5e7d6c978e0b6ce31adc63d10"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_intrabar_confirmation_v1.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_intrabar_confirmation_v1.py.in.txt",
+    "bytes": 722,
+    "sha256": "e1226d81748c856e05775a9736ed37ddbacc02acc1bba47c331f068773cd4172"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_intrabar_confirmation_v2.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_intrabar_confirmation_v2.py.in.txt",
+    "bytes": 742,
+    "sha256": "6bf764b7514b2ed25800d30f56862b0de0c950f89e941c1cbd3f3147edc412c4"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_intrabar_exit_v4.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_intrabar_exit_v4.py.in.txt",
+    "bytes": 1017,
+    "sha256": "249911e1560651935e22c4866d2ced10a2c966cb7738b1392f5421d06d785d8b"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_intrabar_methods_v3.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_intrabar_methods_v3.py.in.txt",
+    "bytes": 830,
+    "sha256": "98e7130aee52430bc4c25e5eebbe1ec1819b9e811f9b5e2461f8a3facad62cf5"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_intrabar_support_v1.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_intrabar_support_v1.py.in.txt",
+    "bytes": 7329,
+    "sha256": "45fe930e33ec76db72fcab78d6f8a35e0ed22235fc195d8e184b345513a1eb43"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_manual_v1.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_manual_v1.py.in.txt",
+    "bytes": 7993,
+    "sha256": "a92e2e68aa2356e063ad68d4d2c97f1156f55ca0a526242ae1a9d47cf41ecbc4"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_parameters_v4.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_parameters_v4.py.in.txt",
+    "bytes": 4665,
+    "sha256": "dd4d951d5c8be8db17a5d324299e0c322f2846f0efe0946a85d46438ed8c6965"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_profit_protection.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_profit_protection.py.in.txt",
+    "bytes": 5329,
+    "sha256": "9d8c8ded9d17b33ef1f8315755b3d661b2b237b048a2d518d29009d1906f815b"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_reverse_after_protection_v5.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_reverse_after_protection_v5.py.in.txt",
+    "bytes": 4574,
+    "sha256": "8468530d6b78402b1248e29868455a635907884fc1014a52459635a9d8e27948"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_robustness_v1.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_robustness_v1.py.in.txt",
+    "bytes": 9791,
+    "sha256": "ab5d386d360a96a5427879e99d408b0d05db63505597349a10d74dbad6859fb8"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_signal_confirmation_v1.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_signal_confirmation_v1.py.in.txt",
+    "bytes": 8275,
+    "sha256": "96f50761d4becd3d88cdea626eda0e1bb1c2a2218ddd31c77d63bd49597362cd"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_stop_confirmation_v1.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_stop_confirmation_v1.py.in.txt",
+    "bytes": 1156,
+    "sha256": "1e7bf3a68b9b5191eec8546ae515e8bf8a2b5e03f827ef78b4011dad7c4ce0af"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_stop_confirmation_v2.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_stop_confirmation_v2.py.in.txt",
+    "bytes": 1831,
+    "sha256": "aedfbe78ee2dd53ff485b81f3a3f7af0e2dba8998afb2ded67278ef677fb3b51"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_timeframe_v6.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_timeframe_v6.py.in.txt",
+    "bytes": 5016,
+    "sha256": "9db203de4b5eaaba5137529c0cdbc5f1075dc26dc5a8c8b83dc3e6d09dc298ae"
+  },
+  {
+    "source": "strategies/authoring/templates/trend_cloud_width_reentry_v1.py.in",
+    "destination": "archived/python_backtest_20261123/strategies/authoring/templates/trend_cloud_width_reentry_v1.py.in.txt",
+    "bytes": 14288,
+    "sha256": "a61d705785dcbc3eb5268fcb8215d5206e062787e7dda598e419fe45222fc133"
+  },
+  {
+    "source": "strategies/cross_market_trend_v1.py",
+    "destination": "archived/python_backtest_20261123/strategies/cross_market_trend_v1.py.txt",
+    "bytes": 8950,
+    "sha256": "f5444b52bde5ebb4ba28c85b838ab06ef7cd2016541b577954f9a02c8c08a922"
+  },
+  {
+    "source": "strategies/ma_cross.py",
+    "destination": "archived/python_backtest_20261123/strategies/ma_cross.py.txt",
+    "bytes": 2422,
+    "sha256": "db80d1572808cef4a09f092b4613837f75ff99298c68b5ce81f1de300c6e18e7"
+  },
+  {
+    "source": "strategies/trend_cloud_atr_confirm_v5.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_atr_confirm_v5.py.txt",
+    "bytes": 4630,
+    "sha256": "e8c0b18de96d22e8fdb528fdc920db036f7bc7a8d78c25aaa05ffec691e87174"
+  },
+  {
+    "source": "strategies/trend_cloud_comparison.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_comparison.py.txt",
+    "bytes": 9550,
+    "sha256": "dc164d5fa7701d398868fdfa7c48dd148381fa1f201ac791aa5315fe7af8d94d"
+  },
+  {
+    "source": "strategies/trend_cloud_context_v3.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_context_v3.py.txt",
+    "bytes": 12981,
+    "sha256": "a3498e849b1af195f19fa84dd663b761ff2257381508ad503e37b2eafba4ba86"
+  },
+  {
+    "source": "strategies/trend_cloud_direct_v7.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_direct_v7.py.txt",
+    "bytes": 5466,
+    "sha256": "b17b73ef92843c450e69372c860ecdfb36e6e14b6a649be66428e1544a6d0fe5"
+  },
+  {
+    "source": "strategies/trend_cloud_entry_v2.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_entry_v2.py.txt",
+    "bytes": 7011,
+    "sha256": "d2b66524c4fc7727c3f0a2252f3d20d68d378b64c4dd6a30b7f7650082181a7d"
+  },
+  {
+    "source": "strategies/trend_cloud_experiments.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_experiments.py.txt",
+    "bytes": 8873,
+    "sha256": "341672d7dc50a641faa419146bb80bc60cc754d5e7d6c978e0b6ce31adc63d10"
+  },
+  {
+    "source": "strategies/trend_cloud_intrabar_confirmation_v1.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_intrabar_confirmation_v1.py.txt",
+    "bytes": 10017,
+    "sha256": "0df894a3fcaac60d7cd7170fc80e7c904e25db322a38a947e8e6e38ce919c645"
+  },
+  {
+    "source": "strategies/trend_cloud_intrabar_confirmation_v2.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_intrabar_confirmation_v2.py.txt",
+    "bytes": 10037,
+    "sha256": "5bfc2025b568d320f02566cda10b476b41cb34f5d0bb1eca3b30d3dc9173b961"
+  },
+  {
+    "source": "strategies/trend_cloud_intrabar_exit_v4.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_intrabar_exit_v4.py.txt",
+    "bytes": 15086,
+    "sha256": "71628ab4082265f895c5eb4d47dad5e242c9ef47f636042c6578a77b09b6dc4c"
+  },
+  {
+    "source": "strategies/trend_cloud_intrabar_methods_v3.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_intrabar_methods_v3.py.txt",
+    "bytes": 14899,
+    "sha256": "a0f430d82aa77f41be7afad7672aa5f8f2564a65c6e3f816724aecba8ba56739"
+  },
+  {
+    "source": "strategies/trend_cloud_intrabar_support_v1.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_intrabar_support_v1.py.txt",
+    "bytes": 19310,
+    "sha256": "1558db53732acc328e3735d1308697e1d0c86dc457ffc1ff3cbefd63eae51e53"
+  },
+  {
+    "source": "strategies/trend_cloud_manual_v1.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_manual_v1.py.txt",
+    "bytes": 8494,
+    "sha256": "03c244cb76c7934b17014e49223843da70c5e7d3124398031717e5eeef30cf49"
+  },
+  {
+    "source": "strategies/trend_cloud_parameters_v4.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_parameters_v4.py.txt",
+    "bytes": 8106,
+    "sha256": "e00bb9c0c3c97b51f7a9996983e4218916dec5153c4b9b7319a9ca0510129b4a"
+  },
+  {
+    "source": "strategies/trend_cloud_profit_protection.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_profit_protection.py.txt",
+    "bytes": 5329,
+    "sha256": "9d8c8ded9d17b33ef1f8315755b3d661b2b237b048a2d518d29009d1906f815b"
+  },
+  {
+    "source": "strategies/trend_cloud_reverse_after_protection_v5.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_reverse_after_protection_v5.py.txt",
+    "bytes": 15569,
+    "sha256": "534d0471f1da24eff472712f76fd5c368174b6df05ba94736b5e0acaaeb36f50"
+  },
+  {
+    "source": "strategies/trend_cloud_robustness_v1.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_robustness_v1.py.txt",
+    "bytes": 11760,
+    "sha256": "c2e5ec291974b4a4a7efd3fc83bdb6d2505de939cd523694c0fbd34b8c965b5a"
+  },
+  {
+    "source": "strategies/trend_cloud_signal_confirmation_v1.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_signal_confirmation_v1.py.txt",
+    "bytes": 9747,
+    "sha256": "757850049ac782216c6d1bdae12a11c0e9a61ef0102668e56e36c5d7a7231900"
+  },
+  {
+    "source": "strategies/trend_cloud_stop_confirmation_v1.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_stop_confirmation_v1.py.txt",
+    "bytes": 18720,
+    "sha256": "75e6d8d5f68025f24842526808d27a951535766fbbc84ccce0f9e1a4de198319"
+  },
+  {
+    "source": "strategies/trend_cloud_stop_confirmation_v2.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_stop_confirmation_v2.py.txt",
+    "bytes": 19395,
+    "sha256": "ac209157831afd95292716b067aad00b439ee83ec35999c19480518393bd3a05"
+  },
+  {
+    "source": "strategies/trend_cloud_timeframe_v6.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_timeframe_v6.py.txt",
+    "bytes": 5016,
+    "sha256": "9db203de4b5eaaba5137529c0cdbc5f1075dc26dc5a8c8b83dc3e6d09dc298ae"
+  },
+  {
+    "source": "strategies/trend_cloud_width_reentry_v1.py",
+    "destination": "archived/python_backtest_20261123/strategies/trend_cloud_width_reentry_v1.py.txt",
+    "bytes": 14288,
+    "sha256": "a61d705785dcbc3eb5268fcb8215d5206e062787e7dda598e419fe45222fc133"
+  },
+  {
+    "source": "test/fixtures/backtest_engine_v11/backtest_execution.py",
+    "destination": "archived/python_backtest_20261123/test/fixtures/backtest_engine_v11/backtest_execution.py.txt",
+    "bytes": 1915,
+    "sha256": "7124d8252d9e58be77afff7cece86708ff2e7024b74d8d3378bc89fe7d62cf1f"
+  },
+  {
+    "source": "test/fixtures/backtest_engine_v11/backtest_history.py",
+    "destination": "archived/python_backtest_20261123/test/fixtures/backtest_engine_v11/backtest_history.py.txt",
+    "bytes": 3065,
+    "sha256": "c08eb330648129dcd9dcb800860a089d9efa1bd95cdba60f656a403905bb36fd"
+  },
+  {
+    "source": "test/fixtures/backtest_engine_v11/local_backtest.py",
+    "destination": "archived/python_backtest_20261123/test/fixtures/backtest_engine_v11/local_backtest.py.txt",
+    "bytes": 35140,
+    "sha256": "e8ee6c3142b169c48ccc2ff2173d336982925f56d7bab42960f528fff432a491"
+  },
+  {
+    "source": "test/fixtures/backtest_engine_v11/manifest.json",
+    "destination": "archived/python_backtest_20261123/test/fixtures/backtest_engine_v11/manifest.json.txt",
+    "bytes": 406,
+    "sha256": "c01d4cae6d591b9bcff3051c550d1fa4e149a5d4aa6be4ad5cd4d86de6e42358"
+  },
+  {
+    "source": "test/fixtures/research_engines_v1/cloud_adaptive_research_v1.py",
+    "destination": "archived/python_backtest_20261123/test/fixtures/research_engines_v1/cloud_adaptive_research_v1.py.txt",
+    "bytes": 13954,
+    "sha256": "d402be314a5f55534bd7436f7aca8d6a298183b1ac5568dd1999048e23a3092f"
+  },
+  {
+    "source": "test/fixtures/research_engines_v1/cloud_protection_research_v1.py",
+    "destination": "archived/python_backtest_20261123/test/fixtures/research_engines_v1/cloud_protection_research_v1.py.txt",
+    "bytes": 13456,
+    "sha256": "f0d16ac81ee970dd1756c4d653becb3b43dbd2288d2db5ba69bd4aa9ea4fd219"
+  },
+  {
+    "source": "test/fixtures/research_engines_v1/cloud_window_research_v1.py",
+    "destination": "archived/python_backtest_20261123/test/fixtures/research_engines_v1/cloud_window_research_v1.py.txt",
+    "bytes": 13624,
+    "sha256": "560ed60e150ff01a28fcab153987b843bb82f5b7f5f542668fabe6cc2c027052"
+  },
+  {
+    "source": "test/test_account_diagnostics.py",
+    "destination": "archived/python_backtest_20261123/test/test_account_diagnostics.py.txt",
+    "bytes": 7720,
+    "sha256": "e8e84b768a01e6dc551f6276655fa3e0e315dc6d6aa9773fd1c91f83f70d239e"
+  },
+  {
+    "source": "test/test_alt_cloud_transfer_study.py",
+    "destination": "archived/python_backtest_20261123/test/test_alt_cloud_transfer_study.py.txt",
+    "bytes": 1367,
+    "sha256": "3c991038435c2d4d46ef8cd8ff6010435966eca8b7140f382371c0f40bb4391e"
+  },
+  {
+    "source": "test/test_backtest_diagnostics.py",
+    "destination": "archived/python_backtest_20261123/test/test_backtest_diagnostics.py.txt",
+    "bytes": 4178,
+    "sha256": "b48ac82a393783d2e75f3faf1b25f9dba757ea94f1d0d45cd4e473a783520ffc"
+  },
+  {
+    "source": "test/test_backtest_history.py",
+    "destination": "archived/python_backtest_20261123/test/test_backtest_history.py.txt",
+    "bytes": 3332,
+    "sha256": "aa5a3644213b0230326758b3d37467c275e6157fa9b40a991beec0f0b6f0ae08"
+  },
+  {
+    "source": "test/test_backtest_preflight.py",
+    "destination": "archived/python_backtest_20261123/test/test_backtest_preflight.py.txt",
+    "bytes": 5118,
+    "sha256": "a7e14971695a5ebc5e614e39f2bff21b6f665eaabeb4a8779ee516e0aa0a9d23"
+  },
+  {
+    "source": "test/test_backtest_provenance.py",
+    "destination": "archived/python_backtest_20261123/test/test_backtest_provenance.py.txt",
+    "bytes": 7553,
+    "sha256": "a0e4fdf49a4b9465625482c05308565befedb41857c721bb362236901c24cfa5"
+  },
+  {
+    "source": "test/test_backtest_record_store.py",
+    "destination": "archived/python_backtest_20261123/test/test_backtest_record_store.py.txt",
+    "bytes": 7749,
+    "sha256": "8fe10682baf711e23323dd6134dfbb2175658d6ef402731a9549dfefa95f9994"
+  },
+  {
+    "source": "test/test_backtest_refactor.py",
+    "destination": "archived/python_backtest_20261123/test/test_backtest_refactor.py.txt",
+    "bytes": 2966,
+    "sha256": "26f08151f522c0e45409448472db6e836e44061f168ac363ef720b488f994758"
+  },
+  {
+    "source": "test/test_btc_cloud_parameter_study.py",
+    "destination": "archived/python_backtest_20261123/test/test_btc_cloud_parameter_study.py.txt",
+    "bytes": 1743,
+    "sha256": "ccf9ab765b61bf23b2a82ad3b140e3e0644604acc9056dc5757c3301d54d6606"
+  },
+  {
+    "source": "test/test_cloud_atr_confirmation.py",
+    "destination": "archived/python_backtest_20261123/test/test_cloud_atr_confirmation.py.txt",
+    "bytes": 4147,
+    "sha256": "2662f57ccb12521c23c4e79c2160987b9e056569877ae2b8677bd44c8dc3ad34"
+  },
+  {
+    "source": "test/test_cloud_comparison_strategy.py",
+    "destination": "archived/python_backtest_20261123/test/test_cloud_comparison_strategy.py.txt",
+    "bytes": 1287,
+    "sha256": "3c23281e6dc0357833d841ae769643ff7561804310b95961c6fd906c3fc0d59e"
+  },
+  {
+    "source": "test/test_cloud_context.py",
+    "destination": "archived/python_backtest_20261123/test/test_cloud_context.py.txt",
+    "bytes": 5190,
+    "sha256": "68ffa10373796bdfd1f1e6c69461d724b3044122e432433909239769eae10768"
+  },
+  {
+    "source": "test/test_cloud_direct_adaptation.py",
+    "destination": "archived/python_backtest_20261123/test/test_cloud_direct_adaptation.py.txt",
+    "bytes": 4387,
+    "sha256": "ccd4d13b00295f5c4674a10791bf672de82f440ffcd01759e2e5f938236e45c8"
+  },
+  {
+    "source": "test/test_cloud_entry.py",
+    "destination": "archived/python_backtest_20261123/test/test_cloud_entry.py.txt",
+    "bytes": 3312,
+    "sha256": "dd631dd4724c949be4be455c87bab59858bea280ca3cb202787c47b12ca1f34e"
+  },
+  {
+    "source": "test/test_cloud_entry_path_audit.py",
+    "destination": "archived/python_backtest_20261123/test/test_cloud_entry_path_audit.py.txt",
+    "bytes": 2131,
+    "sha256": "ed842d9bafa749ec07400de4624d03085cd6a0e194f9c629287b6e1a787d6c6b"
+  },
+  {
+    "source": "test/test_cloud_intrabar_selection.py",
+    "destination": "archived/python_backtest_20261123/test/test_cloud_intrabar_selection.py.txt",
+    "bytes": 3763,
+    "sha256": "8c1689accd076da88eaffcc5acfa300bcda7ba6e449f559b03b63cd5623fbe8a"
+  },
+  {
+    "source": "test/test_cloud_joint_study.py",
+    "destination": "archived/python_backtest_20261123/test/test_cloud_joint_study.py.txt",
+    "bytes": 1887,
+    "sha256": "49d6b77c8ced4e6c36953f0649e2d667a3a914624f48acdee6015c43ee88ba8f"
+  },
+  {
+    "source": "test/test_cloud_manual.py",
+    "destination": "archived/python_backtest_20261123/test/test_cloud_manual.py.txt",
+    "bytes": 3654,
+    "sha256": "89e0df99c0be744760e1f5924379073653b79ced28aa8c84ade505cc11bad7f0"
+  },
+  {
+    "source": "test/test_cloud_parameters.py",
+    "destination": "archived/python_backtest_20261123/test/test_cloud_parameters.py.txt",
+    "bytes": 3967,
+    "sha256": "5d3bc139d089b7f0837aeb1675641ae9746f1b5c3bf2bc6b913ef1e7ea824d69"
+  },
+  {
+    "source": "test/test_cloud_profit_audit.py",
+    "destination": "archived/python_backtest_20261123/test/test_cloud_profit_audit.py.txt",
+    "bytes": 1203,
+    "sha256": "5cd58a0fe9d0dae0fbd6636c13af53f3df3d1dae6a612ae4de039abc104dfe27"
+  },
+  {
+    "source": "test/test_cloud_robustness.py",
+    "destination": "archived/python_backtest_20261123/test/test_cloud_robustness.py.txt",
+    "bytes": 4642,
+    "sha256": "903f4ba250055b134870669a5871821d571bc9885b06d801292c71e87f2666cb"
+  },
+  {
+    "source": "test/test_cloud_short_window.py",
+    "destination": "archived/python_backtest_20261123/test/test_cloud_short_window.py.txt",
+    "bytes": 4388,
+    "sha256": "4115af5ac1bbd3790b914d8825c6079462b8c9f8690863930283ae46efda317f"
+  },
+  {
+    "source": "test/test_cloud_signal_confirmation.py",
+    "destination": "archived/python_backtest_20261123/test/test_cloud_signal_confirmation.py.txt",
+    "bytes": 4516,
+    "sha256": "74d8df950c519d718b01746bd6813cac6086faf3d30968b8478789e56102355b"
+  },
+  {
+    "source": "test/test_cloud_timeframe.py",
+    "destination": "archived/python_backtest_20261123/test/test_cloud_timeframe.py.txt",
+    "bytes": 3047,
+    "sha256": "aa63d94ab5e9d1d27096ab205c898859a053247b25c54e8fde075f6f2adeaf20"
+  },
+  {
+    "source": "test/test_cloud_trade_attribution.py",
+    "destination": "archived/python_backtest_20261123/test/test_cloud_trade_attribution.py.txt",
+    "bytes": 2872,
+    "sha256": "1a97f6b29459db0e2496fd31563137d2bdc741bb07a9aecdb88adbdf3d73df39"
+  },
+  {
+    "source": "test/test_cloud_walkforward.py",
+    "destination": "archived/python_backtest_20261123/test/test_cloud_walkforward.py.txt",
+    "bytes": 5314,
+    "sha256": "bc3369f36a49a9253b9b8110e3aae7a56f0b6fd2a5ccd668c6e24410206b56d8"
+  },
+  {
+    "source": "test/test_cloud_width_reentry.py",
+    "destination": "archived/python_backtest_20261123/test/test_cloud_width_reentry.py.txt",
+    "bytes": 5477,
+    "sha256": "584b85cab0b939a7dacf60fdaf63c5127a4da2764c9c7b8dccc2ad804ab35a7a"
+  },
+  {
+    "source": "test/test_cohesion_boundaries.py",
+    "destination": "archived/python_backtest_20261123/test/test_cohesion_boundaries.py.txt",
+    "bytes": 3112,
+    "sha256": "0e4b0b9003e9e42c78c3306d920bc5c2d0c587f270643b4d5843a6d30041bc04"
+  },
+  {
+    "source": "test/test_cross_market_trend.py",
+    "destination": "archived/python_backtest_20261123/test/test_cross_market_trend.py.txt",
+    "bytes": 4823,
+    "sha256": "c386cc998cace63758696d78bd2b7cbb8735510e69c69d3f3064cd9dca842694"
+  },
+  {
+    "source": "test/test_indicator_verification.py",
+    "destination": "archived/python_backtest_20261123/test/test_indicator_verification.py.txt",
+    "bytes": 4949,
+    "sha256": "605e3cf3f448595f8d9339564db1de85936040509bcfdb762e39a251cb045ce7"
+  },
+  {
+    "source": "test/test_intrabar_no_fixed_stop.py",
+    "destination": "archived/python_backtest_20261123/test/test_intrabar_no_fixed_stop.py.txt",
+    "bytes": 2848,
+    "sha256": "b59dc117cffaa94bac7646c7be947bab837ab1139d6bbd947e80d59ad9603db5"
+  },
+  {
+    "source": "test/test_intrabar_reverse_exit.py",
+    "destination": "archived/python_backtest_20261123/test/test_intrabar_reverse_exit.py.txt",
+    "bytes": 2477,
+    "sha256": "6e5865eee91e2a702a69bb723ab0665db289e29ed4073643b46e851958b75866"
+  },
+  {
+    "source": "test/test_intrabar_stop_entry.py",
+    "destination": "archived/python_backtest_20261123/test/test_intrabar_stop_entry.py.txt",
+    "bytes": 6842,
+    "sha256": "fd7935123d8b379b6d71bec3872ee326bc1ef7b8b711aaa5f491f1974bcddec0"
+  },
+  {
+    "source": "test/test_intrabar_support_gate.py",
+    "destination": "archived/python_backtest_20261123/test/test_intrabar_support_gate.py.txt",
+    "bytes": 4696,
+    "sha256": "9201f255bfd7855da204c57df312a1385ab2da137b32a1d05b0465958e2acefe"
+  },
+  {
+    "source": "test/test_local_backtest_engine.py",
+    "destination": "archived/python_backtest_20261123/test/test_local_backtest_engine.py.txt",
+    "bytes": 8282,
+    "sha256": "cc86be5af88d7fd27344acdcb65f30a32cf8a4cac85aa3465d2b6f5dcf571bc1"
+  },
+  {
+    "source": "test/test_local_backtest_service.py",
+    "destination": "archived/python_backtest_20261123/test/test_local_backtest_service.py.txt",
+    "bytes": 20835,
+    "sha256": "f99cd22629c097c75baa3e70f6064f77fc65e9d227d54226b4d49d302c25fbe1"
+  },
+  {
+    "source": "test/test_parameter_sweeps.py",
+    "destination": "archived/python_backtest_20261123/test/test_parameter_sweeps.py.txt",
+    "bytes": 16250,
+    "sha256": "bda740181c5fa8bd6f9232f28d25203de63a01f8c3812f0394bab8dc3a847a00"
+  },
+  {
+    "source": "test/test_pine_contract.py",
+    "destination": "archived/python_backtest_20261123/test/test_pine_contract.py.txt",
+    "bytes": 375,
+    "sha256": "505c7a57c454516f866e65ed5e71f43fcc8617d41d10d7e25d21692217e5a9fe"
+  },
+  {
+    "source": "test/test_profit_protection.py",
+    "destination": "archived/python_backtest_20261123/test/test_profit_protection.py.txt",
+    "bytes": 5047,
+    "sha256": "665ec46e688ffcae88c07d1a56d8d276b5210aaa78adea7ca89891ddc940c420"
+  },
+  {
+    "source": "test/test_research_engine_refactor.py",
+    "destination": "archived/python_backtest_20261123/test/test_research_engine_refactor.py.txt",
+    "bytes": 2392,
+    "sha256": "ff1e72528e48f80ac5170ef5207c0a15f3af1f61c49be3e137d4e64064b3625d"
+  },
+  {
+    "source": "test/test_research_results_catalog.py",
+    "destination": "archived/python_backtest_20261123/test/test_research_results_catalog.py.txt",
+    "bytes": 9755,
+    "sha256": "112e53e5440f3993cb72a0d3da2b814c49602705983d1edd494400f4d9420f17"
+  },
+  {
+    "source": "test/test_research_studies.py",
+    "destination": "archived/python_backtest_20261123/test/test_research_studies.py.txt",
+    "bytes": 15792,
+    "sha256": "7d82aeb9539dfd09d6e9fa5a53e162250f2c21ac3e3af9e25df7d9dcfff2e5d0"
+  },
+  {
+    "source": "test/test_reverse_after_protection.py",
+    "destination": "archived/python_backtest_20261123/test/test_reverse_after_protection.py.txt",
+    "bytes": 2992,
+    "sha256": "70eb1402fbeb06cc9c935d224f921c3be38ef70af73320e34c27108124252ab5"
+  },
+  {
+    "source": "test/test_stop_confirmation.py",
+    "destination": "archived/python_backtest_20261123/test/test_stop_confirmation.py.txt",
+    "bytes": 6078,
+    "sha256": "0e72d96085011bf2219e11481f1074370c6d3826b2798f2f7eb70bb0e798e5ca"
+  },
+  {
+    "source": "test/test_stop_confirmation_execution.py",
+    "destination": "archived/python_backtest_20261123/test/test_stop_confirmation_execution.py.txt",
+    "bytes": 5234,
+    "sha256": "27d4b1541e94f07484dacd7daea792daed9d55ae0b496834fce257a8e9010e7d"
+  },
+  {
+    "source": "test/test_strategy_authoring.py",
+    "destination": "archived/python_backtest_20261123/test/test_strategy_authoring.py.txt",
+    "bytes": 1479,
+    "sha256": "39ec7e8c0902e8cfec424df9871344a71a02594db8cdbd605b04c711465f0fa0"
+  },
+  {
+    "source": "test/test_zec_intrabar_methods.py",
+    "destination": "archived/python_backtest_20261123/test/test_zec_intrabar_methods.py.txt",
+    "bytes": 5721,
+    "sha256": "1e609ab1b45351eb978ad98be369b935238f0c59429214128e4b1153f1cb5019"
+  },
+  {
+    "source": "scripts/audit_cloud_entry_width.py",
+    "destination": "archived/python_backtest_20261123/scripts/audit_cloud_entry_width.py.txt",
+    "bytes": 4049,
+    "sha256": "df611136c37c22dc19cc9a5a1ef9b3cc6d19db4a7c6d5a2c194ed2845e101d08"
+  },
+  {
+    "source": "scripts/cloud_entry_explanation.html",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_entry_explanation.html.txt",
+    "bytes": 10558,
+    "sha256": "9be47c9e24790aaa14242d245fa2fe22d856ee052b8705317814eee9d8f289fd"
+  },
+  {
+    "source": "scripts/cloud_strategy_versions.py",
+    "destination": "archived/python_backtest_20261123/scripts/cloud_strategy_versions.py.txt",
+    "bytes": 1849,
+    "sha256": "326aa74ad77b3c345bda12aab7333c683a62db11a5ccbef50eef2c1a4e2cd589"
+  },
+  {
+    "source": "scripts/explain_cloud_width_switch.py",
+    "destination": "archived/python_backtest_20261123/scripts/explain_cloud_width_switch.py.txt",
+    "bytes": 14483,
+    "sha256": "7a728b06d05cb17c6a43af8362bea57cd7ab5b500bda479441b9377a6f643585"
+  },
+  {
+    "source": "scripts/render_trend_cloud_study.py",
+    "destination": "archived/python_backtest_20261123/scripts/render_trend_cloud_study.py.txt",
+    "bytes": 10619,
+    "sha256": "a9f12518433811b47870b1c5a544bdcf8251954a84f9bf27cb37c57852b0fd02"
+  },
+  {
+    "source": "docs/RESEARCH_RESULTS.md",
+    "destination": "archived/python_backtest_20261123/docs/RESEARCH_RESULTS.md.txt",
+    "bytes": 5510,
+    "sha256": "e26f82456c8ef25f8874d7205f434959ed02b32dac7f21db06d1035fc7834c67"
+  },
+  {
+    "source": "test/test_ui_audit_regressions.py",
+    "destination": "archived/python_backtest_20261123/test/test_ui_audit_regressions.py.txt",
+    "mode": "snapshot",
+    "bytes": 5124,
+    "sha256": "de22b1ed1e0db250cb647b2434b466b90404d58cb49b26e26473587f9501eb0d"
+  }
+]

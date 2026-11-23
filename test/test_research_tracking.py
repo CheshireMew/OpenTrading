@@ -154,9 +154,6 @@ class _AlertQuery:
         raise AssertionError("snapshot price should be used")
 
 
-class _PortfolioRepository:
-    def get_collection(self):
-        raise AssertionError("price-only alerts do not need portfolios")
 
 
 @pytest.mark.asyncio
@@ -181,7 +178,6 @@ async def test_research_alert_runtime_detects_crossing_and_emits_event(installed
         research_repository=repository,
         market_query_service=_AlertQuery(),
         binance_market_service=_AlertMarket(snapshot),
-        portfolio_repository=_PortfolioRepository(),
     )
 
     first = await runtime.evaluate_once()

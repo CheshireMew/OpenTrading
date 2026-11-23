@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "strategies": {
+    "adaptive_cloud.py": {
+      "sha256": "37d356cca6845570ece8dc932b45f82bc31dca874e53f8bfbb8a861e15046b16",
+      "template": "adaptive_cloud.py.in"
+    },
+    "cross_market_trend_v1.py": {
+      "sha256": "f5444b52bde5ebb4ba28c85b838ab06ef7cd2016541b577954f9a02c8c08a922",
+      "template": "cross_market_trend_v1.py.in"
+    },
+    "ma_cross.py": {
+      "sha256": "db80d1572808cef4a09f092b4613837f75ff99298c68b5ce81f1de300c6e18e7",
+      "template": "ma_cross.py.in"
+    },
+    "trend_cloud_atr_confirm_v5.py": {
+      "sha256": "e8c0b18de96d22e8fdb528fdc920db036f7bc7a8d78c25aaa05ffec691e87174",
+      "template": "trend_cloud_atr_confirm_v5.py.in"
+    },
+    "trend_cloud_comparison.py": {
+      "sha256": "dc164d5fa7701d398868fdfa7c48dd148381fa1f201ac791aa5315fe7af8d94d",
+      "template": "trend_cloud_comparison.py.in"
+    },
+    "trend_cloud_context_v3.py": {
+      "sha256": "a3498e849b1af195f19fa84dd663b761ff2257381508ad503e37b2eafba4ba86",
+      "template": "trend_cloud_context_v3.py.in"
+    },
+    "trend_cloud_direct_v7.py": {
+      "sha256": "b17b73ef92843c450e69372c860ecdfb36e6e14b6a649be66428e1544a6d0fe5",
+      "template": "trend_cloud_direct_v7.py.in"
+    },
+    "trend_cloud_entry_v2.py": {
+      "sha256": "d2b66524c4fc7727c3f0a2252f3d20d68d378b64c4dd6a30b7f7650082181a7d",
+      "template": "trend_cloud_entry_v2.py.in"
+    },
+    "trend_cloud_experiments.py": {
+      "sha256": "341672d7dc50a641faa419146bb80bc60cc754d5e7d6c978e0b6ce31adc63d10",
+      "template": "trend_cloud_experiments.py.in"
+    },
+    "trend_cloud_intrabar_confirmation_v1.py": {
+      "sha256": "0df894a3fcaac60d7cd7170fc80e7c904e25db322a38a947e8e6e38ce919c645",
+      "template": "trend_cloud_intrabar_confirmation_v1.py.in"
+    },
+    "trend_cloud_intrabar_confirmation_v2.py": {
+      "sha256": "5bfc2025b568d320f02566cda10b476b41cb34f5d0bb1eca3b30d3dc9173b961",
+      "template": "trend_cloud_intrabar_confirmation_v2.py.in"
+    },
+    "trend_cloud_intrabar_exit_v4.py": {
+      "sha256": "71628ab4082265f895c5eb4d47dad5e242c9ef47f636042c6578a77b09b6dc4c",
+      "template": "trend_cloud_intrabar_exit_v4.py.in"
+    },
+    "trend_cloud_intrabar_methods_v3.py": {
+      "sha256": "a0f430d82aa77f41be7afad7672aa5f8f2564a65c6e3f816724aecba8ba56739",
+      "template": "trend_cloud_intrabar_methods_v3.py.in"
+    },
+    "trend_cloud_intrabar_support_v1.py": {
+      "sha256": "1558db53732acc328e3735d1308697e1d0c86dc457ffc1ff3cbefd63eae51e53",
+      "template": "trend_cloud_intrabar_support_v1.py.in"
+    },
+    "trend_cloud_manual_v1.py": {
+      "sha256": "03c244cb76c7934b17014e49223843da70c5e7d3124398031717e5eeef30cf49",
+      "template": "trend_cloud_manual_v1.py.in"
+    },
+    "trend_cloud_parameters_v4.py": {
+      "sha256": "e00bb9c0c3c97b51f7a9996983e4218916dec5153c4b9b7319a9ca0510129b4a",
+      "template": "trend_cloud_parameters_v4.py.in"
+    },
+    "trend_cloud_profit_protection.py": {
+      "sha256": "9d8c8ded9d17b33ef1f8315755b3d661b2b237b048a2d518d29009d1906f815b",
+      "template": "trend_cloud_profit_protection.py.in"
+    },
+    "trend_cloud_reverse_after_protection_v5.py": {
+      "sha256": "534d0471f1da24eff472712f76fd5c368174b6df05ba94736b5e0acaaeb36f50",
+      "template": "trend_cloud_reverse_after_protection_v5.py.in"
+    },
+    "trend_cloud_robustness_v1.py": {
+      "sha256": "c2e5ec291974b4a4a7efd3fc83bdb6d2505de939cd523694c0fbd34b8c965b5a",
+      "template": "trend_cloud_robustness_v1.py.in"
+    },
+    "trend_cloud_signal_confirmation_v1.py": {
+      "sha256": "757850049ac782216c6d1bdae12a11c0e9a61ef0102668e56e36c5d7a7231900",
+      "template": "trend_cloud_signal_confirmation_v1.py.in"
+    },
+    "trend_cloud_stop_confirmation_v1.py": {
+      "sha256": "75e6d8d5f68025f24842526808d27a951535766fbbc84ccce0f9e1a4de198319",
+      "template": "trend_cloud_stop_confirmation_v1.py.in"
+    },
+    "trend_cloud_stop_confirmation_v2.py": {
+      "sha256": "ac209157831afd95292716b067aad00b439ee83ec35999c19480518393bd3a05",
+      "template": "trend_cloud_stop_confirmation_v2.py.in"
+    },
+    "trend_cloud_timeframe_v6.py": {
+      "sha256": "9db203de4b5eaaba5137529c0cdbc5f1075dc26dc5a8c8b83dc3e6d09dc298ae",
+      "template": "trend_cloud_timeframe_v6.py.in"
+    },
+    "trend_cloud_width_reentry_v1.py": {
+      "sha256": "a61d705785dcbc3eb5268fcb8215d5206e062787e7dda598e419fe45222fc133",
+      "template": "trend_cloud_width_reentry_v1.py.in"
+    }
+  }
+}

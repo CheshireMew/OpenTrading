@@ -1,0 +1,120 @@
+import json
+from app.infra.research_files import file_hash, relocated_project_path
+from app.application.research_result_ports import ResultIndexPort
+from app.services.research_result_entries import legacy_entries, legacy_identity, make_entry, compact, identity, METRICS
+from app.services.research_result_scanner import summary_paths
+from app.services.research_result_manifests import ManifestImporter
+
+
+class ResultImporter:
+    def __init__(self, index: ResultIndexPort, sync_native):
+        self.index = index
+        self._sync_native = sync_native
+        self.manifests = ManifestImporter(index)
+
+    def refresh(self, roots, max_json_bytes=32 * 1024 * 1024):
+        native = self._sync_native()
+        scanned = imported = unchanged = 0
+        issues = []
+        manifests = []
+        # Withdraw declarations before scanning. A removed/invalid/empty map
+        # must not keep its old enrichment through another source reference.
+        with self.index.transaction() as db:
+            old_maps = db.annotated_sources()
+        for name in old_maps:
+            self.manifests.reset_manifest(relocated_project_path(name), max_json_bytes)
+            if not relocated_project_path(name).is_file():
+                issues.append(dict(path=name, issue="来源映射已不可读，已撤回其声明；原报告仍可查看。"))
+        for path in summary_paths(roots):
+            if path.suffix.lower() != ".json":
+                continue
+            scanned += 1
+            source = str(path.resolve())
+            size = path.stat().st_size
+            digest = file_hash(path)
+            with self.index.transaction() as db:
+                old = db.import_status(source)
+                if old and old[0] == digest and not old[1]:
+                    unchanged += 1
+                    continue
+                entries, issue = [], None
+                if size > max_json_bytes:
+                    issue = "超过摘要导入大小限制；请使用带来源位置的精简汇总。原文件保留。"
+                else:
+                    try:
+                        document = json.loads(path.read_text(encoding="utf-8-sig"))
+                        if isinstance(document, dict) and document.get("catalog_manifest_version") == 1:
+                            manifests.append((path, document))
+                        entries = list(legacy_entries(document))
+                    except (OSError, ValueError, TypeError) as exc:
+                        issue = str(exc)
+                # Replace this source's derived rows only. Native run identity is canonical.
+                previous = db.source_results(source)
+                db.forget_source(source)
+                for rid in previous:
+                    db.discard(rid, legacy_only=True, unreferenced_only=True)
+                for item in entries:
+                    rid = "run:" + item["run_id"] if item.get("run_id") else None
+                    native_row = db.get(rid, source_type="native") if rid else None
+                    if native_row:
+                        actual = native_row
+                        if any(
+                            actual["report"].get(k) != item["report"].get(k) for k in METRICS if k in item["report"]
+                        ):
+                            issues.append(
+                                dict(path=source, issue=f"{item['pointer']} 引用的运行与报告数值不同，保留为独立旧证据")
+                            )
+                            native_row = None
+                    if not native_row:
+                        rid = legacy_identity(item, source)
+                        existing = db.get(rid)
+                        if existing and existing["report"] != compact(item["report"]):
+                            rid = "legacy:" + identity([source, item["pointer"]])[:24]
+                            issues.append(
+                                dict(path=source, issue=f"{item['pointer']} 同一明细来源的摘要不同，保留独立证据")
+                            )
+                        entry = make_entry(
+                            rid,
+                            item["config"],
+                            item["report"],
+                            item["metadata"],
+                            "legacy",
+                            item["label"],
+                            family=item["family"],
+                        )
+                        db.put(entry)
+                    db.link(source, item["pointer"], rid, digest)
+                    imported += 1
+                db.mark_import(source, digest, len(entries), issue)
+                if issue:
+                    issues.append(dict(path=source, issue=issue))
+        # Apply explicit context maps after generic imports so folder order cannot
+        # discard an enrichment. Also re-read unchanged manifests: source hashes
+        # and source reports may have changed independently of the manifest.
+        with self.index.transaction() as db:
+            known = db.imported_paths()
+        done = {str(p.resolve()) for p, _ in manifests}
+        for name in known:
+            p = relocated_project_path(name)
+            if name not in done and p.is_file() and p.stat().st_size < 1024 * 1024:
+                try:
+                    doc = json.loads(p.read_text(encoding="utf-8-sig"))
+                    if isinstance(doc, dict) and doc.get("catalog_manifest_version") == 1:
+                        manifests.append((p, doc))
+                except (OSError, ValueError):
+                    pass
+        for path, document in manifests:
+            self.manifests.reset_manifest(path, max_json_bytes)
+            try:
+                imported += self.manifests.import_manifest(path, document, max_json_bytes)
+            except (OSError, ValueError, TypeError, KeyError) as exc:
+                issues.append(dict(path=str(path), issue=str(exc)))
+        return dict(
+            native_runs=native,
+            scanned_files=scanned,
+            imported_references=imported,
+            unchanged_files=unchanged,
+            issues=issues,
+            index=str(self.index.path.resolve()),
+            note="仅导入有明确 report 的汇总和计划声明的参数矩阵；没有来源字段的内容保留为未知，不按文件名猜测。",
+        )

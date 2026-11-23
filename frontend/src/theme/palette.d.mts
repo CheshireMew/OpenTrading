@@ -1,7 +1,7 @@
 export const DARK_PALETTE: Readonly<Record<
   'canvas' | 'panel' | 'toolbar' | 'elevated' | 'hover' | 'border' | 'borderStrong' |
   'grid' | 'text' | 'title' | 'muted' | 'faint' | 'accent' | 'accentHover' |
-  'positive' | 'negative' | 'blue', string
+  'positive' | 'negative' | 'blue' | 'onAccent', string
 >>
 export const LIGHT_PALETTE: typeof DARK_PALETTE
 export const DARK_CHART_COLORS: Readonly<Record<'bg' | 'grid' | 'text' | 'upColor' | 'downColor', string>>

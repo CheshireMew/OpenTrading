@@ -1,0 +1,214 @@
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import ExitStack
+from datetime import datetime
+from threading import Barrier
+from unittest.mock import patch
+
+import pytest
+from alembic import command
+from sqlalchemy import select, text
+
+from app.domain.portfolios import PortfolioCollectionMismatchError, PortfolioRevisionConflictError
+from app.domain.research import ResearchRevisionConflictError
+from app.infra.db import schema
+from app.infra.db.schema_runtime import _alembic_config
+from app.infra.persistence.portfolio_repository import PortfolioRepository
+from app.infra.persistence.research_repository import ResearchRepository
+from app.infra.persistence.market_screener_repository import MarketScreenerRepository
+from app.infra.persistence.trade_signal_repository import TradeSignalRepository
+from app.infra.persistence import research_rows, research_record_repository, portfolio_ledger_repository
+
+
+def race(repository, check, action):
+    barrier = Barrier(2)
+    # Synchronize the actual pre-write read after the repository responsibility split.
+    owners = [repository]
+    if isinstance(repository, ResearchRepository):
+        owners, check = [research_rows, research_record_repository], check.lstrip("_")
+    elif isinstance(repository, PortfolioRepository):
+        owners, check = [portfolio_ledger_repository], check.lstrip("_")
+    original = getattr(owners[0], check)
+
+    def synchronized(*args, **kwargs):
+        result = original(*args, **kwargs)
+        barrier.wait(timeout=10)
+        return result
+
+    def run(_):
+        try:
+            return action()
+        except Exception as exc:
+            return exc
+
+    with ExitStack() as stack:
+        for owner in owners:
+            stack.enter_context(patch.object(owner, check, synchronized))
+        with ThreadPoolExecutor(2) as pool:
+            return list(pool.map(run, range(2)))
+
+
+@pytest.mark.parametrize(
+    "model,values,repository_type,check,method",
+    [
+        (schema.ResearchWatchlist, {"name": "List"}, ResearchRepository, "_require_row", "set_watchlist_archived"),
+        (
+            schema.ResearchWatchItem,
+            {"watchlist_id": "list", "symbol": "BTC/USDT"},
+            ResearchRepository,
+            "_require_row",
+            "set_watch_item_archived",
+        ),
+        (
+            schema.ResearchNote,
+            {"symbol": "BTC/USDT", "title": "Note", "occurred_at": datetime(2026, 1, 1)},
+            ResearchRepository,
+            "_require_row",
+            "set_note_archived",
+        ),
+        (
+            schema.ResearchAlertRule,
+            {"symbol": "BTC/USDT", "name": "Alert", "metric": "price", "operator": "gt", "threshold": 100},
+            ResearchRepository,
+            "_require_row",
+            "set_alert_archived",
+        ),
+        (
+            schema.SavedMarketScreener,
+            {"name": "Screen", "description": "", "filters": {}},
+            MarketScreenerRepository,
+            "_require",
+            "set_screener_archived",
+        ),
+        (
+            schema.TradeSignalRecord,
+            {
+                "symbol": "BTC/USDT",
+                "timeframe": "1h",
+                "source": "rules",
+                "mode": "rules",
+                "signal_status": "ready",
+                "reason": "test",
+                "market_snapshot": {},
+            },
+            TradeSignalRepository,
+            "_require",
+            "set_signal_archived",
+        ),
+    ],
+)
+def test_all_versioned_research_archives_are_atomic(
+    installed_database_runtime, model, values, repository_type, check, method
+):
+    runtime = installed_database_runtime
+    with runtime.session_scope() as session:
+        session.add(schema.ResearchWatchlist(id="list", name="Parent"))
+        session.flush()
+        session.add(model(id="record", **values))
+    repository = repository_type(runtime)
+    results = race(repository, check, lambda: getattr(repository, method)("record", 1, True))
+    assert sum(isinstance(value, dict) for value in results) == 1
+    assert sum(isinstance(value, ResearchRevisionConflictError) for value in results) == 1
+    with runtime.session_scope() as session:
+        assert session.get(model, "record").version == 2
+        assert (
+            session.scalar(select(schema.ResearchEvent).where(schema.ResearchEvent.entity_id == "record")) is not None
+        )
+
+
+def ledger(runtime):
+    repository = PortfolioRepository(runtime)
+    repository.apply_collection_changes("p", [{"id": "p", "assets": []}], ["p"], 0)
+    return repository
+
+
+def payload(**updates):
+    return {"transaction_type": "deposit", "cash_amount": 100, "occurred_at": datetime(2026, 1, 1), **updates}
+
+
+def test_concurrent_ledger_edit_cannot_overwrite(installed_database_runtime):
+    repository = ledger(installed_database_runtime)
+    row = repository.create_transaction("p", payload())
+    results = race(
+        repository,
+        "_require_transaction",
+        lambda: repository.update_transaction("p", row["id"], 1, payload(cash_amount=200)),
+    )
+    assert sum(isinstance(value, dict) for value in results) == 1
+    assert sum(isinstance(value, PortfolioRevisionConflictError) for value in results) == 1
+    assert repository.get_ledger_record("p")["transactions"][0]["version"] == 2
+
+
+def test_external_id_unique_even_when_both_checks_succeed(installed_database_runtime):
+    repository = ledger(installed_database_runtime)
+    results = race(
+        repository,
+        "_assert_external_id_available",
+        lambda: repository.create_transaction("p", payload(external_id="fill-1")),
+    )
+    assert sum(isinstance(value, dict) for value in results) == 1
+    assert sum(isinstance(value, PortfolioCollectionMismatchError) for value in results) == 1
+    row = repository.get_ledger_record("p")["transactions"][0]
+    repository.set_transaction_archived("p", row["id"], 1, True)
+    repository.create_transaction("p", payload(external_id="fill-1"))
+    with pytest.raises(PortfolioCollectionMismatchError):
+        repository.set_transaction_archived("p", row["id"], 2, False)
+    assert len(repository.get_ledger_record("p")["transactions"]) == 1
+
+
+def test_unique_index_migration_rejects_legacy_duplicates_without_changing_them(installed_database_runtime):
+    runtime = installed_database_runtime
+    config = _alembic_config(runtime.database_url)
+    command.downgrade(config, "018_local_backtests")
+    repository = ledger(runtime)
+    repository.create_transaction("p", payload(external_id="legacy"))
+    # Simulate the previously possible corruption, bypassing the old preflight.
+    with runtime.engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO portfolio_transactions SELECT 'duplicate', portfolio_id, transaction_type, symbol, quantity, unit_price, cash_amount, fee, currency, fee_currency, external_id, note, metadata, version, occurred_at, archived_at, created_at, updated_at FROM portfolio_transactions"
+            )
+        )
+    with pytest.raises(RuntimeError, match="迁移未改动流水"):
+        command.upgrade(config, "head")
+    assert len(repository.get_ledger_record("p")["transactions"]) == 2
+
+
+def test_replace_import_reuses_external_identity_after_archiving_old_rows(installed_database_runtime):
+    repository = ledger(installed_database_runtime)
+    repository.create_transaction("p", payload(external_id="imported-fill"))
+    repository.import_transactions("p", [payload(external_id="imported-fill", cash_amount=200)], replace=True)
+    record = repository.get_ledger_record("p")
+    assert len(record["transactions"]) == len(record["archived_transactions"]) == 1
+    assert record["transactions"][0]["cashAmount"] == 200
+
+
+def test_ledger_request_retry_returns_original_receipt_even_after_archive(installed_database_runtime):
+    repository = ledger(installed_database_runtime)
+    first = repository.create_transaction("p", payload(), request_id="request-1")
+    repository.set_transaction_archived("p", first["id"], 1, True)
+    replay = repository.create_transaction("p", payload(), request_id="request-1")
+    assert replay["id"] == first["id"]
+    record = repository.get_ledger_record("p")
+    assert len(record["transactions"]) == 0
+    assert len(record["archived_transactions"]) == 1
+    with pytest.raises(PortfolioCollectionMismatchError):
+        repository.create_transaction("p", payload(cash_amount=200), request_id="request-1")
+
+
+def test_concurrent_ledger_request_creates_one_transaction(installed_database_runtime):
+    repository = ledger(installed_database_runtime)
+    results = race(repository, "_require_active_portfolio",
+                   lambda: repository.create_transaction("p", payload(), request_id="same-request"))
+    assert all(isinstance(result, dict) for result in results), results
+    assert results[0]["id"] == results[1]["id"]
+    assert len(repository.get_ledger_record("p")["transactions"]) == 1
+
+
+def test_replace_import_retries_do_not_archive_the_import_a_second_time(installed_database_runtime):
+    repository = ledger(installed_database_runtime)
+    repository.create_transaction("p", payload())
+    args = ("p", [payload(cash_amount=200)])
+    assert repository.import_transactions(*args, replace=True, request_id="import-1") == (1, 1)
+    assert repository.import_transactions(*args, replace=True, request_id="import-1") == (1, 1)
+    record = repository.get_ledger_record("p")
+    assert len(record["transactions"]) == len(record["archived_transactions"]) == 1

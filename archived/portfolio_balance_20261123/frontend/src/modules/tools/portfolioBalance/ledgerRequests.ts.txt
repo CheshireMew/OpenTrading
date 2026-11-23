@@ -1,0 +1,54 @@
+import { readDraft, writeDraft } from '@/modules/chartWorkspace/drafts'
+import { toolsApi } from '../api'
+import type { PortfolioTransactionInput, PortfolioTransactionImportCommand } from '../contracts'
+
+type LedgerCommand = { kind: 'create'; body: PortfolioTransactionInput } |
+  { kind: 'import'; body: Omit<PortfolioTransactionImportCommand, 'requestId'> }
+type PendingRequest = LedgerCommand & {
+  requestId: string
+  pending: boolean
+}
+
+const key = (portfolioId: string) => 'ledger-request:' + portfolioId
+export async function readPendingLedgerRequest(portfolioId: string) {
+  const value = await readDraft<PendingRequest>(key(portfolioId), 'window')
+  return value?.pending ? value : undefined
+}
+
+// Preserve the exact command before sending it. A lost response or a reload
+// can replay it safely; changing an unresolved command requires resolving it first.
+export async function submitLedgerRequest(portfolioId: string, request: LedgerCommand) {
+  const previous = await readPendingLedgerRequest(portfolioId)
+  if (previous && (previous.kind !== request.kind || JSON.stringify(previous.body) !== JSON.stringify(request.body))) {
+    throw new Error('portfolioLedger.resolvePending')
+  }
+  const frozen = JSON.parse(JSON.stringify(request)) as LedgerCommand
+  const pending = previous || { ...frozen, requestId: crypto.randomUUID(), pending: true }
+  await writeDraft(key(portfolioId), pending, 'window')
+  return send(portfolioId, pending)
+}
+
+async function send(portfolioId: string, pending: PendingRequest) {
+  let response
+  try {
+    response = pending.kind === 'create'
+      ? await toolsApi.createPortfolioTransaction(portfolioId, { ...pending.body, requestId: pending.requestId })
+      : await toolsApi.importPortfolioTransactions(portfolioId, { ...pending.body, requestId: pending.requestId })
+  } catch (error) {
+    if ([400, 409, 422].includes((error as { status?: number }).status || 0)) {
+      // An explicit validation/conflict rejection commits no new entries and
+      // must allow correcting the form. Transport/server failures stay pending.
+      await writeDraft(key(portfolioId), { ...pending, pending: false }, 'window').catch(() => undefined)
+    }
+    throw error
+  }
+  // An IndexedDB failure cannot undo a confirmed server commit. Replaying the
+  // retained receipt will acknowledge the same write without adding entries.
+  await writeDraft(key(portfolioId), { ...pending, pending: false }, 'window').catch(() => undefined)
+  return response
+}
+
+export async function retryPendingLedgerRequest(portfolioId: string) {
+  const pending = await readPendingLedgerRequest(portfolioId)
+  if (pending) return send(portfolioId, pending)
+}

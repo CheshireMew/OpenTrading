@@ -1,0 +1,66 @@
+"""Shared fill arithmetic and trade payloads; no strategy, scheduling or persistence."""
+
+from math import isclose
+
+
+def position_equity(cash, position, price):
+    if position is None:
+        return cash
+    return (
+        cash + position["principal"] + position["quantity"] * (price - position["entry_price"]) * position["direction"]
+    )
+
+
+def open_position(cash, position_pct, intent, price, timestamp, trade_id):
+    principal = cash * position_pct / 100
+    remaining = cash - principal
+    direction = 1 if intent.action == "long" else -1
+    fixed = price * (1 - direction * intent.stop_loss_pct / 100) if intent.stop_loss_pct else None
+    if intent.stop_loss_distance is not None:
+        fixed = price - direction * intent.stop_loss_distance
+        if fixed <= 0:
+            raise ValueError("初始绝对距离止损价必须大于0")
+    trailing = price * (1 - direction * intent.trailing_stop_pct / 100) if intent.trailing_stop_pct else None
+    stops = [value for value in (fixed, trailing) if value is not None]
+    return remaining, {
+        "trade_id": trade_id,
+        "side": intent.action,
+        "direction": direction,
+        "entry_time": timestamp,
+        "entry_price": price,
+        "principal": principal,
+        "quantity": principal / price,
+        "stop": (max(stops) if direction == 1 else min(stops)) if stops else None,
+        "target": price * (1 + direction * intent.take_profit_pct / 100) if intent.take_profit_pct else None,
+        "trailing_pct": intent.trailing_stop_pct,
+        "best": price,
+    }
+
+
+def closed_trade(position, price, bar, phase, reason, ambiguous, step_ms, *, exit_fields=None):
+    pnl = position["quantity"] * (price - position["entry_price"]) * position["direction"]
+    return {
+        **position,
+        "exit_price": price,
+        "exit_time": bar.timestamp,
+        "exit_phase": phase,
+        "exit_reason": reason,
+        "ambiguous": ambiguous,
+        **(exit_fields or {}),
+        "profit": pnl,
+        "return_pct": pnl / position["principal"] * 100,
+        "duration_minutes": (bar.timestamp + (step_ms if phase == "close" else 0) - position["entry_time"]) / 60000,
+    }
+
+
+def threshold_hits(position, bar, gap=False):
+    stop, target, direction = position["stop"], position["target"], position["direction"]
+    low, high = (bar.open, bar.open) if gap else (bar.low, bar.high)
+
+    def below(a, b):
+        return a < b or isclose(a, b, rel_tol=1e-12)
+
+    return (
+        stop is not None and (below(low, stop) if direction == 1 else below(stop, high)),
+        target is not None and (below(target, high) if direction == 1 else below(low, target)),
+    )

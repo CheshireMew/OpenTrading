@@ -10,12 +10,12 @@
       :aria-modal="inline ? undefined : true"
       aria-labelledby="binance-chart-dialog-title"
       tabindex="-1"
-      class="flex h-[min(88vh,820px)] w-full max-w-7xl flex-col overflow-hidden border border-[#d8d1c5] bg-[#fbfaf7] shadow-2xl outline-none dark:border-slate-700 dark:bg-slate-800"
+      class="flex h-[min(88dvh,820px)] w-full max-w-7xl flex-col overflow-hidden border border-[var(--ui-borderStrong)] bg-[var(--ui-panel)] shadow-2xl outline-none dark:border-slate-700 dark:bg-slate-800"
     >
-      <header class="flex flex-wrap items-center justify-between gap-3 border-b border-[#e4ded3] px-4 py-4 dark:border-slate-700 sm:px-6 sm:py-5">
+      <header class="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--ui-border)] px-4 py-4 dark:border-slate-700 sm:px-6 sm:py-5">
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-3">
-            <span class="border border-[#e4ded3] bg-white px-3 py-1 text-xs font-semibold text-stone-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">{{ marketLabel }}</span>
+            <span class="border border-[var(--ui-border)] bg-white px-3 py-1 text-xs font-semibold text-stone-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">{{ marketLabel }}</span>
             <h3 id="binance-chart-dialog-title" class="text-2xl font-semibold text-slate-900 dark:text-white" :title="symbol">{{ title }}</h3>
           </div>
         </div>
@@ -28,7 +28,7 @@
             :display-name="title"
             :source-context="{ route: '/indicators/binance-market', marketLabel, timeframe }"
           />
-          <div class="flex min-w-0 flex-1 gap-2 overflow-x-auto border border-[#e4ded3] bg-white p-1 dark:border-slate-700 dark:bg-slate-900 sm:flex-none">
+          <div class="flex min-w-0 flex-1 gap-2 overflow-x-auto border border-[var(--ui-border)] bg-white p-1 dark:border-slate-700 dark:bg-slate-900 sm:flex-none">
             <button
               v-for="item in timeframes"
               :key="item"
@@ -44,7 +44,7 @@
 
           <button
             type="button"
-            class="inline-flex h-10 w-10 flex-none items-center justify-center border border-[#e4ded3] bg-white text-stone-600 transition hover:bg-[#f1ece3] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+            class="inline-flex h-10 w-10 flex-none items-center justify-center border border-[var(--ui-border)] bg-white text-stone-600 transition hover:bg-[var(--ui-hover)] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
             :aria-label="t('binanceMarket.close')"
             :title="t('binanceMarket.close')"
             @click="$emit('close')"
@@ -54,8 +54,8 @@
         </div>
       </header>
 
-      <div class="grid min-h-0 flex-1 overflow-y-auto bg-slate-950 lg:overflow-hidden" :class="hasSidePanel ? 'lg:grid-cols-[minmax(0,1fr)_460px]' : ''">
-        <div class="relative min-h-[320px] p-4 sm:min-h-[420px]">
+      <div class="binance-chart-body grid min-h-0 flex-1 overflow-y-auto bg-slate-950 lg:overflow-hidden" :class="hasSidePanel ? 'lg:grid-cols-[minmax(0,1fr)_460px]' : ''">
+        <div class="binance-chart-plot relative min-h-[320px] p-4 sm:min-h-[420px]">
           <p v-if="!chartData.length && !chartError" role="status" class="absolute inset-x-4 top-6 z-10 text-center text-sm app-muted">{{ loading ? t('binanceMarket.refreshing') : t('common.noHistory') }}</p>
           <div v-if="chartError" role="alert" class="absolute left-1/2 top-6 z-20 flex -translate-x-1/2 items-center gap-3 border border-rose-500/30 bg-rose-950/90 px-4 py-2 text-sm text-rose-200 shadow-lg">
             <span>{{ chartError }}</span>
@@ -63,7 +63,7 @@
           </div>
           <div
             v-if="loadingMore"
-            class="absolute left-1/2 top-6 z-10 -translate-x-1/2 bg-[#0f6b4f] px-3 py-1 text-xs font-semibold text-white shadow-lg"
+            class="absolute left-1/2 top-6 z-10 -translate-x-1/2 bg-[var(--ui-accent)] px-3 py-1 text-xs font-semibold text-[var(--ui-onAccent)] shadow-lg"
           >
             {{ t('binanceMarket.loadingMoreHistory') }}
           </div>
@@ -87,25 +87,25 @@
           </div>
 
           <div v-if="monitorItem" class="mt-5 grid grid-cols-2 gap-3">
-            <div class="border border-[#e4ded3] bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
+            <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
               <div class="text-xs uppercase tracking-[0.18em] text-slate-400">{{ t('binanceMarket.columns.today') }}</div>
               <div class="mt-2 text-lg font-semibold" :class="renderValueTone(monitorItem.price_change_pct)">{{ renderSigned(monitorItem.price_change_pct) }}</div>
             </div>
-            <div class="border border-[#e4ded3] bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
+            <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
               <div class="text-xs uppercase tracking-[0.18em] text-slate-400">{{ t('binanceMarket.columns.quoteVolume') }}</div>
               <div class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">{{ renderCompact(monitorItem.quote_volume) }}</div>
             </div>
-            <div class="border border-[#e4ded3] bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
+            <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
               <div class="text-xs uppercase tracking-[0.18em] text-slate-400">{{ t('binanceMarket.columns.naturalScore') }}</div>
               <div class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">{{ renderScore(monitorItem.natural_score) }}</div>
             </div>
-            <div class="border border-[#e4ded3] bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
+            <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
               <div class="text-xs uppercase tracking-[0.18em] text-slate-400">{{ t('binanceMarket.columns.momentumScore') }}</div>
               <div class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">{{ renderScore(monitorItem.momentum_score) }}</div>
             </div>
           </div>
 
-          <div v-if="monitorItem" class="mt-5 space-y-3 border border-[#e4ded3] bg-white p-4 text-stone-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+          <div v-if="monitorItem" class="mt-5 space-y-3 border border-[var(--ui-border)] bg-white p-4 text-stone-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
             <div class="flex items-center justify-between gap-4 text-sm">
               <span class="text-slate-500 dark:text-slate-400">15m / 1h</span>
               <span>{{ renderSigned(monitorItem.change_15m_pct) }} / {{ renderSigned(monitorItem.change_1h_pct) }}</span>
@@ -141,7 +141,7 @@
             </div>
           </div>
 
-          <div v-if="contractDetailLoading" class="mt-5 border border-[#e4ded3] bg-[#fbfaf7] px-4 py-3 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-400">
+          <div v-if="contractDetailLoading" class="mt-5 border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-400">
             {{ t('binanceMarket.contractDetail.loading') }}
           </div>
           <div v-else-if="contractDetailError" class="mt-5 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
@@ -154,25 +154,25 @@
             </div>
 
             <div class="grid grid-cols-2 gap-3">
-              <div class="border border-[#e4ded3] bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
+              <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
                 <div class="text-xs uppercase tracking-[0.18em] text-slate-400">{{ t('binanceMarket.columns.oi') }}</div>
                 <div class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">{{ renderCompact(latestOpenInterest?.sum_open_interest_value) }}</div>
               </div>
-              <div class="border border-[#e4ded3] bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
+              <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
                 <div class="text-xs uppercase tracking-[0.18em] text-slate-400">{{ t('binanceMarket.columns.oi24h') }}</div>
                 <div class="mt-2 text-lg font-semibold" :class="renderValueTone(openInterestChange24h)">{{ renderSigned(openInterestChange24h) }}</div>
               </div>
-              <div class="border border-[#e4ded3] bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
+              <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
                 <div class="text-xs uppercase tracking-[0.18em] text-slate-400">{{ t('binanceMarket.columns.takerBuySell') }}</div>
                 <div class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">{{ renderSigned(latestTakerVolume?.buy_sell_ratio, 2, '', false) }}</div>
               </div>
-              <div class="border border-[#e4ded3] bg-[#fbfaf7] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
+              <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
                 <div class="text-xs uppercase tracking-[0.18em] text-slate-400">{{ t('binanceMarket.columns.basisPremium') }}</div>
                 <div class="mt-2 text-lg font-semibold" :class="renderValueTone(latestBasisRatePct)">{{ renderSigned(latestBasisRatePct, 3) }}</div>
               </div>
             </div>
 
-            <div class="space-y-2 border border-[#e4ded3] bg-white p-4 text-stone-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+            <div class="space-y-2 border border-[var(--ui-border)] bg-white p-4 text-stone-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
               <div class="flex items-center justify-between gap-4 text-sm">
                 <span class="text-slate-500 dark:text-slate-400">{{ t('binanceMarket.columns.globalLongShort') }}</span>
                 <span>{{ renderSigned(latestLongShort?.long_short_ratio, 2, '', false) }}</span>
@@ -319,7 +319,7 @@ const MiniSeries = defineComponent({
       if (!Number.isFinite(timestamp) || timestamp <= 0) return '--'
       return new Intl.DateTimeFormat(undefined, { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(timestamp))
     }
-    return () => h('section', { class: 'border border-[#e4ded3] bg-[#fbfaf7] p-4 dark:border-slate-700 dark:bg-slate-900/70' }, [
+    return () => h('section', { class: 'border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4 dark:border-slate-700 dark:bg-slate-900/70' }, [
       h('h5', { class: 'text-sm font-semibold text-slate-900 dark:text-white' }, seriesProps.title),
       h('div', { class: 'mt-3 space-y-2' }, (seriesProps.rows as Record<string, unknown>[]).length
         ? (seriesProps.rows as Record<string, unknown>[]).map((row, index) => h('div', { key: index, class: 'flex items-center justify-between gap-3 text-sm' }, [
@@ -331,3 +331,12 @@ const MiniSeries = defineComponent({
   },
 })
 </script>
+
+<style scoped>
+.binance-chart-plot { display: flex; flex-direction: column; }
+.binance-chart-plot > :deep(.trading-chart) { flex: 1; height: auto; }
+@media (max-height: 650px) {
+  .binance-chart-body { overflow-y: auto; }
+  .binance-chart-plot { min-height: min(320px, calc(88dvh - 130px)); }
+}
+</style>

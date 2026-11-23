@@ -1,0 +1,27 @@
+                target = bar.close
+                if p['confirmation_level']==2:
+                    target = bar.high if d==1 else bar.low
+                elif p['confirmation_level']==3:
+                    target = max(bar.open,bar.close) if d==1 else min(bar.open,bar.close)
+                self.waiting = dict(side=raw, timestamp=bar.timestamp, index=self.processed, target=target)
+                armed = True
+        trigger = worst = None
+        if self.waiting:
+            w = self.waiting; d = 1 if w['side']=='long' else -1
+            # Every price is known at this close. The next bar cannot contribute
+            # its high/low/close to its own entry level or chase cap.
+            threshold = max(w['target'],upper) if d==1 else min(w['target'],lower)
+            tick = p['price_tick']
+            trigger = round((floor(threshold/tick+1e-8)+1)*tick, 10) if d==1 else round((ceil(threshold/tick-1e-8)-1)*tick, 10)
+            worst = self.base+d*p['chase_mult']*self.width if p['chase_mult'] else None
+            if trigger>0 and (worst is None or d*(worst-trigger)>=0) and aligned(d):
+                protection = ProfitProtection(p['activation_pct'],p['giveback_pct']) if p['activation_pct'] else None
+                stop=p['initial_stop_pct'] or None
+                if p['stop_method']:
+                    scale=self.width if p['stop_method']==1 else self.atr
+                    stop=min(p['stop_cap_pct'],max(p['stop_floor_pct'],100*p['stop_mult']*scale/bar.close))
+                risk = Intent(w['side'], stop_loss_pct=stop, profit_protection=protection,
+                              reason='止损后极值突破重进一次' if w.get('retry') else '原信号积累后盘中突破')
+                order = StopEntry(risk,trigger,worst,'stop_first' if p['entry_bar_assumption']==0 else 'adverse_extreme_before_entry')
+        w = self.waiting
+        return BarResult(intent, values={

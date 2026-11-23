@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from app.domain.market.session_history import SessionHistoryCoverage
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,6 +32,7 @@ class MarketIndexHistoryRecord:
     pricing_currency: str
     is_close_only: bool
     data: list[OhlcvRecord]
+    coverage: SessionHistoryCoverage = field(default_factory=SessionHistoryCoverage)
 
     @property
     def count(self) -> int:

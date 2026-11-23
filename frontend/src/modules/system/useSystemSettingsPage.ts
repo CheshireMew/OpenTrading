@@ -82,7 +82,7 @@ export const useSystemSettingsPage = () => {
       systemConfig.value = await systemApi.getConfig()
     } catch (err) {
       console.error('Load system config failed', err)
-      systemLoadError.value = t('settings.loadFailed')
+      systemLoadError.value = 'settings.loadFailed'
     } finally {
       systemLoading.value = false
     }
@@ -95,7 +95,7 @@ export const useSystemSettingsPage = () => {
       applyConfig(await systemApi.getLlmConfig())
     } catch (err) {
       console.error('Load LLM config failed', err)
-      llmLoadError.value = t('settings.loadFailed')
+      llmLoadError.value = 'settings.loadFailed'
     } finally {
       llmLoading.value = false
     }
@@ -115,10 +115,10 @@ export const useSystemSettingsPage = () => {
         reasoningEnabled: form.reasoningEnabled,
       })
       applyConfig(response)
-      message.value = t('settings.saved')
+      message.value = 'settings.saved'
     } catch (err) {
       console.error('Save LLM config failed', err)
-      error.value = t('settings.saveFailed')
+      error.value = 'settings.saveFailed'
     } finally {
       saving.value = false
     }
@@ -137,10 +137,10 @@ export const useSystemSettingsPage = () => {
         modelId: form.modelId,
         reasoningEnabled: form.reasoningEnabled,
       }))
-      message.value = t('settings.keyCleared')
+      message.value = 'settings.keyCleared'
     } catch (err) {
       console.error('Clear LLM API key failed', err)
-      error.value = t('settings.clearFailed')
+      error.value = 'settings.clearFailed'
     } finally {
       saving.value = false
     }
@@ -155,12 +155,12 @@ export const useSystemSettingsPage = () => {
     presets,
     apiKeyDraft,
     saving,
-    message,
-    error,
+    message: computed(() => message.value ? t(message.value) : ''),
+    error: computed(() => error.value ? t(error.value) : ''),
     systemLoading,
     llmLoading,
-    systemLoadError,
-    llmLoadError,
+    systemLoadError: computed(() => systemLoadError.value ? t(systemLoadError.value) : ''),
+    llmLoadError: computed(() => llmLoadError.value ? t(llmLoadError.value) : ''),
     form,
     selectedPreset,
     isCustomProvider,

@@ -1,0 +1,57 @@
+<template>
+  <section class="app-panel p-5 diagnostics">
+    <div class="controls"><h3 class="font-semibold">{{ tr('researchUi.accountAndTradeDiagnostics') }}</h3><label>{{ tr('researchUi.equitySeries') }}<select v-model="equityKind"><option value="equity">{{ tr('researchUi.signalCloseEquity') }}</option><option value="execution_equity">{{ tr('researchUi.executionCloseEquity') }}</option></select></label><button class="app-button-secondary" :disabled="busy" @click="load">{{ busy ? tr('researchUi.readingSavedRecords') : tr('researchUi.loadDiagnostics') }}</button></div>
+    <p v-if="error" class="error" role="alert">{{ error }}</p>
+    <template v-if="summary">
+      <p class="app-muted text-sm my-3">{{ tr(summary.available ? 'researchUi.accountBasis' : 'researchUi.accountBasisUnavailable') }}</p>
+      <div class="stat-grid"><p>{{ tr('researchUi.longestLosingStreak') }}<strong>{{ tr('researchUi.trades2', { p0: summary.trade_summary.max_consecutive_losses }) }}</strong></p><p>{{ tr('researchUi.equalPrincipalGrossProfit') }}<strong>{{ number(summary.normalized.gross_profit) }}</strong></p><p>{{ tr('researchUi.equalPrincipalGrossLoss') }}<strong>{{ number(summary.normalized.gross_loss) }}</strong></p><p>{{ tr('researchUi.top10WinnersAsShareOfGrossProfit') }}<strong>{{ percent(summary.normalized.top_10_gross_profit_share_pct) }}</strong></p></div>
+      <p class="app-muted text-xs my-3">{{ tr('researchUi.equalPrincipalPerTradeGrossLossIsDisplayedAs', { p0: tr('researchUi.normalizedBasis'), p1: number(summary.normalized.principal_per_trade) }) }}</p>
+      <template v-if="summary.available">
+        <div class="controls"><h4 class="font-semibold">{{ tr('researchUi.continuousAccountReturns') }}</h4><label>{{ tr('researchUi.groupBy') }}<select v-model="calendar"><option value="annual">{{ tr('researchUi.year') }}</option><option value="monthly">{{ tr('researchUi.month') }}</option></select></label></div>
+        <div class="table-scroll"><table><thead><tr><th>{{ tr('researchUi.periodUtc') }}</th><th>{{ tr('researchUi.startingEquity') }}</th><th>{{ tr('researchUi.finalEquity') }}</th><th>{{ tr('researchUi.periodReturn') }}</th><th>{{ tr('researchUi.boundaryRecords') }}</th></tr></thead><tbody><tr v-for="p in summary[calendar]" :key="p.label"><td>{{ p.label }}{{ p.partial ? tr('researchUi.partialPeriod') : '' }}</td><td>{{ number(p.start_equity) }}</td><td>{{ number(p.end_equity) }}</td><td>{{ percent(p.return_pct) }}</td><td :title="tr('researchUi.startingRecordEndingRecord', { p0: date(p.start_mark_time), p1: date(p.end_mark_time) })">{{ p.boundary_carried ? tr('researchUi.carriesForwardEquityBeforeTheBoundaryHoverForTime') : tr('researchUi.equityRecordedAtTheBoundary') }}</td></tr></tbody></table></div>
+        <h4 class="font-semibold mt-5">{{ tr('researchUi.majorDrawdownEpisodes') }}</h4><p class="app-muted text-xs my-2">{{ tr('researchUi.episodesInTotalShowingThe20Largest', { p0: tr('researchUi.drawdownBasis'), p1: summary.drawdown.total_episodes }) }}</p>
+        <p v-if="summary.drawdown.longest" class="text-sm">{{ tr('researchUi.longestDrawdownDurationDays', { p0: days(summary.drawdown.longest.duration_ms), p1: summary.drawdown.longest.recovered ? tr('researchUi.recovered') : tr('researchUi.unrecoveredAtTheEnd') }) }}</p>
+        <div class="table-scroll"><table><thead><tr><th>{{ tr('researchUi.drawdownStartUtc') }}</th><th>{{ tr('researchUi.troughUtc') }}</th><th>{{ tr('researchUi.magnitude') }}</th><th>{{ tr('researchUi.recoveryUtc') }}</th><th>{{ tr('researchUi.durationDays') }}</th></tr></thead><tbody><tr v-for="p in summary.drawdown.worst_episodes" :key="p.peak_time"><td>{{ date(p.peak_time) }}</td><td>{{ date(p.trough_time) }}</td><td>{{ number(p.drawdown_pct) }}%</td><td>{{ p.recovered ? date(p.recovery_time) : tr('researchUi.unrecoveredAtTheEnd2') }}</td><td>{{ days(p.duration_ms) }}</td></tr></tbody></table></div>
+      </template>
+      <details class="my-4"><summary>{{ tr('researchUi.realizedProfitLossByExitReasonAndDirection') }}</summary><p class="app-muted text-xs my-2">{{ tr('researchUi.realizedBasis') }}</p><div v-for="group in ['exit_reason','side']" :key="group" class="table-scroll"><table><thead><tr><th>{{ group === 'side' ? tr('chartWorkspace.direction') : tr('researchUi.exitReason') }}</th><th>{{ tr('web3Rank.dialog.trades') }}</th><th>{{ tr('researchUi.grossProfit') }}</th><th>{{ tr('researchUi.grossLoss') }}</th><th>{{ tr('researchUi.profitFactor') }}</th></tr></thead><tbody><tr v-for="(v, label) in summary.groups[group]" :key="label"><td>{{ group === 'exit_reason' ? exitReason(label) : names[String(label)] || label }}</td><td>{{ v.trades }}</td><td>{{ number(v.gross_profit) }}</td><td>{{ number(v.gross_loss) }}</td><td>{{ number(v.profit_factor) }}</td></tr></tbody></table></div></details>
+    </template>
+    <details class="mt-5"><summary>{{ tr('researchUi.compareTradesAddedRemovedOrChangedInAnotherVersion') }}</summary><form class="controls my-3" @submit.prevent="changeOffset = 0; compare()"><label>{{ tr('researchUi.comparisonRunId') }}<input v-model.trim="otherId" :placeholder="tr('researchUi.runIdOfAnotherCompletedBacktest')" required /></label><button class="app-button-secondary" :disabled="busy || !otherId || otherId === runId">{{ tr('researchUi.loadTradeDifferences') }}</button></form>
+      <template v-if="changes"><p class="app-muted text-sm">{{ tr('researchUi.tradeComparisonBasis') }}</p><p v-if="changes.comparison.issues?.length" class="notice">{{ tr('researchUi.thisComparisonIsDescriptive', { p0: changes.comparison.issues.join('；') }) }}</p><p class="my-3 text-sm">{{ tr('researchUi.removedTradesWinnersLosersAddedChangedHaveTheSame', { p0: changes.dropped.trades, p1: changes.dropped.wins, p2: changes.dropped.losses, p3: changes.added.trades, p4: changes.changed, p5: changes.unchanged }) }}</p><p class="text-sm mb-3">{{ tr('researchUi.atEqualPrincipalOfPerTradeRemovedTradesAvoided', { p0: number(changes.dropped.principal_per_trade), p1: number(changes.dropped.gross_loss), p2: number(changes.dropped.gross_profit), p3: number(changes.added.gross_profit), p4: number(changes.added.gross_loss) }) }}</p>
+        <div class="table-scroll"><table><thead><tr><th>{{ tr('researchUi.change') }}</th><th>{{ tr('researchUi.entryUtc2') }}</th><th>{{ tr('chartWorkspace.direction') }}</th><th>{{ tr('researchUi.originalTradeReturn') }}</th><th>{{ tr('researchUi.comparisonReturn') }}</th><th>{{ tr('researchUi.changedFields') }}</th></tr></thead><tbody><tr v-for="(c, i) in changes.items" :key="i"><td>{{ names[c.kind] }}</td><td>{{ date(c.entry_time) }}</td><td>{{ names[c.side] }}</td><td>{{ percent(c.before?.return_pct) }}</td><td>{{ percent(c.after?.return_pct) }}</td><td>{{ c.changed_fields.map((f: string) => names[f] || f).join('、') }}</td></tr></tbody></table></div>
+        <div class="pager"><button :disabled="busy || !changeOffset" @click="changeOffset -= 100; compare()">{{ tr('chartWorkspace.previous') }}</button><span>{{ changeOffset + changes.items.length }} / {{ changes.total }}</span><button :disabled="busy || changeOffset + 100 >= changes.total" @click="changeOffset += 100; compare()">{{ tr('chartWorkspace.next') }}</button></div>
+      </template>
+    </details>
+  </section>
+</template>
+
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+import { useRequestError } from '@/composables/useRequestError'
+import { computed } from 'vue'
+import { createTradePresentation } from '@/modules/research/tradePresentation'
+import { ref, watch } from 'vue'
+import { localBacktestApi as api } from '@/modules/research/localBacktestApi'
+import type { BacktestDiagnosticSummary, BacktestTradeChanges } from '@/modules/research/generatedContracts'
+
+const { t: tr, locale } = useI18n()
+const { exitReason } = createTradePresentation(tr)
+const { error, setError, clearError } = useRequestError(tr)
+const props = defineProps<{ runId: string }>()
+const summary = ref<BacktestDiagnosticSummary | null>(null), changes = ref<BacktestTradeChanges | null>(null)
+const equityKind = ref<'equity' | 'execution_equity'>('equity'), calendar = ref<'annual' | 'monthly'>('annual')
+const busy = ref(false), otherId = ref(''), changeOffset = ref(0)
+let request = 0
+const number = (v: unknown) => typeof v === 'number' ? (v === 0 ? 0 : v).toLocaleString(locale.value, { maximumFractionDigits: 2 }) : '—'
+const percent = (v: unknown) => typeof v === 'number' ? `${number(v)}%` : '—'
+const date = (v: unknown) => typeof v === 'number' ? new Date(v).toISOString().replace('T',' ').slice(0,19) : '—'
+const days = (v: unknown) => typeof v === 'number' ? number(v/86400000) : '—'
+const names = computed<Record<string,string>>(() => ({ long: tr('researchUi.longPosition'), short: tr('researchUi.shortPosition'), signal: tr('researchUi.oppositeSignal'), reversal: tr('researchUi.oppositeSignal'), stop: tr('chartWorkspace.stopOrder'), target: tr('researchUi.takeProfit'), protection: tr('researchUi.profitProtection'), end: tr('researchUi.endOfInterval'), added: tr('researchUi.added'), dropped: tr('researchUi.removed'), changed: tr('researchUi.changed'), entry_price:tr('researchUi.entryPrice'), exit_time:tr('chartWorkspace.exitTime'), exit_phase:tr('researchUi.exitPhase'), exit_price:tr('researchUi.exitPrice'), exit_reason:tr('researchUi.exitReason'), return_pct:tr('researchUi.tradeReturn'), entry_ambiguity_policy:tr('researchUi.entryEventOrderAssumption') }))
+async function load() { const token=++request, id=props.runId; busy.value=true; clearError(); try { const r=await api.diagnostics(id,equityKind.value); if(token===request) summary.value=r } catch(e) { if(token===request) setError(e, 'ui.operationFailed') } finally { if(token===request) busy.value=false } }
+async function compare() { const token=++request, id=props.runId; busy.value=true; clearError(); try { const r=await api.tradeChanges(id,otherId.value,changeOffset.value); if(token===request) changes.value=r } catch(e) { if(token===request) setError(e, 'ui.operationFailed') } finally { if(token===request) busy.value=false } }
+watch(() => props.runId, () => { request++; summary.value=null; changes.value=null; clearError(); busy.value=false; changeOffset.value=0 })
+watch(equityKind, () => { request++; summary.value=null; busy.value=false })
+</script>
+
+<style scoped>
+.controls{display:flex;align-items:center;gap:16px;flex-wrap:wrap}label{font-size:13px}input,select{display:block;border:1px solid #8884;border-radius:6px;padding:8px;background:transparent;color:inherit;margin-top:6px}input{min-width:320px}.stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;font-size:13px}.stat-grid strong{display:block;font-size:20px;margin-top:6px}.table-scroll{overflow:auto;max-height:380px;margin-top:12px}table{width:100%;font-size:12px;text-align:left;white-space:nowrap}td,th{padding:10px;border-bottom:1px solid #8883}.error,.notice{font-size:13px;padding:12px;background:#8881;margin-top:12px;overflow-wrap:anywhere}.error{color:#d55}.pager{display:flex;justify-content:space-between;gap:12px;font-size:12px;margin-top:12px}button:disabled{opacity:.5;cursor:not-allowed}summary{cursor:pointer;font-size:14px}@media(max-width:900px){.stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}input{min-width:180px}}
+</style>

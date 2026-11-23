@@ -42,8 +42,14 @@ def prepare_dca_dataset(
         daily_df["datetime"] = daily_df.index
         return daily_df[daily_df.index.tz_localize(None) >= start_dt_local].copy()
 
-    all_df["date_str"] = all_df["datetime"].dt.strftime("%Y-%m-%d")
-    dataset = pd.merge(all_df, daily_df[["date_str", "ema20", "rsi", "ahr999"]], on="date_str", how="left")
+    # A UTC daily close is only available at the following UTC midnight.
+    # Execute hourly schedules at the selected candle OPEN, without using its future close.
+    indicators = daily_df[["ema20", "rsi", "ahr999"]].copy()
+    indicators["available_at"] = indicators.index + pd.Timedelta(days=1)
+    dataset = pd.merge_asof(all_df.sort_values("datetime"), indicators.reset_index(drop=True),
+                            left_on="datetime", right_on="available_at", direction="backward")
+    dataset["close"] = dataset["open"]
+    dataset["date_str"] = dataset["datetime"].dt.strftime("%Y-%m-%d")
     filtered = dataset[dataset["local_dt"] >= start_dt_local.replace(tzinfo=tz_obj)].copy()
     return filtered[filtered["local_dt"].dt.hour == target_hour].copy()
 
@@ -89,7 +95,9 @@ def simulate_dca_schedule(
                 multiplier = max(settings.DCA_MULTIPLIER_MIN, min(multiplier, settings.DCA_MULTIPLIER_MAX))
         elif strategy == "fear_greed":
             dt_val = row.get("datetime")
-            date_str = dt_val.strftime("%Y-%m-%d") if pd.notna(dt_val) else row.get("date_str", "")
+            # Historical daily sentiment has no intraday publication timestamp.
+            # Only the preceding UTC day's observation is safe for scheduled decisions.
+            date_str = (dt_val - pd.Timedelta(days=1)).strftime("%Y-%m-%d") if pd.notna(dt_val) else ""
             sentiment_value = sentiment_map.get(date_str)
             if sentiment_value is not None:
                 multiplier = 1 + multiplier_strength * (50 - sentiment_value) / 50

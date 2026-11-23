@@ -2,31 +2,13 @@
 数据库 Schema 定义
 仅定义表结构数据模型，与业务逻辑分离
 """
-from sqlalchemy import Column, Integer, String, Float, DateTime, Text, ForeignKey, JSON, BigInteger, Index, UniqueConstraint
+from sqlalchemy import text, Column, Integer, String, Float, DateTime, Text, ForeignKey, JSON, BigInteger, Index, UniqueConstraint, Boolean
 from sqlalchemy.orm import declarative_base, relationship
 
 from app.domain.market.constants import KLINE_SYMBOL_MAX_LENGTH
 from utils.time import utc_now_naive
 
 Base = declarative_base()
-
-
-class LocalBacktestRunRow(Base):
-    __tablename__ = "local_backtest_runs"
-    id = Column(String(64), primary_key=True)
-    status = Column(String(30), nullable=False, index=True)
-    created_at = Column(DateTime, nullable=False, default=utc_now_naive)
-    payload = Column(JSON, nullable=False)
-
-
-class LocalBacktestRecordRow(Base):
-    __tablename__ = "local_backtest_records"
-    run_id = Column(String(64), ForeignKey("local_backtest_runs.id"), primary_key=True)
-    kind = Column(String(20), primary_key=True)
-    sequence = Column(Integer, primary_key=True)
-    timestamp = Column(BigInteger, nullable=False)
-    payload = Column(JSON, nullable=False)
-    __table_args__ = (Index("ix_local_backtest_record_time", "run_id", "kind", "timestamp"),)
 
 
 class BinanceMarketResearchSeries(Base):
@@ -87,6 +69,7 @@ class Kline(Base):
     low = Column(Float, nullable=False)
     close = Column(Float, nullable=False)
     volume = Column(Float, nullable=False)
+    finalized = Column(Boolean, nullable=False, default=False, server_default=text("false"))
 
     __table_args__ = (
         Index("ix_klines_timeframe_timestamp", "timeframe", "timestamp"),
@@ -99,6 +82,23 @@ class Kline(Base):
     
     def __repr__(self):
         return f"<Kline({self.symbol}, {self.timeframe}, {self.timestamp})>"
+
+class KlineArchiveSegment(Base):
+    """Immutable, lossless OHLCV files; committed together with removal from the hot table."""
+    __tablename__ = "kline_archive_segments"
+    id = Column(String(64), primary_key=True)
+    symbol = Column(String(KLINE_SYMBOL_MAX_LENGTH), nullable=False)
+    timeframe = Column(String(10), nullable=False)
+    first_timestamp = Column(BigInteger, nullable=False)
+    last_timestamp = Column(BigInteger, nullable=False)
+    row_count = Column(Integer, nullable=False)
+    finalized_count = Column(Integer, nullable=False)
+    relative_path = Column(Text, nullable=False)
+    file_sha256 = Column(String(64), nullable=False)
+    size_bytes = Column(BigInteger, nullable=False)
+    archived_at = Column(DateTime, nullable=False, default=utc_now_naive)
+    __table_args__ = (Index("ix_kline_archive_scope_range", "symbol", "timeframe", "last_timestamp"),)
+
 
 class Sentiment(Base):
     """市场情绪数据表 (如 Fear & Greed Index)"""
@@ -150,51 +150,6 @@ class MarketIndicatorData(Base):
         return f"<MarketIndicatorData(indicator={self.indicator_id}, ts={self.timestamp}, val={self.value})>"
 
 
-class PortfolioCollectionState(Base):
-    """Singleton revision and active selection for the portfolio aggregate."""
-
-    __tablename__ = "portfolio_collection_state"
-
-    id = Column(String(32), primary_key=True)
-    revision = Column(Integer, nullable=False, default=0)
-    active_portfolio_id = Column(String(120), nullable=True)
-    updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
-
-
-class PortfolioRecord(Base):
-    """Versioned portfolio document. Deleted records remain restorable."""
-
-    __tablename__ = "portfolio_records"
-
-    id = Column(String(120), primary_key=True)
-    payload = Column(JSON, nullable=False)
-    version = Column(Integer, nullable=False, default=1)
-    position = Column(Integer, nullable=False, default=0)
-    deleted_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=utc_now_naive, nullable=False)
-    updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
-
-    __table_args__ = (
-        Index("ix_portfolio_records_deleted_position", "deleted_at", "position"),
-    )
-
-
-class PortfolioSimulationResultRecord(Base):
-    """Large derived simulation artifact stored outside editable portfolio documents."""
-
-    __tablename__ = "portfolio_simulation_results"
-
-    portfolio_id = Column(
-        String(120),
-        ForeignKey("portfolio_records.id", ondelete="CASCADE"),
-        primary_key=True,
-    )
-    source_fingerprint = Column(String(64), nullable=False)
-    payload = Column(JSON, nullable=False)
-    created_at = Column(DateTime, default=utc_now_naive, nullable=False)
-    updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
-
-
 class RuntimeComponentStatus(Base):
     """Cross-process heartbeat and last job outcome for product readiness."""
 
@@ -223,6 +178,7 @@ class ResearchWatchlist(Base):
     description = Column(Text, nullable=False, default="")
     position = Column(Integer, nullable=False, default=0)
     version = Column(Integer, nullable=False, default=1)
+    __mapper_args__ = {"version_id_col": version, "version_id_generator": False}
     archived_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=utc_now_naive, nullable=False)
     updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
@@ -253,6 +209,7 @@ class ResearchWatchItem(Base):
     source_context = Column(JSON, nullable=False, default=dict)
     position = Column(Integer, nullable=False, default=0)
     version = Column(Integer, nullable=False, default=1)
+    __mapper_args__ = {"version_id_col": version, "version_id_generator": False}
     archived_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=utc_now_naive, nullable=False)
     updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
@@ -281,6 +238,7 @@ class ResearchNote(Base):
     content = Column(Text, nullable=False, default="")
     snapshot = Column(JSON, nullable=False, default=dict)
     version = Column(Integer, nullable=False, default=1)
+    __mapper_args__ = {"version_id_col": version, "version_id_generator": False}
     occurred_at = Column(DateTime, nullable=False)
     archived_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=utc_now_naive, nullable=False)
@@ -316,6 +274,7 @@ class ResearchAlertRule(Base):
     last_evaluated_at = Column(DateTime, nullable=True)
     last_triggered_at = Column(DateTime, nullable=True)
     version = Column(Integer, nullable=False, default=1)
+    __mapper_args__ = {"version_id_col": version, "version_id_generator": False}
     archived_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=utc_now_naive, nullable=False)
     updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
@@ -345,40 +304,6 @@ class ResearchEvent(Base):
     __table_args__ = (
         Index("ix_research_events_timeline", "occurred_at", "kind"),
         Index("ix_research_events_entity", "entity_type", "entity_id", "occurred_at"),
-    )
-
-
-class PortfolioTransactionRecord(Base):
-    """Recoverable transaction ledger used to derive holdings and performance."""
-
-    __tablename__ = "portfolio_transactions"
-
-    id = Column(String(120), primary_key=True)
-    portfolio_id = Column(
-        String(120),
-        ForeignKey("portfolio_records.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    transaction_type = Column(String(32), nullable=False)
-    symbol = Column(String(160), nullable=False, default="")
-    quantity = Column(Float, nullable=False, default=0)
-    unit_price = Column(Float, nullable=False, default=0)
-    cash_amount = Column(Float, nullable=False, default=0)
-    fee = Column(Float, nullable=False, default=0)
-    currency = Column(String(16), nullable=False, default="USD")
-    fee_currency = Column(String(16), nullable=False, default="USD")
-    external_id = Column(String(200), nullable=True)
-    note = Column(Text, nullable=False, default="")
-    metadata_payload = Column("metadata", JSON, nullable=False, default=dict)
-    version = Column(Integer, nullable=False, default=1)
-    occurred_at = Column(DateTime, nullable=False)
-    archived_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=utc_now_naive, nullable=False)
-    updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
-
-    __table_args__ = (
-        Index("ix_portfolio_transactions_timeline", "portfolio_id", "archived_at", "occurred_at"),
-        Index("ix_portfolio_transactions_symbol", "portfolio_id", "symbol", "occurred_at"),
     )
 
 
@@ -417,6 +342,7 @@ class TradeSignalRecord(Base):
     evaluated_at = Column(DateTime, nullable=True)
     expires_at = Column(DateTime, nullable=True)
     version = Column(Integer, nullable=False, default=1)
+    __mapper_args__ = {"version_id_col": version, "version_id_generator": False}
     archived_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=utc_now_naive, nullable=False)
     updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
@@ -438,6 +364,7 @@ class SavedMarketScreener(Base):
     description = Column(Text, nullable=False, default="")
     filters = Column(JSON, nullable=False, default=dict)
     version = Column(Integer, nullable=False, default=1)
+    __mapper_args__ = {"version_id_col": version, "version_id_generator": False}
     archived_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=utc_now_naive, nullable=False)
     updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
@@ -463,28 +390,3 @@ class MarketScreenerRun(Base):
         Index("ix_screener_runs_history", "screener_id", "snapshot_as_of"),
         Index("ix_screener_runs_evaluated", "evaluated_at"),
     )
-
-
-class ResearchReportRecord(Base):
-    """Generated, reproducible research report with the structured source snapshot."""
-
-    __tablename__ = "research_reports"
-
-    id = Column(String(120), primary_key=True)
-    title = Column(String(240), nullable=False)
-    report_type = Column(String(40), nullable=False)
-    symbol = Column(String(160), nullable=True)
-    portfolio_id = Column(String(120), ForeignKey("portfolio_records.id", ondelete="SET NULL"), nullable=True)
-    content_markdown = Column(Text, nullable=False)
-    data_snapshot = Column(JSON, nullable=False, default=dict)
-    version = Column(Integer, nullable=False, default=1)
-    archived_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=utc_now_naive, nullable=False)
-    updated_at = Column(DateTime, default=utc_now_naive, nullable=False)
-
-    __table_args__ = (
-        Index("ix_research_reports_type_created", "report_type", "archived_at", "created_at"),
-        Index("ix_research_reports_symbol_created", "symbol", "created_at"),
-    )
-
-

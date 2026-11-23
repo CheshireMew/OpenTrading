@@ -1,0 +1,140 @@
+"""SQLite storage for the rebuildable result index. No file scanning or report interpretation."""
+
+from contextlib import contextmanager
+import json
+from pathlib import Path
+import sqlite3
+from threading import Lock
+
+
+class ResultIndexTransaction:
+    def __init__(self, connection):
+        self._db = connection
+
+    def put(self, entry):
+        config = entry["config"]
+        payload = json.dumps(entry, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
+        self._db.execute(
+            "INSERT OR REPLACE INTO results VALUES (?,?,?,?,?,?,?,?,?)",
+            (
+                entry["id"],
+                entry["source_type"],
+                config.get("symbol"),
+                config.get("strategy"),
+                entry.get("family"),
+                config.get("timeframe"),
+                entry["cohort"],
+                int(entry["archived"]),
+                payload,
+            ),
+        )
+
+    def get(self, identifier, source_type=None):
+        sql, args = "SELECT payload FROM results WHERE id=?", [identifier]
+        if source_type:
+            sql += " AND source_type=?"
+            args.append(source_type)
+        row = self._db.execute(sql, args).fetchone()
+        return json.loads(row[0]) if row else None
+
+    def entries(self, filters):
+        if set(filters) - {"symbol", "strategy", "family", "timeframe", "archived", "cohort"}:
+            raise ValueError("未知结果筛选字段")
+        where = " AND ".join(key + "=?" for key in filters) or "1=1"
+        return [
+            json.loads(row[0])
+            for row in self._db.execute("SELECT payload FROM results WHERE " + where, list(filters.values()))
+        ]
+
+    def discard(self, identifier, *, legacy_only=False, unreferenced_only=False):
+        sql = "DELETE FROM results WHERE id=?"
+        args = [identifier]
+        if legacy_only:
+            sql += " AND source_type='legacy'"
+        if unreferenced_only:
+            sql += " AND NOT EXISTS (SELECT 1 FROM sources WHERE result_id=?)"
+            args.append(identifier)
+        self._db.execute(sql, args)
+
+    def source_results(self, source):
+        return [row[0] for row in self._db.execute("SELECT result_id FROM sources WHERE path=?", (source,))]
+
+    def references(self, identifier, exclude_source=None):
+        sql, args = "SELECT path,pointer,sha256 FROM sources WHERE result_id=?", [identifier]
+        if exclude_source is not None:
+            sql += " AND path<>?"
+            args.append(exclude_source)
+        return self._db.execute(sql + " ORDER BY path,pointer", args).fetchall()
+
+    def source_result(self, source, pointer):
+        row = self._db.execute("SELECT result_id FROM sources WHERE path=? AND pointer=?", (source, pointer)).fetchone()
+        return row[0] if row else None
+
+    def forget_source(self, source):
+        self._db.execute("DELETE FROM sources WHERE path=?", (source,))
+
+    def forget_result_references(self, identifier):
+        self._db.execute("DELETE FROM sources WHERE result_id=?", (identifier,))
+
+    def link(self, source, pointer, identifier, digest):
+        self._db.execute("INSERT OR REPLACE INTO sources VALUES (?,?,?,?)", (source, pointer, identifier, digest))
+
+    def import_status(self, source):
+        return self._db.execute("SELECT sha256,issue FROM imports WHERE path=?", (source,)).fetchone()
+
+    def mark_import(self, source, digest, count, issue):
+        self._db.execute("INSERT OR REPLACE INTO imports VALUES (?,?,?,?)", (source, digest, count, issue))
+
+    def imported_paths(self):
+        return [row[0] for row in self._db.execute("SELECT path FROM imports")]
+
+    def annotated_sources(self):
+        return [
+            row[0]
+            for row in self._db.execute(
+                """SELECT DISTINCT s.path FROM sources s JOIN results r ON r.id=s.result_id
+               WHERE s.pointer LIKE '/entries/%' AND r.source_type='legacy' AND r.payload LIKE '%"context_note"%'"""
+            )
+        ]
+
+
+class ResearchResultRepository:
+    def __init__(self, path: Path, import_version="3"):
+        self.path = Path(path)
+        self._import_version = import_version
+        self._initialized = False
+        self._lock = Lock()
+
+    def initialize(self):
+        with self._lock:
+            if self._initialized:
+                return
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            with sqlite3.connect(self.path, timeout=30) as db:
+                db.executescript("""CREATE TABLE IF NOT EXISTS results (
+                    id TEXT PRIMARY KEY, source_type TEXT, symbol TEXT, strategy TEXT, family TEXT,
+                    timeframe TEXT, cohort TEXT, archived INTEGER, payload TEXT);
+                    CREATE INDEX IF NOT EXISTS result_scope ON results(symbol,strategy,timeframe);
+                    CREATE INDEX IF NOT EXISTS result_cohort ON results(cohort);
+                    CREATE TABLE IF NOT EXISTS sources (path TEXT, pointer TEXT, result_id TEXT, sha256 TEXT,
+                        PRIMARY KEY(path,pointer));
+                    CREATE TABLE IF NOT EXISTS imports (path TEXT PRIMARY KEY, sha256 TEXT, entries INTEGER, issue TEXT);
+                    CREATE TABLE IF NOT EXISTS catalog_meta (key TEXT PRIMARY KEY, value TEXT);""")
+                version = db.execute("SELECT value FROM catalog_meta WHERE key='import_version'").fetchone()
+                if not version or version[0] != self._import_version:
+                    db.execute("UPDATE imports SET issue='导入规则更新，待重新读取'")
+                    db.execute(
+                        "INSERT OR REPLACE INTO catalog_meta VALUES ('import_version',?)", (self._import_version,)
+                    )
+            db.close()
+            self._initialized = True
+
+    @contextmanager
+    def transaction(self):
+        self.initialize()
+        db = sqlite3.connect(self.path, timeout=30)
+        try:
+            with db:
+                yield ResultIndexTransaction(db)
+        finally:
+            db.close()

@@ -1,0 +1,53 @@
+from math import isclose
+
+
+def ratchet_stops(position, bar, candidate=None):
+    if position and position["trailing_pct"]:
+        d = position["direction"]
+        position["best"] = max(position["best"], bar.high) if d == 1 else min(position["best"], bar.low)
+        updated = position["best"] - d * position["entry_price"] * position["trailing_pct"] / 100
+        if position.get("profit_protection") and (position["stop"] is None or d * (updated - position["stop"]) > 0):
+            position["stop_source"] = "stop_loss"
+        position["stop"] = max(position["stop"], updated) if d == 1 else min(position["stop"], updated)
+    if position and position.get("profit_protection"):
+        d, entry = (position["direction"], position["entry_price"])
+        position["best"] = max(position["best"], bar.high) if d == 1 else min(position["best"], bar.low)
+        peak_profit = max(0.0, d * (position["best"] - entry))
+        position["profit_peak_pct"] = peak_profit / entry * 100
+        protection = position["profit_protection"]
+        activation = protection["activation_pct"]
+        if position["profit_peak_pct"] > activation or isclose(position["profit_peak_pct"], activation, rel_tol=1e-12):
+            position["protection_active"] = True
+            updated = entry + d * peak_profit * (1 - protection["giveback_pct"] / 100)
+            source = "profit_protection"
+            if candidate is not None:
+                updated, source = candidate(position, updated)
+            if position["stop"] is None or d * (updated - position["stop"]) > 0:
+                position["stop"] = updated
+                position["stop_source"] = source
+
+
+class ProtectionExecution:
+    def __init__(self, state, records, config):
+        self.state, self.records, self.config = state, records, config
+
+    def update(self, bar):
+        position = self.state.position
+        before = position.get("stop") if position else None
+        distance = self.state.trailing_distance
+        def candidate(current, _baseline):
+            direction, entry = current["direction"], current["entry_price"]
+            peak = max(0.0, direction * (current["best"] - entry))
+            return entry + direction * max(0.0, peak - distance), "profit_protection"
+        ratchet_stops(position, bar, candidate if distance is not None else None)
+        if position and position.get("stop") != before:
+            self.records.event(
+                "protection_updated",
+                bar.timestamp + self.state.resolution_ms,
+                trade_id=position["trade_id"],
+                previous_stop=before,
+                stop=position["stop"],
+                effective_from=bar.timestamp + self.state.resolution_ms,
+                reason=position.get("stop_source", "stop_loss"),
+                resolution_ms=self.state.resolution_ms,
+            )

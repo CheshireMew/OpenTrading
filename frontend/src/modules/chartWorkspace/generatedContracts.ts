@@ -47,6 +47,7 @@ export interface PineRun {
   progress?: number
   created_at: number
   request: PineRunRequest
+  recording?: "report" | "research"
   error?: string | null
   summary?: { [key: string]: unknown }
   provenance?: { [key: string]: unknown }
@@ -111,6 +112,7 @@ export interface ChartPineRecordsQueryParams {
   kind?: "equity" | "trades" | "open_trades" | "orders" | "fills" | "warnings" | "bars"
   offset?: number
   limit?: number
+  sampled?: boolean
 }
 
 export interface ChartQuotesQueryParams {

@@ -1,5 +1,6 @@
 import { apiGet } from '@/api/request'
 import type {
+  BitcoinHalvingResponse,
   BinanceContractResearchDetailResponse,
   BinanceMarketPageResponse,
   BinanceWeb3HeatRankBoardsResponse,
@@ -63,6 +64,10 @@ export const marketInsightApi = {
 }
 
 export const marketHistoryApi = {
+  getBitcoinHalving(signal: AbortSignal): Promise<BitcoinHalvingResponse> {
+    return apiGet('get_bitcoin_halving', { signal })
+  },
+
   getPriceSeriesWindow(params: GetMarketHistoryQueryParams): Promise<MarketHistoryResponse> {
     return apiGet('get_market_history', { query: params, timeout: MARKET_API_TIMEOUT_MS.history })
   },

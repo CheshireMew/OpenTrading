@@ -5,7 +5,7 @@
         <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <h1 class="app-title">{{ t('web3Rank.title') }}</h1>
-            <p v-if="updatedAt" class="app-muted mt-2 text-xs">{{ t('web3Rank.updatedAt', { time: new Date(updatedAt).toLocaleString() }) }}</p>
+            <p v-if="updatedAt" class="app-muted mt-2 text-xs">{{ t('web3Rank.updatedAt', { time: formatDateTime(updatedAt) }) }}</p>
           </div>
 
           <div class="flex flex-wrap items-end gap-4">
@@ -13,22 +13,22 @@
           <button
             type="button"
             class="app-button-primary app-touch-target px-4 py-2"
-            :disabled="web3Loading"
-            @click="fetchWeb3HeatRank"
+            :disabled="refreshing"
+            @click="refreshCurrent"
           >
-            {{ web3Loading ? t('web3Rank.refreshing') : t('web3Rank.refresh') }}
+            {{ refreshing ? t('web3Rank.refreshing') : t('web3Rank.refresh') }}
           </button>
             <div class="w-40">
               <label for="web3-chain" class="mb-1 block text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-slate-400">{{ t('web3Rank.chain') }}</label>
-              <select id="web3-chain" v-model="chainId" class="app-control w-full">
-                <option v-for="item in chainOptions" :key="item.value" :value="item.value">{{ item.label }}</option>
+              <select id="web3-chain" v-model="selectedChain" class="app-control w-full">
+                <option v-for="item in currentChainOptions" :key="item.value" :value="item.value">{{ item.label }}</option>
               </select>
             </div>
           </div>
         </div>
       </section>
 
-      <section v-if="error" role="alert" class="border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+      <section v-if="error && activeView === 'addresses'" role="alert" class="border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
         {{ error }}
       </section>
 
@@ -107,14 +107,14 @@
                   <div class="flex items-center gap-3">
                     <Web3TokenIcon :src="item.icon_url" :symbol="item.symbol" />
                     <div>
-                      <button type="button" class="app-touch-target font-semibold text-stone-950 transition hover:text-[#0f6b4f] dark:text-white dark:hover:text-emerald-300" @click.stop="selectToken(item)">
+                      <button type="button" class="app-touch-target font-semibold text-stone-950 transition hover:text-[var(--ui-title)] dark:text-white" @click.stop="selectToken(item)">
                         {{ item.symbol || '--' }}
                       </button>
                       <div class="max-w-[160px] truncate text-xs text-slate-400 dark:text-slate-500">{{ item.contract_address }}</div>
                     </div>
                   </div>
                 </td>
-                <td class="px-5 py-4 font-semibold text-[#0f6b4f] dark:text-emerald-300" :data-label="t('web3Rank.columns.heat')">{{ formatScore(item.heat_score) }}</td>
+                <td class="px-5 py-4 font-semibold text-[var(--ui-title)]" :data-label="t('web3Rank.columns.heat')">{{ formatScore(item.heat_score) }}</td>
                 <td class="px-5 py-4" :data-label="t('web3Rank.columns.signal')">
                   <div class="flex max-w-[24rem] flex-wrap gap-1.5 text-xs">
                     <span v-if="item.ranks?.top_search" class="app-chip">{{ t('web3Rank.signals.search') }} #{{ item.ranks.top_search }}</span>
@@ -156,10 +156,11 @@
               </tr>
             </thead>
             <tbody>
+              <tr v-if="!addressPnl.length"><td colspan="5" class="px-5 py-10 text-center app-muted" role="status">{{ t(loading ? 'binanceMarket.loading' : error ? 'web3Rank.loadFailed' : 'web3Rank.noAddresses') }}</td></tr>
               <tr v-for="(item, index) in addressPnl" :key="item.address || `address-${index}`" class="app-table-row">
                 <td class="px-5 py-4 font-medium text-stone-950 dark:text-white app-table-primary" :data-label="t('web3Rank.columns.address')">{{ item.address_label || item.address }}</td>
                 <td class="px-5 py-4" :class="changeClass(item.realized_pnl)" :data-label="t('web3Rank.columns.pnl')">{{ formatCompact(item.realized_pnl) }}</td>
-                <td class="px-5 py-4 text-stone-600 dark:text-slate-300" :data-label="t('web3Rank.columns.winRate')">{{ formatPercent(item.win_rate) }}</td>
+                <td class="px-5 py-4 text-stone-600 dark:text-slate-300" :data-label="t('web3Rank.columns.winRate')">{{ formatWinRate(item.win_rate) }}</td>
                 <td class="px-5 py-4 text-stone-600 dark:text-slate-300" :data-label="t('web3Rank.columns.volume')">{{ formatCompact(item.total_volume) }}</td>
                 <td class="px-5 py-4 text-stone-600 dark:text-slate-300" :data-label="t('web3Rank.columns.trades')">{{ item.total_tx_cnt ?? '--' }}</td>
               </tr>
@@ -198,6 +199,9 @@
 </template>
 
 <script setup lang="ts">
+import { useDateTime } from '@/composables/useDateTime'
+const { formatDateTime } = useDateTime()
+
 import AppLayoutSwitch from "@/components/AppLayoutSwitch.vue"
 import { usePageLayout } from "@/composables/usePageLayout"
 defineOptions({ name: 'Web3MarketRank' })
@@ -217,8 +221,13 @@ const {
   error,
   chainId,
   chainOptions,
+  addressChainId,
+  addressChainOptions,
+  addressPnlUpdatedAt,
+  heatUpdatedAt,
+  loading,
+  fetchData,
   addressPnl,
-  updatedAt,
   web3HeatRank: allHeatRank,
   web3Loading,
   web3Error,
@@ -239,12 +248,21 @@ const {
   closeWeb3Token,
   formatScore,
   formatPercent,
+  formatWinRate,
   formatPrice,
   formatCompact,
   sortDirectionIcon,
   changeClass,
 } = useWeb3MarketRankPage()
 
+const selectedChain = computed({
+  get: () => activeView.value === 'addresses' ? addressChainId.value : chainId.value,
+  set: value => { if (activeView.value === 'addresses') addressChainId.value = value; else chainId.value = value },
+})
+const currentChainOptions = computed(() => activeView.value === 'addresses' ? addressChainOptions : chainOptions.value)
+const updatedAt = computed(() => activeView.value === 'addresses' ? addressPnlUpdatedAt.value : heatUpdatedAt.value)
+const refreshing = computed(() => activeView.value === 'addresses' ? loading.value : web3Loading.value)
+const refreshCurrent = () => activeView.value === 'addresses' ? fetchData() : fetchWeb3HeatRank()
 const pageLayout = usePageLayout('web3', ['table', 'split'] as const, 'table')
 const query = ref('')
 const layoutOptions = computed(() => ['table', 'split'].map(value => ({ value, label: t(`workspaceViews.${value}`) })))

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
+import time
+from app.domain.market.candles import closed_candles
 
 from app.services.market.history_ranges import collect_missing_ranges
 from app.application.persistence_ports import KlineStorePort
@@ -64,6 +66,9 @@ class HistoryRangeCoordinator:
         persist: Callable[[str, str, list[list[float]]], None] | None = None,
         fallback_on_cache_error: bool = False,
         cached_rows: list[list[float]] | None = None,
+        coalesce_gaps: bool = False,
+        refresh_tail: bool = False,
+        missing_ranges: Callable[[list[list[float]]], list[tuple[int, int]]] | None = None,
     ) -> OhlcvRangeResult:
         cached = list(cached_rows) if cached_rows is not None else self._read_cached(
             storage_symbol=storage_symbol,
@@ -72,14 +77,24 @@ class HistoryRangeCoordinator:
             end_ts_exclusive=end_ts_exclusive,
             fallback_on_error=fallback_on_cache_error,
         )
-        missing = self._missing(cached, timeframe, start_ts, end_ts_exclusive)
-        fetched = [
+        missing = missing_ranges(cached) if missing_ranges else self._missing(cached, timeframe, start_ts, end_ts_exclusive)
+        if refresh_tail and cached:
+            missing.append((max(start_ts, int(cached[-1][0])), end_ts_exclusive))
+        if coalesce_gaps and missing:
+            # Exchange holidays are not missing index candles. A single range
+            # request also avoids one upstream download per weekend.
+            missing = [(min(start for start, _ in missing), max(end for _, end in missing))]
+        observed_at = int(time.time() * 1000)
+        fetched = closed_candles([
             row
             for gap_start, gap_end in missing
             for row in fetch_gap(gap_start, gap_end)
-        ]
+        ], timeframe, observed_at)
         self._persist(storage_symbol, timeframe, fetched, persist)
-        return self._result(cached, fetched, timeframe, start_ts, end_ts_exclusive)
+        result = self._result(cached, fetched, timeframe, start_ts, end_ts_exclusive)
+        if missing_ranges is not None:
+            return OhlcvRangeResult(result.rows, missing_ranges(result.rows), result.cached_rows, result.fetched_rows)
+        return result
 
     async def load_async(
         self,
@@ -102,8 +117,10 @@ class HistoryRangeCoordinator:
         )
         missing = self._missing(cached, timeframe, start_ts, end_ts_exclusive)
         fetched: list[list[float]] = []
+        observed_at = int(time.time() * 1000)
         for gap_start, gap_end in missing:
             fetched.extend(await fetch_gap(gap_start, gap_end))
+        fetched = closed_candles(fetched, timeframe, observed_at)
         self._persist(storage_symbol, timeframe, fetched, persist)
         return self._result(cached, fetched, timeframe, start_ts, end_ts_exclusive)
 
@@ -132,7 +149,7 @@ class HistoryRangeCoordinator:
         start_ts: int,
         end_ts_exclusive: int,
     ) -> OhlcvRangeResult:
-        return self._result([], rows, timeframe, start_ts, end_ts_exclusive)
+        return self._result([], closed_candles(rows, timeframe, int(time.time() * 1000)), timeframe, start_ts, end_ts_exclusive)
 
     def _read_cached(
         self,

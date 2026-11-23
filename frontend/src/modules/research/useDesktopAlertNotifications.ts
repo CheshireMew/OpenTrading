@@ -3,35 +3,50 @@ import { getLocalStorage, readStorageValue } from '@/utils/storage'
 
 import { researchApi } from './api'
 import {
-  isWindowsNotificationEvent,
   loadDeliveredNotificationIds,
   WINDOWS_NOTIFICATION_DELIVERED_KEY,
 } from './notificationEvents'
+import { deliverAlertEvent } from './alertDelivery'
 
-const POLL_INTERVAL_MS = 15_000
+const POLL_INTERVAL_MS = 3_000
 
 export const useDesktopAlertNotifications = () => {
   let timer: number | undefined
   let running = false
+  let disposed = false
+  const memoryDelivered = new Set<string>()
 
-  const poll = async () => {
-    if (running || !('Notification' in window) || Notification.permission !== 'granted') return
-    running = true
-    try {
+  const deliverPending = async () => {
       const storage = getLocalStorage()
-      const delivered = new Set(loadDeliveredNotificationIds(storage ? readStorageValue(storage, WINDOWS_NOTIFICATION_DELIVERED_KEY) : null))
+      let stored: string | null = null
+      try { stored = storage ? readStorageValue(storage, WINDOWS_NOTIFICATION_DELIVERED_KEY) : null } catch { /* In-memory delivery remains available. */ }
+      const delivered = new Set([...memoryDelivered, ...loadDeliveredNotificationIds(stored)])
       const page = await researchApi.listEvents('alert_triggered', true, 100)
-      const pending = (page.items || []).filter((event) => isWindowsNotificationEvent(event, delivered)).reverse()
+      if (disposed) return
+      const pending = (page.items || []).filter(event => !event.acknowledgedAt && !delivered.has(event.id)).reverse()
       for (const event of pending) {
-        new Notification(event.title, { body: event.body || event.symbol || '' })
+        if (disposed) break
+        await deliverAlertEvent(event)
         delivered.add(event.id)
+        memoryDelivered.add(event.id)
       }
       if (pending.length > 0) {
-        storage?.setItem(
+        try { storage?.setItem(
           WINDOWS_NOTIFICATION_DELIVERED_KEY,
           JSON.stringify(Array.from(delivered).slice(-500)),
-        )
+        ) } catch { /* A full/read-only store must not interrupt delivery. */ }
       }
+  }
+
+  const poll = async () => {
+    if (running || disposed) return
+    running = true
+    try {
+      if (navigator.locks) {
+        await navigator.locks.request('opentrading:alert-delivery', { ifAvailable: true }, async lock => {
+          if (lock) await deliverPending()
+        })
+      } else await deliverPending()
     } catch {
       // 后台轮询不应打断当前页面，下一轮会自动重试。
     } finally {
@@ -52,6 +67,7 @@ export const useDesktopAlertNotifications = () => {
   })
 
   onBeforeUnmount(() => {
+    disposed = true
     if (timer !== undefined) window.clearInterval(timer)
     window.removeEventListener('focus', pollWhenVisible)
     document.removeEventListener('visibilitychange', pollWhenVisible)

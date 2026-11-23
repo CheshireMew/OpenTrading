@@ -1,0 +1,148 @@
+from app.domain.backtest_accounting import threshold_hits
+from math import isclose
+
+
+class OrderExecution:
+    def __init__(self, state, records, config, account):
+        self.state, self.records, self.config = state, records, config
+        self.account = account
+
+    def thresholds(self, bar, gap=False):
+        if self.state.position is None:
+            return
+        stop, target, d = (self.state.position["stop"], self.state.position["target"], self.state.position["direction"])
+        stopped, gained = threshold_hits(self.state.position, bar, gap)
+        mode = self.state.position.get("stop_loss_confirmation", "immediate")
+        initial_only = mode != "immediate" and self.state.position.get("stop_source", "stop_loss") == "stop_loss"
+        first = self.state.position.get("stop_confirmation_bar")
+        clock_time = (
+            bar.timestamp
+            if self.state.position.get("stop_confirmation_clock") == "execution"
+            else self.state.signal_bar_time
+        )
+        due = first is not None and clock_time > first
+        if initial_only and mode == "next_bar_open" and due and gap and (bar.timestamp == clock_time):
+            if stopped:
+                self.account.close(bar.open, bar, "open", "stop_loss")
+                return
+            self.state.position.pop("stop_confirmation_bar", None)
+            self.records.event(
+                "stop_confirmation_recovered", bar.timestamp, trade_id=self.state.position["trade_id"], mode=mode
+            )
+            first, due = (None, False)
+        if (
+            not gap
+            and stopped
+            and (self.state.position.get("entry_phase") == "intrabar")
+            and (self.state.position["entry_time"] == bar.timestamp)
+            and (d * (bar.close - stop) > 0)
+            and (not isclose(bar.close, stop, rel_tol=1e-12))
+        ):
+            self.state.position["entry_bar_ambiguous"] = True
+            if self.state.position["entry_ambiguity_policy"] == "adverse_extreme_before_entry":
+                stopped = False
+        if stopped and initial_only:
+            if first is None:
+                self.state.position["stop_confirmation_bar"] = clock_time
+                self.records.event(
+                    "stop_confirmation_started",
+                    bar.timestamp,
+                    trade_id=self.state.position["trade_id"],
+                    signal_bar_time=self.state.signal_bar_time,
+                    stop=stop,
+                    mode=mode,
+                    resolution_ms=self.state.resolution_ms,
+                )
+                stopped = False
+            elif not due or mode != "next_bar_touch":
+                stopped = False
+        if stopped or gained:
+            price = bar.open if gap else stop if stopped else target
+            self.account.close(
+                price,
+                bar,
+                "open" if gap else "intrabar",
+                self.state.position.get("stop_source", "stop_loss") if stopped else "take_profit",
+                stopped and gained,
+            )
+
+    def finish_stop_confirmation(self, bar, clock_step_ms=None):
+        if self.state.position is None:
+            return
+        first = self.state.position.get("stop_confirmation_bar")
+        if first is None or bar.timestamp <= first:
+            return
+        mode = self.state.position.get("stop_loss_confirmation")
+        initial_only = self.state.position.get("stop_source", "stop_loss") == "stop_loss"
+        if mode == "next_bar_close" and initial_only:
+            d, stop = (self.state.position["direction"], self.state.position["stop"])
+            if d * (bar.close - stop) <= 0 or isclose(bar.close, stop, rel_tol=1e-12):
+                self.account.close(bar.close, bar, "close", "stop_loss", close_step_ms=clock_step_ms)
+                return
+        if mode in ("next_bar_close", "next_bar_touch"):
+            self.state.position.pop("stop_confirmation_bar", None)
+            self.records.event(
+                "stop_confirmation_recovered",
+                bar.timestamp + (self.config.step_ms if clock_step_ms is None else clock_step_ms),
+                trade_id=self.state.position["trade_id"],
+                mode=mode,
+            )
+
+    def process_pending(self, sub):
+        if self.state.pending is not None:
+            signal, intent = self.state.pending
+            self.state.pending = None
+            action = intent.action
+            if action == "close":
+                if self.state.position:
+                    self.account.close(sub.open, sub, "open", "signal", origin_signal=signal)
+                    signal["status"] = "executed"
+                else:
+                    signal["status"] = "ignored_flat"
+            elif self.state.position and self.state.position["side"] == action:
+                signal["status"] = "ignored_same_side"
+            else:
+                if self.state.position:
+                    self.account.close(sub.open, sub, "open", "reversal", origin_signal=signal)
+                if self.state.entry_blocked_until is not None and sub.timestamp < self.state.entry_blocked_until:
+                    signal["status"] = "ignored_stop_pause"
+                elif self.state.cash <= 0:
+                    signal["status"] = "ignored_nonpositive_equity"
+                else:
+                    self.account.enter(intent, sub, sub.open, origin_signal=signal)
+                    signal["status"] = "executed"
+            self.records.event(
+                "signal_processed", sub.timestamp, signal_id=signal["signal_id"], status=signal["status"]
+            )
+
+    def check_entry(self, active_entry, sub):
+        if active_entry is not None:
+            signal, order = active_entry
+            d = 1 if order.intent.action == "long" else -1
+            gap_triggered = d * (sub.open - order.trigger_price) >= 0
+            touched = sub.high >= order.trigger_price if d == 1 else sub.low <= order.trigger_price
+            fill_price = sub.open if gap_triggered else order.trigger_price
+            if self.state.entry_blocked_until is not None and sub.timestamp < self.state.entry_blocked_until:
+                signal["status"] = "ignored_stop_pause"
+            elif self.state.position is not None:
+                signal["status"] = "ignored_position"
+            elif not touched:
+                signal["status"] = "not_triggered"
+            elif order.worst_price is not None and d * (fill_price - order.worst_price) > 0:
+                signal["status"] = "ignored_price_cap"
+            elif self.account.enter(order.intent, sub, fill_price, "open" if gap_triggered else "intrabar", signal):
+                signal["status"] = "executed"
+            else:
+                signal["status"] = "ignored_nonpositive_equity"
+            self.records.event(
+                "order_checked",
+                sub.timestamp,
+                signal_id=signal["signal_id"],
+                status=signal["status"],
+                trigger_price=order.trigger_price,
+                worst_price=order.worst_price,
+                resolution_ms=self.state.resolution_ms,
+            )
+            if signal["status"] != "not_triggered":
+                active_entry = None
+        return active_entry

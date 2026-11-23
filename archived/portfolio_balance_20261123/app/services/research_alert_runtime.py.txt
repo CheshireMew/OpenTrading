@@ -1,0 +1,204 @@
+from __future__ import annotations
+
+import asyncio
+import math
+from datetime import datetime, timezone
+from typing import Any
+
+from app.application.persistence_ports import ResearchAlertEvaluationPort
+from app.services.tools.portfolio_service import PortfolioService
+from app.contracts.research import ResearchAlertEvaluationResponse
+from app.infra.executor import run_database
+from config import settings
+from utils.logger import logger
+from app.services.periodic_task import PeriodicTask
+from app.domain.portfolio_allocation import calculate_allocation
+from app.domain.research_alerts import should_trigger
+
+
+class ResearchAlertRuntime:
+    def __init__(
+        self,
+        *,
+        research_repository: ResearchAlertEvaluationPort,
+        market_query_service,
+        binance_market_service,
+        portfolio_service: PortfolioService,
+    ) -> None:
+        self._research_repository = research_repository
+        self._market_query = market_query_service
+        self._binance_market = binance_market_service
+        self._portfolios = portfolio_service
+        self._evaluation_lock = asyncio.Lock()
+        self._chart_prices = None
+        self._periodic = PeriodicTask(
+            "research-alert-runtime",
+            self.evaluate_once,
+            lambda: max(float(settings.RESEARCH_ALERT_INTERVAL_SECONDS), 10.0),
+        )
+
+    async def start(self, chart_market=None) -> None:
+        if chart_market is not None and self._chart_prices is None:
+            from app.services.chart_price_alert_runtime import ChartPriceAlertRuntime
+            self._chart_prices = ChartPriceAlertRuntime(self._research_repository, chart_market)
+            await self._chart_prices.start()
+        await self._periodic.start()
+
+    async def shutdown(self) -> None:
+        await self._periodic.shutdown()
+        if self._chart_prices is not None:
+            await self._chart_prices.shutdown()
+            self._chart_prices = None
+
+    async def evaluate_once(self) -> ResearchAlertEvaluationResponse:
+        async with self._evaluation_lock:
+            evaluated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            rules = await run_database(self._research_repository.list_enabled_alerts)
+            rules = [rule for rule in rules if not rule.get("configuration", {}).get("chartSymbolId")]
+            if not rules:
+                return ResearchAlertEvaluationResponse(
+                    evaluatedAt=evaluated_at,
+                    ruleCount=0,
+                    evaluatedCount=0,
+                    triggeredCount=0,
+                    unavailableCount=0,
+                )
+
+            snapshot = await self._binance_market.snapshot_service.get_market_page_snapshot_data()
+            needs_market_page = any(rule["metric"] in {"breakout_score", "oi_change_1h_pct"} for rule in rules)
+            market_page = (
+                await self._binance_market.page.get_page(min_rise_pct=0, limit=100, quote_asset="USDT")
+                if needs_market_page
+                else None
+            )
+            needs_portfolios = any(rule["metric"] == "portfolio_drift_pct" for rule in rules)
+            portfolios = await self._portfolios.get_allocation_collection() if needs_portfolios else None
+
+            evaluated_count = 0
+            triggered_count = 0
+            unavailable_count = 0
+            for rule in rules:
+                try:
+                    value = await self._resolve_value(
+                        rule,
+                        snapshot=snapshot,
+                        market_page=market_page,
+                        portfolios=portfolios,
+                    )
+                    if value is None or not math.isfinite(value):
+                        unavailable_count += 1
+                        continue
+                    triggered = self._should_trigger(rule, value, evaluated_at)
+                    await run_database(
+                        lambda rule=rule, value=value, triggered=triggered: (
+                            self._research_repository.record_alert_evaluation(
+                                rule["id"],
+                                value=value,
+                                evaluated_at=evaluated_at,
+                                triggered=triggered,
+                            )
+                        )
+                    )
+                    evaluated_count += 1
+                    if triggered:
+                        triggered_count += 1
+                except Exception as exc:
+                    unavailable_count += 1
+                    logger.warning("Research alert evaluation failed for %s: %s", rule.get("id"), exc)
+
+            return ResearchAlertEvaluationResponse(
+                evaluatedAt=evaluated_at,
+                ruleCount=len(rules),
+                evaluatedCount=evaluated_count,
+                triggeredCount=triggered_count,
+                unavailableCount=unavailable_count,
+            )
+
+    async def _resolve_value(self, rule: dict[str, Any], *, snapshot, market_page, portfolios) -> float | None:
+        metric = rule["metric"]
+        symbol = self._ticker_symbol(rule["symbol"])
+        spot_tickers = self._rows_by_symbol(snapshot.get("spot_ticker", {}).get("items", []))
+        usdm_tickers = self._rows_by_symbol(snapshot.get("usdm_ticker", {}).get("items", []))
+        marks = self._rows_by_symbol(snapshot.get("usdm_mark", {}).get("items", []))
+
+        if metric == "price":
+            row = spot_tickers.get(symbol) or marks.get(symbol) or usdm_tickers.get(symbol)
+            value = self._float((row or {}).get("last_price") or (row or {}).get("mark_price"))
+            if value is not None:
+                return value
+            response = await self._market_query.get_current_price(symbol=rule["symbol"], timeframe="1h")
+            return self._float(response.current_price)
+        if metric == "price_change_24h":
+            row = spot_tickers.get(symbol) or usdm_tickers.get(symbol)
+            return self._float((row or {}).get("price_change_pct"))
+        if metric == "funding_rate_pct":
+            value = self._float((marks.get(symbol) or {}).get("funding_rate_pct"))
+            if value is not None:
+                return value
+            return self._float((marks.get(symbol) or {}).get("last_funding_rate"))
+        if metric == "breakout_score" and market_page is not None:
+            item = next((row for row in market_page.monitor.items if self._ticker_symbol(row.symbol) == symbol), None)
+            if item is None:
+                return None
+            score_kind = str((rule.get("configuration") or {}).get("scoreKind") or "max")
+            if score_kind == "natural":
+                return float(item.natural_score)
+            if score_kind == "momentum":
+                return float(item.momentum_score)
+            return float(max(item.natural_score, item.momentum_score))
+        if metric == "oi_change_1h_pct" and market_page is not None:
+            for board in market_page.contract_boards.values():
+                item = next((row for row in board.items if self._ticker_symbol(row.symbol or "") == symbol), None)
+                if item is not None:
+                    return self._float(item.oi_change_1h_pct)
+            return None
+        if metric == "portfolio_drift_pct" and portfolios is not None:
+            return self._portfolio_drift(rule, portfolios)
+        if metric == "rsi":
+            timeframe = str((rule.get("configuration") or {}).get("timeframe") or "1h")
+            response = await self._market_query.get_realtime(
+                symbol=rule["symbol"],
+                timeframe=timeframe,
+                limit=200,
+            )
+            return self._float(response.indicators.rsi)
+        return None
+
+    @classmethod
+    def _portfolio_drift(cls, rule: dict[str, Any], collection) -> float | None:
+        configuration = rule.get("configuration") or {}
+        portfolio_id = str(configuration.get("portfolioId") or collection.active_portfolio_id or "")
+        payload = next(
+            (item for item in collection.active_payloads if str(item.get("id")) == portfolio_id),
+            None,
+        )
+        if not payload or payload.get("valuationComplete") is False:
+            return None
+        assets = list(payload.get("assets") or [])
+        allocation = calculate_allocation(assets, require_fresh=True)
+        normalized_symbol = str(rule["symbol"]).upper().split("/")[0]
+        for index, asset in enumerate(allocation.assets):
+            if str(asset.get("symbol") or "").upper().split("/")[0] == normalized_symbol:
+                drift = allocation.overweight_percentage_points(index)
+                return drift if drift is None or configuration.get("signed") else abs(drift)
+        return None
+
+    @staticmethod
+    def _should_trigger(rule: dict[str, Any], value: float, evaluated_at: datetime) -> bool:
+        return should_trigger(rule, value, evaluated_at)
+
+    @staticmethod
+    def _rows_by_symbol(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+        return {str(row.get("symbol") or "").upper(): row for row in rows if row.get("symbol")}
+
+    @staticmethod
+    def _ticker_symbol(symbol: str) -> str:
+        return str(symbol or "").strip().upper().replace("/", "")
+
+    @staticmethod
+    def _float(value: Any) -> float | None:
+        try:
+            parsed = float(value)
+        except (TypeError, ValueError):
+            return None
+        return parsed if math.isfinite(parsed) else None

@@ -10,6 +10,7 @@ def test_compare_index_symbols_uses_index_history():
     index_service = MagicMock()
     index_service.get_instrument.side_effect = lambda symbol: object() if symbol in {"HK_HSI", "US_SP500"} else None
     index_service.get_history.side_effect = lambda **kwargs: MarketIndexHistoryResponse(
+            coverage={"complete": True, "calendar": "XHKG", "start_date": "2024-01-02", "end_date": "2024-01-04"},
         symbol=kwargs["symbol"],
         name=kwargs["symbol"],
         market="test",

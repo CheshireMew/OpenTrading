@@ -2,6 +2,14 @@ import { migrateWorkspaceState } from './legacyState'
 
 let pending:Promise<IDBDatabase>|undefined
 let legacyPending:Promise<IDBDatabase|undefined>|undefined
+const windowId = crypto.randomUUID()
+const previousWindowId = (() => {
+  try {
+    const previous = sessionStorage.getItem('opentrading-chart-draft-window')
+    sessionStorage.setItem('opentrading-chart-draft-window', windowId)
+    return previous
+  } catch { return null }
+})()
 function database() {
   return pending ??= new Promise<IDBDatabase>((resolve,reject)=>{
     const open = indexedDB.open('opentrading-chart-workspace',1)
@@ -27,9 +35,12 @@ async function getDraft(db:IDBDatabase,key:string):Promise<unknown> {
     query.onerror = () => reject(query.error)
   })
 }
-export async function readDraft<T>(key:string):Promise<T|undefined> {
+export async function readDraft<T>(key:string, scope?:'window'):Promise<T|undefined> {
   const db = await database()
-  let value = await getDraft(db,key)
+  let value = scope ? await getDraft(db, `${key}:window:${windowId}`) : undefined
+  const ownDraft = value !== undefined
+  if (scope && value === undefined && previousWindowId) value = await getDraft(db, `${key}:window:${previousWindowId}`)
+  if (value === undefined) value = await getDraft(db,key)
   if (value === undefined) {
     const legacy = await legacyDatabase()
     if (legacy) {
@@ -37,13 +48,14 @@ export async function readDraft<T>(key:string):Promise<T|undefined> {
       if (value !== undefined) await writeDraft(key,migrateWorkspaceState(value))
     }
   }
+  if (scope && !ownDraft && value !== undefined) await writeDraft(key, value, scope)
   return migrateWorkspaceState(value) as T|undefined
 }
-export async function writeDraft(key:string,value:unknown) {
+export async function writeDraft(key:string,value:unknown, scope?:'window') {
   const db = await database()
   return new Promise<void>((resolve,reject)=>{
     const transaction = db.transaction('drafts','readwrite')
-    transaction.objectStore('drafts').put(JSON.parse(JSON.stringify(value)),key)
+    transaction.objectStore('drafts').put(JSON.parse(JSON.stringify(value)),scope ? `${key}:window:${windowId}` : key)
     transaction.oncomplete = () => resolve()
     transaction.onerror = () => reject(transaction.error)
   })

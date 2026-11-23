@@ -1,0 +1,112 @@
+from __future__ import annotations
+
+from sqlalchemy import select, update
+
+from sqlalchemy.dialects.postgresql import insert as postgresql_insert
+
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+
+from app.domain.portfolios import (
+    PortfolioCollectionMismatchError,
+    PortfolioCollectionRecord,
+    PortfolioNotFoundError,
+    PortfolioRevisionConflictError,
+)
+
+from app.infra.db.schema import PortfolioCollectionState, PortfolioRecord, PortfolioTransactionRecord
+
+COLLECTION_ID = "default"
+
+
+def require_active_portfolio(session, portfolio_id: str) -> PortfolioRecord:
+    row = session.get(PortfolioRecord, portfolio_id)
+    if row is None or row.deleted_at is not None:
+        raise PortfolioNotFoundError("没有这个活动组合")
+    return row
+
+
+def require_transaction(
+    session, portfolio_id: str, transaction_id: str, expected_version: int
+) -> PortfolioTransactionRecord:
+    row = session.get(PortfolioTransactionRecord, transaction_id)
+    if row is None or row.portfolio_id != portfolio_id:
+        raise PortfolioNotFoundError("组合流水不存在")
+    if row.version != expected_version:
+        raise PortfolioRevisionConflictError("组合流水已在其它窗口更新，请重新载入后再试")
+    return row
+
+
+def assert_external_id_available(
+    session, portfolio_id: str, external_id: str | None, *, excluding_id: str | None = None
+) -> None:
+    if not external_id:
+        return
+    statement = select(PortfolioTransactionRecord.id).where(
+        PortfolioTransactionRecord.portfolio_id == portfolio_id,
+        PortfolioTransactionRecord.external_id == external_id,
+        PortfolioTransactionRecord.archived_at.is_(None),
+    )
+    if excluding_id:
+        statement = statement.where(PortfolioTransactionRecord.id != excluding_id)
+    if session.scalar(statement) is not None:
+        raise PortfolioCollectionMismatchError(f"外部流水编号 {external_id} 已存在")
+
+
+def transaction_payload(row: PortfolioTransactionRecord) -> dict:
+    return {
+        "id": row.id,
+        "portfolioId": row.portfolio_id,
+        "transactionType": row.transaction_type,
+        "symbol": row.symbol,
+        "quantity": row.quantity,
+        "unitPrice": row.unit_price,
+        "cashAmount": row.cash_amount,
+        "fee": row.fee,
+        "currency": row.currency,
+        "feeCurrency": row.fee_currency,
+        "externalId": row.external_id,
+        "note": row.note,
+        "metadata": dict(row.metadata_payload or {}),
+        "version": row.version,
+        "occurredAt": row.occurred_at,
+        "archivedAt": row.archived_at,
+        "createdAt": row.created_at,
+        "updatedAt": row.updated_at,
+    }
+
+
+def claim_revision(session, *, expected_revision: int, active_portfolio_id: str, updated_at) -> int:
+    ensure_state_row(session, updated_at=updated_at)
+    result = session.execute(
+        update(PortfolioCollectionState)
+        .where(PortfolioCollectionState.id == COLLECTION_ID, PortfolioCollectionState.revision == expected_revision)
+        .values(revision=expected_revision + 1, active_portfolio_id=active_portfolio_id, updated_at=updated_at)
+    )
+    if result.rowcount != 1:
+        raise PortfolioRevisionConflictError("组合已在其它窗口更新，请重新载入后再试")
+    return expected_revision + 1
+
+
+def ensure_state_row(session, *, updated_at) -> None:
+    values = {"id": COLLECTION_ID, "revision": 0, "active_portfolio_id": None, "updated_at": updated_at}
+    dialect_name = session.get_bind().dialect.name
+    if dialect_name == "sqlite":
+        statement = sqlite_insert(PortfolioCollectionState).values(**values)
+        session.execute(statement.on_conflict_do_nothing(index_elements=["id"]))
+        return
+    if dialect_name == "postgresql":
+        statement = postgresql_insert(PortfolioCollectionState).values(**values)
+        session.execute(statement.on_conflict_do_nothing(index_elements=["id"]))
+        return
+    if session.get(PortfolioCollectionState, COLLECTION_ID) is None:
+        session.add(PortfolioCollectionState(**values))
+        session.flush()
+
+
+def to_record(*, revision: int, active_portfolio_id: str, records: list[PortfolioRecord]) -> PortfolioCollectionRecord:
+    active = [dict(record.payload) for record in records if record.deleted_at is None]
+    active_ids = {str(portfolio["id"]) for portfolio in active}
+    resolved_active_id = (
+        active_portfolio_id if active_portfolio_id in active_ids else str(active[0]["id"]) if active else ""
+    )
+    return PortfolioCollectionRecord(revision=revision, active_portfolio_id=resolved_active_id, active_payloads=active)

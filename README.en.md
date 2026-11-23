@@ -7,7 +7,7 @@
 <h1 align="center">OpenTrading</h1>
 
 <p align="center">
-  <strong>Market charts, strategy research, and portfolio analysis.</strong>
+  <strong>Market charts, Pine simulations, and market research.</strong>
 </p>
 
 <p align="center">
@@ -29,7 +29,7 @@
 
 <!-- readme-header:end -->
 
-Choose a symbol and timeframe, add indicators or Pine scripts, record portfolio trades, and review strategy results. Market coverage focuses on cryptocurrencies.
+Choose a symbol and timeframe, add indicators or Pine scripts, compare assets and review strategy results. Market coverage focuses on cryptocurrencies.
 
 ## Features
 
@@ -38,8 +38,7 @@ Choose a symbol and timeframe, add indicators or Pine scripts, record portfolio 
 | [Charting](docs/CHART_WORKSPACE.md) | One, two, or four charts, watchlists, drawing tools, technical indicators, a Pine editor, and a strategy tester |
 | [Market monitoring](docs/DATA_SOURCES.md) | Market signals, Binance derivatives, Web3 rankings, and [equity-related instruments offered by exchanges](docs/EQUITY_CATALOG.md) |
 | Investment tools | Asset comparison, DCA simulation, and Bitcoin halving cycles |
-| [Portfolio analysis](docs/RESEARCH_WORKFLOWS.md) | Trade ledger, costs and fees, returns, benchmarks, correlations, and stress tests |
-| [Strategy research](docs/LOCAL_BACKTESTS.md) | Python backtests, [parameter sweeps](docs/PARAMETER_SWEEPS.md), result review, and research reports |
+| [Historical simulation](docs/CHART_WORKSPACE.md) | Pine strategy testing, equity curves and trades |
 
 ## Install and run
 
@@ -75,23 +74,21 @@ Redis and model API keys are optional. See the [startup guide](docs/GETTING_STAR
 | Entry | Address or documentation |
 | --- | --- |
 | Chart workspace | `/` · [Usage and Pine compatibility](docs/CHART_WORKSPACE.md) |
-| Portfolios | `/tools/portfolio-balance` |
 | Data health | `/system/data-health` |
 | API documentation | [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) |
-| Python backtests and parameter sweeps | `/research/backtests` · `/research/parameter-sweeps` |
 
-Research pages are currently hidden from the main menu. Visit their paths directly after startup, or use the research CLI:
+Asset research and data checks are also available through the CLI:
 
 ```powershell
 .\venv\Scripts\python.exe -m scripts.research_cli --help
 .\venv\Scripts\python.exe -m scripts.research_cli asset BTC/USDT --timeframe 1h
 ```
 
-The CLI returns structured JSON for scripts. See [research workflows](docs/RESEARCH_WORKFLOWS.md) and [strategy research](docs/STRATEGY_RESEARCH.md) for the full command reference.
+The CLI returns structured JSON; see [research workflows](docs/RESEARCH_WORKFLOWS.md). Python backtests, parameter sweeps and research diagnostics are [archived](archived/python_backtest_20261123/README.md). Strategy simulation uses the chart workspace Pine tester.
 
 ## Data and backtest limitations
 
-OpenTrading supports research and simulation; it does not connect trading accounts to place orders. Pine v5/v6 support is partial. Pine and Python backtests use different engines and cost assumptions, so check their respective documentation before comparing results.
+OpenTrading supports research and simulation; it does not connect trading accounts to place orders. Pine v5/v6 support is partial. Pine uses the PineTS compatibility engine; historical OHLC simulations are not guaranteed to match the official TradingView engine.
 
 Early Bitcoin history includes synthetic and proxy data; see [data/README.md](data/README.md) for sources and date boundaries. External market data can have gaps or delays. Historical results and model analysis do not predict future returns.
 

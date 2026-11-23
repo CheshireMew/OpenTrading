@@ -79,6 +79,7 @@ class PineRun(BaseModel):
     progress: float = 0
     created_at: int
     request: PineRunRequest
+    recording: Literal["report", "research"] = "research"
     error: str | None = None
     summary: dict[str, Any] = Field(default_factory=dict)
     provenance: dict[str, Any] = Field(default_factory=dict)

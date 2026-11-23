@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title desc">
+  <title id="title">OpenTrading — C 双窗</title>
+  <desc id="desc">两个错位的开放窗口，对应工作台的多图观察与资产比较；每个窗口保持独立，组合成同一标识。</desc>
+  <g id="mark"><path class="accent-fill" fill="#22ab94" d="M18 78V18H78V34H34V78Z"/><path class="blue-fill" fill="#5086f5" d="M50 50H110V110H50V94H94V66H50Z"/></g>
+</svg>

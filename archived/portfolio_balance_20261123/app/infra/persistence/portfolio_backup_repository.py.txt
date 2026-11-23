@@ -1,0 +1,189 @@
+from __future__ import annotations
+
+from sqlalchemy import select
+
+from app.domain.portfolios import (
+    PortfolioCollectionMismatchError,
+    PortfolioExportRecord,
+    PortfolioRevisionConflictError,
+    portfolio_simulation_fingerprint,
+)
+
+from app.infra.db.database import DatabaseRuntime
+
+from app.infra.persistence.write_session import write_session
+
+from app.infra.db.schema import (
+    PortfolioCollectionState,
+    PortfolioRecord,
+    PortfolioSimulationResultRecord as PortfolioSimulationResultRow,
+    PortfolioTransactionRecord,
+)
+
+from utils.time import utc_now_naive
+
+from app.infra.persistence.portfolio_rows import COLLECTION_ID, transaction_payload, claim_revision, to_record
+
+
+class PortfolioBackupRepository:
+    def __init__(self, database_runtime: DatabaseRuntime) -> None:
+        self._database_runtime = database_runtime
+
+    def get_export_record(self) -> PortfolioExportRecord:
+        with write_session(
+            self._database_runtime, PortfolioRevisionConflictError, PortfolioCollectionMismatchError
+        ) as session:
+            state = session.get(PortfolioCollectionState, COLLECTION_ID)
+            records = list(
+                session.scalars(
+                    select(PortfolioRecord).order_by(
+                        PortfolioRecord.deleted_at.is_not(None),
+                        PortfolioRecord.position,
+                        PortfolioRecord.created_at,
+                        PortfolioRecord.id,
+                    )
+                )
+            )
+            simulations = {item.portfolio_id: item for item in session.scalars(select(PortfolioSimulationResultRow))}
+            active_payloads = [dict(item.payload) for item in records if item.deleted_at is None]
+            deleted_payloads = [dict(item.payload) for item in records if item.deleted_at is not None]
+            active_ids = {str(payload["id"]) for payload in active_payloads}
+            active_portfolio_id = state.active_portfolio_id if state is not None else ""
+            if active_portfolio_id not in active_ids:
+                active_portfolio_id = str(active_payloads[0]["id"]) if active_payloads else ""
+            return PortfolioExportRecord(
+                revision=state.revision if state is not None else 0,
+                active_portfolio_id=active_portfolio_id,
+                active_payloads=active_payloads,
+                deleted_payloads=deleted_payloads,
+                simulation_payloads=[
+                    (record.id, dict(simulations[record.id].payload))
+                    for record in records
+                    if record.id in simulations
+                    and simulations[record.id].source_fingerprint == portfolio_simulation_fingerprint(record.payload)
+                ],
+                transaction_payloads=[
+                    transaction_payload(row) for row in session.scalars(select(PortfolioTransactionRecord))
+                ],
+                deleted_at={row.id: row.deleted_at for row in records if row.deleted_at is not None},
+            )
+
+    def import_collection(
+        self,
+        *,
+        active_portfolio_id,
+        active_payloads,
+        deleted_payloads,
+        simulation_payloads,
+        transactions,
+        deleted_at,
+        expected_revision,
+        replace,
+    ):
+        """Restore every backup component in the same revision-checked transaction.
+
+        Incoming IDs replace the corresponding portfolio snapshot. Missing local data
+        is archived, never destroyed. V1/V2 imports leave existing ledgers untouched.
+        """
+        from datetime import timezone
+
+        def naive(value):
+            return value.astimezone(timezone.utc).replace(tzinfo=None) if value.tzinfo else value
+
+        with write_session(
+            self._database_runtime, PortfolioRevisionConflictError, PortfolioCollectionMismatchError
+        ) as session:
+            now = utc_now_naive()
+            revision = claim_revision(
+                session, expected_revision=expected_revision, active_portfolio_id=active_portfolio_id, updated_at=now
+            )
+            existing = {row.id: row for row in session.scalars(select(PortfolioRecord))}
+            active_ids = [str(payload["id"]) for payload in active_payloads]
+            incoming = {str(payload["id"]) for payload in [*active_payloads, *deleted_payloads]}
+            if len(incoming) != len(active_payloads) + len(deleted_payloads):
+                raise PortfolioCollectionMismatchError("备份组合 ID 不能重复")
+            order = (
+                []
+                if replace
+                else [
+                    row.id
+                    for row in sorted(existing.values(), key=lambda row: row.position)
+                    if row.deleted_at is None and row.id not in incoming
+                ]
+            )
+            order.extend(active_ids)
+            if len(order) > 100:
+                raise PortfolioCollectionMismatchError("活动组合最多 100 个，请减少组合后再合并备份")
+            active_portfolio_id = active_portfolio_id or (order[0] if order else "")
+            session.get(PortfolioCollectionState, COLLECTION_ID).active_portfolio_id = active_portfolio_id or None
+            for index, payload in enumerate([*active_payloads, *deleted_payloads]):
+                key = str(payload["id"])
+                row = existing.get(key)
+                if row is None:
+                    row = PortfolioRecord(id=key, version=0, created_at=now)
+                    session.add(row)
+                    existing[key] = row
+                row.payload = payload
+                row.position = order.index(key) if key in order else index
+                row.deleted_at = None if key in active_ids else naive(deleted_at.get(key, now))
+                row.version += 1
+                row.updated_at = now
+                simulation = session.get(PortfolioSimulationResultRow, key)
+                if key in simulation_payloads:
+                    if simulation is None:
+                        simulation = PortfolioSimulationResultRow(portfolio_id=key, created_at=now)
+                        session.add(simulation)
+                    simulation.payload = simulation_payloads[key]
+                    simulation.source_fingerprint = portfolio_simulation_fingerprint(payload)
+                    simulation.updated_at = now
+                elif simulation is not None:
+                    simulation.source_fingerprint = "import-without-result"
+            for key, row in existing.items():
+                if key in order:
+                    row.position = order.index(key)
+                elif replace and row.deleted_at is None:
+                    row.deleted_at, row.updated_at = (now, now)
+                    row.version += 1
+            if transactions is not None:
+                rows = {row.id: row for row in session.scalars(select(PortfolioTransactionRecord))}
+                imported_ids = {item["id"] for item in transactions}
+                previously_active = {row.id for row in rows.values() if row.archived_at is None}
+                for row in rows.values():
+                    if row.portfolio_id in incoming and row.archived_at is None:
+                        row.archived_at = now
+                session.flush()
+                for row in rows.values():
+                    if row.portfolio_id in incoming and row.id not in imported_ids and (row.id in previously_active):
+                        row.archived_at, row.updated_at = (now, now)
+                        row.version += 1
+                for item in transactions:
+                    row = rows.get(item["id"])
+                    if row is not None and row.portfolio_id != item["portfolioId"]:
+                        raise PortfolioCollectionMismatchError("流水 ID 与其它组合冲突")
+                    if row is None:
+                        row = PortfolioTransactionRecord(
+                            id=item["id"], portfolio_id=item["portfolioId"], created_at=naive(item["createdAt"])
+                        )
+                        session.add(row)
+                    for source, target in (
+                        ("transactionType", "transaction_type"),
+                        ("symbol", "symbol"),
+                        ("quantity", "quantity"),
+                        ("unitPrice", "unit_price"),
+                        ("cashAmount", "cash_amount"),
+                        ("fee", "fee"),
+                        ("currency", "currency"),
+                        ("feeCurrency", "fee_currency"),
+                        ("externalId", "external_id"),
+                        ("note", "note"),
+                        ("metadata", "metadata_payload"),
+                    ):
+                        setattr(row, target, item[source])
+                    row.occurred_at = naive(item["occurredAt"])
+                    row.archived_at = naive(item["archivedAt"]) if item["archivedAt"] else None
+                    row.version = max(item["version"], (row.version or 0) + 1)
+                    row.updated_at = naive(item["updatedAt"])
+            session.flush()
+            return to_record(
+                revision=revision, active_portfolio_id=active_portfolio_id, records=[existing[key] for key in order]
+            )

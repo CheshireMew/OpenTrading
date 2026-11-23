@@ -106,7 +106,7 @@ class MarketRealtimeQueryService:
             symbol=symbol,
             kline_data=kline_data,
             indicators=indicators,
-            enabled=use_ai,
+            enabled=use_ai and snapshot.fresh(),
             log_context=ai_log_context,
         )
         return self.realtime_service.build_response(
@@ -116,6 +116,8 @@ class MarketRealtimeQueryService:
             indicators,
             ai_analysis=ai_analysis,
             include_type=include_type,
+            observed_at_ms=snapshot.observed_at_ms,
+            source=snapshot.source,
         )
 
     async def _run_ai_analysis(

@@ -3,7 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { useTheme } from '@/composables/useTheme'
-import { formatAdaptivePrice, formatCompactNumber, formatSignedPercent } from '@/modules/format'
+import { formatAdaptivePrice, formatCompactNumber, formatSignedPercent, formatRatioPercent } from '@/modules/format'
 import { binanceWeb3Api } from './api'
 import type {
   BinanceWeb3AddressPnlItemResponse,
@@ -13,7 +13,6 @@ import { useWeb3HeatRankPanel } from './useWeb3HeatRankPanel'
 import {
   WEB3_ALL_CHAIN_ID,
   WEB3_SUPPORTED_CHAIN_OPTIONS,
-  web3ApiChainId,
   WEB3_KLINE_INTERVALS,
 } from './web3MarketShared'
 
@@ -29,6 +28,7 @@ export function useWeb3MarketRankPage() {
   const errorKey = ref('')
   const error = computed(() => (errorKey.value ? t(errorKey.value) : ''))
   const chainId = ref(WEB3_ALL_CHAIN_ID)
+  const addressChainId = ref('56')
   const heatRank = useWeb3HeatRankPanel(chainId)
   const addressPnl = ref<BinanceWeb3AddressPnlItemResponse[]>([])
   const addressPnlUpdatedAt = ref<string | null>(null)
@@ -52,10 +52,10 @@ export function useWeb3MarketRankPage() {
     }
   })
 
-  const addressPnlRequestKey = () => chainId.value
+  const addressPnlRequestKey = () => addressChainId.value
 
   const fetchData = async () => {
-    const requestChainId = chainId.value
+    const requestChainId = addressChainId.value
     const requestKey = addressPnlRequestKey()
     if (addressPnlFetchState?.key === requestKey) return addressPnlFetchState.task
     let task!: Promise<void>
@@ -63,8 +63,7 @@ export function useWeb3MarketRankPage() {
       loading.value = true
       errorKey.value = ''
       try {
-        const selectedChainId = web3ApiChainId(requestChainId)
-        const pnlRes = await binanceWeb3Api.getBinanceWeb3AddressPnlRank({ chain_id: selectedChainId || '56', page_size: 10 })
+        const pnlRes = await binanceWeb3Api.getBinanceWeb3AddressPnlRank({ chain_id: requestChainId, page_size: 10 })
         if (requestKey !== addressPnlRequestKey()) return
         addressPnl.value = pnlRes?.items || []
         addressPnlUpdatedAt.value = new Date().toISOString()
@@ -88,7 +87,11 @@ export function useWeb3MarketRankPage() {
     }
   }
 
-  watch(chainId, fetchData)
+  watch(addressChainId, () => {
+    addressPnl.value = []
+    addressPnlUpdatedAt.value = null
+    void fetchData()
+  })
 
   onMounted(() => {
     void fetchData()
@@ -107,6 +110,10 @@ export function useWeb3MarketRankPage() {
     error,
     chainId,
     chainOptions,
+    addressChainId,
+    addressChainOptions: WEB3_SUPPORTED_CHAIN_OPTIONS,
+    addressPnlUpdatedAt,
+    heatUpdatedAt: heatRank.web3UpdatedAt,
     addressPnl,
     updatedAt,
     web3HeatRank: heatRank.web3HeatRank,
@@ -130,6 +137,7 @@ export function useWeb3MarketRankPage() {
     fetchData,
     formatScore,
     formatPercent: formatSignedPercent,
+    formatWinRate: formatRatioPercent,
     formatPrice: (value: number | null | undefined) => formatAdaptivePrice(value, 'USDT', '--'),
     formatCompact: formatCompactNumber,
     sortDirectionIcon,

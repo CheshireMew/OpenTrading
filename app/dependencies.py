@@ -20,8 +20,6 @@ if TYPE_CHECKING:
     from app.services.market.query_app_service import MarketQueryAppService
     from app.services.market.websocket_service import MarketWebSocketService
     from app.services.tools.app_service import ToolsAppService
-    from app.services.tools.portfolio_service import PortfolioService
-    from app.services.tools.portfolio_analytics_service import PortfolioAnalyticsService
     from app.services.research_service import ResearchService
     from app.services.research_alert_runtime import ResearchAlertRuntime
     from app.services.trade_signal_service import TradeSignalService
@@ -29,7 +27,6 @@ if TYPE_CHECKING:
     from app.services.asset_research_service import AssetResearchService
     from app.services.market_screener_service import MarketScreenerService
     from app.services.data_health_service import DataHealthService
-    from app.services.research_report_service import ResearchReportService
 
 
 def get_runtime_services(connection: HTTPConnection) -> AppRuntimeServices:
@@ -53,17 +50,6 @@ def get_llm_config_service(connection: HTTPConnection) -> "LlmConfigService":
 
 def get_tools_app_service(connection: HTTPConnection) -> "ToolsAppService":
     return get_runtime_services(connection).require_api().tools.app
-
-
-def get_portfolio_service(connection: HTTPConnection) -> "PortfolioService":
-    return get_runtime_services(connection).require_api().tools.portfolios
-
-
-def get_portfolio_analytics_service(connection: HTTPConnection) -> "PortfolioAnalyticsService":
-    service = get_runtime_services(connection).require_api().tools.portfolio_analytics
-    if service is None:
-        raise RuntimeError("Portfolio analytics service is not initialized")
-    return service
 
 
 def get_research_service(connection: HTTPConnection) -> "ResearchService":
@@ -112,13 +98,6 @@ def get_data_health_service(connection: HTTPConnection) -> "DataHealthService":
     service = get_runtime_services(connection).require_api().data_health
     if service is None:
         raise RuntimeError("Data health service is not initialized")
-    return service
-
-
-def get_research_report_service(connection: HTTPConnection) -> "ResearchReportService":
-    service = get_runtime_services(connection).require_api().research_reports
-    if service is None:
-        raise RuntimeError("Research report service is not initialized")
     return service
 
 

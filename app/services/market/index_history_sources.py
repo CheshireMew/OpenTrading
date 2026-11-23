@@ -56,7 +56,14 @@ class IndexHistorySources:
     ) -> IndexFetchResult:
         errors: list[str] = []
         source = get_index_source_binding(instrument.symbol)
-        for provider in self.providers:
+        providers = self.providers
+        if instrument.symbol == "HK_HSTECH":
+            # Eastmoney includes the pre-launch back series (from 2014-12-31);
+            # Sina currently begins in August 2020. Keep the other fallbacks.
+            providers = tuple(sorted(providers, key=lambda provider: (
+                not isinstance(getattr(provider, "__self__", None), EastmoneyIndexHistoryProvider)
+            )))
+        for provider in providers:
             try:
                 result = provider(instrument, source, start_dt, end_dt)
             except Exception as exc:

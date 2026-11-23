@@ -5,3 +5,11 @@
 /docs/verification/eth-intrabar-short-window-20260913/policies/fixed.json -text
 /docs/PINE_CODE_STANDARD.md -text
 /docs/verification/pine-v7-2-contract/event-fixtures.json -text
+
+# Standalone strategy hashes are Windows snapshots; author fragments and old
+# execution bundles retain their recorded bytes instead of Git newline conversion.
+/strategies/*.py text eol=crlf
+/strategies/authoring/templates/* -text
+/strategies/authoring/shared/* -text
+/test/fixtures/backtest_engine_v11/* -text
+/test/fixtures/research_engines_v1/*.py -text

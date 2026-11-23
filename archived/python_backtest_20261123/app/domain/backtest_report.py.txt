@@ -1,0 +1,31 @@
+from app.domain.backtest_types import DISCLAIMER
+
+
+def build_report(initial_cash, cash, trades, points):
+    wins = [t["profit"] for t in trades if t["profit"] > 0]
+    losses = [-t["profit"] for t in trades if t["profit"] < 0]
+    count = len(trades)
+    report = {
+        "initial_cash": initial_cash,
+        "final_equity": cash,
+        "profit": cash - initial_cash,
+        "return_pct": (cash / initial_cash - 1) * 100,
+        "max_drawdown_pct": max((p["drawdown_pct"] for p in points), default=0),
+        "total_trades": count,
+        "wins": len(wins),
+        "losses": len(losses),
+        "breakeven": count - len(wins) - len(losses),
+        "win_rate": len(wins) / count * 100 if count else None,
+        "average_return_pct": sum((t["return_pct"] for t in trades)) / count if count else None,
+        "payoff_ratio": sum(wins) / len(wins) / (sum(losses) / len(losses)) if wins and losses else None,
+        "profit_factor": sum(wins) / sum(losses) if losses else None,
+        "average_duration_minutes": sum((t["duration_minutes"] for t in trades)) / count if count else None,
+        "ambiguous_trades": sum((t["ambiguous"] for t in trades)),
+        "notes": [
+            DISCLAIMER,
+            "最大回撤按每根收盘权益计算",
+            "无亏损时利润因子为空；无交易时胜率为空",
+            "K 线内退出的持仓时间按所属 K 线开盘时间近似",
+        ],
+    }
+    return report

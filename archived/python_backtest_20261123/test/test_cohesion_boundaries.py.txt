@@ -1,0 +1,78 @@
+"""Architectural boundaries for the responsibilities separated by the cohesion audit."""
+
+import ast
+from pathlib import Path
+
+from app.infra.persistence.research_result_repository import ResearchResultRepository
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def source(relative):
+    return (ROOT / relative).read_text(encoding="utf-8")
+
+
+def test_research_uses_public_backtest_capabilities_only():
+    for relative in (
+        "app/services/research_study_service.py",
+        "app/services/parameter_sweep_service.py",
+        "app/services/research_results_catalog.py",
+        "app/services/backtest_diagnostics_service.py",
+    ):
+        tree = ast.parse(source(relative))
+        forbidden = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Attribute):
+                if node.value.attr == "backtests" and (
+                    node.attr.startswith("_") or node.attr in {"repository", "root", "directory", "data_path"}
+                ):
+                    forbidden.append(node.attr)
+            if isinstance(node, ast.ClassDef):
+                assert all(ast.unparse(base) != "LocalBacktestService" for base in node.bases)
+        assert forbidden == [], (relative, forbidden)
+
+
+def test_results_sql_and_filesystem_discovery_have_separate_owners(tmp_path):
+    index = ResearchResultRepository(tmp_path / "not-created/index.sqlite")
+    assert not index.path.parent.exists()
+    for relative in (
+        "app/services/research_results_catalog.py",
+        "app/services/research_result_importer.py",
+        "app/services/research_result_manifests.py",
+    ):
+        tree = ast.parse(source(relative))
+        assert not any(
+            isinstance(node, ast.Attribute) and node.attr in {"execute", "executescript", "walk"}
+            for node in ast.walk(tree)
+        )
+    with index.transaction() as db:
+        assert db.entries({}) == []
+    assert index.path.is_file()
+
+
+def test_backtest_public_api_has_no_mutable_execution_loop():
+    tree = ast.parse(source("app/domain/local_backtest.py"))
+    assert not any(isinstance(node, (ast.For, ast.While, ast.Nonlocal)) for node in ast.walk(tree))
+    for relative in (
+        "app/domain/cloud_adaptive_research_v1.py",
+        "app/domain/cloud_protection_research_v1.py",
+        "app/domain/cloud_window_research_v1.py",
+    ):
+        tree = ast.parse(source(relative))
+        assert not any(isinstance(node, (ast.For, ast.While, ast.Nonlocal)) for node in ast.walk(tree))
+        assert any(
+            isinstance(node, ast.ImportFrom) and node.module == "app.domain.cloud_research_kernel" for node in tree.body
+        )
+
+
+def test_http_research_routes_retrieve_runtime_capabilities():
+    tree = ast.parse(source("app/routers/local_backtests.py"))
+    constructed = {
+        node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    }
+    assert not constructed & {
+        "LocalBacktestService",
+        "ResearchResultsCatalog",
+        "ParameterSweepService",
+        "BacktestDiagnosticsService",
+    }

@@ -7,7 +7,7 @@
 <h1 align="center">OpenTrading</h1>
 
 <p align="center">
-  <strong>行情图表、策略研究与投资组合分析工具。</strong>
+  <strong>行情图表、Pine 历史模拟与市场观察工具。</strong>
 </p>
 
 <p align="center">
@@ -29,7 +29,7 @@
 
 <!-- readme-header:end -->
 
-打开首页即可选择交易对与周期、添加指标或 Pine 脚本，也可以记录组合交易、比较资产和回看策略结果。行情以加密货币为主。
+打开首页即可选择交易对与周期、添加指标或 Pine 脚本，也可以比较资产、进行定投模拟和回看策略结果。行情以加密货币为主。
 
 ## 功能
 
@@ -38,8 +38,8 @@
 | [看盘](docs/CHART_WORKSPACE.md) | 单图、双图或四图，自选列表、绘图、技术指标、Pine 编辑器与策略测试器 |
 | [市场观察](docs/DATA_SOURCES.md) | 市场信号、Binance 合约市场、Web3 排行，以及交易所支持的[股票相关品种](docs/EQUITY_CATALOG.md) |
 | 投资工具 | 币种对比、DCA 模拟、比特币减半周期观察 |
-| [组合分析](docs/RESEARCH_WORKFLOWS.md) | 交易流水、成本与费用、收益率、基准对比、相关性和压力测试 |
-| [策略研究](docs/LOCAL_BACKTESTS.md) | Python 策略回测、[批量参数比较](docs/PARAMETER_SWEEPS.md)、结果复盘和研究报告 |
+| [历史模拟](docs/CHART_WORKSPACE.md#策略测试器) | Pine 脚本策略测试、收益曲线与交易记录 |
+| [美元流动性](docs/MARKET_DATA.md) | 美元流动性看板，命令行可查跨资产日线和宏观历史 |
 
 ## 安装与启动
 
@@ -75,23 +75,21 @@ Redis 和模型 API Key 均为可选项。PostgreSQL、手动启动、日志位�
 | 入口 | 地址或文档 |
 | --- | --- |
 | 图表工作台 | `/` · [操作与 Pine 兼容范围](docs/CHART_WORKSPACE.md) |
-| 组合 | `/tools/portfolio-balance` |
 | 数据健康 | `/system/data-health` |
 | API 文档 | [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) |
-| Python 回测与参数比较 | `/research/backtests` · `/research/parameter-sweeps` |
 
-研究页面目前未显示在主菜单中，启动后可直接访问对应路径，或使用研究 CLI：
+资产研究和数据检查也可通过 CLI 使用：
 
 ```powershell
 .\venv\Scripts\python.exe -m scripts.research_cli --help
 .\venv\Scripts\python.exe -m scripts.research_cli asset BTC/USDT --timeframe 1h
 ```
 
-CLI 返回结构化 JSON，适合脚本调用。完整命令见[研究工作流](docs/RESEARCH_WORKFLOWS.md)与[策略研究](docs/STRATEGY_RESEARCH.md)。
+CLI 返回结构化 JSON，适合脚本调用，命令见[研究工作流](docs/RESEARCH_WORKFLOWS.md)。Python 回测、参数扫描和研究诊断已[归档退出](archived/python_backtest_20261123/README.md)，策略模拟统一使用图表中的 Pine 测试器。
 
 ## 数据与回测边界
 
-OpenTrading 用于研究与模拟，不连接交易账户下单。Pine 支持 v5/v6 的部分能力；Pine 与 Python 回测使用不同的引擎和费用口径，比较结果前请查看各自说明。
+OpenTrading 用于研究与模拟，不连接交易账户下单。Pine 使用 PineTS 兼容引擎，支持 v5/v6 的部分能力；历史 OHLC 模拟不承诺与 TradingView 官方结果完全一致。
 
 早期比特币历史包含合成与代理数据，来源及日期边界见 [data/README.md](data/README.md)。外部行情可能存在缺口或延迟，历史结果和模型分析不代表未来收益。
 

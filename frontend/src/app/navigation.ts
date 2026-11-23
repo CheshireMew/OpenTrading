@@ -1,26 +1,5 @@
 export const APP_ROUTE_DEFINITIONS = [
   {
-    path: '/research/results',
-    name: 'ResearchResults',
-    component: () => import('@/views/research/ResearchResults.vue'),
-    meta: { titleKey: 'nav.researchResults' },
-    nav: { section: 'research', labelKey: 'nav.researchResults', icon: 'BookmarkSquareIcon' },
-  },
-  {
-    path: '/research/parameter-sweeps',
-    name: 'ParameterSweeps',
-    component: () => import('@/views/research/ParameterSweeps.vue'),
-    meta: { titleKey: 'nav.parameterSweeps' },
-    nav: { section: 'research', labelKey: 'nav.parameterSweeps', icon: 'PresentationChartLineIcon' },
-  },
-  {
-    path: '/research/backtests',
-    name: 'LocalBacktests',
-    component: () => import('@/views/research/LocalBacktests.vue'),
-    meta: { titleKey: 'nav.localBacktests' },
-    nav: { section: 'research', labelKey: 'nav.localBacktests', icon: 'PresentationChartLineIcon' },
-  },
-  {
     path: '/',
     name: 'Dashboard',
     component: () => import('@/views/ChartWorkspace.vue'),
@@ -30,6 +9,13 @@ export const APP_ROUTE_DEFINITIONS = [
       labelKey: 'nav.realtime',
       icon: 'ChartBarSquareIcon',
     },
+  },
+  {
+    path: '/indicators/asset-observation',
+    name: 'AssetObservation',
+    component: () => import('@/views/indicators/AssetObservation.vue'),
+    meta: { titleKey: 'observation.title' },
+    nav: { section: 'primary', labelKey: 'observation.title', icon: 'PresentationChartLineIcon' },
   },
   {
     path: '/indicators/market-signals',
@@ -60,6 +46,13 @@ export const APP_ROUTE_DEFINITIONS = [
     nav: { section: 'indicators', labelKey: 'nav.equities', icon: 'ChartBarSquareIcon' },
   },
   {
+    path: '/indicators/market-data',
+    name: 'SignalLab',
+    component: () => import('@/views/indicators/SignalLab.vue'),
+    meta: { titleKey: 'nav.signalLab' },
+    nav: { section: 'indicators', labelKey: 'nav.signalLab', icon: 'CircleStackIcon' },
+  },
+  {
     path: '/research',
     name: 'ResearchWorkbench',
     component: () => import('@/views/research/ResearchWorkbench.vue'),
@@ -81,13 +74,6 @@ export const APP_ROUTE_DEFINITIONS = [
     nav: { section: 'research', labelKey: 'nav.screeners', icon: 'FunnelIcon' },
   },
   {
-    path: '/research/reports',
-    name: 'ResearchReports',
-    component: () => import('@/views/research/ResearchReports.vue'),
-    meta: { titleKey: 'nav.reports' },
-    nav: { section: 'research', labelKey: 'nav.reports', icon: 'DocumentTextIcon' },
-  },
-  {
     path: '/research/assets/:symbol(.*)',
     name: 'AssetResearch',
     component: () => import('@/views/research/AssetResearch.vue'),
@@ -106,17 +92,6 @@ export const APP_ROUTE_DEFINITIONS = [
     component: () => import('@/views/tools/DCA.vue'),
     meta: { titleKey: 'nav.dca' },
     nav: { section: 'tools', labelKey: 'nav.dca', icon: 'BanknotesIcon' },
-  },
-  {
-    path: '/tools/portfolio-balance',
-    name: 'PortfolioBalance',
-    component: () => import('@/views/tools/PortfolioBalance.vue'),
-    meta: { titleKey: 'nav.portfolioBalance' },
-    nav: {
-      section: 'tools',
-      labelKey: 'nav.portfolioBalance',
-      icon: 'ArrowsRightLeftIcon',
-    },
   },
   {
     path: '/tools/halving',

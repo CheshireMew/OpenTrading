@@ -68,7 +68,7 @@ def build_kline_tail_response(
     *,
     symbol: str,
     timeframe: str,
-    timestamp: str,
+    timestamp: str | None,
     current_price: float | None,
     rows: list[list[float]],
 ) -> KlineTailResponse:
@@ -124,13 +124,17 @@ def build_current_price_batch_response(
 def build_realtime_response(
     *,
     symbol: str,
-    timestamp: str,
-    current_price: float,
+    timestamp: str | None,
+    current_price: float | None,
     indicators: dict[str, Any],
     ai_analysis: Any | None,
     rows: list[list[float]],
     timeframe: str | None,
     include_type: bool,
+    status: str = "unavailable",
+    source: str = "unavailable",
+    queried_at: str | None = None,
+    valid_until: str | None = None,
 ) -> RealtimeResponse:
     return RealtimeResponse(
         symbol=symbol,
@@ -141,4 +145,5 @@ def build_realtime_response(
         kline_data=build_ohlcv_points(rows),
         timeframe=timeframe,
         type="realtime" if include_type else None,
+        status=status, source=source, queried_at=queried_at, valid_until=valid_until,
     )

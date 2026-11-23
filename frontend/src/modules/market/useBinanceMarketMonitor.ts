@@ -30,7 +30,7 @@ export function useBinanceMarketMonitor(snapshot: BinanceMarketSnapshot) {
   const contractSort = ref<ContractSortState>({ field: snapshot.contractSortField, direction: snapshot.contractSortDirection })
   const detailKey = ref('')
   const resource = useBinanceMarketPageResource(minRisePct, autoRefresh, locale, translate)
-  const { loading, error, monitor, spotBoards, contractBoards, fetchData, startAutoRefresh, stopAutoRefresh } = resource
+  const { loading, error, monitorAvailable, spotAvailable, contractAvailable, monitor, spotBoards, contractBoards, fetchData, startAutoRefresh, stopAutoRefresh } = resource
 
   const items = computed(() => monitor.value.items || [])
   const spotRows = computed<BinanceTickerStatsItemResponse[]>(() => (
@@ -50,10 +50,10 @@ export function useBinanceMarketMonitor(snapshot: BinanceMarketSnapshot) {
   const summaryCards = computed(() => {
     const summary = monitor.value.summary ?? EMPTY_RESPONSE.summary!
     return [
-      { label: t('binanceMarket.summary.monitored'), value: String(summary.monitored_count || 0), hint: `>${monitor.value.min_rise_pct || minRisePct.value}%` },
-      { label: t('binanceMarket.summary.natural'), value: String(summary.natural_count || 0), hint: t('binanceMarket.summary.naturalHint') },
-      { label: t('binanceMarket.summary.momentum'), value: String(summary.momentum_count || 0), hint: t('binanceMarket.summary.momentumHint') },
-      { label: t('binanceMarket.summary.focus'), value: String(summary.focus_count || 0), hint: t('binanceMarket.summary.focusHint') },
+      { label: t('binanceMarket.summary.monitored'), value: monitorAvailable.value ? String(summary.monitored_count ?? 0) : '—', hint: `>${monitor.value.min_rise_pct || minRisePct.value}%` },
+      { label: t('binanceMarket.summary.natural'), value: monitorAvailable.value ? String(summary.natural_count ?? 0) : '—', hint: t('binanceMarket.summary.naturalHint') },
+      { label: t('binanceMarket.summary.momentum'), value: monitorAvailable.value ? String(summary.momentum_count ?? 0) : '—', hint: t('binanceMarket.summary.momentumHint') },
+      { label: t('binanceMarket.summary.focus'), value: monitorAvailable.value ? String(summary.focus_count ?? 0) : '—', hint: t('binanceMarket.summary.focusHint') },
     ]
   })
 
@@ -89,6 +89,7 @@ export function useBinanceMarketMonitor(snapshot: BinanceMarketSnapshot) {
 
   return {
     loading,
+    monitorAvailable, spotAvailable, contractAvailable,
     error,
     minRisePct,
     mode,

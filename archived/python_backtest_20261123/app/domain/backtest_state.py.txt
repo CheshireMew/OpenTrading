@@ -1,0 +1,59 @@
+"""Explicit execution state and append-only output sinks for one instrument."""
+
+from dataclasses import dataclass
+
+
+@dataclass
+class ExecutionState:
+    cash: float
+    position: dict | None = None
+    pending: tuple | None = None
+    pending_entry: tuple | None = None
+    entry_blocked_until: int | None = None
+    signal_bar_time: int = 0
+    resolution_ms: int = 3600000
+    fallback_time: int | None = None
+    trailing_distance: float | None = None
+
+
+@dataclass(frozen=True)
+class SimulationConfig:
+    initial_cash: float
+    position_pct: float
+    step_ms: int
+    warmup: int
+    execution_bars: dict | None = None
+    intrabar_profit_protection: bool = False
+    execution_step_ms: int | None = None
+
+
+class BacktestRecords:
+    def __init__(self, initial_cash, factory=None):
+        factory = factory or (lambda kind: [])
+        self.trades = factory("trades")
+        self.signals = factory("signals")
+        self.fills = factory("fills")
+        self.equity = factory("equity")
+        self.levels = factory("levels")
+        self.observations = factory("indicators")
+        self.events = factory("events")
+        self.execution_equity = factory("execution_equity")
+        self.peak = self.execution_peak = initial_cash
+        self.detailed_candles = self.fallback_candles = 0
+
+    def event(self, kind, timestamp, **values):
+        self.events.append({"event_id": len(self.events) + 1, "event": kind, "timestamp": timestamp, **values})
+
+    def record_levels(self, bar, position):
+        if position and (
+            not self.levels
+            or (self.levels[-1]["timestamp"], self.levels[-1]["trade_id"]) != (bar.timestamp, position["trade_id"])
+        ):
+            self.levels.append(
+                dict(
+                    timestamp=bar.timestamp,
+                    trade_id=position["trade_id"],
+                    stop=position["stop"],
+                    target=position["target"],
+                )
+            )

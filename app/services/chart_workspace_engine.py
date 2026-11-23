@@ -8,10 +8,15 @@ from pathlib import Path
 from app.services.chart_workspace_store import ROOT
 
 
+BUNDLED_LIBRARIES = (
+    "frontend/src/modules/chartWorkspace/pineLibraries.mjs",
+    "frontend/src/modules/chartWorkspace/pineLibraries/ziglibV1.mjs",
+)
 FILES = (
     "frontend/scripts/pine-workspace-worker.mjs",
     "frontend/src/modules/chartWorkspace/pineCompatibility.mjs",
     "frontend/src/modules/chartWorkspace/pineRuntimeCompat.mjs",
+    *BUNDLED_LIBRARIES,
     "frontend/node_modules/pinets/package.json",
     "frontend/node_modules/pinets/dist/pinets.min.es.js",
     "frontend/node_modules/pinets/LICENSE",
@@ -44,6 +49,9 @@ def engine_worker(root: Path, identity: str) -> Path:
             raise ValueError("Pine 引擎快照清单已改变，不能按原快照重跑")
         manifest = json.loads(encoded)
         for name in FILES:
+            # Older frozen workers did not import the bundled-library resolver.
+            if name not in manifest and name in BUNDLED_LIBRARIES:
+                continue
             if hashlib.sha256((folder / name).read_bytes()).hexdigest() != manifest.get(name):
                 raise ValueError("Pine 引擎快照文件已改变，不能按原快照重跑")
     except FileNotFoundError as exc:

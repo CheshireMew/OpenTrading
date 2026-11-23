@@ -7,7 +7,7 @@
 <h1 align="center">OpenTrading</h1>
 
 <p align="center">
-  <strong>相場チャート・戦略検証・ポートフォリオ分析ツール。</strong>
+  <strong>相場チャート・Pine 戦略検証・市場分析ツール。</strong>
 </p>
 
 <p align="center">
@@ -38,8 +38,7 @@
 | [チャート](docs/CHART_WORKSPACE.md) | 1・2・4画面、自選リスト、描画ツール、テクニカル指標、Pine エディター、戦略テスター |
 | [市場の確認](docs/DATA_SOURCES.md) | 市場シグナル、Binance デリバティブ、Web3 ランキング、[取引所が扱う株式関連銘柄](docs/EQUITY_CATALOG.md) |
 | 投資ツール | 銘柄比較、積立投資（DCA）のシミュレーション、ビットコイン半減期の観察 |
-| [ポートフォリオ分析](docs/RESEARCH_WORKFLOWS.md) | 取引台帳、取得原価と手数料、収益率、ベンチマーク比較、相関、ストレステスト |
-| [戦略研究](docs/LOCAL_BACKTESTS.md) | Python バックテスト、[パラメーター比較](docs/PARAMETER_SWEEPS.md)、結果の振り返り、研究レポート |
+| [過去データのシミュレーション](docs/CHART_WORKSPACE.md) | Pine 戦略テスト、資産曲線と取引履歴、積立シミュレーション |
 
 ## インストールと起動
 
@@ -75,23 +74,21 @@ Redis とモデルの API キーは任意です。PostgreSQL、手動起動、�
 | 入口 | パス・ドキュメント |
 | --- | --- |
 | チャート | `/` · [操作方法と Pine の対応範囲](docs/CHART_WORKSPACE.md) |
-| ポートフォリオ | `/tools/portfolio-balance` |
 | データの状態 | `/system/data-health` |
 | API ドキュメント | [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) |
-| Python バックテストとパラメーター比較 | `/research/backtests` · `/research/parameter-sweeps` |
 
-研究ページは現在メインメニューに表示されません。起動後に各パスへ直接アクセスするか、研究 CLI を使います。
+資産研究とデータ確認は CLI からも利用できます。
 
 ```powershell
 .\venv\Scripts\python.exe -m scripts.research_cli --help
 .\venv\Scripts\python.exe -m scripts.research_cli asset BTC/USDT --timeframe 1h
 ```
 
-CLI はスクリプトから扱える構造化 JSON を返します。全コマンドは[研究ワークフロー](docs/RESEARCH_WORKFLOWS.md)と[戦略研究](docs/STRATEGY_RESEARCH.md)を参照してください。
+CLI は構造化 JSON を返します。コマンドは[研究ワークフロー](docs/RESEARCH_WORKFLOWS.md)を参照してください。Python バックテスト、パラメータースキャン、研究診断は[アーカイブ](archived/python_backtest_20261123/README.md)され、戦略テストは Pine に統一されています。
 
 ## データとバックテストの制約
 
-OpenTrading は研究とシミュレーション用で、取引口座に接続して発注する機能はありません。Pine v5/v6 は一部の機能に対応しています。Pine と Python のバックテストではエンジンと費用の計算方法が異なるため、結果を比較する前にそれぞれの説明を確認してください。
+OpenTrading は研究とシミュレーション用で、取引口座に接続して発注する機能はありません。Pine v5/v6 は一部の機能に対応しています。Pine は PineTS 互換エンジンを使用しており、過去の OHLC シミュレーションが TradingView 公式エンジンと完全に一致するとは限りません。
 
 初期のビットコイン履歴には合成データと代理データが含まれます。出典と対象期間は [data/README.md](data/README.md) に記載しています。外部の相場データには欠損や遅延があり、過去の結果やモデルの分析は将来の収益を保証しません。
 

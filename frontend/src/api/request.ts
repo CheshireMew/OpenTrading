@@ -52,12 +52,14 @@ export const normalizeApiError = (error: unknown, fallback = 'Request failed'): 
 }
 
 export const apiErrorMessage = (error: unknown, fallback: string): string => {
+    if (error instanceof SyntaxError) return fallback
     const normalized = normalizeApiError(error, fallback)
-    if (normalized.status === 422) return fallback
+    if (normalized.status === 422 || (normalized.status !== null && normalized.status >= 500 && !normalized.payload)) return fallback
     const message = normalized.detail.trim()
     // A transport failure has no useful task context; use the caller's recovery copy.
     // Preserve the backend's specific detail when it supplied one.
-    if (!normalized.payload && /^(?:Network Error|Request failed(?: with status code \d+)?|timeout of \d+ms exceeded|Request aborted)$/i.test(message)) return fallback
+    if (/^(?:Network Error|Failed to fetch|fetch failed|Load failed|Request failed(?: with status code \d+)?|timeout of \d+ms exceeded|Request aborted|Internal server error)$/i.test(message)) return fallback
+    if (/Unexpected (?:end|token).*JSON|(?:Failed to execute|JSON\.parse)|Traceback|sqlalche\.me\/e\//i.test(message)) return fallback
     return message || fallback
 }
 

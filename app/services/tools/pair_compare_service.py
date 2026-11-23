@@ -53,6 +53,7 @@ class PairCompareService:
                 "data_b": self._format_for_chart(aligned["data_b"]),
                 "ratio_ohlc": self._calculate_ratio_ohlc(aligned["data_a"], aligned["data_b"]),
                 "ratio_symbol": f"{resolved_a['symbol']}/{resolved_b['symbol']}",
+                "ratio_price_basis": "close",
                 "timeframe": resolved_timeframe,
                 "relative_strength": statistics["excess_return_pct"],
                 "statistics": statistics,
@@ -103,6 +104,8 @@ class PairCompareService:
                 start_date=start_date.strftime("%Y-%m-%d"),
                 end_date=end_date.strftime("%Y-%m-%d"),
             )
+            if not result.coverage.complete:
+                raise ValueError("指数交易日历史行情不完整")
             return [
                 [point.timestamp, point.open, point.high, point.low, point.close, point.volume]
                 for point in result.data
@@ -160,15 +163,16 @@ class PairCompareService:
     def _calculate_ratio_ohlc(self, klines_a: list[list[float]], klines_b: list[list[float]]) -> list[dict[str, float]]:
         ratio_klines = []
         for left, right in zip(klines_a, klines_b):
-            if any(value in (0, None) for value in (left[1], left[2], left[3], left[4], right[1], right[2], right[3], right[4])):
+            if not left[4] or not right[4]:
                 continue
+            ratio = left[4] / right[4]
             ratio_klines.append(
                 {
                     "time": int(left[0] / 1000),
-                    "open": left[1] / right[1],
-                    "high": left[2] / right[2],
-                    "low": left[3] / right[3],
-                    "close": left[4] / right[4],
+                    "open": ratio,
+                    "high": ratio,
+                    "low": ratio,
+                    "close": ratio,
                 }
             )
         return ratio_klines

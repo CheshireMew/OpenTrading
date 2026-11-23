@@ -5,7 +5,7 @@ import { messageText } from './locale'
 // Vela 0.7.6 exposes English chrome but no locale option. Keep the translation
 // boundary outside its renderer; scripts, prices and the attribution stay intact.
 const vocabulary:Record<string,string>={
-  'LINES':'线条','CHANNELS':'通道','Add to favorites':'加入收藏','Remove from favorites':'取消收藏','Main chart':'主图',
+  'Maximize pane':'最大化副图','Restore pane':'还原副图','Move pane up':'上移副图','Move pane down':'下移副图','Collapse pane':'收起副图','Expand pane':'展开副图','LINES':'线条','CHANNELS':'通道','Add to favorites':'加入收藏','Remove from favorites':'取消收藏','Main chart':'主图',
   'Group the selected drawings':'将选中绘图分组','Duplicate the selected drawings':'复制选中的绘图','Drag to change what draws in front':'拖动调整图层顺序','Drag to restack, or onto another pane to move it there':'拖动调整顺序或移到另一副图','Drag to another pane, or between panes for a new one':'拖动到其他副图，或拖到副图之间新建',
   'Chart settings':'图表设置','Chart style':'图表类型','Candles':'K 线','Bars':'美国线','Line':'线图','Area':'面积图','Baseline':'基线图','Heikin Ashi':'平均 K 线',
   'Undo':'撤销','Redo':'重做','Data window':'数据窗口','Object tree':'对象列表','Cursor':'光标','Crosshair':'十字线','Dot':'圆点','Arrow':'箭头','Eraser':'橡皮擦',

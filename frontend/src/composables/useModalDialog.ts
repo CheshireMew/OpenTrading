@@ -11,6 +11,7 @@ const FOCUSABLE_SELECTOR = [
 
 const modalStack: symbol[] = []
 let unlockedBodyOverflow = ''
+const isolatedElements = new Map<HTMLElement, { owners: number; inert: boolean }>()
 
 export const useModalDialog = (
   open: Readonly<Ref<boolean>>,
@@ -21,6 +22,32 @@ export const useModalDialog = (
   const modalId = Symbol('modal')
   let previouslyFocused: HTMLElement | null = null
   let active = false
+  const background = new Set<HTMLElement>()
+
+  const isolateBackground = () => {
+    let current = dialogRef.value
+    while (current?.parentElement) {
+      for (const sibling of Array.from(current.parentElement.children)) {
+        if (!(sibling instanceof HTMLElement) || sibling === current || /^(SCRIPT|STYLE|LINK)$/.test(sibling.tagName)) continue
+        const saved = isolatedElements.get(sibling) ?? { owners: 0, inert: sibling.inert }
+        saved.owners += 1
+        isolatedElements.set(sibling, saved)
+        sibling.inert = true
+        background.add(sibling)
+      }
+      current = current.parentElement
+    }
+  }
+
+  const releaseBackground = () => {
+    for (const element of background) {
+      const saved = isolatedElements.get(element)
+      if (!saved || --saved.owners > 0) continue
+      element.inert = saved.inert
+      isolatedElements.delete(element)
+    }
+    background.clear()
+  }
 
   const isTopmost = () => modalStack[modalStack.length - 1] === modalId
 
@@ -67,6 +94,7 @@ export const useModalDialog = (
     if (!active) return
     const restoreFocus = isTopmost()
     active = false
+    releaseBackground()
     window.removeEventListener('keydown', handleKeydown, true)
     const index = modalStack.indexOf(modalId)
     if (index >= 0) modalStack.splice(index, 1)
@@ -97,6 +125,7 @@ export const useModalDialog = (
     window.addEventListener('keydown', handleKeydown, true)
     await nextTick()
     if (!open.value || !active || !isTopmost()) return
+    isolateBackground()
     const firstFocusable = initialFocus?.value ?? focusableElements()[0]
     if (firstFocusable) firstFocusable.focus()
     else dialogRef.value?.focus()

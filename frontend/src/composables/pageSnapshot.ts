@@ -10,7 +10,6 @@ const PAGE_SNAPSHOT_TTL_MS = 1000 * 60 * 60 * 24 * 30
 export const PAGE_SNAPSHOT_KEYS = {
   dca: 'tools:dca',
   compare: 'tools:compare',
-  portfolioBalance: 'tools:portfolio-balance',
   halving: 'tools:halving',
   binanceMarket: 'indicators:binance-market',
 } as const

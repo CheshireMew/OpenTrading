@@ -1,0 +1,50 @@
+import type { TradingViewStrategyMarker } from '../../components/tradingViewChartPresentation'
+
+type RecordRow = Record<string, unknown>
+
+export const tradeColors = { long: '#F23645', short: '#4CAF50', closeLong: '#E91E63', closeShort: '#00897B', stop: '#FF9800' }
+
+export function createTradePresentation(tr: (key: string) => string) {
+  const signalStatus = (s: unknown) => ({ pending: tr('researchUi.waitingForLaterMarketData'), executed: tr('researchUi.executed'), ignored_flat: tr('researchUi.noPositionCloseIgnored'), ignored_same_side: tr('researchUi.sameSidePositionAlreadyHeld'), ignored_position: tr('researchUi.positionAlreadyHeld'), ignored_price_cap: tr('researchUi.beyondThePriceCap'), ignored_stop_pause: tr('researchUi.entryPausedAfterAStopInThisInterval'), not_triggered: tr('researchUi.breakoutPriceNotReachedBeforeExpiry'), ignored_nonpositive_equity: tr('researchUi.insufficientEquity'), unexecuted_end: tr('researchUi.endOfIntervalNotExecuted') }[String(s)] ?? String(s))
+  const exitReason = (s: unknown) => ({ stop: tr('chartWorkspace.stopOrder'), target: tr('researchUi.takeProfit'), protection: tr('researchUi.profitGivebackProtection'), end: tr('researchUi.endOfBacktest'), stop_loss: tr('chartWorkspace.stopOrder'), take_profit: tr('researchUi.takeProfit'), profit_protection: tr('researchUi.profitGivebackProtection'), reversal: tr('researchUi.oppositeSignal'), signal: tr('researchUi.strategyExit'), end_of_backtest: tr('researchUi.endOfBacktest') }[String(s)] ?? String(s))
+
+
+  function signalMarkers(signals: RecordRow[]): TradingViewStrategyMarker[] {
+    return signals.filter(v => v.action === 'long' || v.action === 'short').map(v => ({
+      time: Number(v.timestamp), kind: `${v.action}_entry`, position: v.action === 'short' ? 'aboveBar' : 'belowBar',
+      label: v.action === 'long' ? tr('chartWorkspace.long') : tr('chartWorkspace.short'), color: v.action === 'long' ? tradeColors.long : tradeColors.short,
+    }))
+  }
+
+  function fillMarkers(fills: RecordRow[], trades: RecordRow[], focusedTrade?: unknown): TradingViewStrategyMarker[] {
+    const sides = new Map(trades.map(t => [t.trade_id, t.side]))
+    for (const fill of fills) if (fill.action === 'long' || fill.action === 'short') sides.set(fill.trade_id, fill.action)
+    const pairs = new Map<number, number>()
+    for (let i = 0; i < fills.length - 1; i++) {
+      const close = fills[i]!, open = fills[i + 1]!
+      // Only merge a genuine opposite-side exit followed by a new entry on this
+      // bar. A stopped position or missing lineage never becomes a reversal.
+      if (close.action === 'close' && ['reversal', 'signal'].includes(String(close.reason))
+          && ['long', 'short'].includes(String(open.action)) && sides.has(close.trade_id)
+          && sides.get(close.trade_id) !== open.action && close.timestamp === open.timestamp
+          && close.phase !== 'close') pairs.set(i, i + 1)
+    }
+    const reversed = new Map([...pairs].map(([a,b]) => [b,a]))
+    return fills.flatMap((fill, i) => {
+      if (focusedTrade != null && fill.trade_id !== focusedTrade) return []
+      if (pairs.has(i) && (focusedTrade == null || fills[pairs.get(i)!]?.trade_id === focusedTrade)) return []
+      const side = sides.get(fill.trade_id)
+      const isClose = fill.action === 'close'
+      const stopped = isClose && ['stop_loss', 'profit_protection'].includes(String(fill.reason))
+      const reverse = reversed.has(i)
+      const label = stopped ? tr('chartWorkspace.stopOrder') : !isClose ? `${reverse ? tr('researchUi.closePosition') : ''}${fill.action === 'long' ? tr('chartWorkspace.long') : tr('chartWorkspace.short')}`
+        : fill.reason === 'take_profit' ? tr('researchUi.takeProfit') : side === 'long' ? tr('researchUi.closeLong') : side === 'short' ? tr('researchUi.closeShort') : tr('researchUi.closePosition')
+      return [{ time: Number(fill.timestamp), kind: isClose ? 'exit' : `${fill.action}_entry`, label,
+        position: stopped || (isClose ? side !== 'short' : fill.action === 'short') ? 'aboveBar' as const : 'belowBar' as const,
+        color: stopped ? tradeColors.stop : !isClose ? fill.action === 'long' ? tradeColors.long : tradeColors.short
+          : side === 'short' ? tradeColors.closeShort : tradeColors.closeLong }]
+    })
+  }
+
+  return { signalStatus, exitReason, signalMarkers, fillMarkers }
+}

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from app.application.errors import InvalidRequestError
-from app.application.persistence_ports import ResearchRepositoryPort, TradeSignalRepositoryPort
+from app.application.persistence_ports import ResearchWorkbenchReadPort, TradeSignalRepositoryPort
 from app.contracts.research import AssetResearchResponse
 from app.domain.market.constants import timeframe_to_milliseconds
 from app.infra.executor import run_database, run_tool
@@ -16,7 +16,7 @@ class AssetResearchService:
     def __init__(
         self,
         *,
-        research_repository: ResearchRepositoryPort,
+        research_repository: ResearchWorkbenchReadPort,
         signal_repository: TradeSignalRepositoryPort,
         market_query_service,
         index_data_service,
@@ -47,7 +47,8 @@ class AssetResearchService:
         workbench = await run_database(lambda: self._research.get_workbench(event_limit=500, note_limit=1_000))
         web3_item = next(
             (
-                item for item in workbench["items"]
+                item
+                for item in workbench["items"]
                 if item["assetClass"] == "web3" and item["symbol"].casefold() == symbol.casefold()
             ),
             None,

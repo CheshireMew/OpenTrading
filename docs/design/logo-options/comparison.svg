@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-labelledby="title desc" font-family="Segoe UI, Arial, sans-serif">
+  <title id="title">OpenTrading Logo：A、B、C、D 四个候选</title>
+  <desc id="desc">左上 A 开口 O，右上 B OT 连字，左下 C 双窗，右下 D K 线。所有候选均搭配相同字标和留白。</desc>
+  <rect width="1280" height="720" fill="#fbfaf7"/>
+  <path d="M640 24V696 M24 360H1256" stroke="#e4ded3" fill="none"/>
+  <g transform="translate(0 0)" aria-label="方案 A：开口 O">
+    <text x="32" y="44" fill="#78716c" font-size="20" font-weight="600">A</text>
+    <g transform="translate(256 68)"><path class="accent-stroke" d="M95.1127 32.8873 A44 44 0 1 0 108 64" fill="none" stroke="#22ab94" stroke-width="18" stroke-linecap="butt"/></g>
+    <text x="320" y="262" text-anchor="middle" fill="#10261f" font-size="36" font-weight="600" letter-spacing="-1">OpenTrading</text>
+  </g><g transform="translate(640 0)" aria-label="方案 B：OT 连字">
+    <text x="32" y="44" fill="#78716c" font-size="20" font-weight="600">B</text>
+    <g transform="translate(256 68)"><path class="ink" fill="#10261f" fill-rule="evenodd" d="M44 22C24 22 12 38 12 64C12 90 24 106 44 106C64 106 76 90 76 64C76 54 74 46 70 39H84V106H102V39H118V22H44Z M44 40C54 40 59 48 59 64C59 80 54 88 44 88C34 88 29 80 29 64C29 48 34 40 44 40Z"/></g>
+    <text x="320" y="262" text-anchor="middle" fill="#10261f" font-size="36" font-weight="600" letter-spacing="-1">OpenTrading</text>
+  </g><g transform="translate(0 360)" aria-label="方案 C：双窗">
+    <text x="32" y="44" fill="#78716c" font-size="20" font-weight="600">C</text>
+    <g transform="translate(256 68)"><path class="accent-fill" fill="#22ab94" d="M18 78V18H78V34H34V78Z"/><path class="blue-fill" fill="#5086f5" d="M50 50H110V110H50V94H94V66H50Z"/></g>
+    <text x="320" y="262" text-anchor="middle" fill="#10261f" font-size="36" font-weight="600" letter-spacing="-1">OpenTrading</text>
+  </g><g transform="translate(640 360)" aria-label="方案 D：K 线">
+    <text x="32" y="44" fill="#78716c" font-size="20" font-weight="600">D</text>
+    <g transform="translate(256 68)"><g class="positive-fill" fill="#089981"><rect x="20" y="30" width="8" height="68" rx="2"/><rect x="14" y="44" width="20" height="34" rx="3"/><rect x="100" y="32" width="8" height="64" rx="2"/><rect x="94" y="54" width="20" height="24" rx="3"/></g><g class="negative-fill" fill="#f23645"><rect x="60" y="18" width="8" height="90" rx="2"/><rect x="54" y="38" width="20" height="52" rx="3"/></g></g>
+    <text x="320" y="262" text-anchor="middle" fill="#10261f" font-size="36" font-weight="600" letter-spacing="-1">OpenTrading</text>
+  </g>
+</svg>

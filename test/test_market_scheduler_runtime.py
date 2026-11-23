@@ -20,7 +20,7 @@ async def test_scheduler_start_runs_first_collection_immediately(monkeypatch):
     await runtime.start()
 
     try:
-        assert calls == ["indicator"]
+        assert calls == ["indicator", "cleanup"]
         assert {job.id for job in runtime.scheduler.get_jobs()} == {
             "fetch_market_indicators",
             "data_retention_cleanup",

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from typing import Callable, Literal
 
 from app.application.errors import InvalidRequestError
@@ -16,6 +16,7 @@ from app.infra.executor import run_database, run_external_io
 from app.services.market.app_service_support import validate_market_request
 from app.services.market.market_data_service import MarketDataService
 from app.domain.market.constants import timeframe_to_milliseconds
+from app.domain.market.candles import RecentCandles, candle_end_ms
 from config import settings
 
 
@@ -72,14 +73,19 @@ class MarketHistoryQueryService:
                 limit,
             )
         )
-        current_price = kline_data[-1][4] if kline_data else None
-        return build_kline_tail_response(
+        observed = candle_end_ms(int(kline_data[-1][0]), timeframe) if kline_data else None
+        fresh = RecentCandles(kline_data, observed, "cached_history").fresh(end_ts, settings.MARKET_QUOTE_MAX_AGE_SECONDS)
+        response = build_kline_tail_response(
             symbol=symbol,
             timeframe=timeframe,
-            timestamp=datetime.now().isoformat(),
-            current_price=current_price,
+            timestamp=datetime.fromtimestamp(observed / 1000, timezone.utc).isoformat() if observed is not None else None,
+            current_price=kline_data[-1][4] if fresh else None,
             rows=kline_data,
         )
+        response.status = "fresh" if fresh else "stale" if observed is not None else "unavailable"
+        response.queried_at = datetime.fromtimestamp(end_ts / 1000, timezone.utc).isoformat()
+        response.valid_until = datetime.fromtimestamp(observed / 1000 + settings.MARKET_QUOTE_MAX_AGE_SECONDS, timezone.utc).isoformat() if observed is not None else None
+        return response
 
     async def get_full_history(
         self,
@@ -87,6 +93,7 @@ class MarketHistoryQueryService:
         symbol: str,
         timeframe: str,
         start_date: str,
+        end_date: str | None = None,
         fetch_policy: Literal["cache_only", "hydrate"] = "hydrate",
         persist_klines: Callable[[str, str, list[list[float]]], None] | None = None,
     ) -> MarketHistoryResponse:
@@ -95,6 +102,7 @@ class MarketHistoryQueryService:
             symbol=symbol,
             timeframe=timeframe,
             start_date=start_date,
+            end_date=end_date,
             fetch_policy=fetch_policy,
             persist_klines=persist_klines,
         )
@@ -156,12 +164,14 @@ class MarketHistoryQueryService:
         start_date: str,
         fetch_policy: Literal["cache_only", "hydrate"],
         persist_klines: Callable[[str, str, list[list[float]]], None] | None,
+        end_date: str | None = None,
     ) -> tuple[list[list[float]], list[tuple[int, int]]]:
         return await run_external_io(
             lambda: self._load_full_history_rows_sync(
                 symbol=symbol,
                 timeframe=timeframe,
                 start_date=start_date,
+                end_date=end_date,
                 fetch_policy=fetch_policy,
                 persist_klines=persist_klines,
             )
@@ -175,13 +185,16 @@ class MarketHistoryQueryService:
         start_date: str,
         fetch_policy: Literal["cache_only", "hydrate"],
         persist_klines: Callable[[str, str, list[list[float]]], None] | None,
+        end_date: str | None = None,
     ) -> tuple[list[list[float]], list[tuple[int, int]]]:
         try:
-            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            end_dt = min(datetime.now(timezone.utc), datetime.strptime(end_date, "%Y-%m-%d").replace(tzinfo=timezone.utc) + timedelta(days=1) - timedelta(milliseconds=1)) if end_date else datetime.now(timezone.utc)
         except ValueError as exc:
             raise InvalidRequestError("start_date 必须是 YYYY-MM-DD") from exc
 
-        end_dt = datetime.now()
+        if start_dt > end_dt:
+            raise InvalidRequestError("start_date 不能晚于 end_date")
         interval_ms = timeframe_to_milliseconds(timeframe)
         if interval_ms > 0:
             estimated_points = int(

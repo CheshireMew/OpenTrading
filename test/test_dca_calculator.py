@@ -84,6 +84,7 @@ class TestValueAveraging(unittest.TestCase):
     def test_index_standard_dca_uses_daily_history(self):
         index_service = MagicMock()
         index_service.get_pricing_history.return_value = MarketIndexHistoryResponse(
+            coverage={"complete": True, "calendar": "XHKG", "start_date": "2024-01-02", "end_date": "2024-01-04"},
             symbol="HK_HSI",
             name="Hang Seng Index",
             market="HK",

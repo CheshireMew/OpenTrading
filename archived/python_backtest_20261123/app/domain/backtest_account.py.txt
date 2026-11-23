@@ -1,0 +1,115 @@
+from app.domain.backtest_accounting import position_equity, open_position, closed_trade
+from dataclasses import asdict
+
+
+class BacktestAccount:
+    def __init__(self, state, records, config):
+        self.state, self.records, self.config = state, records, config
+
+    def equity(self, price):
+        return position_equity(self.state.cash, self.state.position, price)
+
+    def close(self, price, bar, phase, reason, ambiguous=False, origin_signal=None, close_step_ms=None):
+        close_duration = self.config.step_ms if close_step_ms is None else close_step_ms
+        if reason == "stop_loss" and self.state.position.get("pause_after_stop"):
+            self.state.entry_blocked_until = self.state.signal_bar_time + self.config.step_ms
+        trade = closed_trade(
+            self.state.position,
+            price,
+            bar,
+            phase,
+            reason,
+            ambiguous or self.state.position.get("entry_bar_ambiguous", False),
+            close_duration,
+            exit_fields={"exit_resolution_ms": self.state.resolution_ms},
+        )
+        self.state.cash += self.state.position["principal"] + trade["profit"]
+        self.records.trades.append(trade)
+        self.records.fills.append(
+            {
+                "timestamp": bar.timestamp,
+                "phase": phase,
+                "action": "close",
+                "price": price,
+                "quantity": self.state.position["quantity"],
+                "trade_id": self.state.position["trade_id"],
+                "reason": reason,
+                "signal_id": origin_signal.get("signal_id") if origin_signal else None,
+            }
+        )
+        self.records.event(
+            "exit",
+            bar.timestamp + (close_duration if phase == "close" else 0),
+            trade_id=self.state.position["trade_id"],
+            phase=phase,
+            price=price,
+            reason=reason,
+            signal_id=origin_signal.get("signal_id") if origin_signal else None,
+            resolution_ms=self.state.resolution_ms,
+            fallback=self.state.fallback_time is not None,
+        )
+        self.state.position = None
+
+    def enter(self, intent, bar, price, phase="open", order_signal=None, origin_signal=None):
+        if intent.stop_confirmation_clock == "execution" and self.config.execution_bars is None:
+            raise ValueError("按成交周期确认止损需要细周期成交行情")
+        if self.state.cash <= 0:
+            return False
+        self.state.cash, self.state.position = open_position(
+            self.state.cash, self.config.position_pct, intent, price, bar.timestamp, len(self.records.trades) + 1
+        )
+        self.state.position.update(
+            entry_resolution_ms=self.state.resolution_ms,
+            execution_fallback_times=[self.state.fallback_time] if self.state.fallback_time is not None else [],
+        )
+        signal_ref = order_signal or origin_signal
+        if intent.stop_loss_confirmation != "immediate":
+            self.state.position["stop_loss_confirmation"] = intent.stop_loss_confirmation
+        if intent.stop_confirmation_clock != "signal":
+            self.state.position["stop_confirmation_clock"] = intent.stop_confirmation_clock
+        if intent.pause_after_stop:
+            self.state.position["pause_after_stop"] = True
+        self.state.position["entry_signal_id"] = signal_ref.get("signal_id") if signal_ref else None
+        if intent.profit_protection is not None:
+            self.state.position.update(
+                profit_protection=asdict(intent.profit_protection), profit_peak_pct=0.0, protection_active=False
+            )
+            if intent.activation_distance is not None:
+                self.state.position["profit_protection"]["activation_pct"] = 100 * intent.activation_distance / price
+        if order_signal is not None:
+            self.state.position.update(
+                entry_phase=phase,
+                entry_order_signal_time=order_signal["timestamp"],
+                entry_trigger=order_signal["trigger_price"],
+                entry_worst_price=order_signal["worst_price"],
+                entry_ambiguity_policy=order_signal["ambiguity_policy"],
+                entry_bar_ambiguous=False,
+            )
+        self.records.fills.append(
+            {
+                "timestamp": bar.timestamp,
+                "phase": phase,
+                "action": intent.action,
+                "price": price,
+                "quantity": self.state.position["quantity"],
+                "trade_id": self.state.position["trade_id"],
+                "reason": intent.reason,
+                "signal_id": self.state.position["entry_signal_id"],
+            }
+        )
+        self.records.event(
+            "entry",
+            bar.timestamp,
+            trade_id=self.state.position["trade_id"],
+            signal_id=self.state.position["entry_signal_id"],
+            phase=phase,
+            side=intent.action,
+            price=price,
+            stop=self.state.position["stop"],
+            resolution_ms=self.state.resolution_ms,
+            fallback=self.state.fallback_time is not None,
+        )
+        return True
+
+    def record_levels(self, bar):
+        self.records.record_levels(bar, self.state.position)

@@ -19,3 +19,6 @@ export function formatDate(value: number, timeOnly = false): string {
   const date = new Date(value)
   return timeOnly ? date.toLocaleTimeString(i18n.global.locale.value) : date.toLocaleString(i18n.global.locale.value)
 }
+
+export const workspaceMarketLabel = (id: string) => id.includes(':usdm:') ? cw('binancePerpetual')
+  : id.startsWith('index:') ? cw('index') : id.startsWith('okx:') ? cw('okxSpot') : cw('binanceSpot')

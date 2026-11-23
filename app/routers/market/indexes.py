@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+from dataclasses import asdict
 
 from fastapi import Depends, Query, Request
 
@@ -44,6 +45,7 @@ def _index_history_response(record: Any) -> MarketIndexHistoryResponse:
         is_close_only=record.is_close_only,
         count=record.count,
         data=build_ohlcv_points([item.as_row() for item in record.data]),
+        coverage=asdict(record.coverage),
     )
 
 

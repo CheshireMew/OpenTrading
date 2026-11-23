@@ -1,8 +1,28 @@
-import json
+from typing import TypedDict
+
+
+class MacdValues(TypedDict):
+    dif: float | None
+    dea: float | None
+    histogram: float | None
+
+
+class MarketIndicators(TypedDict, total=False):
+    ema: float | None
+    rsi: float | None
+    macd: MacdValues | None
+    atr: float | None
+    atr_pct: float | None
+    realized_volatility_pct: float | None
+    annualized_volatility_pct: float | None
+
+
+def describe_number(value: float | None) -> str:
+    return f"{value:.2f}" if value is not None else "N/A"
 
 class PromptEngine:
     @staticmethod
-    def build_analysis_prompt(symbol, market_data, indicators):
+    def build_analysis_prompt(symbol, market_data, indicators: MarketIndicators):
         """
         构建发送给 AI 的 Prompt
         """
@@ -19,15 +39,17 @@ class PromptEngine:
         atr_val = indicators.get('atr')
         
         # 构建文本描述
-        ema_desc = f"{ema_val:.2f}" if ema_val else "N/A"
-        rsi_desc = f"{rsi_val:.2f}" if rsi_val else "N/A"
+        ema_desc = describe_number(ema_val)
+        rsi_desc = describe_number(rsi_val)
         
         macd_desc = "N/A"
-        if macd_val and macd_val[0] is not None:
-             dif, dea, hist = macd_val
-             macd_desc = f"DIF={dif:.2f}, DEA={dea:.2f}, Histogram={hist:.2f}"
+        if macd_val:
+            macd_desc = ", ".join(
+                f"{label}={describe_number(macd_val.get(key))}"
+                for key, label in (("dif", "DIF"), ("dea", "DEA"), ("histogram", "Histogram"))
+            )
 
-        atr_desc = f"{atr_val:.2f}" if atr_val else "N/A"
+        atr_desc = describe_number(atr_val)
 
         # 使用双大括号转义 JSON 模板
         prompt = f"""

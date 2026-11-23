@@ -23,7 +23,7 @@ def test_ci_is_blocking_and_matches_the_supported_windows_runtime():
     assert workflow.count("--require-hashes -r requirements.lock") == 2
     assert "astral-sh/ruff-action@v4.1.0" in workflow
     assert "Run frontend tests" in workflow
-    assert "git diff --exit-code" in workflow
+    assert "scripts.generate_frontend_contracts --check" in workflow
 
 
 def test_declared_runtime_versions_and_lockfiles_remain_in_sync():
@@ -93,7 +93,7 @@ def test_frontend_contract_generator_discovers_included_api_routes():
     discovered = {(route.name, route.path) for route in contract_routes()}
 
     assert ("get_realtime_analysis", "/api/v1/realtime") in discovered
-    assert ("import_portfolio_collection", "/api/v1/tools/portfolios/import") in discovered
+    assert ("dca_simulate", "/api/v1/tools/dca_simulate") in discovered
     assert ("update_llm_config", "/api/v1/llm-config") in discovered
 
 

@@ -1,0 +1,77 @@
+import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import test from 'node:test'
+import ts from 'typescript'
+
+const base = new URL('../src/modules/tools/portfolioBalance/', import.meta.url)
+function load(file, modules = {}) {
+  const exports = {}
+  const code = ts.transpileModule(fs.readFileSync(new URL(file + '.ts', base), 'utf8'),
+    { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText
+  new Function('require', 'exports', code)(id => modules[id], exports)
+  return exports
+}
+const number = load('number')
+const assetsModule = load('assets', {
+  './number': number,
+  '@/modules/market': {
+    toBaseSymbol: value => String(value).split('/')[0].toUpperCase(),
+    isIndexSymbol: () => false, readCashSymbolPrices: () => ({ USD: 1, USDT: 1 }),
+  },
+})
+const { calculatePortfolioAllocation } = assetsModule
+const cases = JSON.parse(fs.readFileSync(new URL('../../test/fixtures/portfolio_allocation.json', import.meta.url)))
+for (const row of cases) {
+  test('allocation parity: ' + row.name, () => {
+    const result = calculatePortfolioAllocation(row.assets, row.requireFresh, Date.parse(row.now))
+    assert.equal(result.totalValue, row.totalValue)
+    assert.deepEqual(result.normalizedWeights, row.targetWeights)
+    assert.deepEqual(result.currentWeights, row.currentWeights)
+    assert.equal(result.valuationComplete, row.complete)
+    assert.equal(result.usesEqualWeightFallback, row.equalWeight)
+  })
+}
+
+const { computePortfolioBalancePlan } = load('plan', {
+  './number': number, './assets': assetsModule,
+  './snapshot': { normalizePortfolioBalanceAsset: asset => asset },
+  './schedule': { todayIso: () => '2026-11-13', parseIsoDate: () => null },
+})
+test('expired quotes become unknown price, value and profit together, then recover', () => {
+  const asset = { id: 'btc', symbol: 'BTC/USDT', currentPrice: 200, units: 2, seedValue: 300, targetWeight: 100,
+    priceStatus: 'fresh', priceObservedAt: '2026-11-13T00:00:00Z', priceValidUntil: '2026-11-13T00:01:00Z' }
+  const strategy = { rebalanceBand: 5, minTradeAmount: 10, reviewFrequency: 'monthly' }
+  const tracking = { virtualCapital: 300, inceptionDate: '2026-01-01' }
+  const stale = computePortfolioBalancePlan([asset], strategy, tracking, true, Date.parse('2026-11-13T00:02:00Z'))
+  assert.equal(stale.valuationComplete, false)
+  assert.equal(stale.assets[0].price, null)
+  assert.equal(stale.assets[0].currentValue, null)
+  assert.equal(stale.assets[0].trackingDiffValue, null)
+  assert.equal(stale.turnoverAmount, 0)
+  const fresh = computePortfolioBalancePlan([{ ...asset, priceValidUntil: '2026-11-13T00:03:00Z' }], strategy, tracking, true, Date.parse('2026-11-13T00:02:00Z'))
+  assert.equal(fresh.valuationComplete, true)
+  assert.equal(fresh.assets[0].price, 200)
+  assert.equal(fresh.assets[0].currentValue, 400)
+  assert.equal(fresh.assets[0].trackingDiffValue, 100)
+})
+
+test('allocated virtual capital without acquired units is not an investment loss', () => {
+  const plan = computePortfolioBalancePlan([{ id: 'bnb', symbol: 'BNB', currentPrice: 0, units: 0, seedValue: 10000, targetWeight: 100 }],
+    { rebalanceBand: 5, minTradeAmount: 10, reviewFrequency: 'monthly' }, { virtualCapital: 10000, inceptionDate: '' }, true)
+  assert.equal(plan.assets[0].currentValue, 0)
+  assert.equal(plan.assets[0].trackingDiffValue, null)
+})
+
+test('unset target weights never produce an actionable equal-weight rebalance', () => {
+  const plan = computePortfolioBalancePlan([
+    { id: 'btc', symbol: 'BTC', units: 1, currentPrice: 100, seedValue: 100, targetWeight: 0 },
+    { id: 'usd', symbol: 'USD', units: 900, currentPrice: 1, seedValue: 900, targetWeight: 0 },
+  ], { rebalanceBand: 5, minTradeAmount: 10, reviewFrequency: 'monthly' }, { virtualCapital: 1000, inceptionDate: '' })
+  assert.equal(plan.totalValue, 1000)
+  assert.equal(plan.usesEqualWeightFallback, true)
+  assert.equal(plan.suggestedAction, 'wait')
+  assert.equal(plan.turnoverAmount, 0)
+  assert.equal(plan.shouldReviewNow, false)
+  assert.equal(plan.outOfBandCount, 0)
+  assert.equal(plan.projectedOutOfBandCount, 0)
+})

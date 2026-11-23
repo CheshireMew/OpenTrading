@@ -5,6 +5,10 @@ from datetime import datetime, timedelta
 from app.services.market.market_data_service import MarketDataService
 import app.services.market.market_data_service as market_data_module
 from config import settings
+from datetime import timezone
+from app.infra.persistence.market.kline_store import KlineStore
+from app.infra.db.schema import Kline
+from app.domain.market.candles import candle_end_ms
 
 
 class FakeKlineStore:
@@ -101,3 +105,35 @@ def test_recent_candles_uses_bounded_live_refresh_instead_of_gap_hydration(monke
     assert [row[0] for row in rows] == [first_row[0], missing_row[0], third_row[0]]
     assert exchange_gateway.calls == [("BTC/USDT", "1h", None, 3, settings.EXCHANGE_TAIL_MAX_RETRIES)]
     assert kline_store.saved_rows == [missing_row]
+
+
+def test_open_and_legacy_cached_bars_are_revalidated_after_close(installed_database_runtime, monkeypatch):
+    base = datetime(2024, 1, 1, tzinfo=timezone.utc)
+    stamp = int(base.timestamp() * 1000)
+    now = [stamp + 1_800_000]
+    monkeypatch.setattr(market_data_module.time, "time", lambda: now[0] / 1000)
+    store = KlineStore(database_runtime=installed_database_runtime)
+    partial = [stamp, 100, 101, 99, 100, 10]
+    gateway = FakeExchangeGateway({0: [partial]})
+    service = MarketDataService(exchange_gateway=gateway, kline_store=store)
+    assert service.get_recent_candles("BTC/USDT", "1h", 1) == [partial]
+    assert store.get_range("BTC/USDT", "1h", stamp, stamp) == []
+    # A migrated row has no proof that it was observed after close.
+    with installed_database_runtime.session_scope() as session:
+        session.add(Kline(symbol="BTC/USDT", timeframe="1h", timestamp=stamp, open=100, high=101, low=99, close=100, volume=10))
+    now[0] = stamp + 7_200_000
+    assert store.get_range("BTC/USDT", "1h", stamp, stamp) == []
+    final = [stamp, 100, 115, 97, 110, 100]
+    gateway.rows_by_since[stamp] = [final]
+    result = service.load_ohlcv_range("BTC/USDT", "1h", base, base + timedelta(hours=1) - timedelta(milliseconds=1))
+    assert result.complete and result.rows == [final]
+    assert store.get_range("BTC/USDT", "1h", stamp, stamp) == [final]
+    # A late partial observation must not replace an already confirmed close.
+    now[0] = stamp + 1_800_000
+    store.save("BTC/USDT", "1h", [partial])
+    assert store.get_range("BTC/USDT", "1h", stamp, stamp) == [final]
+
+
+def test_monthly_finality_uses_calendar_months():
+    stamp = int(datetime(2024, 2, 1, tzinfo=timezone.utc).timestamp() * 1000)
+    assert candle_end_ms(stamp, "1M") == int(datetime(2024, 3, 1, tzinfo=timezone.utc).timestamp() * 1000)

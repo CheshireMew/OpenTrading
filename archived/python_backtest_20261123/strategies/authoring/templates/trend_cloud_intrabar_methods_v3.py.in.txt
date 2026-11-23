@@ -1,0 +1,14 @@
+"""Remember original EMA55 signals, then use predeclared intrabar stop entries."""
+from math import floor, ceil
+from collections import deque
+from app.domain.local_backtest import BarResult, Intent, ProfitProtection, TrendCloud, StopEntry
+
+STRATEGY = {'id': 'trend_cloud_intrabar_methods_v3',
+ 'name': 'EMA通道盘中确认改法 v3',
+@@include:intrabar_stop_parameters@@
+@@include:intrabar_entry_state@@
+            if position and position['side']!=raw:
+                intent = Intent('close', reason='原反向信号平仓，盘中突破再入场')
+            eligible = self.width>0 and (p['chase_mult']==0 or d*(bar.close-self.base)<=p['chase_mult']*self.width)
+            if (position is None or position['side']!=raw) and self.waiting is None and eligible and aligned(d):
+@@include:intrabar_exit_execution@@

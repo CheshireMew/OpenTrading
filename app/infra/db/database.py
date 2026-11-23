@@ -12,9 +12,15 @@ from config.settings import AppSettings
 
 
 class DatabaseRuntime:
-    def __init__(self, *, database_url: str, source: str, connect_timeout: int = 3) -> None:
+    def __init__(self, *, database_url: str, source: str, connect_timeout: int = 3,
+                 archive_root: Path | None = None) -> None:
         self.database_url = database_url
         self.source = source
+        sqlite_file = make_url(database_url).database if database_url.startswith("sqlite") else None
+        self.archive_root = archive_root or (
+            Path(sqlite_file).resolve().parent / (Path(sqlite_file).stem + "-market-archive")
+            if sqlite_file and sqlite_file != ":memory:" else None
+        )
         self.engine = self._create_engine(database_url, connect_timeout=connect_timeout)
         self.session_factory = sessionmaker(bind=self.engine, expire_on_commit=False)
 
@@ -96,4 +102,6 @@ def build_database_runtime(app_settings: AppSettings) -> DatabaseRuntime:
         database_url=database_url,
         source=source,
         connect_timeout=app_settings.DATABASE_CONNECT_TIMEOUT,
+        archive_root=(app_settings.KLINE_ARCHIVE_DIR if not database_url.startswith("sqlite")
+                      or "KLINE_ARCHIVE_DIR" in app_settings.model_fields_set else None),
     )

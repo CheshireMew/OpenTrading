@@ -4,17 +4,7 @@ from sqlalchemy import func, select, text
 
 from app.infra.db.database import DatabaseRuntime
 from app.domain.market.indicator_catalog import MARKET_INDICATOR_META
-from app.infra.db.schema import (
-    BinanceMarketResearchSeries,
-    Kline,
-    MarketIndicatorData,
-    PortfolioTransactionRecord,
-    ResearchAlertRule,
-    ResearchNote,
-    ResearchWatchItem,
-    RuntimeComponentStatus,
-    TradeSignalRecord,
-)
+from app.infra.db.schema import BinanceMarketResearchSeries, Kline, KlineArchiveSegment, MarketIndicatorData, ResearchAlertRule, ResearchNote, ResearchWatchItem, RuntimeComponentStatus, TradeSignalRecord
 
 
 class DataHealthRepository:
@@ -32,9 +22,32 @@ class DataHealthRepository:
                         func.count(),
                         func.min(Kline.timestamp),
                         func.max(Kline.timestamp),
-                    ).group_by(Kline.symbol, Kline.timeframe)
+                    ).where(Kline.finalized.is_(True)).group_by(Kline.symbol, Kline.timeframe)
                 )
             ]
+            # Keep archived history visible on the existing data-health page.
+            # Only confirmed cold segments are read; hot/cold corrections count once.
+            from app.infra.persistence.market.kline_archive import KlineArchive
+
+            archive = KlineArchive(self._database_runtime)
+            by_scope = {(item["symbol"], item["timeframe"]): item for item in klines}
+            scopes = session.execute(select(KlineArchiveSegment.symbol, KlineArchiveSegment.timeframe)
+                                     .where(KlineArchiveSegment.finalized_count > 0).distinct()).all()
+            for symbol, timeframe in scopes:
+                cold = archive.read(session, symbol, timeframe, None, 2**63 - 1)
+                if not cold:
+                    continue
+                times = {int(row[0]) for row in cold}
+                first, last = min(times), max(times)
+                hot_overlap = set(session.scalars(select(Kline.timestamp).where(
+                    Kline.symbol == symbol, Kline.timeframe == timeframe, Kline.finalized.is_(True),
+                    Kline.timestamp >= first, Kline.timestamp <= last)))
+                item = by_scope.setdefault((symbol, timeframe), dict(symbol=symbol, timeframe=timeframe,
+                                                                      count=0, first=first, last=last))
+                item["count"] += len(times - hot_overlap)
+                item["first"] = min(item["first"], first)
+                item["last"] = max(item["last"], last)
+            klines = list(by_scope.values())
             indicators = [
                 {"indicatorId": row[0], "count": int(row[1]), "first": row[2], "last": row[3]}
                 for row in session.execute(
@@ -95,9 +108,6 @@ class DataHealthRepository:
                 "notes": int(session.scalar(select(func.count()).select_from(ResearchNote)) or 0),
                 "alerts": int(session.scalar(select(func.count()).select_from(ResearchAlertRule)) or 0),
                 "signals": int(session.scalar(select(func.count()).select_from(TradeSignalRecord)) or 0),
-                "portfolioTransactions": int(
-                    session.scalar(select(func.count()).select_from(PortfolioTransactionRecord)) or 0
-                ),
             }
             revision = session.execute(text("SELECT version_num FROM alembic_version")).scalar_one_or_none()
             return {

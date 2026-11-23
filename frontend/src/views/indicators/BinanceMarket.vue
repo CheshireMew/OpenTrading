@@ -15,18 +15,24 @@
       <dl class="app-metric-strip">
         <div v-for="card in summaryCards" :key="card.label"><dt :title="card.hint">{{ card.label }}</dt><dd>{{ card.value }}</dd></div>
       </dl>
-      <div v-if="error" role="alert" class="app-inline-note text-rose-700 dark:text-rose-300">{{ error }}</div>
+      <div v-if="error" role="alert" class="app-inline-note text-rose-700 dark:text-rose-300">{{ error }} <button type="button" class="ml-3 underline" :disabled="loading" @click="fetchData">{{ t('common.retry') }}</button></div>
       <AppTabs id="binance" v-model="activeView" :label="t('nav.binanceMarket')" :tabs="viewTabs" />
       <AppTabs v-show="activeView === 'rankings'" id="binance-rank" v-model="activeRank" :label="t('binanceMarket.rankTitle')" :tabs="rankTabs" />
       <div class="market-workspace" :class="{ 'is-split': pageLayout === 'split', 'is-filters': pageLayout === 'filters' }">
-        <button v-if="pageLayout === 'filters'" type="button" class="market-filter-toggle app-button-secondary" :aria-expanded="filtersOpen" aria-controls="binance-filters" @click="filtersOpen = !filtersOpen">{{ t('ui.filters') }}</button>
-        <aside id="binance-filters" class="market-filters" :class="{ 'is-open': filtersOpen }">
+        <div class="market-search-toolbar">
           <label class="block"><span class="sr-only">{{ t('workspaceViews.search') }}</span><input v-model="query" type="search" class="app-control w-full" :placeholder="t('workspaceViews.search')" /></label>
+          <button v-if="activeView === 'monitor'" type="button" class="market-filter-toggle app-button-secondary" :aria-expanded="filtersOpen" aria-controls="binance-filters" @click="filtersOpen = !filtersOpen">{{ t('ui.filters') }}</button>
+        </div>
+        <div v-if="activeView === 'monitor'" class="market-filter-summary flex flex-wrap items-center gap-3 text-xs app-muted" style="grid-column:1/-1">
+          <span>{{ t('binanceMarket.filters.' + mode) }} · {{ t('binanceMarket.market.' + marketFilter) }} · {{ t('binanceMarket.minRisePct') }} ≥ {{ minRisePct }}%</span>
+          <button v-if="mode !== 'all' || marketFilter !== 'all' || minRisePct !== 5" type="button" class="underline" @click="mode = 'all'; marketFilter = 'all'; minRisePct = 5">{{ t('ui.clearFilters') }}</button>
+        </div>
+        <aside v-show="activeView === 'monitor'" id="binance-filters" class="market-filters" :class="{ 'is-open': filtersOpen }">
 <div v-show="activeView === 'monitor'" class="binance-monitor-toolbar flex flex-col gap-3">
               <div class="flex flex-col gap-4 px-2 xl:flex-row xl:items-center xl:justify-between">
                 <div class="flex flex-wrap items-baseline gap-3">
 
-                  <span class="bg-[#0f6b4f] px-2 py-0.5 text-xs font-semibold text-white dark:bg-emerald-500 dark:text-slate-950">{{ monitor.quote_asset }}</span>
+                  <span class="bg-[var(--ui-accent)] px-2 py-0.5 text-xs font-semibold text-[var(--ui-onAccent)]">{{ monitor.quote_asset }}</span>
                   <span class="text-xs text-slate-500 dark:text-slate-400">{{ t('binanceMarket.updatedAt', { time: formatTime(monitor.updated_at) }) }}</span>
                 </div>
 
@@ -79,7 +85,7 @@
               <span><strong>{{ displaySymbol(item.symbol) }}</strong><small>{{ formatMarketLabel(item) }}</small></span>
               <span class="market-list-value" :class="valueTone(item.price_change_pct)">{{ formatSigned(item.price_change_pct) }}<small>{{ formatPrice(item.mark_price ?? item.last_price) }}</small></span>
             </button>
-            <p v-if="!listRows.length" class="p-6 text-sm app-muted">{{ loading ? t('binanceMarket.refreshing') : t('binanceMarket.tables.noMonitorRows') }}</p>
+            <p v-if="!listRows.length" class="p-6 text-sm app-muted">{{ loading ? t('binanceMarket.refreshing') : currentDataAvailable ? t('binanceMarket.tables.noMonitorRows') : t('ui.dataUnavailable') }}</p>
           </div>
       <section v-show="activeView === 'monitor' && pageLayout !== 'split'" class="space-y-4">
         <AppLoadingState v-if="loading && !filteredItems.length" :label="t('binanceMarket.refreshing')" />
@@ -87,7 +93,7 @@
                 <div class="app-panel-header flex items-center justify-between">
                   <div>
                     <h2 class="text-lg font-semibold text-slate-900 dark:text-white">{{ t('binanceMarket.tables.monitorList') }}</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('binanceMarket.resultCount', { count: filteredItems.length }) }}</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">{{ monitorAvailable ? t('binanceMarket.resultCount', { count: filteredItems.length }) : t('ui.dataUnavailable') }}</p>
                   </div>
                 </div>
 
@@ -109,7 +115,7 @@
                         v-for="item in filteredItems"
                         :key="`${item.market}-${item.symbol}`"
                         class="app-table-row market-row-clickable" @click="selectRow(item)"
-                        :class="chartDialog.open && detailKey === toItemKey(item) ? 'bg-[#edf3ee] dark:bg-emerald-500/10' : ''"
+                        :class="chartDialog.open && detailKey === toItemKey(item) ? 'bg-[var(--ui-hover)]' : ''"
                       >
                         <td class="app-table-primary px-5 py-4" :data-label="t('binanceMarket.columns.asset')">
                           <div class="flex items-center gap-3">
@@ -117,7 +123,7 @@
                             <div>
                               <button
                                 type="button"
-                                class="app-touch-target font-semibold text-slate-900 transition hover:text-[#0f6b4f] dark:text-white dark:hover:text-emerald-300"
+                                class="app-touch-target font-semibold text-slate-900 transition hover:text-[var(--ui-title)] dark:text-white"
                                 @click.stop="openMonitorDetail(item)"
                               >
                                 {{ displaySymbol(item.symbol) }}
@@ -139,7 +145,7 @@
                       </tr>
                       <tr v-if="!filteredItems.length" class="app-table-empty-row">
                         <td colspan="7" class="px-5 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
-                          {{ t('binanceMarket.tables.noMonitorRows') }}
+                          {{ monitorAvailable ? t('binanceMarket.tables.noMonitorRows') : t('ui.dataUnavailable') }}
                         </td>
                       </tr>
                     </tbody>
@@ -219,7 +225,7 @@
                         <td class="app-table-primary px-5 py-4 font-medium text-slate-900 dark:text-white" :data-label="t('binanceMarket.columns.asset')">
                           <button
                             type="button"
-                            class="app-touch-target px-2 py-1 transition hover:bg-[#edf3ee] hover:text-[#0f6b4f] dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300"
+                            class="app-touch-target px-2 py-1 transition hover:bg-[var(--ui-hover)] hover:text-[var(--ui-title)]"
                             @click="openChart(item)"
                           >
                             {{ displaySymbol(item.symbol) }}
@@ -232,7 +238,7 @@
                         <td class="px-5 py-4 text-slate-600 dark:text-slate-300" :data-label="t('binanceMarket.columns.quoteVolume')">{{ formatCompact(item.quote_volume) }}</td>
                       </tr>
                       <tr v-if="!contractRows.length" class="app-table-empty-row">
-                        <td colspan="6" class="px-5 py-8 text-center text-sm text-slate-400 dark:text-slate-500">{{ t('binanceMarket.tables.noContractRows') }}</td>
+                        <td colspan="6" class="px-5 py-8 text-center text-sm text-slate-400 dark:text-slate-500">{{ contractAvailable ? t('binanceMarket.tables.noContractRows') : t('ui.dataUnavailable') }}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -282,7 +288,7 @@
                         <td class="app-table-primary px-5 py-4 font-medium text-slate-900 dark:text-white" :data-label="t('binanceMarket.columns.asset')">
                           <button
                             type="button"
-                            class="app-touch-target px-2 py-1 transition hover:bg-[#edf3ee] hover:text-[#0f6b4f] dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300"
+                            class="app-touch-target px-2 py-1 transition hover:bg-[var(--ui-hover)] hover:text-[var(--ui-title)]"
                             @click.stop="openChart({ ...item, market: 'spot' })"
                           >
                             {{ displaySymbol(item.symbol) }}
@@ -293,7 +299,7 @@
                         <td class="px-5 py-4 text-slate-600 dark:text-slate-300" :data-label="t('binanceMarket.columns.quoteVolume')">{{ formatCompact(item.quote_volume) }}</td>
                       </tr>
                       <tr v-if="!spotRows.length" class="app-table-empty-row">
-                        <td colspan="4" class="px-5 py-8 text-center text-sm text-slate-400 dark:text-slate-500">{{ t('binanceMarket.tables.noSpotRows') }}</td>
+                        <td colspan="4" class="px-5 py-8 text-center text-sm text-slate-400 dark:text-slate-500">{{ spotAvailable ? t('binanceMarket.tables.noSpotRows') : t('ui.dataUnavailable') }}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -302,7 +308,7 @@
         </section>
       </section>
         </div>
-        <div v-if="pageLayout === 'split' && !chartDialog.open" class="market-detail-empty">{{ t('workspaceViews.selectItem') }}</div>
+        <div v-if="pageLayout === 'split' && !chartDialog.open" class="market-detail-empty">{{ currentDataAvailable ? t('workspaceViews.selectItem') : t('ui.dataUnavailable') }}</div>
     <BinanceSymbolChartDialog
       :open="chartDialog.open"
       :inline="pageLayout === 'split'"
@@ -355,17 +361,19 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const activeView = ref('monitor')
 const activeRank = ref('contracts')
+const currentDataAvailable = computed(() => activeView.value === 'monitor' ? monitorAvailable.value : activeRank.value === 'contracts' ? contractAvailable.value : spotAvailable.value)
 const viewTabs = computed(() => [
-  { id: 'monitor', label: t('binanceMarket.tables.monitor'), count: filteredItems.value.length },
+  { id: 'monitor', label: t('binanceMarket.tables.monitor'), count: monitorAvailable.value ? filteredItems.value.length : undefined },
   { id: 'rankings', label: t('binanceMarket.rankTitle') },
 ])
 const rankTabs = computed(() => [
-  { id: 'contracts', label: t('binanceMarket.tables.rankContract'), count: contractRows.value.length },
-  { id: 'spot', label: t('binanceMarket.tables.rankSpot'), count: spotRows.value.length },
+  { id: 'contracts', label: t('binanceMarket.tables.rankContract'), count: contractAvailable.value ? contractRows.value.length : undefined },
+  { id: 'spot', label: t('binanceMarket.tables.rankSpot'), count: spotAvailable.value ? spotRows.value.length : undefined },
 ])
 
 const {
   loading,
+  monitorAvailable, spotAvailable, contractAvailable,
   error,
   minRisePct,
   mode,
@@ -440,7 +448,5 @@ const selectRow = (item: any) => {
 .binance-monitor-toolbar { padding: 0 0 4px; }
 .binance-live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ui-faint); }
 .binance-live-dot.is-active { background: var(--ui-accent); }
-.market-workspace:not(.is-filters):not(.is-split) .market-filters { display:flex; flex-direction:column; gap:16px; }
-.market-workspace.is-split .market-filters { grid-column:1 / -1; display:flex; flex-direction:column; gap:16px; }
 [role=tabpanel]:focus { outline: none; }
 </style>

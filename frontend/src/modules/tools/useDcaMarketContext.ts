@@ -98,6 +98,7 @@ export const useDcaMarketContext = ({
           const realtimeResponse = marketRes as RealtimeResponse
           marketData.rsi = realtimeResponse.indicators?.rsi?.toFixed(2) || '--'
           marketData.currentPrice = realtimeResponse.current_price
+          if (realtimeResponse.status !== 'fresh') failures.push(t('dca.marketPriceLoadFailed'))
           marketData.pricingCurrency = 'USDT'
           marketData.pricingSymbol = `${toBaseSymbol(currentSymbol)}/USDT`
         }

@@ -4,13 +4,6 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import Any, Protocol
 
-from app.domain.portfolios import (
-    PortfolioCollectionRecord,
-    PortfolioDeletedPageRecord,
-    PortfolioExportRecord,
-    PortfolioSimulationResultRecord,
-)
-
 
 class CacheServicePort(Protocol):
     def get(self, key: str) -> Any | None: ...
@@ -37,7 +30,9 @@ class IndicatorRepositoryPort(Protocol):
         *,
         start_date: datetime | None = None,
     ) -> dict[str, list[dict[str, Any]]]: ...
-    def upsert_points(self, data_points: list[dict[str, Any]], meta_catalog: dict[str, tuple[str, str, str]]) -> None: ...
+    def upsert_points(
+        self, data_points: list[dict[str, Any]], meta_catalog: dict[str, tuple[str, str, str]]
+    ) -> None: ...
     def get_latest_timestamps(self, indicator_ids: list[str]) -> dict[str, datetime]: ...
 
 
@@ -56,86 +51,63 @@ class SentimentRepositoryPort(Protocol):
 DataRetentionCleanup = Callable[[], Any]
 
 
-class PortfolioRepositoryPort(Protocol):
-    def get_collection(self) -> PortfolioCollectionRecord: ...
-    def list_deleted(self, *, offset: int, limit: int) -> PortfolioDeletedPageRecord: ...
-    def get_simulation(self, portfolio_id: str) -> PortfolioSimulationResultRecord: ...
-    def save_simulation(
-        self,
-        portfolio_id: str,
-        expected_revision: int,
-        result_payload: dict[str, Any],
-    ) -> PortfolioSimulationResultRecord: ...
-    def get_export_record(self) -> PortfolioExportRecord: ...
-    def apply_collection_changes(
-        self,
-        active_portfolio_id: str,
-        changed_portfolio_payloads: list[dict[str, Any]],
-        portfolio_order: list[str],
-        expected_revision: int,
-    ) -> PortfolioCollectionRecord: ...
-    def restore_portfolio(
-        self,
-        portfolio_id: str,
-        expected_revision: int,
-    ) -> PortfolioCollectionRecord: ...
-    def get_ledger_record(self, portfolio_id: str) -> dict[str, Any]: ...
-    def create_transaction(self, portfolio_id: str, payload: dict[str, Any]) -> dict[str, Any]: ...
-    def update_transaction(
-        self,
-        portfolio_id: str,
-        transaction_id: str,
-        expected_version: int,
-        payload: dict[str, Any],
-    ) -> dict[str, Any]: ...
-    def set_transaction_archived(
-        self,
-        portfolio_id: str,
-        transaction_id: str,
-        expected_version: int,
-        archived: bool,
-    ) -> dict[str, Any]: ...
-    def import_transactions(
-        self,
-        portfolio_id: str,
-        payloads: list[dict[str, Any]],
-        *,
-        replace: bool,
-    ) -> tuple[int, int]: ...
-
-
-class ResearchRepositoryPort(Protocol):
+class ResearchWorkbenchReadPort(Protocol):
     def get_workbench(self, *, event_limit: int, note_limit: int) -> dict[str, Any]: ...
+
     def list_events(
-        self,
-        *,
-        kind: str | None,
-        unacknowledged_only: bool,
-        since: datetime | None,
-        limit: int,
+        self, *, kind: str | None, unacknowledged_only: bool, since: datetime | None, limit: int
     ) -> tuple[list[dict[str, Any]], int]: ...
-    def create_watchlist(self, payload: dict[str, Any]) -> dict[str, Any]: ...
-    def update_watchlist(self, watchlist_id: str, expected_version: int, payload: dict[str, Any]) -> dict[str, Any]: ...
-    def set_watchlist_archived(self, watchlist_id: str, expected_version: int, archived: bool) -> dict[str, Any]: ...
-    def create_watch_item(self, payload: dict[str, Any]) -> dict[str, Any]: ...
-    def update_watch_item(self, item_id: str, expected_version: int, payload: dict[str, Any]) -> dict[str, Any]: ...
-    def set_watch_item_archived(self, item_id: str, expected_version: int, archived: bool) -> dict[str, Any]: ...
-    def create_note(self, payload: dict[str, Any]) -> dict[str, Any]: ...
-    def update_note(self, note_id: str, expected_version: int, payload: dict[str, Any]) -> dict[str, Any]: ...
-    def set_note_archived(self, note_id: str, expected_version: int, archived: bool) -> dict[str, Any]: ...
-    def create_alert(self, payload: dict[str, Any]) -> dict[str, Any]: ...
-    def update_alert(self, alert_id: str, expected_version: int, payload: dict[str, Any]) -> dict[str, Any]: ...
-    def set_alert_archived(self, alert_id: str, expected_version: int, archived: bool) -> dict[str, Any]: ...
+
+
+class ResearchEventWritePort(Protocol):
     def acknowledge_event(self, event_id: str, acknowledged: bool) -> dict[str, Any]: ...
+
+
+class ResearchRecordWritePort(Protocol):
+    def create_watchlist(self, payload: dict[str, Any]) -> dict[str, Any]: ...
+
+    def update_watchlist(self, watchlist_id: str, expected_version: int, payload: dict[str, Any]) -> dict[str, Any]: ...
+
+    def set_watchlist_archived(self, watchlist_id: str, expected_version: int, archived: bool) -> dict[str, Any]: ...
+
+    def create_watch_item(self, payload: dict[str, Any]) -> dict[str, Any]: ...
+
+    def update_watch_item(self, item_id: str, expected_version: int, payload: dict[str, Any]) -> dict[str, Any]: ...
+
+    def set_watch_item_archived(self, item_id: str, expected_version: int, archived: bool) -> dict[str, Any]: ...
+
+    def create_note(self, payload: dict[str, Any]) -> dict[str, Any]: ...
+
+    def update_note(self, note_id: str, expected_version: int, payload: dict[str, Any]) -> dict[str, Any]: ...
+
+    def set_note_archived(self, note_id: str, expected_version: int, archived: bool) -> dict[str, Any]: ...
+
+
+class ResearchAlertWritePort(Protocol):
+    def create_alert(self, payload: dict[str, Any]) -> dict[str, Any]: ...
+
+    def update_alert(self, alert_id: str, expected_version: int, payload: dict[str, Any]) -> dict[str, Any]: ...
+
+    def set_alert_archived(self, alert_id: str, expected_version: int, archived: bool) -> dict[str, Any]: ...
+
+
+class ResearchAlertEvaluationPort(Protocol):
     def list_enabled_alerts(self) -> list[dict[str, Any]]: ...
+
     def record_alert_evaluation(
-        self,
-        alert_id: str,
-        *,
-        value: float,
-        evaluated_at: datetime,
-        triggered: bool,
+        self, alert_id: str, *, value: float, evaluated_at: datetime, triggered: bool
     ) -> dict[str, Any]: ...
+
+
+class ResearchRepositoryPort(
+    ResearchWorkbenchReadPort,
+    ResearchEventWritePort,
+    ResearchRecordWritePort,
+    ResearchAlertWritePort,
+    ResearchAlertEvaluationPort,
+    Protocol,
+):
+    pass
 
 
 class TradeSignalRepositoryPort(Protocol):

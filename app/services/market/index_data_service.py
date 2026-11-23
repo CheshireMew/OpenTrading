@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from app.application.errors import InvalidRequestError
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from app.infra.market_calendar import session_dates
+from app.domain.market.session_history import SessionHistoryCoverage
 
 from app.domain.market.index_catalog import (
     IndexInstrument,
@@ -138,7 +140,19 @@ class IndexDataService:
             raise InvalidRequestError("start_date 不能晚于 end_date")
 
         start_ts = int(start_dt.timestamp() * 1000)
-        end_ts_exclusive = int(end_dt.timestamp() * 1000) + 86_400_000
+        # Daily research covers completed UTC dates only. Never count today's
+        # still-changing provider row as a historical observation.
+        closed_end = min(end_dt.date(), datetime.now(timezone.utc).date() - timedelta(days=1))
+        end_ts_exclusive = int(datetime.combine(closed_end + timedelta(days=1), datetime.min.time(), tzinfo=timezone.utc).timestamp() * 1000)
+        calendar, expected, holidays, calendar_error = None, [], [], None
+        try:
+            calendar, expected, holidays = session_dates(instrument.market, start_dt.date(), closed_end)
+        except (ValueError, KeyError) as exc:
+            calendar_error = str(exc)
+        expected_timestamps = {int(datetime.fromisoformat(day).replace(tzinfo=timezone.utc).timestamp() * 1000) for day in expected}
+        def missing_sessions(rows):
+            found = {int(row[0]) for row in rows if float(row[4]) > 0}
+            return [(stamp, stamp + 86_400_000) for stamp in sorted(expected_timestamps - found)]
         source = "none"
 
         def fetch_gap(gap_start: int, gap_end: int) -> list[list[float]]:
@@ -173,8 +187,11 @@ class IndexDataService:
             start_ts=start_ts,
             end_ts_exclusive=end_ts_exclusive,
             fetch_gap=fetch_gap,
+            coalesce_gaps=True,
+            missing_ranges=missing_sessions if calendar_error is None else None,
         )
-        data = range_result.rows
+        data = [row for row in range_result.rows if int(row[0]) in expected_timestamps and float(row[4]) > 0]
+        missing = [datetime.fromtimestamp(stamp / 1000, timezone.utc).date().isoformat() for stamp, _ in missing_sessions(data)]
         if source == "none" and range_result.cached_rows:
             source = "cache"
         return MarketIndexHistoryRecord(
@@ -191,6 +208,9 @@ class IndexDataService:
             pricing_currency=pricing_currency,
             is_close_only=bool(data) and self._rows_are_close_only(data),
             data=[self._ohlcv_record(row) for row in data],
+            coverage=SessionHistoryCoverage(complete=calendar_error is None and not missing, calendar=calendar,
+                start_date=start_date, end_date=closed_end.isoformat(), expected_sessions=expected,
+                missing_sessions=missing, non_trading_dates=holidays, error=calendar_error),
         )
 
     def _rows_are_close_only(self, rows: list[list[float]]) -> bool:

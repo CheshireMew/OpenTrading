@@ -22,11 +22,11 @@ const icons: Record<string, typeof ViewColumnsIcon> = {
 </script>
 
 <style>
-.app-layout-switch { display:inline-flex; align-items:stretch; flex-wrap:wrap; gap:3px; padding:3px; border:1px solid var(--ui-border-strong); border-radius:6px; width:fit-content; max-width:100%; }
-.app-layout-switch button { display:flex; align-items:center; justify-content:center; gap:7px; padding:7px 11px; min-height:34px; border-radius:3px; color:var(--ui-muted); font-size:12px; white-space:nowrap; }
+.app-layout-switch { display:inline-flex; align-items:stretch; flex-wrap:wrap; gap:3px; padding:3px; border:1px solid var(--ui-borderStrong); border-radius:6px; width:fit-content; max-width:100%; }
+.app-layout-switch button { display:flex; align-items:center; justify-content:center; gap:7px; padding:7px 11px; min-height:34px; border-radius:3px; color:var(--ui-text); font-size:13px; font-weight:600; white-space:nowrap; }
 .app-layout-switch button svg { width:16px; height:16px; flex-shrink:0; }
 .app-layout-switch button:hover { color:var(--ui-title); background:var(--ui-hover); }
-.app-layout-switch button[aria-pressed=true] { background:var(--ui-accent); color:var(--ui-panel); }
-.dark .app-layout-switch button[aria-pressed=true] { color:#09231f; }
+.app-layout-switch button[aria-pressed=true] { background:var(--ui-accent); color:var(--ui-onAccent); }
+.dark .app-layout-switch button[aria-pressed=true] { color:var(--ui-onAccent); }
 @media (max-width:767px), (pointer:coarse) { .app-layout-switch button { min-height:40px; } }
 </style>

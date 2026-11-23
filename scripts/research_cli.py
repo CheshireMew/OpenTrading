@@ -10,8 +10,7 @@ from contextlib import contextmanager, redirect_stdout
 from typing import Any
 
 from app.contracts.data_health import DataRepairCommand
-from app.contracts.portfolios import PortfolioAnalyticsCommand
-from app.contracts.research import MarketScreenerRunCommand, ResearchReportGenerateCommand
+from app.contracts.research import MarketScreenerRunCommand
 from app.runtime import build_app_runtime_services
 
 
@@ -40,14 +39,6 @@ def diagnostic_output():
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="OpenTrading structured research CLI")
     subparsers = parser.add_subparsers(dest="resource", required=True)
-    from scripts.local_backtest_cli import add_parser
-    add_parser(subparsers)
-    from scripts.research_study_cli import add_parser as add_study_parser
-    add_study_parser(subparsers)
-    from scripts.research_catalog_cli import add_parser as add_catalog_parser
-    add_catalog_parser(subparsers)
-    from scripts.parameter_sweep_cli import add_parser as add_sweep_parser
-    add_sweep_parser(subparsers)
 
     health = subparsers.add_parser("health", help="Inspect or repair data health")
     health.add_argument(
@@ -77,41 +68,14 @@ def build_parser() -> argparse.ArgumentParser:
     signals.add_argument("--signal-id")
     signals.add_argument("--limit", type=int, default=100)
 
-    report = subparsers.add_parser("report", help="List or generate reproducible research reports")
-    report.add_argument("action", choices=["list", "generate"])
-    report.add_argument("--title", default="OpenTrading Research Brief")
-    report.add_argument(
-        "--type", choices=["daily_brief", "weekly_brief", "asset_review", "portfolio_review", "decision_review"], default="daily_brief"
-    )
-    report.add_argument("--symbol")
-    report.add_argument("--portfolio-id")
-    report.add_argument("--limit", type=int, default=50)
-
     screener = subparsers.add_parser("screener", help="Run or replay a saved market screener")
     screener.add_argument("id")
     screener.add_argument("--as-of")
 
-    portfolio = subparsers.add_parser("portfolio", help="Run portfolio performance and risk analysis")
-    portfolio.add_argument("id")
-    portfolio.add_argument("--period-days", type=int, default=365)
-    portfolio.add_argument("--benchmark", default="BTC/USDT")
-    portfolio.add_argument("--shock", action="append", default=[], metavar="SYMBOL=PCT")
     return parser
 
 
 async def execute(args: argparse.Namespace) -> Any:
-    if args.resource == "backtest":
-        from scripts.local_backtest_cli import execute as execute_backtest
-        return await execute_backtest(args)
-    if args.resource == 'study':
-        from scripts.research_study_cli import execute as execute_study
-        return await execute_study(args)
-    if args.resource == 'catalog':
-        from scripts.research_catalog_cli import execute as execute_catalog
-        return await execute_catalog(args)
-    if args.resource == 'sweep':
-        from scripts.parameter_sweep_cli import execute as execute_sweep
-        return await execute_sweep(args)
     runtime = await asyncio.to_thread(build_app_runtime_services, "api")
     api = runtime.require_api()
     try:
@@ -137,29 +101,10 @@ async def execute(args: argparse.Namespace) -> Any:
                 offset=0,
                 limit=args.limit,
             )
-        if args.resource == "report":
-            if args.action == "generate":
-                return await api.research_reports.generate(
-                    ResearchReportGenerateCommand(
-                        title=args.title, reportType=args.type, symbol=args.symbol, portfolioId=args.portfolio_id
-                    )
-                )
-            return await asyncio.to_thread(
-                api.research_reports.list_reports, include_archived=False, offset=0, limit=args.limit
-            )
         if args.resource == "screener":
             as_of = datetime.fromisoformat(args.as_of.replace("Z", "+00:00")) if args.as_of else None
             return await api.market_screeners.run(args.id, MarketScreenerRunCommand(asOf=as_of))
-        shocks = {}
-        for value in args.shock:
-            if "=" not in value:
-                raise ValueError("--shock 必须使用 SYMBOL=PCT，例如 BTC/USDT=-30")
-            symbol, percent = value.split("=", 1)
-            shocks[symbol.strip().upper()] = float(percent)
-        return await api.tools.portfolio_analytics.analyze(
-            args.id,
-            PortfolioAnalyticsCommand(periodDays=args.period_days, benchmarkSymbol=args.benchmark, customShocks=shocks),
-        )
+        raise ValueError(f"Unknown research command: {args.resource}")
     finally:
         await runtime.shutdown()
 

@@ -36,6 +36,17 @@ class MarketSymbolSearchResponse(BaseModel):
     pricing_currency: str | None = None
 
 
+class MarketSessionCoverageResponse(BaseModel):
+    complete: bool
+    calendar: str | None
+    start_date: str
+    end_date: str
+    expected_sessions: list[str] = Field(default_factory=list)
+    missing_sessions: list[str] = Field(default_factory=list)
+    non_trading_dates: list[str] = Field(default_factory=list)
+    error: str | None = None
+
+
 class MarketIndexHistoryResponse(BaseModel):
     symbol: str
     name: str
@@ -51,3 +62,4 @@ class MarketIndexHistoryResponse(BaseModel):
     is_close_only: bool = False
     count: int
     data: list[OhlcvPointResponse] = Field(default_factory=list)
+    coverage: MarketSessionCoverageResponse

@@ -1,0 +1,80 @@
+import type {
+  PortfolioBalanceAsset as AssetContract,
+  PortfolioBalanceStrategy as StrategyContract,
+  PortfolioBalanceTracking as TrackingContract,
+  PortfolioBalanceSimulation as SimulationContract,
+  PortfolioBalancePortfolio as PortfolioContract,
+  PortfolioBalanceSnapshot as SnapshotContract,
+  PortfolioSimulationSummary as SummaryContract,
+  PortfolioSimulationEquityPoint,
+} from '../contracts'
+
+export type { PortfolioSimulationEquityPoint } from '../contracts'
+export type PortfolioReviewFrequency = NonNullable<StrategyContract['reviewFrequency']>
+export type PortfolioHoldingsSource = NonNullable<PortfolioContract['holdingsSource']>
+export type PortfolioSuggestedAction = 'wait' | 'cashflow' | 'full'
+export type PortfolioSuggestedReason = 'on_track' | 'scheduled_review' | 'band_breach' | 'cashflow_first' | 'full_rebalance' | 'below_threshold'
+export type PortfolioBalanceAssetInput = Required<Omit<AssetContract, 'priceObservedAt' | 'priceValidUntil'>> & Pick<AssetContract, 'priceObservedAt' | 'priceValidUntil'>
+export type PortfolioBalanceStrategyConfig = Required<StrategyContract>
+export type PortfolioBalanceTrackingConfig = Required<TrackingContract>
+export type PortfolioBalanceSimulationConfig = Required<SimulationContract>
+export type PortfolioBalancePortfolio = Omit<PortfolioContract, 'assets' | 'strategy' | 'tracking' | 'simulation'> & {
+  assets: PortfolioBalanceAssetInput[]
+  strategy: PortfolioBalanceStrategyConfig
+  tracking: PortfolioBalanceTrackingConfig
+  simulation: PortfolioBalanceSimulationConfig
+}
+export type PortfolioSimulationSummary = Required<SummaryContract> & { equityCurve: PortfolioSimulationEquityPoint[] }
+export type PortfolioBalanceSnapshot = Omit<Required<SnapshotContract>, 'portfolios'> & {
+  portfolios: PortfolioBalancePortfolio[]
+}
+
+export interface PortfolioBalanceAssetPlan {
+  id: string
+  symbol: string
+  units: number
+  seedValue: number
+  currentValue: number | null
+  trackingDiffValue: number | null
+  price: number | null
+  currentWeight: number
+  normalizedTargetWeight: number
+  targetValue: number
+  driftValue: number
+  driftWeight: number
+  rebalanceAmount: number
+  rebalanceUnits: number
+  primaryAction: 'buy' | 'sell' | 'hold'
+  bandLowerWeight: number
+  bandUpperWeight: number
+  bandLowerValue: number
+  bandUpperValue: number
+  isOutOfBand: boolean
+  cashflowAmount: number
+  projectedValue: number
+  projectedWeight: number
+  projectedIsOutOfBand: boolean
+}
+
+export interface PortfolioBalancePlan {
+  valuationComplete: boolean
+  totalValue: number
+  trackingCapital: number
+  targetWeightInputSum: number
+  usesEqualWeightFallback: boolean
+  totalBuyAmount: number
+  totalSellAmount: number
+  turnoverAmount: number
+  maxDriftWeight: number
+  outOfBandCount: number
+  projectedOutOfBandCount: number
+  reviewDue: boolean
+  shouldReviewNow: boolean
+  reviewFrequency: PortfolioReviewFrequency
+  nextReviewDate: string
+  daysUntilReview: number
+  suggestedAction: PortfolioSuggestedAction
+  suggestedReason: PortfolioSuggestedReason
+  assets: PortfolioBalanceAssetPlan[]
+}
+

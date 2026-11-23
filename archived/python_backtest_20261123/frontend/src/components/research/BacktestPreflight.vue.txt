@@ -1,0 +1,27 @@
+<template>
+  <section class="preflight text-sm">
+    <p><strong>{{ tr('researchUi.localDataPreview') }}</strong> {{ tr('researchUi.actualWarmup') }} {{ value.warmup_bars }} {{ tr('researchUi.bars2') }}</p>
+    <p class="app-muted my-2">{{ backendText(value.warmup_explanation) }}</p>
+    <p>{{ tr('researchUi.requestedTradingIntervalTo', { p0: value.config.start, p1: value.config.end }) }}</p>
+    <div v-for="item in [value.signal_data, value.execution_data].filter(Boolean)" :key="item!.timeframe" class="my-3">
+      <p>{{ tr('researchUi.requiredDataTo', { p0: item!.timeframe, p1: date(item!.required_start_ms), p2: date(item!.required_end_ms) }) }}</p>
+      <p>{{ tr('researchUi.localCacheBoundariesTo', { p0: date(item!.first_cached_ms), p1: date(item!.last_cached_close_ms) }) }}</p>
+      <p>{{ tr('researchUi.requiredBarsCachedToFetch', { p0: item!.expected_bars.toLocaleString(), p1: item!.cached_bars.toLocaleString(), p2: item!.missing_bars.toLocaleString() }) }}</p>
+    </div>
+    <p>{{ tr('researchUi.continuousLocalDataAndWarmupCover') }}</p><p v-if="!value.comparable_intervals.length">{{ tr('researchUi.noCompleteIntervalDataMustBeFetchedAtRuntime') }}</p>
+    <p v-for="v in value.comparable_intervals.slice(0, 20)" :key="v.start_ms">{{ tr('researchUi.to2', { p0: date(v.start_ms), p1: date(v.end_ms) }) }}</p>
+    <details v-if="value.comparable_intervals.length > 20"><summary>{{ tr('researchUi.allIntervals', { p0: value.comparable_intervals.length }) }}</summary><pre>{{ JSON.stringify(value.comparable_intervals, null, 2) }}</pre></details>
+    <details class="my-3"><summary>{{ tr('researchUi.rulesForThisRun') }}</summary><p v-for="line in value.rules_summary" :key="line">{{ backendRuleSummary(line) }}</p></details>
+    <p v-for="line in value.warnings" :key="line" class="app-muted text-xs mt-2">{{ backendText(line) }}</p>
+  </section>
+</template>
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+import { backendText, backendRuleSummary } from '@/i18n/backendText'
+import type { LocalBacktestPreview } from '@/modules/research/generatedContracts'
+
+const { t: tr, locale } = useI18n()
+defineProps<{ value: LocalBacktestPreview }>()
+const date = (v: number | null | undefined) => v == null ? tr('researchUi.noCache') : new Date(v).toISOString().replace('T', ' ').slice(0, 16) + ' UTC'
+</script>
+<style scoped>.preflight{border:1px solid #8884;border-radius:10px;padding:14px;overflow-wrap:anywhere}pre{white-space:pre-wrap;max-height:250px;overflow:auto}summary{cursor:pointer}</style>

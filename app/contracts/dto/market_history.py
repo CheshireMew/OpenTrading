@@ -1,8 +1,17 @@
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
+from typing import Literal
 
 from app.contracts.json_types import JsonValue
+
+
+class BitcoinHalvingResponse(BaseModel):
+    block_height: int
+    block_timestamp: int
+    next_halving_height: int
+    estimated_at: int
+    confirmed_halvings_after_2024: list[int]
 
 
 class MACDResponse(BaseModel):
@@ -72,8 +81,12 @@ class MarketHistoryBatchResponse(BaseModel):
 
 class RealtimeResponse(BaseModel):
     symbol: str
-    timestamp: str
-    current_price: float
+    timestamp: str | None
+    current_price: float | None
+    queried_at: str | None = None
+    valid_until: str | None = None
+    source: str = "unavailable"
+    status: Literal["fresh", "stale", "unavailable"] = "unavailable"
     indicators: IndicatorSummaryResponse
     ai_analysis: JsonValue | None
     kline_data: list[OhlcvPointResponse] = Field(default_factory=list)
@@ -84,16 +97,25 @@ class RealtimeResponse(BaseModel):
 class KlineTailResponse(BaseModel):
     symbol: str
     timeframe: str
-    timestamp: str
+    timestamp: str | None
     current_price: float | None
+    queried_at: str | None = None
+    valid_until: str | None = None
+    status: Literal["fresh", "stale", "unavailable"] = "unavailable"
     kline_data: list[OhlcvPointResponse] = Field(default_factory=list)
 
 
 class CurrentPriceResponse(BaseModel):
     symbol: str
     timeframe: str
-    timestamp: str
+    timestamp: str | None
     current_price: float | None
+    source: str = "unavailable"
+    received_at: str | None = None
+    queried_at: str | None = None
+    valid_until: str | None = None
+    status: Literal["fresh", "stale", "unavailable"] = "unavailable"
+    market: str = "spot"
 
 
 class CurrentPriceBatchItemResponse(CurrentPriceResponse):

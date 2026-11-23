@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from app.application.errors import InvalidRequestError
 from app.contracts.dto.market_history import CurrentPriceBatchItemResponse, CurrentPriceBatchResponse, CurrentPriceResponse
 from app.contracts.market_history import (
-    build_current_price_batch_item_response,
     build_current_price_batch_response,
-    build_current_price_response,
 )
 from app.infra.executor import run_database
+from app.domain.market.quotes import MarketQuote
 from app.services.market.app_service_support import validate_market_request
 from app.services.market.market_data_service import MarketDataService
 from config import settings
@@ -32,18 +31,7 @@ class MarketPriceQueryService:
         timeframe: str,
     ) -> CurrentPriceResponse:
         validate_market_request(symbol, timeframe)
-        current_price = await self._get_current_price_from_snapshot(symbol)
-        if current_price is None:
-            current_price = await self._get_current_price_from_cached_history(
-                symbol=symbol,
-                timeframe=timeframe,
-            )
-        return build_current_price_response(
-            symbol=symbol,
-            timeframe=timeframe,
-            timestamp=datetime.now().isoformat(),
-            current_price=current_price,
-        )
+        return CurrentPriceResponse(**await self._quote_payload(symbol, timeframe))
 
     async def get_current_price_batch(
         self,
@@ -85,39 +73,24 @@ class MarketPriceQueryService:
         symbol: str,
         timeframe: str,
     ) -> CurrentPriceBatchItemResponse:
-        current_price = await self._get_current_price_from_snapshot(symbol)
-        source = "websocket_snapshot" if current_price is not None else "cached_history"
-        if current_price is None:
-            current_price = await self._get_current_price_from_cached_history(
-                symbol=symbol,
-                timeframe=timeframe,
-            )
-        return build_current_price_batch_item_response(
-            symbol=symbol,
-            timeframe=timeframe,
-            timestamp=datetime.now().isoformat(),
-            current_price=current_price,
-            source=source if current_price is not None else "unavailable",
-        )
+        return CurrentPriceBatchItemResponse(**await self._quote_payload(symbol, timeframe))
 
-    async def _get_current_price_from_snapshot(self, symbol: str) -> float | None:
-        if self.binance_snapshot_service is None:
-            return None
-        return await self.binance_snapshot_service.get_current_price(symbol)
-
-    async def _get_current_price_from_cached_history(
-        self,
-        *,
-        symbol: str,
-        timeframe: str,
-    ) -> float | None:
-        end_ts = int(datetime.now().timestamp() * 1000)
-        kline_data = await run_database(
-            lambda: self.market_data_service.get_history_data(
-                symbol,
-                timeframe,
-                end_ts,
-                1,
-            )
-        )
-        return kline_data[-1][4] if kline_data else None
+    async def _quote_payload(self, symbol, timeframe):
+        now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+        quote = await self.binance_snapshot_service.get_current_quote(symbol) if self.binance_snapshot_service is not None else MarketQuote()
+        if not quote.fresh(now_ms, settings.MARKET_QUOTE_MAX_AGE_SECONDS):
+            # A long-period bar says nothing about when its current close was
+            # observed. Only completed minute bars can bound a cached quote age.
+            rows = await run_database(lambda: self.market_data_service.get_history_data(symbol, "1m", now_ms, 2))
+            closed = [row for row in rows if int(row[0]) + 60_000 <= now_ms]
+            cached = MarketQuote(float(closed[-1][4]), int(closed[-1][0]) + 60_000, None, "cached_history") if closed else MarketQuote()
+            if cached.observed_at is not None and (quote.value is None or quote.observed_at is None or cached.observed_at > quote.observed_at):
+                quote = cached
+        fresh = quote.fresh(now_ms, settings.MARKET_QUOTE_MAX_AGE_SECONDS)
+        def iso(value):
+            return datetime.fromtimestamp(value / 1000, timezone.utc).isoformat() if value is not None else None
+        return dict(symbol=symbol,timeframe=timeframe,timestamp=iso(quote.observed_at),
+                    current_price=quote.value if fresh else None,source=quote.source,
+                    received_at=iso(quote.received_at),queried_at=iso(now_ms),
+                    valid_until=iso(quote.observed_at + int(settings.MARKET_QUOTE_MAX_AGE_SECONDS * 1000)) if quote.observed_at else None,
+                    status="fresh" if fresh else "stale" if quote.observed_at else "unavailable",market=quote.market)

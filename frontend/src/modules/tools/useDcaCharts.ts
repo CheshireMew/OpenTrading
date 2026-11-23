@@ -10,14 +10,16 @@ Chart.register(...registerables)
 
 interface UseDcaChartsOptions {
   theme: Ref<string>
-  t: (key: string) => string
+  t: (key: string, params?: Record<string, unknown>) => string
   result: Ref<DCAResponse | null>
+  assetLabel: Readonly<Ref<string>>
 }
 
 export const useDcaCharts = ({
   theme,
   t,
   result,
+  assetLabel,
 }: UseDcaChartsOptions) => {
   const { displayCurrency, toDisplayAmount, formatMoney } = useMoney()
   const roiChartCanvas = ref<HTMLCanvasElement | null>(null)
@@ -116,7 +118,7 @@ export const useDcaCharts = ({
               labels,
               datasets: [
                 {
-                  label: t('dca.btcPrice'),
+                  label: t('dca.assetPrice', { symbol: assetLabel.value }),
                   data: history.map((item) => toDisplayAmount(item.price, sourceCurrency) ?? 0),
                   borderColor: 'rgb(59, 130, 246)',
                   backgroundColor: 'rgba(59, 130, 246, 0.1)',

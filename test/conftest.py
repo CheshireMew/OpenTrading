@@ -1,6 +1,7 @@
 """
 Shared pytest fixtures for OpenTrading tests.
 """
+
 from contextlib import asynccontextmanager
 import pytest
 from fastapi.testclient import TestClient
@@ -28,6 +29,8 @@ from test.regression_support import (
     StubMarketQueryAppService,
     StubToolsAppService,
 )
+
+
 
 
 class StubCurrencyRateService:
@@ -108,7 +111,8 @@ def mock_kline_data():
 
 
 @pytest.fixture
-def api_harness(installed_database_runtime):
+def api_harness(installed_database_runtime, tmp_path):
+
     @asynccontextmanager
     async def noop_lifespan(_app):
         yield
@@ -152,7 +156,7 @@ def api_harness(installed_database_runtime):
                 sentiment_repository=object(),
                 sentiment=object(),
             ),
-            tools=ToolRuntimeServices(object(), object(), services["tools_app"], object()),
+            tools=ToolRuntimeServices(object(), object(), services["tools_app"]),
         ),
     )
     app.state.database_error = None

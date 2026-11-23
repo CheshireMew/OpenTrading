@@ -21,6 +21,7 @@ class DCAResponse(BaseModel):
     symbol: str
     asset_class: str | None = None
     price_basis: str | None = None
+    execution_price_basis: Literal["hour_open", "daily_close"] = "hour_open"
     pricing_symbol: str | None = None
     pricing_name: str | None = None
     pricing_currency: str | None = None
@@ -64,6 +65,7 @@ class PairCompareToolResponse(BaseModel):
     data_b: list[ToolCandlestickPointResponse]
     ratio_ohlc: list[ToolCandlestickPointResponse]
     ratio_symbol: str
+    ratio_price_basis: Literal["close"] = "close"
     timeframe: str | None = None
     relative_strength: float | None = None
     statistics: PairCompareStatisticsResponse

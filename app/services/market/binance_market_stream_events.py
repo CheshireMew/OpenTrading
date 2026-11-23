@@ -7,6 +7,7 @@ from .binance_numbers import safe_float, safe_int
 
 def ticker_from_event(event: dict[str, Any]) -> dict[str, Any]:
     return {
+        "event_time": safe_int(event.get("E")),
         "symbol": event.get("s"),
         "price_change": safe_float(event.get("p")),
         "price_change_pct": safe_float(event.get("P")),

@@ -78,16 +78,21 @@ class BinanceMarketSnapshotService:
             status = "stopped"
         elif not self._seed_completed:
             status = "starting"
+        elif all(self._store.freshness().values()):
+            status = "ready"
         elif self._seed_error is not None or self._seed_success_count == 0:
             status = "failed"
+        elif not all(self._store.freshness().values()):
+            status = "stale"
         else:
-            status = "ready"
+            status = "stale"
         return {
             "status": status,
             "seedCompleted": self._seed_completed,
             "seedSuccessCount": self._seed_success_count,
             "activeStreams": sum(1 for task in self._tasks[1:] if not task.done()),
             "error": self._seed_error,
+            "sourcesFresh": self._store.freshness(),
         }
 
     async def seed(
@@ -151,6 +156,9 @@ class BinanceMarketSnapshotService:
     async def get_current_price(self, symbol: str) -> float | None:
         return await self._store.current_price(symbol)
 
+    async def get_current_quote(self, symbol: str):
+        return await self._store.current_quote(symbol)
+
     async def _apply_spot_ticker_response(self, response: Any) -> None:
         payload = response.model_dump() if hasattr(response, "model_dump") else response
         await self._store.merge_tickers("spot_ticker", payload.get("items", []))
@@ -209,7 +217,10 @@ class BinanceMarketSnapshotService:
         await self._store.merge_tickers("spot_ticker", [ticker_from_event(event) for event in events])
 
     async def _apply_usdm_ticker_events(self, events: list[dict[str, Any]]) -> None:
-        await self._store.merge_tickers("usdm_ticker", [ticker_from_event(event) for event in events])
+        # The futures market streams also carry COIN-M events (st=2).
+        await self._store.merge_tickers(
+            "usdm_ticker", [ticker_from_event(event) for event in events if event.get("st", 1) == 1]
+        )
 
     async def _apply_usdm_mark_events(self, events: list[dict[str, Any]]) -> None:
-        await self._store.merge_marks([mark_from_event(event) for event in events])
+        await self._store.merge_marks([mark_from_event(event) for event in events if event.get("st", 1) == 1])

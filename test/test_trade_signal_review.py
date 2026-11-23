@@ -47,7 +47,36 @@ class FakeMarketQuery:
         self.rows = rows
 
     async def get_full_history(self, **_kwargs):
-        return SimpleNamespace(items=self.rows)
+        return SimpleNamespace(items=self.rows, coverage=SimpleNamespace(complete=True, missing_ranges=[]))
+
+
+@pytest.mark.asyncio
+async def test_expiry_excludes_later_target_and_requires_complete_prior_history():
+    start = int(datetime(2026, 1, 1, tzinfo=timezone.utc).timestamp() * 1000)
+    signal = {"symbol": "BTC/USDT", "timeframe": "1h", "entryTime": start, "entry": 100, "target": 110,
+              "stop": 90, "side": "long", "expiresAt": datetime(2026, 1, 1, 1)}
+    row = lambda offset, high: SimpleNamespace(timestamp=start + offset * 3_600_000, open=100, high=high, low=99, close=100, volume=1)
+    market = FakeMarketQuery([row(0, 105), row(2, 120)])
+    runtime = TradeSignalEvaluationRuntime(repository=None, market_query_service=market)
+    result = await runtime._evaluate_signal(signal, datetime(2026, 1, 1, 3))
+    assert result["outcomeStatus"] == "expired"
+    assert result["targetHitAt"] is None
+    market.rows = [row(2, 120)]
+    assert (await runtime._evaluate_signal(signal, datetime(2026, 1, 1, 3)))["outcomeStatus"] == "unavailable"
+
+
+@pytest.mark.asyncio
+async def test_coverage_gap_prevents_claiming_a_target_hit():
+    start = int(datetime(2026, 1, 1, tzinfo=timezone.utc).timestamp() * 1000)
+    signal = {"symbol": "BTC/USDT", "timeframe": "1h", "entryTime": start, "entry": 100, "target": 110,
+              "stop": 90, "side": "long", "expiresAt": datetime(2026, 1, 1, 4)}
+    class Incomplete:
+        async def get_full_history(self, **kwargs):
+            assert kwargs["end_date"] == "2026-01-01"
+            return SimpleNamespace(items=[SimpleNamespace(timestamp=start + 3_600_000, high=120, low=99, close=110)],
+                coverage=SimpleNamespace(complete=False, missing_ranges=[SimpleNamespace(start_ts=start, end_ts=start + 3_600_000)]))
+    runtime = TradeSignalEvaluationRuntime(repository=None, market_query_service=Incomplete())
+    assert (await runtime._evaluate_signal(signal, datetime(2026, 1, 1, 3)))["outcomeStatus"] == "unavailable"
 
 
 @pytest.mark.asyncio
@@ -70,8 +99,8 @@ async def test_signal_evaluator_records_target_mfe_mae_and_forward_returns(insta
     assert evaluated["outcomeStatus"] == "target_hit"
     assert evaluated["mfePct"] == pytest.approx(11)
     assert evaluated["maePct"] == pytest.approx(-2)
-    assert evaluated["forwardReturns"]["1h"] == pytest.approx(10)
-    assert evaluated["forwardReturns"]["24h"] == pytest.approx(9)
+    assert evaluated["forwardReturns"]["1h"] == pytest.approx(2)
+    assert evaluated["forwardReturns"]["24h"] is None  # The supplied 24h row is in the future.
 
 
 @pytest.mark.asyncio

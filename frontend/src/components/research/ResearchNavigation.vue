@@ -10,10 +10,6 @@ const items = [
   { path: '/research', label: 'nav.research' },
   { path: '/research/signals', label: 'nav.signalReview' },
   { path: '/research/screeners', label: 'nav.screeners' },
-  { path: '/research/reports', label: 'nav.reports' },
-  { path: '/research/backtests', label: 'nav.localBacktests' },
-  { path: '/research/parameter-sweeps', label: 'nav.parameterSweeps' },
-  { path: '/research/results', label: 'nav.researchResults' },
 ]
 </script>
 <style scoped>

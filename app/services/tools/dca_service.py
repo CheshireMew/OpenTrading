@@ -41,6 +41,8 @@ class DCAService:
             from app.services.tools.dca_calculator import prepare_dca_dataset, simulate_dca_schedule
 
             target_h, target_m = map(int, target_time_str.split(":"))
+            if not 0 <= target_h <= 23 or target_m != 0:
+                return {"error": "小时行情定投仅支持整点执行，请选择 HH:00"}
             now_local = now_in_timezone(timezone)
 
             start_dt_local = datetime.strptime(start_date_str, "%Y-%m-%d")
@@ -80,6 +82,8 @@ class DCAService:
                     start_date=fetch_start_utc.strftime("%Y-%m-%d"),
                     end_date=fetch_end_utc.strftime("%Y-%m-%d"),
                 )
+                if not index_pricing.coverage.complete:
+                    raise ValueError("指数交易日历史行情不完整")
                 klines = [
                     [point.timestamp, point.open, point.high, point.low, point.close, point.volume]
                     for point in index_pricing.data
@@ -100,6 +104,8 @@ class DCAService:
                 start_dt_local=start_dt_local,
                 target_hour=None if is_index else target_h,
             )
+            if not is_index:
+                target_klines = target_klines[target_klines["local_dt"] <= end_dt_local.replace(tzinfo=now_local.tzinfo)]
 
             sentiment_map: dict[str, int] = {}
             if strategy == "fear_greed":
@@ -124,15 +130,17 @@ class DCAService:
                 and int(target_klines["timestamp"].min()) < settings.BTC_SYNTHETIC_HISTORY_CUTOFF_TS
             )
 
-            if is_index:
+            if is_index or not current_end:
                 current_price = klines[-1][4]
             else:
                 try:
-                    latest = self.market_data_service.get_recent_candles(normalized_symbol, "1m", limit=1)
-                    current_price = float(latest[-1][4]) if latest and len(latest[-1]) > 4 else history[-1]["price"]
+                    latest = self.market_data_service.get_recent_candle_snapshot(normalized_symbol, "1m", limit=1)
+                    if not latest.rows or not latest.fresh(int(datetime.now().timestamp() * 1000), settings.MARKET_QUOTE_MAX_AGE_SECONDS):
+                        raise ValueError("当前报价已过期")
+                    current_price = float(latest.rows[-1][4])
                 except Exception as exc:
-                    logger.warning(f"无法获取实时价格，降级使用最后一次定投价格: {exc}")
-                    current_price = history[-1]["price"]
+                    logger.warning(f"无法取得有效报价，暂不生成当前估值: {exc}")
+                    return {"error": "当前报价不可用，无法计算当前持仓价值，请稍后重试"}
 
             final_value = total_coins * current_price
             profit_loss = final_value - total_invested
@@ -141,6 +149,7 @@ class DCAService:
                 "symbol": normalized_symbol,
                 "asset_class": "index" if is_index else "crypto",
                 "price_basis": "proxy_etf" if is_index else "spot",
+                "execution_price_basis": "daily_close" if is_index else "hour_open",
                 "pricing_symbol": index_pricing.pricing_symbol if is_index else normalized_symbol,
                 "pricing_name": index_pricing.pricing_name if is_index else normalized_symbol,
                 "pricing_currency": index_pricing.pricing_currency if is_index else "USDT",

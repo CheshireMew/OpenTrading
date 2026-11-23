@@ -7,19 +7,24 @@ import { installPineRuntimeCompat,PINE_ADAPTER_VERSION } from '../src/modules/ch
 installPineRuntimeCompat()
 
 const folder = process.argv[2]
+const reportOnly = process.argv.includes('--report')
+let pipedInput
 if (process.argv.includes('--managed')) {
   const bytes = []
   for await (const chunk of process.stdin) bytes.push(chunk)
-  if (Buffer.concat(bytes).toString() !== '1') process.exit(2)
+  const input = Buffer.concat(bytes)
+  if (input[0] !== 49 || (!reportOnly && input.length !== 1)) process.exit(2)
+  if (reportOnly) pipedInput = JSON.parse(input.subarray(1).toString('utf8'))
 }
 const write = (name, value) => {
+  if (reportOnly && ['metadata.json', 'series.json'].includes(name)) return
   const target = path.join(folder, name)
   fs.writeFileSync(target + '.tmp', JSON.stringify(value))
   fs.renameSync(target + '.tmp', target)
 }
 const hash = value => crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex')
 try {
-  const input = JSON.parse(fs.readFileSync(path.join(folder, 'input.json'), 'utf8'))
+  const input = pipedInput ?? JSON.parse(fs.readFileSync(path.join(folder, 'input.json'), 'utf8'))
   checkPine(input.source)
   const indicator = new Indicator(input.source, input.request.inputs)
   indicator.prepare()
@@ -118,10 +123,10 @@ try {
   const pine = new PineTS(provider,input.request.symbol,input.request.timeframe,input.bars.length,input.request.start,input.request.end)
   pine.setMaxLoops(500000)
   const orders = new Set(), equity = [], observed = new WeakSet(),cancelled=new WeakSet()
-  const remember = context => {if(context.strategy)for(const order of context.strategy.pending_orders)orders.add(order)}
+  const remember = context => {if(!reportOnly&&context.strategy)for(const order of context.strategy.pending_orders)orders.add(order)}
   const prepared = indicator.prepare(), original = prepared.fn
   prepared.fn = async context => {
-    if(!observed.has(context)){
+    if(!reportOnly&&!observed.has(context)){
       observed.add(context)
       // Capture at the public strategy calls as well as bar boundaries: an order
       // can be placed and cancelled within one execution of the same candle.
@@ -139,7 +144,7 @@ try {
     remember(context)
     const value = await original(context)
     if (context.strategy) {
-      for (const order of context.strategy.pending_orders) orders.add(order)
+      if(!reportOnly)for (const order of context.strategy.pending_orders) orders.add(order)
       const state = context.strategy
       equity.push({time:context.marketData[context.idx]?.openTime, equity:state.equity, netprofit:state.netprofit, openprofit:state.openprofit})
     }
@@ -170,11 +175,24 @@ try {
   summary.profit_factor = state.grossloss ? state.grossprofit/Math.abs(state.grossloss) : null
   summary.commission = [...trades,...state.opentrades].reduce((n,t) => n+(t.commission??0),0)
   write('series.json',allSeries)
-  write('result.json',{summary,equity,trades,open_trades:state.opentrades,orders:rawOrders,
+  const result = {summary,equity,trades,open_trades:state.opentrades,orders:rawOrders,
     fills,warnings:context.warnings,
     provenance:{engine:'PineTS',version:PINE_ENGINE_VERSION,adapter:PINE_ADAPTER_VERSION,engine_snapshot:input.engine_snapshot??null,node_version:process.version,source_hash:hash(input.source),data_hash:hash(allSeries),
       quote_currency:input.symbol.currency,account_currency:state.account_currency,bars:input.bars.length,
-      first_bar:input.bars[0].time,last_bar:input.bars.at(-1).time}})
+      first_bar:input.bars[0].time,last_bar:input.bars.at(-1).time}}
+  if (reportOnly) {
+    const emit = async frame => {
+      if (!process.stdout.write('OPENTRADING_REPORT\t' + JSON.stringify(frame) + '\n')) {
+        await new Promise(resolve => process.stdout.once('drain', resolve))
+      }
+    }
+    for (const kind of ['equity', 'trades', 'open_trades', 'warnings']) {
+      for (let offset = 0; offset < result[kind].length; offset += 1024) {
+        await emit({kind, items:result[kind].slice(offset, offset + 1024)})
+      }
+    }
+    await emit({kind:'summary', summary, provenance:{...result.provenance, recording:'report'}})
+  } else write('result.json', result)
 } catch (error) {
   write('error.json',{error:error.message,stack:error.stack})
   process.exitCode = 1

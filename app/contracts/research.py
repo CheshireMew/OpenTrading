@@ -1,18 +1,20 @@
 from __future__ import annotations
 
 from datetime import datetime
+import math
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.contracts.json_types import JsonObject
+from app.contracts.timestamps import UtcResponseModel
 from app.contracts.dto.market_history import IndicatorSummaryResponse, OhlcvPointResponse
 
 
 ResearchAssetClass = Literal["crypto", "index", "cash", "web3"]
 ResearchNoteKind = Literal["thesis", "update", "review", "decision"]
-ResearchAlertOperator = Literal["gt", "gte", "lt", "lte", "crosses_above", "crosses_below", "between", "outside"]
-ResearchNotificationChannel = Literal["in_app", "windows"]
+ResearchAlertOperator = Literal["gt", "gte", "lt", "lte", "crosses", "crosses_above", "crosses_below", "between", "outside"]
+ResearchNotificationChannel = Literal["in_app", "windows", "sound"]
 
 
 class ResearchWatchlistCreateCommand(BaseModel):
@@ -32,7 +34,7 @@ class ResearchArchiveCommand(BaseModel):
     expectedVersion: int = Field(ge=1)
 
 
-class ResearchWatchlistResponse(BaseModel):
+class ResearchWatchlistResponse(UtcResponseModel):
     id: str
     name: str
     description: str
@@ -76,7 +78,7 @@ class ResearchWatchItemUpdateCommand(ResearchWatchItemCreateCommand):
     expectedVersion: int = Field(ge=1)
 
 
-class ResearchWatchItemResponse(BaseModel):
+class ResearchWatchItemResponse(UtcResponseModel):
     id: str
     watchlistId: str
     symbol: str
@@ -110,7 +112,7 @@ class ResearchNoteUpdateCommand(ResearchNoteCreateCommand):
     expectedVersion: int = Field(ge=1)
 
 
-class ResearchNoteResponse(BaseModel):
+class ResearchNoteResponse(UtcResponseModel):
     id: str
     watchItemId: str | None = None
     symbol: str
@@ -142,6 +144,18 @@ class ResearchAlertCreateCommand(BaseModel):
 
     @model_validator(mode="after")
     def validate_thresholds(self):
+        if self.metric == 'portfolio_drift_pct':
+            raise ValueError('组合平衡已退出，不能创建或更新组合偏离提醒')
+        if not math.isfinite(self.threshold) or (self.secondaryThreshold is not None and not math.isfinite(self.secondaryThreshold)):
+            raise ValueError("提醒价格必须是有效数字")
+        if self.configuration.get("chartSymbolId"):
+            if not isinstance(self.configuration["chartSymbolId"], str):
+                raise ValueError("图表警报必须指定有效品种")
+            if self.metric != "price" or self.threshold <= 0:
+                raise ValueError("图表警报必须使用有效的正数价格")
+            initial = self.configuration.get("initialPrice")
+            if initial is not None and (not isinstance(initial, (int, float)) or not math.isfinite(initial) or initial <= 0):
+                raise ValueError("初始价格必须是有效的正数")
         if self.operator in {"between", "outside"}:
             if self.secondaryThreshold is None:
                 raise ValueError("区间提醒必须提供第二个阈值")
@@ -154,7 +168,7 @@ class ResearchAlertUpdateCommand(ResearchAlertCreateCommand):
     expectedVersion: int = Field(ge=1)
 
 
-class ResearchAlertResponse(BaseModel):
+class ResearchAlertResponse(UtcResponseModel):
     id: str
     watchItemId: str | None = None
     symbol: str
@@ -176,7 +190,7 @@ class ResearchAlertResponse(BaseModel):
     updatedAt: datetime
 
 
-class ResearchEventResponse(BaseModel):
+class ResearchEventResponse(UtcResponseModel):
     id: str
     entityType: str
     entityId: str | None = None
@@ -196,12 +210,12 @@ class ResearchEventAcknowledgeCommand(BaseModel):
     acknowledged: bool = True
 
 
-class ResearchEventPageResponse(BaseModel):
+class ResearchEventPageResponse(UtcResponseModel):
     items: list[ResearchEventResponse] = Field(default_factory=list)
     total: int = Field(ge=0)
 
 
-class ResearchWorkbenchResponse(BaseModel):
+class ResearchWorkbenchResponse(UtcResponseModel):
     watchlists: list[ResearchWatchlistResponse] = Field(default_factory=list)
     items: list[ResearchWatchItemResponse] = Field(default_factory=list)
     notes: list[ResearchNoteResponse] = Field(default_factory=list)
@@ -210,7 +224,7 @@ class ResearchWorkbenchResponse(BaseModel):
     unacknowledgedEventCount: int = Field(ge=0)
 
 
-class ResearchAlertEvaluationResponse(BaseModel):
+class ResearchAlertEvaluationResponse(UtcResponseModel):
     evaluatedAt: datetime
     ruleCount: int = Field(ge=0)
     evaluatedCount: int = Field(ge=0)
@@ -224,7 +238,7 @@ class ResearchAlertEvaluateCommand(BaseModel):
     force: bool = True
 
 
-class TradeSignalResponse(BaseModel):
+class TradeSignalResponse(UtcResponseModel):
     id: str
     symbol: str
     timeframe: str
@@ -260,14 +274,14 @@ class TradeSignalResponse(BaseModel):
     updatedAt: datetime
 
 
-class TradeSignalPageResponse(BaseModel):
+class TradeSignalPageResponse(UtcResponseModel):
     items: list[TradeSignalResponse] = Field(default_factory=list)
     total: int = Field(ge=0)
     offset: int = Field(ge=0)
     limit: int = Field(ge=1, le=500)
 
 
-class TradeSignalStatGroupResponse(BaseModel):
+class TradeSignalStatGroupResponse(UtcResponseModel):
     key: str
     total: int = Field(ge=0)
     resolved: int = Field(ge=0)
@@ -281,7 +295,7 @@ class TradeSignalStatGroupResponse(BaseModel):
     averageMaePct: float | None = None
 
 
-class TradeSignalConfidenceBucketResponse(BaseModel):
+class TradeSignalConfidenceBucketResponse(UtcResponseModel):
     key: str
     minConfidence: int = Field(ge=0, le=100)
     maxConfidence: int = Field(ge=0, le=100)
@@ -294,7 +308,7 @@ class TradeSignalConfidenceBucketResponse(BaseModel):
     calibrationGapPct: float | None = None
 
 
-class TradeSignalStatsResponse(BaseModel):
+class TradeSignalStatsResponse(UtcResponseModel):
     overall: TradeSignalStatGroupResponse
     bySource: list[TradeSignalStatGroupResponse] = Field(default_factory=list)
     byStrategy: list[TradeSignalStatGroupResponse] = Field(default_factory=list)
@@ -308,7 +322,7 @@ class TradeSignalEvaluationCommand(BaseModel):
     force: bool = True
 
 
-class TradeSignalEvaluationRunResponse(BaseModel):
+class TradeSignalEvaluationRunResponse(UtcResponseModel):
     evaluatedAt: datetime
     candidateCount: int = Field(ge=0)
     evaluatedCount: int = Field(ge=0)
@@ -316,7 +330,7 @@ class TradeSignalEvaluationRunResponse(BaseModel):
     unavailableCount: int = Field(ge=0)
 
 
-class AssetResearchResponse(BaseModel):
+class AssetResearchResponse(UtcResponseModel):
     symbol: str
     assetClass: ResearchAssetClass
     timeframe: str
@@ -381,7 +395,7 @@ class SavedMarketScreenerUpdateCommand(SavedMarketScreenerCreateCommand):
     expectedVersion: int = Field(ge=1)
 
 
-class SavedMarketScreenerResponse(BaseModel):
+class SavedMarketScreenerResponse(UtcResponseModel):
     id: str
     name: str
     description: str
@@ -392,7 +406,7 @@ class SavedMarketScreenerResponse(BaseModel):
     updatedAt: datetime
 
 
-class SavedMarketScreenerListResponse(BaseModel):
+class SavedMarketScreenerListResponse(UtcResponseModel):
     items: list[SavedMarketScreenerResponse] = Field(default_factory=list)
 
 
@@ -401,7 +415,7 @@ class MarketScreenerRunCommand(BaseModel):
     asOf: datetime | None = None
 
 
-class MarketScreenerRunResponse(BaseModel):
+class MarketScreenerRunResponse(UtcResponseModel):
     id: str
     screenerId: str
     filters: MarketScreenerFilters
@@ -412,47 +426,6 @@ class MarketScreenerRunResponse(BaseModel):
     historicalReplay: bool = False
 
 
-class MarketScreenerRunPageResponse(BaseModel):
+class MarketScreenerRunPageResponse(UtcResponseModel):
     items: list[MarketScreenerRunResponse] = Field(default_factory=list)
-    total: int = Field(ge=0)
-
-
-class ResearchReportGenerateCommand(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    title: str = Field(min_length=1, max_length=240)
-    reportType: Literal[
-        "daily_brief",
-        "weekly_brief",
-        "asset_review",
-        "portfolio_review",
-        "decision_review",
-    ] = "daily_brief"
-    symbol: str | None = Field(default=None, max_length=160)
-    portfolioId: str | None = Field(default=None, max_length=120)
-
-    @model_validator(mode="after")
-    def validate_scope(self):
-        if self.reportType == "asset_review" and not self.symbol:
-            raise ValueError("资产报告必须指定标的")
-        if self.reportType == "portfolio_review" and not self.portfolioId:
-            raise ValueError("组合报告必须指定组合")
-        return self
-
-
-class ResearchReportResponse(BaseModel):
-    id: str
-    title: str
-    reportType: str
-    symbol: str | None = None
-    portfolioId: str | None = None
-    contentMarkdown: str
-    dataSnapshot: dict[str, Any] = Field(default_factory=dict)
-    version: int
-    archivedAt: datetime | None = None
-    createdAt: datetime
-    updatedAt: datetime
-
-
-class ResearchReportPageResponse(BaseModel):
-    items: list[ResearchReportResponse] = Field(default_factory=list)
     total: int = Field(ge=0)

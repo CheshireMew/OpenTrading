@@ -1,0 +1,173 @@
+"""Result registration and queries; storage and import workflows have separate owners."""
+
+import math
+from pathlib import Path
+
+from app.application.backtest_ports import BacktestNotFoundError, ResearchBacktestPort
+from app.application.research_result_ports import ResultIndexPort
+from app.infra.persistence.research_result_repository import ResearchResultRepository
+from app.infra.research_files import file_hash, relocated_project_path
+from app.services.research_result_entries import make_entry, legacy_entries, date_key, METRICS, NOTE
+from app.services.research_result_importer import ResultImporter
+
+__all__ = ["ResearchResultsCatalog", "make_entry", "legacy_entries"]
+
+
+class ResearchResultsCatalog:
+    def __init__(self, backtests: ResearchBacktestPort, index: ResultIndexPort | None = None):
+        self.backtests = backtests
+        self.index = index or ResearchResultRepository(backtests.result_index_path)
+        self._importer = ResultImporter(self.index, self.sync_native)
+
+    def register(self, run, transaction=None):
+        if run["status"] != "completed" or not run.get("report"):
+            return False
+        metadata = run.get("metadata", {})
+        strategy, study = metadata.get("strategy", {}), metadata.get("study", {})
+        entry = make_entry(
+            "run:" + run["id"],
+            run["config"],
+            run["report"],
+            metadata,
+            "native",
+            run.get("name") or strategy.get("name") or run["config"].get("strategy") or run["id"],
+            run_id=run["id"],
+            archived=run.get("archived", False),
+            family=strategy.get("family") or study.get("family"),
+        )
+        if transaction is None:
+            with self.index.transaction() as db:
+                db.put(entry)
+        else:
+            transaction.put(entry)
+        return True
+
+    def sync_native(self):
+        count = 0
+        with self.index.transaction() as db:
+            for archived in (False, True):
+                offset = 0
+                while True:
+                    page = self.backtests.listing(offset, 200, archived)
+                    for run in page["items"]:
+                        count += int(self.register(run, db))
+                        if run["status"] != "completed":
+                            db.discard("run:" + run["id"])
+                    offset += len(page["items"])
+                    if offset >= page["total"] or not page["items"]:
+                        break
+        return count
+
+    def refresh(self, roots, max_json_bytes=32 * 1024 * 1024):
+        return self._importer.refresh(roots, max_json_bytes)
+
+    def get(self, identifier, *, sync=True):
+        if sync:
+            self.sync_native()
+        with self.index.transaction() as db:
+            entry = db.get(identifier)
+            if entry is None:
+                raise ValueError("结果目录记录不存在")
+            entry["sources"] = [
+                dict(
+                    path=str(relocated_project_path(p)),
+                    pointer=t,
+                    sha256_at_import=h,
+                    exists=relocated_project_path(p).is_file(),
+                )
+                for p, t, h in db.references(identifier)
+            ]
+        if sync:
+            for evidence in entry["sources"]:
+                evidence["unchanged"] = (
+                    evidence["exists"] and file_hash(Path(evidence["path"])) == evidence["sha256_at_import"]
+                )
+        entry["run_available"] = False
+        if entry["run_id"]:
+            try:
+                artifacts = self.backtests.artifacts(entry["run_id"])
+            except BacktestNotFoundError:
+                # Keep the indexed summary and its provenance. One orphaned run
+                # must not hide the rest of a query or destroy saved research.
+                pass
+            else:
+                entry["run_available"] = True
+                path = Path(artifacts["metadata"])
+                entry["sources"].insert(0, dict(path=str(path), pointer="/", sha256_at_import=None, exists=path.is_file()))
+        return entry
+
+    def query(
+        self,
+        *,
+        symbol=None,
+        strategy=None,
+        family=None,
+        timeframe=None,
+        start=None,
+        end=None,
+        execution_timeframe=None,
+        intrabar_profit_protection=None,
+        parameters=None,
+        reference_id=None,
+        sort="return_pct",
+        descending=True,
+        minimum_trades=0,
+        include_archived=False,
+        offset=0,
+        limit=30,
+    ):
+        if sort not in METRICS or offset < 0 or not 1 <= limit <= 200 or minimum_trades < 0:
+            raise ValueError("排序字段或分页范围无效")
+        if parameters is not None and not isinstance(parameters, dict):
+            raise ValueError("parameters 必须是参数对象")
+        self.sync_native()
+        filters = {
+            k: v for k, v in dict(symbol=symbol, strategy=strategy, family=family, timeframe=timeframe).items() if v
+        }
+        if not include_archived:
+            filters["archived"] = 0
+        if reference_id:
+            reference = self.get(reference_id, sync=False)
+            if not reference["cohort"]:
+                raise ValueError("参照记录证据不足，不能建立同条件排序：" + "、".join(reference["missing"]))
+            filters["cohort"] = reference["cohort"]
+        with self.index.transaction() as db:
+            rows = db.entries(filters)
+        expected = {
+            k: v
+            for k, v in dict(
+                start=date_key(start),
+                end=date_key(end),
+                execution_timeframe=execution_timeframe,
+                intrabar_profit_protection=intrabar_profit_protection,
+            ).items()
+            if v is not None
+        }
+        if execution_timeframe == "none":
+            expected["execution_timeframe"] = None
+
+        def matches(entry):
+            c, r = entry["config"], entry["report"]
+            return (
+                all(k in c and c[k] == v for k, v in expected.items())
+                and all(k in c["parameters"] and c["parameters"][k] == v for k, v in (parameters or {}).items())
+                and (r.get("total_trades") or 0) >= minimum_trades
+            )
+
+        rows = [r for r in rows if matches(r)]
+
+        def order(entry):
+            value = entry["report"].get(sort)
+            available = isinstance(value, (int, float)) and math.isfinite(value)
+            return (0 if available else 1, (-value if descending else value) if available else 0, entry["id"])
+
+        rows.sort(key=order)
+        items = [self.get(r["id"], sync=False) for r in rows[offset : offset + limit]]
+        return dict(
+            items=items,
+            total=len(rows),
+            offset=offset,
+            mode="same_conditions" if reference_id else "historical",
+            reference_id=reference_id,
+            note=NOTE,
+        )

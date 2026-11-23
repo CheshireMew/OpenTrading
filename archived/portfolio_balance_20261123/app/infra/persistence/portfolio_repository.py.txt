@@ -1,0 +1,99 @@
+from __future__ import annotations
+
+from app.domain.portfolios import (
+    PortfolioCollectionRecord,
+    PortfolioDeletedPageRecord,
+    PortfolioExportRecord,
+    PortfolioSimulationResultRecord,
+)
+
+from app.infra.db.database import DatabaseRuntime
+
+from app.infra.persistence.portfolio_collection_repository import PortfolioCollectionRepository
+
+from app.infra.persistence.portfolio_ledger_repository import PortfolioLedgerRepository
+
+from app.infra.persistence.portfolio_simulation_repository import PortfolioSimulationRepository
+
+from app.infra.persistence.portfolio_backup_repository import PortfolioBackupRepository
+
+
+class PortfolioRepository:
+    """Compatibility facade; production readers receive the narrow repositories below."""
+
+    def __init__(self, database_runtime: DatabaseRuntime) -> None:
+        self.collections = PortfolioCollectionRepository(database_runtime)
+        self.ledger = PortfolioLedgerRepository(database_runtime)
+        self.simulations = PortfolioSimulationRepository(database_runtime)
+        self.backups = PortfolioBackupRepository(database_runtime)
+
+    def get_collection(self) -> PortfolioCollectionRecord:
+        return self.collections.get_collection()
+
+    def list_deleted(self, *, offset: int, limit: int) -> PortfolioDeletedPageRecord:
+        return self.collections.list_deleted(offset=offset, limit=limit)
+
+    def apply_collection_changes(
+        self,
+        active_portfolio_id: str,
+        changed_portfolio_payloads: list[dict],
+        portfolio_order: list[str],
+        expected_revision: int,
+    ) -> PortfolioCollectionRecord:
+        return self.collections.apply_collection_changes(
+            active_portfolio_id, changed_portfolio_payloads, portfolio_order, expected_revision
+        )
+
+    def restore_portfolio(self, portfolio_id: str, expected_revision: int) -> PortfolioCollectionRecord:
+        return self.collections.restore_portfolio(portfolio_id, expected_revision)
+
+    def get_ledger_record(self, portfolio_id: str) -> dict:
+        return self.ledger.get_ledger_record(portfolio_id)
+
+    def create_transaction(self, portfolio_id: str, payload: dict, *, request_id: str | None = None) -> dict:
+        return self.ledger.create_transaction(portfolio_id, payload, request_id=request_id)
+
+    def update_transaction(self, portfolio_id: str, transaction_id: str, expected_version: int, payload: dict) -> dict:
+        return self.ledger.update_transaction(portfolio_id, transaction_id, expected_version, payload)
+
+    def set_transaction_archived(
+        self, portfolio_id: str, transaction_id: str, expected_version: int, archived: bool
+    ) -> dict:
+        return self.ledger.set_transaction_archived(portfolio_id, transaction_id, expected_version, archived)
+
+    def import_transactions(self, portfolio_id: str, payloads: list[dict], *, replace: bool, request_id: str | None = None) -> tuple[int, int]:
+        return self.ledger.import_transactions(portfolio_id, payloads, replace=replace, request_id=request_id)
+
+    def get_simulation(self, portfolio_id: str) -> PortfolioSimulationResultRecord:
+        return self.simulations.get_simulation(portfolio_id)
+
+    def save_simulation(
+        self, portfolio_id: str, expected_revision: int, result_payload: dict
+    ) -> PortfolioSimulationResultRecord:
+        return self.simulations.save_simulation(portfolio_id, expected_revision, result_payload)
+
+    def get_export_record(self) -> PortfolioExportRecord:
+        return self.backups.get_export_record()
+
+    def import_collection(
+        self,
+        *,
+        active_portfolio_id,
+        active_payloads,
+        deleted_payloads,
+        simulation_payloads,
+        transactions,
+        deleted_at,
+        expected_revision,
+        replace,
+    ):
+        return self.backups.import_collection(
+            active_portfolio_id=active_portfolio_id,
+            active_payloads=active_payloads,
+            deleted_payloads=deleted_payloads,
+            simulation_payloads=simulation_payloads,
+            transactions=transactions,
+            deleted_at=deleted_at,
+            expected_revision=expected_revision,
+            replace=replace,
+        )

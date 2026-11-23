@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenTrading · Logo 候选</title>
+<style>
+:root { color-scheme: light; --bg: #fbfaf7; --ink: #10261f; --muted: #78716c; --line: #e4ded3; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Segoe UI", "Microsoft YaHei", sans-serif; transition: background .15s, color .15s; }
+body.dark { color-scheme: dark; --bg: #151619; --ink: #f0f3fa; --muted: #959ca9; --line: #2a2b30; }
+main { max-width: 1120px; padding: 32px 32px 48px; margin: auto; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+h1 { font-size: 23px; font-weight: 600; letter-spacing: -.6px; margin: 0; }
+.controls { display: flex; gap: 8px; }
+button { font: inherit; font-size: 13px; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 5px; padding: 8px 12px; cursor: pointer; }
+button:focus-visible, a:focus-visible { outline: 2px solid #22ab94; outline-offset: 4px; }
+button[aria-pressed="true"] { border-color: var(--ink); }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+article { padding: 24px 32px 32px; border-bottom: 1px solid var(--line); }
+article:nth-child(odd) { border-right: 1px solid var(--line); }
+.candidate-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+h2 { font-size: 18px; font-weight: 600; margin: 0; }
+h2 span { margin-left: 12px; font-size: 13px; font-weight: 400; color: var(--muted); }
+a { font-size: 12px; color: var(--muted); text-underline-offset: 3px; }
+.lockup { min-height: 270px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+.hero-mark { width: 128px; height: 128px; }
+.wordmark { font-size: 30px; font-weight: 600; letter-spacing: -1px; }
+svg { display: block; width: 100%; height: 100%; }
+.ink { fill: var(--ink); }
+.samples { display: flex; align-items: center; justify-content: center; gap: 30px; height: 64px; }
+.sample { display: inline-block; flex-shrink: 0; }
+.s16 { width: 16px; height: 16px; } .s24 { width: 24px; height: 24px; }
+.s32 { width: 32px; height: 32px; } .s48 { width: 48px; height: 48px; }
+.mono :is(.accent-fill, .blue-fill, .positive-fill, .negative-fill) { fill: var(--ink); }
+.mono .accent-stroke { stroke: var(--ink); }
+@media (max-width: 680px) { main { padding: 20px 16px; } .top { flex-wrap: wrap; gap: 16px; } .grid { grid-template-columns: 1fr; } article { padding: 24px 12px; } article:nth-child(odd) { border-right: 0; } .lockup { min-height: 250px; } }
+@media (prefers-reduced-motion: reduce) { body { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header class="top"><h1>OpenTrading</h1><div class="controls"><button id="theme" type="button" aria-pressed="false">深色背景</button><button id="mono" type="button" aria-pressed="false">单色</button></div></header>
+  <section class="grid" aria-label="Logo 候选方案"><article aria-labelledby="label-A">
+  <header class="candidate-head"><h2 id="label-A">A <span>开口 O</span></h2><a href="A-open-o.svg" download>SVG</a></header>
+  <div class="lockup"><div class="hero-mark"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title-A desc-A">
+  <title id="title-A">OpenTrading — A 开口 O</title>
+  <desc id="desc-A">OpenTrading 的 O 保留一个开口，以行情图表向右延伸的时间轴方向建立识别。</desc>
+  <g id="mark-A"><path class="accent-stroke" d="M95.1127 32.8873 A44 44 0 1 0 108 64" fill="none" stroke="#22ab94" stroke-width="18" stroke-linecap="butt"/></g>
+</svg>
+</div><div class="wordmark">OpenTrading</div></div>
+  <div class="samples" aria-label="16、24、32、48 像素预览"><span class="sample s16" aria-label="16 像素"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title-A-16 desc-A-16">
+  <title id="title-A-16">OpenTrading — A 开口 O</title>
+  <desc id="desc-A-16">OpenTrading 的 O 保留一个开口，以行情图表向右延伸的时间轴方向建立识别。</desc>
+  <g id="mark-A-16"><path class="accent-stroke" d="M95.1127 32.8873 A44 44 0 1 0 108 64" fill="none" stroke="#22ab94" stroke-width="18" stroke-linecap="butt"/></g>
+</svg>
+</span><span class="sample s24" aria-label="24 像素"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title-A-24 desc-A-24">
+  <title id="title-A-24">OpenTrading — A 开口 O</title>
+  <desc id="desc-A-24">OpenTrading 的 O 保留一个开口，以行情图表向右延伸的时间轴方向建立识别。</desc>
+  <g id="mark-A-24"><path class="accent-stroke" d="M95.1127 32.8873 A44 44 0 1 0 108 64" fill="none" stroke="#22ab94" stroke-width="18" stroke-linecap="butt"/></g>
+</svg>
+</span><span class="sample s32" aria-label="32 像素"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title-A-32 desc-A-32">
+  <title id="title-A-32">OpenTrading — A 开口 O</title>
+  <desc id="desc-A-32">OpenTrading 的 O 保留一个开口，以行情图表向右延伸的时间轴方向建立识别。</desc>
+  <g id="mark-A-32"><path class="accent-stroke" d="M95.1127 32.8873 A44 44 0 1 0 108 64" fill="none" stroke="#22ab94" stroke-width="18" stroke-linecap="butt"/></g>
+</svg>
+</span><span class="sample s48" aria-label="48 像素"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title-A-48 desc-A-48">
+  <title id="title-A-48">OpenTrading — A 开口 O</title>
+  <desc id="desc-A-48">OpenTrading 的 O 保留一个开口，以行情图表向右延伸的时间轴方向建立识别。</desc>
+  <g id="mark-A-48"><path class="accent-stroke" d="M95.1127 32.8873 A44 44 0 1 0 108 64" fill="none" stroke="#22ab94" stroke-width="18" stroke-linecap="butt"/></g>
+</svg>
+</span></div>
+</article><article aria-labelledby="label-B">
+  <header class="candidate-head"><h2 id="label-B">B <span>OT 连字</span></h2><a href="B-ot-ligature.svg" download>SVG</a></header>
+  <div class="lockup"><div class="hero-mark"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title-B desc-B">
+  <title id="title-B">OpenTrading — B OT 连字</title>
+  <desc id="desc-B">把项目名称的 O 与 T 连成一个紧凑字形，作为图表工作台与研究工具共用的名称标识。</desc>
+  <g id="mark-B"><path class="ink" fill="#10261f" fill-rule="evenodd" d="M44 22C24 22 12 38 12 64C12 90 24 106 44 106C64 106 76 90 76 64C76 54 74 46 70 39H84V106H102V39H118V22H44Z M44 40C54 40 59 48 59 64C59 80 54 88 44 88C34 88 29 80 29 64C29 48 34 40 44 40Z"/></g>
+</svg>
+</div><div class="wordmark">OpenTrading</div></div>
+  <div class="samples" aria-label="16、24、32、48 像素预览"><span class="sample s16" aria-label="16 像素"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title-B-16 desc-B-16">
+  <title id="title-B-16">OpenTrading — B OT 连字</title>
+  <desc id="desc-B-16">把项目名称的 O 与 T 连成一个紧凑字形，作为图表工作台与研究工具共用的名称标识。</desc>
+  <g id="mark-B-16"><path class="ink" fill="#10261f" fill-rule="evenodd" d="M44 22C24 22 12 38 12 64C12 90 24 106 44 106C64 106 76 90 76 64C76 54 74 46 70 39H84V106H102V39H118V22H44Z M44 40C54 40 59 48 59 64C59 80 54 88 44 88C34 88 29 80 29 64C29 48 34 40 44 40Z"/></g>
+</svg>
+</span><span class="sample s24" aria-label="24 像素"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title-B-24 desc-B-24">
+  <title id="title-B-24">OpenTrading — B OT 连字</title>
+  <desc id="desc-B-24">把项目名称的 O 与 T 连成一个紧凑字形，作为图表工作台与研究工具共用的名称标识。</desc>
+  <g id="mark-B-24"><path class="ink" fill="#10261f" fill-rule="evenodd" d="M44 22C24 22 12 38 12 64C12 90 24 106 44 106C64 106 76 90 76 64C76 54 74 46 70 39H84V106H102V39H118V22H44Z M44 40C54 40 59 48 59 64C59 80 54 88 44 88C34 88 29 80 29 64C29 48 34 40 44 40Z"/></g>
+</svg>
+</span><span class="sample s32" aria-label="32 像素"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title-B-32 desc-B-32">
+  <title id="title-B-32">OpenTrading — B OT 连字</title>
+  <desc id="desc-B-32">把项目名称的 O 与 T 连成一个紧凑字形，作为图表工作台与研究工具共用的名称标识。</desc>
+  <g id="mark-B-32"><path class="ink" fill="#10261f" fill-rule="evenodd" d="M44 22C24 22 12 38 12 64C12 90 24 106 44 106C64 106 76 90 76 64C76 54 74 46 70 39H84V106H102V39H118V22H44Z M44 40C54 40 59 48 59 64C59 80 54 88 44 88C34 88 29 80 29 64C29 48 34 40 44 40Z"/></g>
+</svg>
+</span><span class="sample s48" aria-label="48 像素"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title-B-48 desc-B-48">
+  <title id="title-B-48">OpenTrading — B OT 连字</title>
+  <desc id="desc-B-48">把项目名称的 O 与 T 连成一个紧凑字形，作为图表工作台与研究工具共用的名称标识。</desc>
+  <g id="mark-B-48"><path class="ink" fill="#10261f" fill-rule="evenodd" d="M44 22C24 22 12 38 12 64C12 90 24 106 44 106C64 106 76 90 76 64C76 54 74 46 70 39H84V106H102V39H118V22H44Z M44 40C54 40 59 48 59 64C59 80 54 88 44 88C34 88 29 80 29 64C29 48 34 40 44 40Z"/></g>
+</svg>
+</span></div>
+</article><article aria-labelledby="label-C">
+  <header class="candidate-head"><h2 id="label-C">C <span>双窗</span></h2><a href="C-parallel-windows.svg" download>SVG</a></header>
+  <div class="lockup"><div class="hero-mark"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title-C desc-C">
+  <title id="title-C">OpenTrading — C 双窗</title>
+  <desc id="desc-C">两个错位的开放窗口，对应工作台的多图观察与资产比较；每个窗口保持独立，组合成同一标识。</desc>
+  <g id="mark-C"><path class="accent-fill" fill="#22ab94" d="M18 78V18H78V34H34V78Z"/><path class="blue-fill" fill="#5086f5" d="M50 50H110V110H50V94H94V66H50Z"/></g>
+</svg>
+</div><div class="wordmark">OpenTrading</div></div>
+  <div class="samples" aria-label="16、24、32、48 像素预览"><span class="sample s16" aria-label="16 像素"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title-C-16 desc-C-16">
+  <title id="title-C-16">OpenTrading — C 双窗</title>
+  <desc id="desc-C-16">两个错位的开放窗口，对应工作台的多图观察与资产比较；每个窗口保持独立，组合成同一标识。</desc>
+  <g id="mark-C-16"><path class="accent-fill" fill="#22ab94" d="M18 78V18H78V34H34V78Z"/><path class="blue-fill" fill="#5086f5" d="M50 50H110V110H50V94H94V66H50Z"/></g>
+</svg>
+</span><span class="sample s24" aria-label="24 像素"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title-C-24 desc-C-24">
+  <title id="title-C-24">OpenTrading — C 双窗</title>
+  <desc id="desc-C-24">两个错位的开放窗口，对应工作台的多图观察与资产比较；每个窗口保持独立，组合成同一标识。</desc>
+  <g id="mark-C-24"><path class="accent-fill" fill="#22ab94" d="M18 78V18H78V34H34V78Z"/><path class="blue-fill" fill="#5086f5" d="M50 50H110V110H50V94H94V66H50Z"/></g>
+</svg>
+</span><span class="sample s32" aria-label="32 像素"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title-C-32 desc-C-32">
+  <title id="title-C-32">OpenTrading — C 双窗</title>
+  <desc id="desc-C-32">两个错位的开放窗口，对应工作台的多图观察与资产比较；每个窗口保持独立，组合成同一标识。</desc>
+  <g id="mark-C-32"><path class="accent-fill" fill="#22ab94" d="M18 78V18H78V34H34V78Z"/><path class="blue-fill" fill="#5086f5" d="M50 50H110V110H50V94H94V66H50Z"/></g>
+</svg>
+</span><span class="sample s48" aria-label="48 像素"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title-C-48 desc-C-48">
+  <title id="title-C-48">OpenTrading — C 双窗</title>
+  <desc id="desc-C-48">两个错位的开放窗口，对应工作台的多图观察与资产比较；每个窗口保持独立，组合成同一标识。</desc>
+  <g id="mark-C-48"><path class="accent-fill" fill="#22ab94" d="M18 78V18H78V34H34V78Z"/><path class="blue-fill" fill="#5086f5" d="M50 50H110V110H50V94H94V66H50Z"/></g>
+</svg>
+</span></div>
+</article><article aria-labelledby="label-D">
+  <header class="candidate-head"><h2 id="label-D">D <span>K 线</span></h2><a href="D-price-bars.svg" download>SVG</a></header>
+  <div class="lockup"><div class="hero-mark"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title-D desc-D">
+  <title id="title-D">OpenTrading — D K 线</title>
+  <desc id="desc-D">三根不同实体与影线的 K 线，直接对应价格观察和基于历史 K 线的策略检验，不表达单向上涨。</desc>
+  <g id="mark-D"><g class="positive-fill" fill="#089981"><rect x="20" y="30" width="8" height="68" rx="2"/><rect x="14" y="44" width="20" height="34" rx="3"/><rect x="100" y="32" width="8" height="64" rx="2"/><rect x="94" y="54" width="20" height="24" rx="3"/></g><g class="negative-fill" fill="#f23645"><rect x="60" y="18" width="8" height="90" rx="2"/><rect x="54" y="38" width="20" height="52" rx="3"/></g></g>
+</svg>
+</div><div class="wordmark">OpenTrading</div></div>
+  <div class="samples" aria-label="16、24、32、48 像素预览"><span class="sample s16" aria-label="16 像素"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title-D-16 desc-D-16">
+  <title id="title-D-16">OpenTrading — D K 线</title>
+  <desc id="desc-D-16">三根不同实体与影线的 K 线，直接对应价格观察和基于历史 K 线的策略检验，不表达单向上涨。</desc>
+  <g id="mark-D-16"><g class="positive-fill" fill="#089981"><rect x="20" y="30" width="8" height="68" rx="2"/><rect x="14" y="44" width="20" height="34" rx="3"/><rect x="100" y="32" width="8" height="64" rx="2"/><rect x="94" y="54" width="20" height="24" rx="3"/></g><g class="negative-fill" fill="#f23645"><rect x="60" y="18" width="8" height="90" rx="2"/><rect x="54" y="38" width="20" height="52" rx="3"/></g></g>
+</svg>
+</span><span class="sample s24" aria-label="24 像素"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title-D-24 desc-D-24">
+  <title id="title-D-24">OpenTrading — D K 线</title>
+  <desc id="desc-D-24">三根不同实体与影线的 K 线，直接对应价格观察和基于历史 K 线的策略检验，不表达单向上涨。</desc>
+  <g id="mark-D-24"><g class="positive-fill" fill="#089981"><rect x="20" y="30" width="8" height="68" rx="2"/><rect x="14" y="44" width="20" height="34" rx="3"/><rect x="100" y="32" width="8" height="64" rx="2"/><rect x="94" y="54" width="20" height="24" rx="3"/></g><g class="negative-fill" fill="#f23645"><rect x="60" y="18" width="8" height="90" rx="2"/><rect x="54" y="38" width="20" height="52" rx="3"/></g></g>
+</svg>
+</span><span class="sample s32" aria-label="32 像素"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title-D-32 desc-D-32">
+  <title id="title-D-32">OpenTrading — D K 线</title>
+  <desc id="desc-D-32">三根不同实体与影线的 K 线，直接对应价格观察和基于历史 K 线的策略检验，不表达单向上涨。</desc>
+  <g id="mark-D-32"><g class="positive-fill" fill="#089981"><rect x="20" y="30" width="8" height="68" rx="2"/><rect x="14" y="44" width="20" height="34" rx="3"/><rect x="100" y="32" width="8" height="64" rx="2"/><rect x="94" y="54" width="20" height="24" rx="3"/></g><g class="negative-fill" fill="#f23645"><rect x="60" y="18" width="8" height="90" rx="2"/><rect x="54" y="38" width="20" height="52" rx="3"/></g></g>
+</svg>
+</span><span class="sample s48" aria-label="48 像素"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title-D-48 desc-D-48">
+  <title id="title-D-48">OpenTrading — D K 线</title>
+  <desc id="desc-D-48">三根不同实体与影线的 K 线，直接对应价格观察和基于历史 K 线的策略检验，不表达单向上涨。</desc>
+  <g id="mark-D-48"><g class="positive-fill" fill="#089981"><rect x="20" y="30" width="8" height="68" rx="2"/><rect x="14" y="44" width="20" height="34" rx="3"/><rect x="100" y="32" width="8" height="64" rx="2"/><rect x="94" y="54" width="20" height="24" rx="3"/></g><g class="negative-fill" fill="#f23645"><rect x="60" y="18" width="8" height="90" rx="2"/><rect x="54" y="38" width="20" height="52" rx="3"/></g></g>
+</svg>
+</span></div>
+</article></section>
+</main>
+<script>
+const theme = document.getElementById('theme');
+const mono = document.getElementById('mono');
+theme.addEventListener('click', () => {
+  const active = document.body.classList.toggle('dark');
+  theme.setAttribute('aria-pressed', String(active));
+  theme.textContent = active ? '浅色背景' : '深色背景';
+});
+mono.addEventListener('click', () => {
+  const active = document.body.classList.toggle('mono');
+  mono.setAttribute('aria-pressed', String(active));
+  mono.textContent = active ? '彩色' : '单色';
+});
+</script>
+</body>
+</html>

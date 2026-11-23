@@ -1,10 +1,11 @@
 // Host compatibility extension for the pinned PineTS 0.9.34 runtime.
 // The upstream transpiler maps both var and varip to Context.var. Preserve only
 // global scalar varip values across its existing rollback; history and drawings
-// still use the upstream rollback. The Pine source is never rewritten.
+// still use the upstream rollback. Stored Pine source stays unchanged; supported
+// imports are linked only while compiling or scanning their metadata.
 import { PineTS, Indicator } from 'pinets'
-import { codeOnly } from './pineCompatibility.mjs'
-export const PINE_ADAPTER_VERSION='opentrading-2'
+import { codeOnly, linkPine } from './pineCompatibility.mjs'
+export const PINE_ADAPTER_VERSION='opentrading-3'
 let primaryIdentity='',primaryBars=new Map()
 let symbolCatalog=[]
 export function setPineSymbolCatalog(catalog){symbolCatalog=catalog}
@@ -23,10 +24,29 @@ export function installPineRuntimeCompat(){
   const prepare=Indicator.prototype.prepare,restore=PineTS.prototype._restoreVarState,initialize=PineTS.prototype._initializeContext
   if(typeof restore!=='function')throw new Error('Pine 引擎回滚接口改变，需要重新验证兼容层')
   const preparedObjects=new WeakSet(),keysByContext=new WeakMap(),states=new WeakMap()
+  for(const method of ['getInputsMeta','getPropsMeta','getDeclarationType']){
+    const read=Indicator.prototype[method]
+    Indicator.prototype[method]=function(...args){
+      const source=this.source,linked=typeof source==='string'?linkPine(source):null
+      try {if(linked?.imports.length)this.source=linked.source;return read.apply(this,args)}
+      finally {if(linked?.imports.length)this.source=source}
+    }
+  }
   // The Vela adapter invents generic USD metadata for request.security symbols.
   // Use the same verified catalog as the primary feed for every Pine context.
   PineTS.prototype._initializeContext=function(...args){
     const context=initialize.apply(this,args)
+    const createLine=context.pine.line.new.bind(context.pine.line)
+    context.pine.line.new=(...args)=>{
+      const first=context.get(args[0],0),second=context.get(args[1],0)
+      if(first&&second&&typeof first==='object'&&typeof second==='object'&&'price' in first&&'price' in second){
+        const positional=context.get(args[2],0),options=context.get(args[args.length-1],0)
+        const location=typeof positional==='string'?positional:context.get(options?.xloc,0)
+        const field=location===context.pine.xloc.bar_time?'time':'index'
+        return createLine(first[field],first.price,second[field],second.price,...args.slice(2))
+      }
+      return createLine(...args)
+    }
     if(symbolCatalog.length){
       const ticker=String(context.tickerId).split(';')[0].replace(/^(?:opentrading|heimdall):/i,'')
       const parts=ticker.split(':'),code=parts.at(-1).replace(/\.P$/,'')
@@ -37,7 +57,24 @@ export function installPineRuntimeCompat(){
     return context
   }
   Indicator.prototype.prepare=function(...args){
-    const prepared=prepare.apply(this,args)
+    const originalSource=this.source
+    const linked=typeof originalSource==='string'?linkPine(originalSource):null
+    let prepared
+    try {
+      if(linked?.imports.length)this.source=linked.source
+      prepared=prepare.apply(this,args)
+      if(linked?.imports.length){this.getInputsMeta();this.getPropsMeta()}
+    } catch(error) {
+      if(linked?.imports.length){
+        const location=String(error.message).match(/at (\d+):(\d+)/)
+        if(location){
+          const line=linked.lineMap[Number(location[1])-1]??Number(location[1])
+          error.line=line;error.column=Number(location[2])
+          error.message=error.message.replace(location[0],`at ${line}:${location[2]}`)
+        }
+      }
+      throw error
+    } finally { if(linked?.imports.length)this.source=originalSource }
     if(preparedObjects.has(prepared)||typeof this.source!=='string')return prepared
     preparedObjects.add(prepared)
     const names=[...codeOnly(this.source).matchAll(/^varip\s+(?:(?:int|float|bool|string|color)\s+)?([A-Za-z_]\w*)\s*=/gm)].map(m=>m[1])

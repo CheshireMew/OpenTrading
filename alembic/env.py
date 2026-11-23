@@ -8,6 +8,7 @@ from alembic import context
 
 from config import settings
 from app.infra.db.schema import Base
+from app.infra.db.schema_runtime import include_app_schema_object
 
 # Alembic Config 对象
 config = context.config
@@ -16,8 +17,8 @@ if not config.attributes.get("use_configured_database_url"):
     config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 # 配置日志
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+if config.config_file_name is not None and config.attributes.get("configure_logger", True):
+    fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 # 目标 metadata（Alembic 用它来对比 schema 差异）
 target_metadata = Base.metadata
@@ -29,6 +30,7 @@ def run_migrations_offline() -> None:
     context.configure(
         url=url,
         target_metadata=target_metadata,
+        include_object=include_app_schema_object,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
     )
@@ -47,6 +49,7 @@ def run_migrations_online() -> None:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
+            include_object=include_app_schema_object,
         )
         with context.begin_transaction():
             context.run_migrations()

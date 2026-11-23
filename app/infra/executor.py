@@ -13,6 +13,10 @@ T = TypeVar("T")
 
 @dataclass(slots=True)
 class BlockingExecutorRuntime:
+    workspace: ThreadPoolExecutor = field(default_factory=lambda: ThreadPoolExecutor(
+        max_workers=max(int(settings.BLOCKING_WORKSPACE_MAX_WORKERS), 1),
+        thread_name_prefix="opentrading-workspace",
+    ))
     database: ThreadPoolExecutor = field(default_factory=lambda: ThreadPoolExecutor(
         max_workers=max(int(settings.BLOCKING_DATABASE_MAX_WORKERS), 1),
         thread_name_prefix="opentrading-db",
@@ -35,7 +39,7 @@ class BlockingExecutorRuntime:
     ))
 
     def shutdown(self) -> None:
-        for executor in (self.database, self.compute, self.external_io, self.background, self.tools):
+        for executor in (self.database, self.compute, self.external_io, self.background, self.tools, self.workspace):
             executor.shutdown(wait=True, cancel_futures=True)
 
 
@@ -80,3 +84,7 @@ async def run_background(action: Callable[[], T]) -> T:
 
 async def run_tool(action: Callable[[], T]) -> T:
     return await _run(_get_executor_runtime().tools, action)
+
+
+async def run_workspace(action: Callable[[], T]) -> T:
+    return await _run(_get_executor_runtime().workspace, action)

@@ -28,6 +28,10 @@ apscheduler>=3.10.0      # 定时任务调度（用于市场指标数据抓取�
 
 # 数据处理
 pandas>=2.0.0            # 数据分析处理 (DCA 模块)
+exchange-calendars==4.13.2 # US/CN/HK trading sessions and market holidays
+pyarrow==19.0.1
+typer==0.26.8
+tzdata>=2026.2
 yfinance>=0.2.0          # 公开市场指数历史数据兜底源
 baostock>=0.8.9          # A 股指数日线历史数据兜底源
 akshare>=1.18.0          # 港股指数历史日线数据源

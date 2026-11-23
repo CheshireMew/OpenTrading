@@ -8,11 +8,6 @@ from fastapi.responses import JSONResponse
 
 from app.application.errors import InvalidRequestError
 from app.contracts.dto.errors import ApiErrorResponse
-from app.domain.portfolios import (
-    PortfolioCollectionMismatchError,
-    PortfolioNotFoundError,
-    PortfolioRevisionConflictError,
-)
 from app.domain.research import (
     ResearchDuplicateError,
     ResearchNotFoundError,
@@ -69,19 +64,6 @@ async def request_validation_error_handler(_request: Request, exc: RequestValida
     return JSONResponse(
         status_code=422,
         content=ApiErrorResponse(detail=detail).model_dump(),
-    )
-
-
-async def portfolio_domain_error_handler(_request: Request, exc: Exception):
-    if isinstance(exc, PortfolioNotFoundError):
-        status_code = 404
-    elif isinstance(exc, (PortfolioRevisionConflictError, PortfolioCollectionMismatchError)):
-        status_code = 409
-    else:
-        status_code = 500
-    return JSONResponse(
-        status_code=status_code,
-        content=ApiErrorResponse(detail=str(exc)).model_dump(),
     )
 
 

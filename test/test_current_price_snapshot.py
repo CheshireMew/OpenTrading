@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from app.domain.market.quotes import MarketQuote
 
 import pytest
 
@@ -11,8 +12,9 @@ class FakeSnapshot:
     def __init__(self, prices: dict[str, float | None]) -> None:
         self.prices = prices
 
-    async def get_current_price(self, symbol: str) -> float | None:
-        return self.prices.get(symbol)
+    async def get_current_quote(self, symbol: str):
+        now = int(time.time() * 1000)
+        return MarketQuote(self.prices.get(symbol), now, now, "websocket_snapshot")
 
 
 class FakeMarketDataService:
@@ -24,7 +26,7 @@ class FakeMarketDataService:
         self.history_calls.append(symbol)
         if self.delay_seconds:
             time.sleep(self.delay_seconds)
-        return [[1717000000000, 1.0, 2.0, 0.5, 456.0, 1000.0]]
+        return [[(int(time.time() * 1000) // 60000 - 1) * 60000, 1.0, 2.0, 0.5, 456.0, 1000.0]]
 
 
 class FakeRealtime:

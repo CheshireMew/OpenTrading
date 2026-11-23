@@ -1,0 +1,56 @@
+import type { PortfolioCollectionChangeCommand } from '../contracts'
+import type { PortfolioBalanceSnapshot } from './types'
+
+// Quotes and ledger-derived balances are read models, not configuration edits.
+export const portfolioConfiguration = (portfolio: PortfolioBalanceSnapshot['portfolios'][number]) => ({
+  ...portfolio,
+  lastPriceUpdatedAt: null,
+  ...(portfolio.holdingsSource === 'ledger' ? { holdingsInitializedAt: null, seedCapital: null } : {}),
+  assets: portfolio.assets.filter(asset => !(portfolio.holdingsSource === 'ledger' && asset.id.startsWith('ledger:') && asset.targetWeight === 0)).map(asset => ({ ...asset, currentPrice: 0, priceObservedAt: null, priceValidUntil: null,
+    ...(portfolio.holdingsSource === 'ledger' ? { units: 0, seedValue: 0 } : {}),
+  })),
+})
+
+export const clonePortfolioSnapshot = (
+  snapshot: PortfolioBalanceSnapshot,
+): PortfolioBalanceSnapshot => structuredClone(snapshot)
+
+const sameOrder = (left: string[], right: string[]) => (
+  left.length === right.length && left.every((value, index) => value === right[index])
+)
+const configurationKey = (value: unknown) => JSON.stringify(value, (_key, item) =>
+  item && typeof item === 'object' && !Array.isArray(item)
+    ? Object.fromEntries(Object.entries(item).sort(([a], [b]) => a.localeCompare(b))) : item)
+
+export const buildPortfolioChangeCommand = (
+  current: PortfolioBalanceSnapshot,
+  acknowledged: PortfolioBalanceSnapshot,
+  expectedRevision: number,
+): PortfolioCollectionChangeCommand | null => {
+  const acknowledgedById = new Map(
+    acknowledged.portfolios.map((portfolio) => [portfolio.id, portfolio] as const),
+  )
+  const changedPortfolios = current.portfolios.map(portfolioConfiguration).filter((portfolio) => {
+    const previous = acknowledgedById.get(portfolio.id)
+    const baseline = previous && portfolioConfiguration(portfolio.holdingsSource === 'ledger'
+      ? { ...previous, holdingsSource: 'ledger' } : previous)
+    return baseline === undefined || configurationKey(baseline) !== configurationKey(portfolio)
+  })
+  const portfolioOrder = current.portfolios.map((portfolio) => portfolio.id)
+  const acknowledgedOrder = acknowledged.portfolios.map((portfolio) => portfolio.id)
+
+  if (
+    changedPortfolios.length === 0
+    && current.activePortfolioId === acknowledged.activePortfolioId
+    && sameOrder(portfolioOrder, acknowledgedOrder)
+  ) {
+    return null
+  }
+
+  return {
+    expectedRevision,
+    activePortfolioId: current.activePortfolioId,
+    changedPortfolios,
+    portfolioOrder,
+  }
+}

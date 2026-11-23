@@ -46,6 +46,11 @@ npm run build:frontend
 - `frontend/src/modules/market/generatedContracts.ts`
 - `frontend/src/modules/system/generatedContracts.ts`
 - `frontend/src/modules/tools/generatedContracts.ts`
+- `frontend/src/modules/research/generatedContracts.ts`
+- `frontend/src/modules/chartWorkspace/generatedContracts.ts`
+- `frontend/src/modules/market/generatedWeb3Chains.ts`
+
+运行 `python -m scripts.generate_frontend_contracts --check`，以生成器的完整输出清单检查缺失或漂移。该命令只检查，不重写文件；CI 在构建前运行它。
 
 CI 使用 Windows、Python 3.12.10 与 Node.js 22.23.0，执行语法检查、Ruff、后端测试、前端测试、类型检查、构建和契约漂移检查。仅修改文档时，核对事实、命令、相对链接及中英日 README 的一致性即可，不必运行产品全套测试。
 

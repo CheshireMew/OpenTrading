@@ -8,6 +8,7 @@ from sqlalchemy import func, select
 
 from app.domain.research import ResearchNotFoundError, ResearchRevisionConflictError
 from app.infra.db.database import DatabaseRuntime
+from app.infra.persistence.write_session import write_session
 from app.infra.db.schema import ResearchEvent, TradeSignalRecord
 from utils.time import utc_now_naive
 
@@ -17,7 +18,7 @@ class TradeSignalRepository:
         self._database_runtime = database_runtime
 
     def create_signal(self, payload: dict[str, Any]) -> dict[str, Any]:
-        with self._database_runtime.session_scope() as session:
+        with write_session(self._database_runtime, ResearchRevisionConflictError) as session:
             now = utc_now_naive()
             row = TradeSignalRecord(
                 id=uuid4().hex,
@@ -54,7 +55,7 @@ class TradeSignalRepository:
         offset: int,
         limit: int,
     ) -> tuple[list[dict[str, Any]], int]:
-        with self._database_runtime.session_scope() as session:
+        with write_session(self._database_runtime, ResearchRevisionConflictError) as session:
             filters = []
             if symbol:
                 filters.append(TradeSignalRecord.symbol == symbol.upper())
@@ -77,11 +78,11 @@ class TradeSignalRepository:
             return [self._payload(row) for row in rows], total
 
     def get_signal(self, signal_id: str) -> dict[str, Any]:
-        with self._database_runtime.session_scope() as session:
+        with write_session(self._database_runtime, ResearchRevisionConflictError) as session:
             return self._payload(self._require(session, signal_id))
 
     def list_evaluation_candidates(self, signal_id: str | None = None) -> list[dict[str, Any]]:
-        with self._database_runtime.session_scope() as session:
+        with write_session(self._database_runtime, ResearchRevisionConflictError) as session:
             statement = select(TradeSignalRecord).where(TradeSignalRecord.archived_at.is_(None))
             if signal_id:
                 statement = statement.where(TradeSignalRecord.id == signal_id)
@@ -91,7 +92,7 @@ class TradeSignalRepository:
             return [self._payload(row) for row in rows]
 
     def record_evaluation(self, signal_id: str, payload: dict[str, Any]) -> dict[str, Any]:
-        with self._database_runtime.session_scope() as session:
+        with write_session(self._database_runtime, ResearchRevisionConflictError) as session:
             row = self._require(session, signal_id)
             previous = row.outcome_status
             mapping = {
@@ -133,7 +134,7 @@ class TradeSignalRepository:
         expected_version: int,
         archived: bool,
     ) -> dict[str, Any]:
-        with self._database_runtime.session_scope() as session:
+        with write_session(self._database_runtime, ResearchRevisionConflictError) as session:
             row = self._require(session, signal_id)
             if row.version != expected_version:
                 raise ResearchRevisionConflictError("交易信号已在其它窗口更新，请重新载入")

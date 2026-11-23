@@ -1,0 +1,15 @@
+                                 '利润保护已启动': bool(position and position.get('protection_active'))},
+                         cloud=TrendCloud(self.base+.45*self.width, self.base-.45*self.width, bar.close > self.base))
+
+
+_calculation = None
+
+
+def on_bar(context):
+    global _calculation
+    if _calculation is None or _calculation.processed >= len(context.history):
+        _calculation = Calculation(context.parameters)
+    result = None
+    for i in range(_calculation.processed, len(context.history)):
+        result = _calculation.update(context.history[i], context.position, decisions=i == len(context.history)-1)
+    return result

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from app.domain.market.constants import timeframe_to_milliseconds
+from app.domain.market.candles import candle_end_ms
 
 
 def merge_missing_ranges(ranges: list[tuple[int, int]]) -> list[tuple[int, int]]:
@@ -47,7 +48,7 @@ def collect_missing_ranges(
         for previous_row, current_row in zip(sorted_rows, sorted_rows[1:]):
             previous_ts = int(previous_row[0])
             current_ts = int(current_row[0])
-            expected_next_ts = previous_ts + timeframe_ms
+            expected_next_ts = candle_end_ms(previous_ts, timeframe)
             if current_ts <= expected_next_ts:
                 continue
             gap_start = max(start_ts, expected_next_ts)
@@ -55,7 +56,7 @@ def collect_missing_ranges(
             if gap_start < gap_end:
                 missing_ranges.append((gap_start, gap_end))
 
-    tail_start = last_cached + timeframe_ms if timeframe_ms > 0 else last_cached + 1
+    tail_start = candle_end_ms(last_cached, timeframe) if timeframe_ms > 0 else last_cached + 1
     if end_ts_exclusive > tail_start:
         missing_ranges.append((tail_start, end_ts_exclusive))
 

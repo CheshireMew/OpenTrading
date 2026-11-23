@@ -28,14 +28,14 @@
           tabindex="-1"
           class="symbol-dialog mx-auto flex w-full max-w-3xl flex-col overflow-hidden border shadow-xl outline-none"
         >
-          <div class="flex items-center justify-between border-b border-[#e4ded3] px-5 py-4 dark:border-gray-700">
+          <div class="flex items-center justify-between border-b border-[var(--ui-border)] px-5 py-4 dark:border-gray-700">
             <h2 :id="titleId" class="text-lg font-semibold text-stone-950 dark:text-white">{{ t('symbolSearch.title') }}</h2>
             <button type="button" :aria-label="t('common.close')" class="app-icon-button" @click="closeSearch">
               <XMarkIcon class="h-5 w-5" />
             </button>
           </div>
 
-          <div class="border-b border-[#e4ded3] p-4 dark:border-gray-700">
+          <div class="border-b border-[var(--ui-border)] p-4 dark:border-gray-700">
             <div class="symbol-search-field flex items-center border px-3">
               <MagnifyingGlassIcon class="h-5 w-5 shrink-0 text-stone-400" />
               <input
@@ -90,7 +90,7 @@
               :aria-pressed="isSelected(item)"
               class="symbol-result grid w-full items-center gap-x-3 gap-y-1 border-b px-5 py-3 text-left transition"
               :class="[
-                isSelected(item) ? 'bg-[#edf3ee] dark:bg-emerald-950/30' : '',
+                isSelected(item) ? 'bg-[var(--ui-hover)]' : '',
                 isDisabled(item) ? 'cursor-not-allowed opacity-45 hover:bg-transparent dark:hover:bg-transparent' : '',
               ]"
               @click="choose(item)"

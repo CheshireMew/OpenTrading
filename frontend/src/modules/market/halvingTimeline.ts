@@ -1,76 +1,83 @@
 import { DARK_PALETTE } from '@/theme/palette.mjs'
 import type { ChartConfiguration, ChartDataset } from 'chart.js'
 
-import { parseLocalIsoDate } from '@/utils/localDate'
+import type { BitcoinHalvingResponse } from './contracts'
 
+const KNOWN_HALVING_TIMESTAMPS = ['2012-11-28', '2016-07-09', '2020-05-11', '2024-04-20']
+  .map((date) => Date.parse(date))
+const ONE_DAY_MS = 24 * 60 * 60 * 1000
+const HALVING_WINDOW_MS = 500 * ONE_DAY_MS
 
-export const HALVING_DATES = [
-  { date: '2012-11-28', label: 'H1' },
-  { date: '2016-07-09', label: 'H2' },
-  { date: '2020-05-11', label: 'H3' },
-  { date: '2024-04-20', label: 'H4' },
-  { date: '2028-04-17', label: 'H5 (Est)', future: true },
-] as const
+type HalvingEvent = { timestamp: number; label: string }
 
-export const LAST_HALVING_DATE_TEXT = '2024-04-20'
-export const NEXT_HALVING_DATE_TEXT = '2028-04-17'
-export const LAST_HALVING_DATE = parseLocalIsoDate(LAST_HALVING_DATE_TEXT) ?? new Date(2024, 3, 20)
-export const NEXT_HALVING_ESTIMATE = parseLocalIsoDate(NEXT_HALVING_DATE_TEXT) ?? new Date(2028, 3, 17)
-export const ONE_DAY_MS = 24 * 60 * 60 * 1000
+export const buildHalvingTimeline = (estimate: BitcoinHalvingResponse | null) => {
+  const dates = [...KNOWN_HALVING_TIMESTAMPS, ...(estimate?.confirmed_halvings_after_2024 ?? [])]
+  const history = dates.map((timestamp, index) => ({ timestamp, label: `H${index + 1}` }))
+  return {
+    history,
+    last: history[history.length - 1],
+    next: estimate ? { timestamp: estimate.estimated_at, label: `H${history.length + 1} (Est)` } : null,
+  }
+}
+
+type HalvingTimeline = ReturnType<typeof buildHalvingTimeline>
+
+export const daysUntil = (timestamp: number, now: number) => Math.max(0, Math.ceil((timestamp - now) / ONE_DAY_MS))
 
 type Translate = (key: string, params?: Record<string, unknown>) => string
 type AnnotationMap = Record<string, Record<string, unknown>>
 
-const buildPhaseAnnotations = (t: Translate, isDark: boolean, compact: boolean): AnnotationMap => Object.fromEntries(
-  HALVING_DATES.flatMap((halving, index) => {
-    const halvingTime = new Date(halving.date).getTime()
-    return [
-      [`acc_${index}`, {
-        type: 'box',
-        xMin: halvingTime - (500 * ONE_DAY_MS),
-        xMax: halvingTime,
-        backgroundColor: 'rgba(34, 197, 94, 0.1)',
-        borderWidth: 0,
-        label: {
-          display: !compact,
-          content: t('halving.accumulation'),
-          color: isDark ? 'rgba(34, 197, 94, 0.8)' : 'rgba(21, 128, 61, 0.8)',
-          font: { size: 10 },
-          position: 'start',
-          yAdjust: -20,
-        },
-      }],
-      [`exp_${index}`, {
-        type: 'box',
-        xMin: halvingTime,
-        xMax: halvingTime + (540 * ONE_DAY_MS),
-        backgroundColor: 'rgba(249, 115, 22, 0.1)',
-        borderWidth: 0,
-        label: {
-          display: !compact,
-          content: t('halving.bullRun'),
-          color: isDark ? 'rgba(249, 115, 22, 0.8)' : 'rgba(194, 65, 12, 0.8)',
-          font: { size: 10 },
-          position: 'start',
-          yAdjust: -20,
-        },
-      }],
-    ]
-  }),
+const buildPhaseAnnotations = (halvings: HalvingEvent[], t: Translate, isDark: boolean, compact: boolean): AnnotationMap => Object.fromEntries(
+  halvings.flatMap(({ timestamp: halvingTime }, index) => [
+    [`acc_${index}`, {
+      type: 'box',
+      xMin: halvingTime - HALVING_WINDOW_MS,
+      xMax: halvingTime,
+      backgroundColor: 'rgba(34, 197, 94, 0.1)',
+      borderWidth: 0,
+      label: {
+        display: !compact,
+        content: t('halving.accumulation'),
+        color: isDark ? 'rgba(34, 197, 94, 0.8)' : 'rgba(21, 128, 61, 0.8)',
+        font: { size: 10 },
+        position: 'start',
+        yAdjust: -20,
+      },
+    }],
+    [`exp_${index}`, {
+      type: 'box',
+      xMin: halvingTime,
+      xMax: halvingTime + HALVING_WINDOW_MS,
+      backgroundColor: 'rgba(249, 115, 22, 0.1)',
+      borderWidth: 0,
+      label: {
+        display: !compact,
+        content: t('halving.bullRun'),
+        color: isDark ? 'rgba(249, 115, 22, 0.8)' : 'rgba(194, 65, 12, 0.8)',
+        font: { size: 10 },
+        position: 'start',
+        yAdjust: -20,
+      },
+    }],
+  ]),
 )
 
-const buildAnnotations = (t: Translate, isDark: boolean, showPhases: boolean, compact: boolean): AnnotationMap => {
-  const annotations: AnnotationMap = Object.fromEntries(HALVING_DATES.map((halving, index) => [
+const buildAnnotations = (
+  timeline: HalvingTimeline, now: number, t: Translate, isDark: boolean, showPhases: boolean, compact: boolean,
+): AnnotationMap => {
+  const { history, last, next } = timeline
+  const halvings = next ? [...history, next] : history
+  const annotations: AnnotationMap = Object.fromEntries(halvings.map((halving, index) => [
     `halving_${index}`,
     {
       type: 'line',
       scaleID: 'x',
-      value: new Date(halving.date).getTime(),
+      value: halving.timestamp,
       borderColor: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0,0,0,0.3)',
       borderWidth: 2,
       borderDash: [6, 6],
       label: {
-        display: !compact || index >= 3,
+        display: !compact || index >= history.length - 1,
         content: halving.label,
         position: 'start',
         backgroundColor: isDark ? DARK_PALETTE.elevated : 'rgba(255, 255, 255, 1)',
@@ -80,19 +87,17 @@ const buildAnnotations = (t: Translate, isDark: boolean, showPhases: boolean, co
       },
     },
   ]))
-  if (showPhases) Object.assign(annotations, buildPhaseAnnotations(t, isDark, compact))
+  if (showPhases) Object.assign(annotations, buildPhaseAnnotations(halvings, t, isDark, compact))
 
-  const now = Date.now()
-  const h4 = new Date(HALVING_DATES[3].date).getTime()
-  const h5 = new Date(HALVING_DATES[4].date).getTime()
-  const bullEnd = h4 + (540 * ONE_DAY_MS)
-  const accStart = h5 - (500 * ONE_DAY_MS)
-  const [nextPhaseLabel, nextPhaseDays] = now < bullEnd
-    ? [t('halving.bullRunEnds'), Math.ceil((bullEnd - now) / ONE_DAY_MS)]
-    : now < accStart
-      ? [t('halving.accStarts'), Math.ceil((accStart - now) / ONE_DAY_MS)]
-      : [t('halving.nextHalvingPhase'), Math.ceil((h5 - now) / ONE_DAY_MS)]
-  if (now > h4) {
+  const bullEnd = last.timestamp + HALVING_WINDOW_MS
+  let nextPhase = now < bullEnd ? { label: 'halving.bullRunEnds', timestamp: bullEnd } : null
+  if (!nextPhase && next) {
+    const accStart = next.timestamp - HALVING_WINDOW_MS
+    nextPhase = now < accStart
+      ? { label: 'halving.accStarts', timestamp: accStart }
+      : { label: 'halving.nextHalvingPhase', timestamp: next.timestamp }
+  }
+  if (now > last.timestamp) {
     annotations.current_countdown = {
       type: 'line',
       scaleID: 'x',
@@ -102,7 +107,10 @@ const buildAnnotations = (t: Translate, isDark: boolean, showPhases: boolean, co
       borderDash: [2, 4],
       label: {
         display: true,
-        content: compact ? t('halving.today') : [t('halving.today'), t('halving.daysTo', { days: nextPhaseDays, phase: nextPhaseLabel })],
+        content: compact || !nextPhase ? t('halving.today') : [t('halving.today'), t('halving.daysTo', {
+          days: daysUntil(nextPhase.timestamp, now),
+          phase: t(nextPhase.label),
+        })],
         position: 'center',
         backgroundColor: isDark ? 'rgba(59, 130, 246, 0.9)' : 'rgba(37, 99, 235, 0.9)',
         color: '#fff',
@@ -115,6 +123,8 @@ const buildAnnotations = (t: Translate, isDark: boolean, showPhases: boolean, co
 }
 
 export const buildHalvingChartConfig = (options: {
+  timeline: HalvingTimeline
+  now: number
   t: Translate
   isDark: boolean
   showPhases: boolean
@@ -155,7 +165,9 @@ export const buildHalvingChartConfig = (options: {
         },
       },
       plugins: {
-        annotation: { annotations: buildAnnotations(options.t, options.isDark, options.showPhases, Boolean(options.compact)) },
+        annotation: {
+          annotations: buildAnnotations(options.timeline, options.now, options.t, options.isDark, options.showPhases, Boolean(options.compact)),
+        },
         decimation: { enabled: true, algorithm: 'lttb', samples: 600 },
         legend: { display: false },
         tooltip: {

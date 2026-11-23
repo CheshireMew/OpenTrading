@@ -1,4 +1,4 @@
-<template><div ref="chartContainer" class="relative h-full w-full" /></template>
+<template><div ref="chartContainer" class="trading-chart relative h-full w-full min-h-0 min-w-0" /></template>
 
 <script setup lang="ts">
 import { DARK_CHART_COLORS } from '@/theme/palette.mjs'
@@ -17,9 +17,12 @@ const props = withDefaults(defineProps<Partial<TradingViewChartProps>>(), {
 
 const emit = defineEmits<{ 'load-more': [] }>()
 const { t } = useI18n()
-const { chartContainer, getChart } = useTradingViewChart(props, emit, t)
+const { chartContainer, getChart, isVisible, isResizing, setVisibleLogicalRange } = useTradingViewChart(props, emit, t)
 
 defineExpose({
   get chart() { return getChart() },
+  isVisible,
+  isResizing,
+  setVisibleLogicalRange,
 })
 </script>

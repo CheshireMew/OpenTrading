@@ -7,12 +7,16 @@
       <!-- Card 1: Countdown -->
       <div class="app-card relative overflow-hidden transition-all">
         <h3 class="text-sm font-medium text-stone-500 dark:text-slate-400">{{ $t('halving.nextHalvingEstimate') }}</h3>
-        <p class="mt-2 text-3xl font-semibold text-stone-950 dark:text-white">{{ $t('halving.estimatedDate', { date: nextHalvingDate }) }}</p>
-        <div class="mt-2 flex items-center text-sm font-medium text-[#0f6b4f] dark:text-emerald-300">
+        <p class="halving-estimate-date mt-2 font-semibold text-stone-950 dark:text-white">{{ nextHalvingDate ? $t('halving.estimatedDate', { date: nextHalvingDate }) : '—' }}</p>
+        <div v-if="daysToHalving !== null" class="mt-2 flex items-center text-sm font-medium text-[var(--ui-title)]">
           <ClockIcon class="w-4 h-4 mr-1" />
           <span>{{ daysToHalving }} {{ $t('halving.daysLeft') }}</span>
         </div>
-        <p class="mt-3 text-xs leading-5 text-stone-500 dark:text-slate-400">{{ $t('halving.estimateNotice') }}</p>
+        <p class="mt-3 text-xs leading-5 text-stone-500 dark:text-slate-400" role="status">
+          {{ halvingEstimateFailed
+            ? $t(nextHalvingDate ? 'halving.estimateStale' : 'halving.estimateUnavailable')
+            : $t('halving.estimateNotice') }}
+        </p>
       </div>
 
       <!-- Card 2: Price -->
@@ -22,28 +26,29 @@
           {{ formatPrice(currentPrice) }}
         </p>
         <p class="mt-1 text-xs text-stone-500">BTC/USDT</p>
-        <p v-if="currentPriceUpdatedAt" class="mt-1 text-xs text-stone-500 dark:text-slate-400">{{ $t('halving.updatedAt', { time: new Date(currentPriceUpdatedAt).toLocaleString() }) }}</p>
+        <p v-if="currentPriceUpdatedAt" class="mt-1 text-xs text-stone-500 dark:text-slate-400">{{ $t('halving.updatedAt', { time: formatDateTime(currentPriceUpdatedAt) }) }}</p>
       </div>
 
       <!-- Card 3: Cycle Progress -->
       <div class="halving-progress-card app-card relative overflow-hidden">
         <h3 class="mb-4 text-sm font-medium text-stone-500 dark:text-slate-400">{{ $t('halving.cycleProgress') }}</h3>
-        <div class="relative pt-1">
+        <div v-if="cycleProgress !== null" class="relative pt-1">
           <div class="mb-2 flex items-center justify-end">
             <div class="text-right">
-              <span class="inline-block text-xs font-semibold text-[#0f6b4f] dark:text-emerald-300">
+              <span class="inline-block text-xs font-semibold text-[var(--ui-title)]">
                 {{ cycleProgress }}%
               </span>
             </div>
           </div>
           <div class="mb-4 flex h-3 overflow-hidden bg-stone-200 text-xs dark:bg-gray-700" role="progressbar" :aria-label="$t('halving.cycleProgress')" :aria-valuenow="cycleProgress" :aria-valuemin="0" :aria-valuemax="100">
-            <div :style="{ width: cycleProgress + '%' }" class="flex flex-col justify-center whitespace-nowrap bg-[#0f6b4f] text-center text-white shadow-none transition-all duration-1000 ease-out dark:bg-emerald-500"></div>
+            <div :style="{ width: cycleProgress + '%' }" class="flex flex-col justify-center whitespace-nowrap bg-[var(--ui-accent)] text-center text-[var(--ui-onAccent)] shadow-none transition-all duration-1000 ease-out"></div>
           </div>
           <div class="flex justify-between text-xs text-stone-400">
-            <span>2024-04-20</span>
-            <span>Est. 2028-04-17</span>
+            <span>{{ lastHalvingDate }}</span>
+            <span>{{ $t('halving.estimatedDate', { date: nextHalvingDate }) }}</span>
           </div>
         </div>
+        <p v-else class="mt-2 text-stone-500 dark:text-slate-400">—</p>
       </div>
     </div>
 
@@ -57,7 +62,7 @@
       <div class="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
            <h2 class="flex items-center text-xl font-semibold text-stone-950 dark:text-white">
-             <ChartBarIcon class="mr-2 h-6 w-6 text-[#0f6b4f]" />
+             <ChartBarIcon class="mr-2 h-6 w-6 text-[var(--ui-title)]" />
              {{ $t('halving.chartTitle') }}
            </h2>
            <div v-if="showPhases" class="mt-2 flex flex-wrap items-center gap-2 text-xs text-stone-500 dark:text-slate-400">
@@ -92,17 +97,17 @@
            <!-- Phases Toggle -->
            <label class="inline-flex items-center cursor-pointer">
               <input type="checkbox" v-model="showPhases" class="sr-only peer">
-              <div class="peer relative h-6 w-11 bg-stone-200 peer-checked:bg-[#0f6b4f] peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-600 peer-focus-visible:ring-offset-2 dark:bg-gray-700 dark:peer-checked:bg-emerald-500 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white rtl:peer-checked:after:-translate-x-full dark:border-gray-600"></div>
+              <div class="peer relative h-6 w-11 bg-stone-200 peer-checked:bg-[var(--ui-accent)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--ui-accent)] peer-focus-visible:ring-offset-2 dark:bg-gray-700 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-[var(--ui-onAccent)] peer-checked:after:bg-[var(--ui-onAccent)] rtl:peer-checked:after:-translate-x-full dark:border-gray-600"></div>
               <span class="ms-3 text-sm font-medium text-stone-900 dark:text-gray-300">{{ $t('halving.phases') }}</span>
             </label>
         </div>
       </div>
       
-      <div class="app-chart-frame relative h-[420px] w-full sm:h-[520px] lg:h-[600px]">
+      <div class="app-chart-frame relative h-[420px] w-full sm:h-[520px] lg:h-[600px]" :style="chartHeight ? { height: chartHeight + 'px' } : undefined">
         <canvas ref="chartCanvas" role="img" :aria-label="$t('halving.chartTitle')"></canvas>
-        <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-[#f7f4ed]/80 backdrop-blur-sm dark:bg-gray-900/80">
+        <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-gray-50/80 backdrop-blur-sm dark:bg-gray-900/80">
           <div class="flex flex-col items-center">
-             <div class="h-12 w-12 animate-spin rounded-full border-4 border-[#0f6b4f] border-t-transparent"></div>
+             <div class="h-12 w-12 animate-spin rounded-full border-4 border-[var(--ui-accent)] border-t-transparent"></div>
              <span class="mt-3 text-sm font-medium text-stone-500">{{ $t('halving.loading') }}</span>
           </div>
         </div>
@@ -113,6 +118,9 @@
 </template>
 
 <script setup>
+import { useDateTime } from '@/composables/useDateTime'
+const { formatDateTime } = useDateTime()
+
 import { ClockIcon, ChartBarIcon } from '@heroicons/vue/24/outline'
 import { useHalvingPage } from '@/modules/market'
 
@@ -121,10 +129,13 @@ const {
   error,
   retry,
   chartCanvas,
+  chartHeight,
   currentPrice,
   currentPriceUpdatedAt,
   showPhases,
   scaleType,
+  halvingEstimateFailed,
+  lastHalvingDate,
   nextHalvingDate,
   daysToHalving,
   cycleProgress,
@@ -134,6 +145,7 @@ const {
 
 <style scoped>
 .halving-summary-strip { border-block:1px solid var(--ui-border); gap:0; }
+.halving-estimate-date { font-size:clamp(22px, 2vw, 28px); line-height:1.3; text-wrap:balance; word-break:keep-all; overflow-wrap:normal; }
 .halving-summary-strip .app-card { border:0; border-radius:0; background:transparent; padding:20px 24px; }
 .halving-summary-strip .app-card + .app-card { border-left:1px solid var(--ui-border); }
 .halving-summary-strip .app-card:first-child { padding-left:0; }

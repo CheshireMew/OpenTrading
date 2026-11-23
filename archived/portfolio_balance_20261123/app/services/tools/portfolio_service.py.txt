@@ -1,0 +1,366 @@
+from __future__ import annotations
+
+from datetime import datetime, timezone
+
+from app.application.persistence_ports import PortfolioRepositoryPort
+from app.domain.portfolio_accounting import calculate_portfolio_ledger
+from app.domain.portfolios import PortfolioCollectionRecord, PortfolioNotFoundError, portfolio_configuration
+from app.infra.executor import run_database
+from app.services.tools.portfolio_quotes import PortfolioQuotes
+from app.contracts.portfolios import (
+    LegacyPortfolioExportDocument,
+    PortfolioBalancePortfolio,
+    PortfolioBalanceSnapshot,
+    PortfolioCollectionChangeCommand,
+    PortfolioCollectionImportCommand,
+    PortfolioCollectionResponse,
+    PortfolioCollectionSaveCommand,
+    PortfolioDeletedPage,
+    PortfolioDeletedSummary,
+    PortfolioBackupDocument,
+    PortfolioSimulationArtifact,
+    PortfolioSimulationResultCommand,
+    PortfolioSimulationResultResponse,
+    PortfolioLedgerResponse,
+    PortfolioTransactionArchiveCommand,
+    PortfolioTransactionCreateCommand,
+    PortfolioTransactionInput,
+    PortfolioTransactionImportCommand,
+    PortfolioTransactionImportResponse,
+    PortfolioTransactionResponse,
+    PortfolioTransactionUpdateCommand,
+)
+
+
+class PortfolioService:
+    def __init__(self, repository: PortfolioRepositoryPort, *, market_query_service=None, index_data_service=None) -> None:
+        self._repository = repository
+        self._quotes = PortfolioQuotes(market_query_service, index_data_service)
+
+    def get_collection(self) -> PortfolioCollectionResponse:
+        return self._to_response(self._repository.get_collection())
+
+    def get_ledger(self, portfolio_id: str) -> PortfolioLedgerResponse:
+        record = self._repository.get_ledger_record(portfolio_id)
+        return self._ledger_response(portfolio_id, record)
+
+    async def get_valued_ledger(self, portfolio_id: str) -> PortfolioLedgerResponse:
+        record = await run_database(lambda: self._repository.get_ledger_record(portfolio_id))
+        quotes = await self._quotes.load(self._record_symbols(record))
+        result = self._ledger_response(portfolio_id, record, {symbol: value["currentPrice"] for symbol, value in quotes.items()})
+        for position in result.summary.positions:
+            quote = quotes.get(position.symbol, {})
+            position.priceObservedAt = quote.get("priceObservedAt")
+            position.priceValidUntil = quote.get("priceValidUntil")
+        return result
+
+    @staticmethod
+    def _record_symbols(record: dict) -> set[str]:
+        return {str(item.get("symbol") or "").upper() for item in
+                [*record["portfolio_payload"].get("assets", []), *record["transactions"]]}
+
+    async def get_allocation_collection(self) -> PortfolioCollectionRecord:
+        def read():
+            collection = self._repository.get_collection()
+            records = []
+            for item in collection.active_payloads:
+                try:
+                    records.append(self._repository.get_ledger_record(item["id"]))
+                except PortfolioNotFoundError:
+                    # A concurrently archived portfolio makes its own drift
+                    # unavailable without interrupting unrelated alert rules.
+                    continue
+            return collection, records
+        collection, records = await run_database(read)
+        quotes = await self._quotes.load(set().union(*(self._record_symbols(record) for record in records)))
+        prices = {symbol: quote["currentPrice"] for symbol, quote in quotes.items()}
+        payloads = []
+        for record in records:
+            payload = dict(record["portfolio_payload"])
+            assets = [dict(asset) for asset in payload.get("assets", [])]
+            if record["transactions"] or record["archived_transactions"] or payload.get("holdingsSource") == "ledger":
+                summary = self._ledger_response(payload["id"], record, prices).summary
+                if summary.costBasis is None or summary.cashBalance is None or summary.cashBalance < 0:
+                    # Invalid accounting cannot yield a seemingly valid drift.
+                    payload["valuationComplete"] = False
+                positions = {}
+                for item in summary.positions:
+                    base = item.symbol.upper().split("/")[0]
+                    positions[base] = positions.get(base, 0) + item.units
+                    if item.units < 0:
+                        payload["valuationComplete"] = False
+                positions["USD"] = positions.get("USD", 0) + (summary.cashBalance or 0)
+                for asset in assets:
+                    asset["units"] = positions.pop(str(asset.get("symbol", "")).upper().split("/")[0], 0)
+                for symbol, units in positions.items():
+                    if units:
+                        assets.append({"symbol": symbol, "units": units, "targetWeight": 0})
+            for asset in assets:
+                symbol = str(asset.get("symbol") or "").upper()
+                quote = quotes.get(symbol) or quotes.get(symbol.split("/")[0]) or {}
+                asset.update(currentPrice=quote.get("currentPrice", 0), priceObservedAt=quote.get("priceObservedAt"),
+                             priceValidUntil=quote.get("priceValidUntil"))
+            payload["assets"] = assets
+            payloads.append(payload)
+        return PortfolioCollectionRecord(collection.revision, collection.active_portfolio_id, payloads)
+
+    def create_transaction(
+        self,
+        portfolio_id: str,
+        command: PortfolioTransactionCreateCommand,
+    ) -> PortfolioTransactionResponse:
+        return PortfolioTransactionResponse.model_validate(
+            self._repository.create_transaction(
+                portfolio_id,
+                self._transaction_payload(command),
+                request_id=command.requestId,
+            )
+        )
+
+    def update_transaction(
+        self,
+        portfolio_id: str,
+        transaction_id: str,
+        command: PortfolioTransactionUpdateCommand,
+    ) -> PortfolioTransactionResponse:
+        return PortfolioTransactionResponse.model_validate(
+            self._repository.update_transaction(
+                portfolio_id,
+                transaction_id,
+                command.expectedVersion,
+                self._transaction_payload(command),
+            )
+        )
+
+    def archive_transaction(
+        self,
+        portfolio_id: str,
+        transaction_id: str,
+        command: PortfolioTransactionArchiveCommand,
+        *,
+        archived: bool,
+    ) -> PortfolioTransactionResponse:
+        return PortfolioTransactionResponse.model_validate(
+            self._repository.set_transaction_archived(
+                portfolio_id,
+                transaction_id,
+                command.expectedVersion,
+                archived,
+            )
+        )
+
+    def import_transactions(
+        self,
+        portfolio_id: str,
+        command: PortfolioTransactionImportCommand,
+    ) -> PortfolioTransactionImportResponse:
+        imported_count, archived_count = self._repository.import_transactions(
+            portfolio_id,
+            [self._transaction_payload(item) for item in command.transactions],
+            replace=command.mode == "replace",
+            request_id=command.requestId,
+        )
+        return PortfolioTransactionImportResponse(
+            importedCount=imported_count,
+            archivedCount=archived_count,
+            ledger=self.get_ledger(portfolio_id),
+        )
+
+    def save_collection(self, command: PortfolioCollectionSaveCommand) -> PortfolioCollectionResponse:
+        return self._to_response(
+            self._repository.apply_collection_changes(
+                command.snapshot.activePortfolioId,
+                [portfolio_configuration(portfolio.model_dump(mode="json")) for portfolio in command.snapshot.portfolios],
+                [portfolio.id for portfolio in command.snapshot.portfolios],
+                command.expectedRevision,
+            )
+        )
+
+    def apply_collection_changes(
+        self,
+        command: PortfolioCollectionChangeCommand,
+    ) -> PortfolioCollectionResponse:
+        return self._to_response(
+            self._repository.apply_collection_changes(
+                command.activePortfolioId,
+                [portfolio_configuration(portfolio.model_dump(mode="json")) for portfolio in command.changedPortfolios],
+                command.portfolioOrder,
+                command.expectedRevision,
+            )
+        )
+
+    def restore_portfolio(self, portfolio_id: str, expected_revision: int) -> PortfolioCollectionResponse:
+        return self._to_response(
+            self._repository.restore_portfolio(portfolio_id, expected_revision)
+        )
+
+    def list_deleted(self, *, offset: int, limit: int) -> PortfolioDeletedPage:
+        page = self._repository.list_deleted(offset=offset, limit=limit)
+        return PortfolioDeletedPage(
+            items=[
+                PortfolioDeletedSummary(
+                    id=item.portfolio_id,
+                    name=item.name,
+                    deletedAt=item.deleted_at,
+                )
+                for item in page.items
+            ],
+            offset=page.offset,
+            limit=page.limit,
+            total=page.total,
+        )
+
+    def get_simulation(self, portfolio_id: str) -> PortfolioSimulationResultResponse:
+        return self._to_simulation_response(
+            self._repository.get_simulation(portfolio_id)
+        )
+
+    def save_simulation(
+        self,
+        portfolio_id: str,
+        command: PortfolioSimulationResultCommand,
+    ) -> PortfolioSimulationResultResponse:
+        return self._to_simulation_response(
+            self._repository.save_simulation(
+                portfolio_id,
+                command.expectedRevision,
+                command.result.model_dump(mode="json"),
+            )
+        )
+
+    def export_collection(self) -> PortfolioBackupDocument:
+        record = self._repository.get_export_record()
+        return PortfolioBackupDocument(
+            schemaVersion=3,
+            exportedAt=datetime.now(timezone.utc),
+            snapshot=PortfolioBalanceSnapshot(
+                activePortfolioId=record.active_portfolio_id,
+                portfolios=record.active_payloads,
+            ),
+            deletedPortfolios=record.deleted_payloads,
+            simulationResults=[
+                PortfolioSimulationArtifact(portfolioId=portfolio_id, result=payload)
+                for portfolio_id, payload in record.simulation_payloads
+            ],
+            transactions=record.transaction_payloads,
+            deletedAt=record.deleted_at,
+        )
+
+    def import_collection(self, command: PortfolioCollectionImportCommand) -> PortfolioCollectionResponse:
+        snapshot, simulations = self._normalize_import_document(command.document)
+        deleted = [PortfolioBalancePortfolio.model_validate(item.model_dump(exclude={"lastSimulationResult"}))
+                   for item in command.document.deletedPortfolios]
+        if isinstance(command.document, LegacyPortfolioExportDocument):
+            simulations.update({item.id: item.lastSimulationResult for item in command.document.deletedPortfolios
+                                if item.lastSimulationResult is not None})
+        ids = [item.id for item in [*snapshot.portfolios, *deleted]]
+        if len(ids) != len(set(ids)) or not set(simulations).issubset(ids):
+            from app.domain.portfolios import PortfolioCollectionMismatchError
+            raise PortfolioCollectionMismatchError("备份中的组合或模拟结果引用无效")
+        record = self._repository.import_collection(
+            active_portfolio_id=snapshot.activePortfolioId,
+            active_payloads=[portfolio_configuration(item.model_dump(mode="json")) for item in snapshot.portfolios],
+            deleted_payloads=[portfolio_configuration(item.model_dump(mode="json")) for item in deleted],
+            simulation_payloads={key: value.model_dump(mode="json") for key, value in simulations.items()},
+            transactions=[item.model_dump() for item in command.document.transactions]
+            if isinstance(command.document, PortfolioBackupDocument) else None,
+            deleted_at=command.document.deletedAt if isinstance(command.document, PortfolioBackupDocument) else {},
+            expected_revision=command.expectedRevision, replace=command.mode == "replace",
+        )
+        return self._to_response(record)
+
+    @staticmethod
+    def _normalize_import_document(document):
+        if isinstance(document, LegacyPortfolioExportDocument):
+            portfolios = [
+                PortfolioBalancePortfolio.model_validate(
+                    portfolio.model_dump(exclude={"lastSimulationResult"})
+                )
+                for portfolio in document.snapshot.portfolios
+            ]
+            simulations = {
+                portfolio.id: portfolio.lastSimulationResult
+                for portfolio in document.snapshot.portfolios
+                if portfolio.lastSimulationResult is not None
+            }
+            return (
+                PortfolioBalanceSnapshot(
+                    activePortfolioId=document.snapshot.activePortfolioId,
+                    portfolios=portfolios,
+                ),
+                simulations,
+            )
+        return (
+            document.snapshot,
+            {
+                artifact.portfolioId: artifact.result
+                for artifact in document.simulationResults
+            },
+        )
+
+    @staticmethod
+    def _to_response(record) -> PortfolioCollectionResponse:
+        return PortfolioCollectionResponse(
+            revision=record.revision,
+            snapshot=PortfolioBalanceSnapshot(
+                activePortfolioId=record.active_portfolio_id,
+                portfolios=record.active_payloads,
+            ),
+        )
+
+    @staticmethod
+    def _to_simulation_response(record) -> PortfolioSimulationResultResponse:
+        return PortfolioSimulationResultResponse(
+            portfolioId=record.portfolio_id,
+            result=record.result_payload,
+            updatedAt=record.updated_at,
+        )
+
+    @staticmethod
+    def _transaction_payload(command: PortfolioTransactionInput) -> dict:
+        return {
+            "transaction_type": command.transactionType,
+            "symbol": command.symbol.strip().upper(),
+            "quantity": command.quantity,
+            "unit_price": command.unitPrice,
+            "cash_amount": command.cashAmount,
+            "fee": command.fee,
+            "currency": command.currency.strip().upper(),
+            "fee_currency": command.feeCurrency.strip().upper(),
+            "external_id": command.externalId.strip() if command.externalId else None,
+            "note": command.note.strip(),
+            "metadata_payload": command.metadata,
+            "occurred_at": command.occurredAt.astimezone(timezone.utc).replace(tzinfo=None)
+            if command.occurredAt.tzinfo is not None
+            else command.occurredAt,
+        }
+
+    @staticmethod
+    def _ledger_response(portfolio_id: str, record: dict, market_prices: dict | None = None) -> PortfolioLedgerResponse:
+        active_transactions = record["transactions"]
+        domain_transactions = [
+            {
+                "id": item["id"],
+                "transaction_type": item["transactionType"],
+                "symbol": item["symbol"],
+                "quantity": item["quantity"],
+                "unit_price": item["unitPrice"],
+                "cash_amount": item["cashAmount"],
+                "fee": item["fee"],
+                "currency": item["currency"],
+                "fee_currency": item["feeCurrency"],
+                "occurred_at": item["occurredAt"],
+            }
+            for item in active_transactions
+        ]
+        summary = calculate_portfolio_ledger(
+            domain_transactions,
+            market_prices=market_prices or {},
+        )
+        return PortfolioLedgerResponse(
+            portfolioId=portfolio_id,
+            holdingsSource="ledger" if active_transactions or record["archived_transactions"] or record["portfolio_payload"].get("holdingsSource") == "ledger" else "virtual",
+            transactions=active_transactions,
+            archivedTransactions=record["archived_transactions"],
+            summary=summary,
+        )

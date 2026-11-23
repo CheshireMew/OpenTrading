@@ -60,6 +60,7 @@ class MarketSchedulerRuntime:
             self._cleanup_old_data,
             'interval',
             hours=24,
+            next_run_time=datetime.now(timezone.utc),
             id='data_retention_cleanup',
             replace_existing=True,
             coalesce=True,

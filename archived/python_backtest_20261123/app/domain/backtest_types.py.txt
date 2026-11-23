@@ -1,0 +1,112 @@
+from __future__ import annotations
+from collections.abc import Sequence
+from dataclasses import dataclass, field
+from typing import Any
+
+DISCLAIMER = "基于所选价格数据、不计成本的多空策略模拟"
+
+
+@dataclass(frozen=True)
+class Bar:
+    timestamp: int
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: float
+
+
+class History(Sequence):
+    """Append-only past data. A strategy never receives future bars."""
+
+    def __init__(self, past_bars):
+        self.__bars = past_bars
+
+    def __len__(self):
+        return len(self.__bars)
+
+    def __getitem__(self, key):
+        value = self.__bars[key]
+        return tuple(value) if isinstance(key, slice) else value
+
+
+@dataclass(frozen=True)
+class ProfitProtection:
+    """Activate after a favorable return, then retain a share of peak profit.
+
+    Both fields are percentages: activation_pct=2, giveback_pct=40 means
+    activate at +2% and protect 60% of the best excursion known at a close.
+    """
+
+    activation_pct: float
+    giveback_pct: float
+
+
+@dataclass(frozen=True)
+class Intent:
+    action: str = "hold"
+    stop_loss_pct: float | None = None
+    take_profit_pct: float | None = None
+    trailing_stop_pct: float | None = None
+    reason: str = ""
+    profit_protection: ProfitProtection | None = None
+    # Absolute price distance known at signal close, anchored to the next fill.
+    # Mutually exclusive with stop_loss_pct. Used for ATR-based initial stops.
+    stop_loss_distance: float | None = None
+    # Applies only to the initial stop, never to profit protection. The clock
+    # defaults to strategy bars; execution opts into available finer bars.
+    stop_loss_confirmation: str = "immediate"
+    pause_after_stop: bool = False
+    stop_confirmation_clock: str = "signal"
+    # Absolute favorable distance known at decision close; anchored to the fill.
+    activation_distance: float | None = None
+
+
+@dataclass(frozen=True)
+class TrendCloud:
+    upper: float
+    lower: float
+    bullish: bool
+
+
+@dataclass(frozen=True)
+class StopEntry:
+    """A close-created breakout order, valid for the next observed bar only.
+
+    Only opens when flat. A separate close intent can exit at that bar's open.
+    worst_price cancels the bar's order if the open gaps beyond the chase cap.
+    Ambiguous entry-bar stops use stop_first or adverse_extreme_before_entry;
+    these are OHLC execution assumptions, not known tick chronology.
+    """
+
+    intent: Intent
+    trigger_price: float
+    worst_price: float | None = None
+    ambiguity_policy: str = "stop_first"
+
+
+@dataclass(frozen=True)
+class BarResult:
+    """Optional per-close observations. Recorded even without a trade signal."""
+
+    intent: Intent | None = None
+    values: dict[str, float | None] = field(default_factory=dict)
+    checks: dict[str, bool] = field(default_factory=dict)
+    cloud: TrendCloud | None = None
+    entry_order: StopEntry | None = None
+    # Updated at a signal close, then available to subsequent protection updates.
+    trailing_distance: float | None = None
+    record_observation: bool = True
+
+
+@dataclass(frozen=True)
+class Context:
+    history: History
+    position: Any
+    cash: float
+    equity: float
+    parameters: Any
+    # Last completed exit, visible only after execution and before this close's
+    # decision. Includes same-entry-bar stops; strategies must consume trade_id
+    # once. Primitive, immutable fields only; no future fills or mutable ledger.
+    last_exit: Any = None

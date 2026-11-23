@@ -1,0 +1,25 @@
+
+
+class CompletedBars:
+    """Aggregate UTC bars, publish only complete buckets; discard initial partial."""
+    def __init__(self,period):
+        self.period=period
+        self.pending=None
+
+    def update(self,b):
+        start=b.timestamp//self.period*self.period
+        p=self.pending
+        if p is None or p['timestamp']!=start:
+            p=dict(timestamp=start,open=b.open,high=b.high,low=b.low,close=b.close,
+                   count=1,valid=b.timestamp==start,last=b.timestamp)
+        else:
+            p.update(high=max(p['high'],b.high),low=min(p['low'],b.low),close=b.close,
+                     count=p['count']+1,valid=p['valid'] and b.timestamp==p['last']+STEP,last=b.timestamp)
+        self.pending=p
+        if b.timestamp+STEP==start+self.period:
+            self.pending=None
+            if p['valid'] and p['count']==self.period//STEP:
+                return {k:p[k] for k in ('timestamp','open','high','low','close')}|{'known_at':start+self.period}
+        return None
+
+

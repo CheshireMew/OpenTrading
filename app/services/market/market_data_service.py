@@ -6,6 +6,7 @@ from typing import Callable
 
 from app.infra.cache import RedisService
 from app.domain.market.constants import KEY_PREFIX_KLINE
+from app.domain.market.candles import RecentCandles, candle_end_ms, closed_candles, current_candle_open_ms
 from app.application.persistence_ports import KlineStorePort
 from app.services.market.exchange_kline_fetcher import ExchangeKlineFetcher
 from app.services.market.exchange_gateway import ExchangeGateway
@@ -122,6 +123,13 @@ class MarketDataService:
         allow_cached_response: bool = False,
         live_max_retries: int | None = None,
     ) -> list[list[float]]:
+        return self.get_recent_candle_snapshot(symbol, timeframe, limit,
+            allow_cached_response=allow_cached_response, live_max_retries=live_max_retries).rows
+
+    def get_recent_candle_snapshot(
+        self, symbol: str, timeframe: str, limit: int = settings.LIMIT, *,
+        allow_cached_response: bool = False, live_max_retries: int | None = None,
+    ) -> RecentCandles:
         end_ts = int(time.time() * 1000)
         timeframe_ms = timeframe_to_milliseconds(timeframe)
         storage_symbol = self.symbol_routing.storage_symbol(symbol)
@@ -142,26 +150,29 @@ class MarketDataService:
             limit=limit,
             now_ms=end_ts,
         ):
-            return cached[-limit:]
+            rows = cached[-limit:]
+            return RecentCandles(rows, candle_end_ms(int(rows[-1][0]), timeframe), "cached_history")
 
         retry_limit = live_max_retries if live_max_retries is not None else settings.EXCHANGE_TAIL_MAX_RETRIES
         live_rows = self.get_live_kline_data(symbol, timeframe, limit=limit, max_retries=retry_limit)
         if live_rows:
             merged = merge_ohlcv_rows(cached, live_rows)
             try:
-                self.kline_store.save(storage_symbol, timeframe, live_rows)
+                self.kline_store.save(storage_symbol, timeframe, closed_candles(live_rows, timeframe, end_ts))
             except Exception as exc:
                 logger.warning(f"最近 K 线回写缓存失败: {exc}")
             logger.debug(
                 f"[metrics] get_recent_candles symbol={symbol} tf={timeframe} limit={limit} "
                 f"cached={len(cached)} live={len(live_rows)} elapsed={time.time() - start_time:.2f}s"
             )
-            return merged[-limit:]
+            rows = merged[-limit:]
+            return RecentCandles(rows, min(end_ts, candle_end_ms(int(live_rows[-1][0]), timeframe)), "exchange")
         logger.debug(
             f"[metrics] get_recent_candles symbol={symbol} tf={timeframe} limit={limit} "
             f"cached={len(cached)} live=0 elapsed={time.time() - start_time:.2f}s"
         )
-        return cached[-limit:]
+        rows = cached[-limit:]
+        return RecentCandles(rows, candle_end_ms(int(rows[-1][0]), timeframe) if rows else None, "cached_history")
 
     def load_ohlcv_range(
         self,
@@ -172,7 +183,7 @@ class MarketDataService:
         persist_klines: Callable[[str, str, list[list[float]]], None] | None = None,
     ) -> OhlcvRangeResult:
         start_ts = int(start_date.timestamp() * 1000)
-        end_ts_exclusive = int(end_date.timestamp() * 1000) + 1
+        end_ts_exclusive = min(int(end_date.timestamp() * 1000) + 1, current_candle_open_ms(int(time.time() * 1000), timeframe))
 
         def persist(storage_symbol: str, current_timeframe: str, rows: list[list[float]]) -> None:
             try:
@@ -198,7 +209,7 @@ class MarketDataService:
         end_date: datetime,
     ) -> OhlcvRangeResult:
         start_ts = int(start_date.timestamp() * 1000)
-        end_ts_exclusive = int(end_date.timestamp() * 1000) + 1
+        end_ts_exclusive = min(int(end_date.timestamp() * 1000) + 1, current_candle_open_ms(int(time.time() * 1000), timeframe))
         return self.history_ranges.read_cached(
             storage_symbol=self.symbol_routing.storage_symbol(symbol),
             timeframe=timeframe,
@@ -214,7 +225,7 @@ class MarketDataService:
         end_date: datetime,
     ) -> OhlcvRangeResult:
         start_ts = int(start_date.timestamp() * 1000)
-        end_ts_exclusive = int(end_date.timestamp() * 1000) + 1
+        end_ts_exclusive = min(int(end_date.timestamp() * 1000) + 1, current_candle_open_ms(int(time.time() * 1000), timeframe))
         rows = self.exchange_history.fetch_gap(symbol, timeframe, start_ts, end_ts_exclusive)
         return self.history_ranges.from_live_rows(
             rows=rows,

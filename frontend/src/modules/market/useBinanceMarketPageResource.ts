@@ -1,4 +1,4 @@
-import { computed, ref, watch, type Ref } from 'vue'
+import { computed, ref, watch, onScopeDispose, type Ref } from 'vue'
 
 import { binanceMarketApi } from './api'
 import { binanceMarketWarmSnapshot } from './binanceMarketWarmSnapshot'
@@ -15,6 +15,8 @@ const MARKET_PAGE_LIMIT = 24
 const MARKET_PAGE_QUOTE_ASSET = 'USDT'
 const LOAD_ERROR_LABEL_KEYS: Record<string, string> = {
   '现货榜单': 'binanceMarket.loadErrorLabels.spotRank',
+  'U本位24H': 'binanceMarket.loadErrorLabels.contractTicker',
+  'U本位Funding': 'binanceMarket.loadErrorLabels.contractFunding',
 }
 
 type Translate = (key: string, params?: Record<string, string | number>) => string
@@ -26,26 +28,32 @@ export const useBinanceMarketPageResource = (
   translate: Translate,
 ) => {
   const loading = ref(false)
-  const errorState = ref<{ key: string; params?: Record<string, string | number> } | null>(null)
-  const error = computed(() => errorState.value ? translate(errorState.value.key, errorState.value.params) : '')
+  const errorState = ref<{ key: string; labels?: string[] } | null>(null)
+  const error = computed(() => {
+    const failure = errorState.value
+    if (!failure) return ''
+    const labels = failure.labels?.map(label => LOAD_ERROR_LABEL_KEYS[label]
+      ? translate(LOAD_ERROR_LABEL_KEYS[label]) : label).join(locale.value === 'zh-CN' ? '、' : ', ')
+    return translate(failure.key, labels ? { labels } : undefined)
+  })
   const monitor = ref<BinanceBreakoutMonitorResponse>({ ...EMPTY_RESPONSE })
   const spotBoards = ref<Record<string, BinanceTickerStatsResponse>>({})
   const contractBoards = ref<Record<string, BinanceContractBoardResponse>>({})
+  const monitorAvailable = ref(false), spotAvailable = ref(false), contractAvailable = ref(false)
   let refreshTimer: ReturnType<typeof setInterval> | null = null
   let pendingRefreshTimer: ReturnType<typeof setTimeout> | null = null
   let thresholdTimer: ReturnType<typeof setTimeout> | null = null
   let fetchState: { key: string; task: Promise<void> } | null = null
+  let disposed = false
+  let stopped = false
+  let generation = 0
 
   const setLoadFailures = (labels: string[]) => {
     if (!labels.length) {
       errorState.value = null
       return
     }
-    const separator = locale.value === 'zh-CN' ? '、' : ', '
-    const localized = labels
-      .map((label) => LOAD_ERROR_LABEL_KEYS[label] ? translate(LOAD_ERROR_LABEL_KEYS[label]) : label)
-      .join(separator)
-    errorState.value = { key: 'binanceMarket.loadFailure', params: { labels: localized } }
+    errorState.value = { key: 'binanceMarket.loadFailure', labels }
   }
 
   const hasDisplayedData = () => (
@@ -54,12 +62,18 @@ export const useBinanceMarketPageResource = (
     || Object.values(contractBoards.value).some((board) => Boolean(board.items?.length))
   )
 
-  const applyPayload = (payload: BinanceMarketPageResponse, warmStart = false) => {
+  const applyPayload = (payload: BinanceMarketPageResponse) => {
+    const failures = payload.load_errors || []
+    const hasRows = (boards: typeof payload.spot_boards | typeof payload.contract_boards) => Object.values(boards || {}).some(board => board.items?.length)
+    const boardsReady = payload.refresh_status?.boards_ready ?? true
+    spotAvailable.value = hasRows(payload.spot_boards) || (boardsReady && !failures.includes('现货榜单') && Object.keys(payload.spot_boards || {}).length > 0)
+    contractAvailable.value = hasRows(payload.contract_boards) || (boardsReady && !failures.some(label => label.startsWith('U本位')) && Object.keys(payload.contract_boards || {}).length > 0)
+    monitorAvailable.value = Boolean(payload.monitor?.items?.length) || (Boolean(payload.monitor?.updated_at)
+      && (payload.refresh_status?.monitor_ready ?? true) && (payload.refresh_status?.snapshot_ready ?? !failures.length))
     monitor.value = payload.monitor || { ...EMPTY_RESPONSE }
     spotBoards.value = payload.spot_boards || {}
     contractBoards.value = payload.contract_boards || {}
-    if (warmStart) errorState.value = null
-    else setLoadFailures([...(payload.load_errors || [])])
+    setLoadFailures([...(payload.load_errors || [])])
   }
 
   const requestKey = () => `${minRisePct.value}:${MARKET_PAGE_LIMIT}:${MARKET_PAGE_QUOTE_ASSET}`
@@ -68,7 +82,7 @@ export const useBinanceMarketPageResource = (
     if (pendingRefreshTimer) clearTimeout(pendingRefreshTimer)
     pendingRefreshTimer = null
     const status = payload.refresh_status
-    if (!status || status.monitor_ready) return
+    if (disposed || stopped || !status || status.monitor_ready) return
     pendingRefreshTimer = setTimeout(() => {
       pendingRefreshTimer = null
       void fetchData()
@@ -77,10 +91,12 @@ export const useBinanceMarketPageResource = (
 
   const restoreWarmSnapshot = () => {
     const payload = binanceMarketWarmSnapshot.read(minRisePct.value, MARKET_PAGE_QUOTE_ASSET)
-    if (payload) applyPayload(payload, true)
+    if (payload) applyPayload(payload)
   }
 
   const fetchData = async () => {
+    if (disposed) return
+    const current = generation
     const requestedRise = minRisePct.value
     const key = requestKey()
     if (fetchState?.key === key) return fetchState.task
@@ -94,18 +110,18 @@ export const useBinanceMarketPageResource = (
           limit: MARKET_PAGE_LIMIT,
           quote_asset: MARKET_PAGE_QUOTE_ASSET,
         })
-        if (key !== requestKey()) return
+        if (disposed || current !== generation || key !== requestKey()) return
         applyPayload(response)
         schedulePendingRefresh(response)
         binanceMarketWarmSnapshot.write(response, requestedRise, MARKET_PAGE_QUOTE_ASSET)
       } catch (requestError) {
-        if (key !== requestKey()) return
+        if (disposed || current !== generation || key !== requestKey()) return
         errorState.value = {
           key: hasDisplayedData() ? 'binanceMarket.refreshFailedWithCache' : 'binanceMarket.monitorLoadFailed',
         }
         console.error('Failed to load Binance market page', requestError)
       } finally {
-        if (fetchState?.key === key && fetchState.task === task) loading.value = false
+        if (!disposed && current === generation && fetchState?.key === key && fetchState.task === task) loading.value = false
       }
     })()
     fetchState = { key, task }
@@ -117,6 +133,8 @@ export const useBinanceMarketPageResource = (
   }
 
   const startAutoRefresh = () => {
+    if (disposed) return
+    stopped = false
     if (refreshTimer) clearInterval(refreshTimer)
     refreshTimer = null
     if (!autoRefresh.value) return
@@ -124,6 +142,10 @@ export const useBinanceMarketPageResource = (
   }
 
   const stopAutoRefresh = () => {
+    stopped = true
+    generation += 1
+    fetchState = null
+    loading.value = false
     if (refreshTimer) clearInterval(refreshTimer)
     if (thresholdTimer) clearTimeout(thresholdTimer)
     if (pendingRefreshTimer) clearTimeout(pendingRefreshTimer)
@@ -131,6 +153,7 @@ export const useBinanceMarketPageResource = (
     thresholdTimer = null
     pendingRefreshTimer = null
   }
+  onScopeDispose(() => { disposed = true; stopAutoRefresh() })
 
   watch(autoRefresh, startAutoRefresh)
   watch(minRisePct, () => {
@@ -144,6 +167,7 @@ export const useBinanceMarketPageResource = (
 
   return {
     loading,
+    monitorAvailable, spotAvailable, contractAvailable,
     error,
     monitor,
     spotBoards,

@@ -1,0 +1,82 @@
+"""Full result parity with the immutable pre-refactor engine, including old bundle loading."""
+
+import json
+import random
+import sys
+from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
+
+from app.domain import local_backtest as current
+from app.services.backtest_provenance import execution_modules, verify_bundle
+
+LEGACY = Path(__file__).parent / "fixtures/backtest_engine_v11"
+MANIFEST = json.loads((LEGACY / "manifest.json").read_text(encoding="utf-8"))
+
+
+def strategy(api, mode):
+    def on_bar(context):
+        i = len(context.history)
+        action = "long" if i % 9 == 1 else "short" if i % 9 == 5 else "hold"
+        risk = api.Intent(
+            action,
+            stop_loss_pct=3,
+            take_profit_pct=7,
+            profit_protection=api.ProfitProtection(2, 30) if mode == "protection" else None,
+            stop_loss_confirmation="next_bar_close" if mode == "confirmation" else "immediate",
+        )
+        if mode == "stop" and action != "hold":
+            price = context.history[-1].close
+            return api.BarResult(
+                entry_order=api.StopEntry(risk, price, ambiguity_policy="adverse_extreme_before_entry")
+            )
+        return risk
+
+    return SimpleNamespace(on_bar=on_bar)
+
+
+def simulate(api, rows, mode, detailed):
+    bars = [api.Bar(*row) for row in rows]
+    detail = None
+    if detailed:
+        detail = {
+            bar.timestamp: [
+                api.Bar(bar.timestamp, bar.open, bar.high, min(bar.open, bar.close), bar.close, bar.volume / 2),
+                api.Bar(bar.timestamp + 500, bar.close, max(bar.open, bar.close), bar.low, bar.close, bar.volume / 2),
+            ]
+            for i, bar in enumerate(bars)
+            if i % 5
+        }
+    return api.simulate(
+        bars,
+        strategy(api, mode),
+        {},
+        warmup=0,
+        position_pct=75,
+        step_ms=1000,
+        execution_step_ms=500,
+        execution_bars=detail,
+        intrabar_profit_protection=detailed,
+    )
+
+
+@pytest.mark.parametrize("mode", ["market", "stop", "protection", "confirmation"])
+@pytest.mark.parametrize("detailed", [False, True])
+@pytest.mark.parametrize("seed", [8, 19, 33])
+def test_all_outputs_equal_old_engine_and_old_bundle_restores_modules(mode, detailed, seed):
+    rng = random.Random(seed)
+    rows, price = [], 100.0
+    for i in range(90):
+        close = max(20.0, price + rng.uniform(-5, 5))
+        rows.append(
+            [i * 1000, price, max(price, close) + rng.random() * 5, min(price, close) - rng.random() * 5, close, 10.0]
+        )
+        price = close
+    previous = sys.modules["app.domain.local_backtest"]
+    verify_bundle(LEGACY, MANIFEST)
+    with execution_modules(LEGACY, MANIFEST):
+        legacy = sys.modules["app.domain.local_backtest"]
+        expected = simulate(legacy, rows, mode, detailed)
+    assert sys.modules["app.domain.local_backtest"] is previous
+    assert simulate(current, rows, mode, detailed) == expected

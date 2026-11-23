@@ -5,92 +5,12 @@ from datetime import datetime
 from fastapi import Depends, Query
 
 from app.contracts.frontend import FrontendContractRouter
-from app.contracts.research import (
-    ResearchAlertCreateCommand,
-    ResearchAlertEvaluationResponse,
-    ResearchAlertEvaluateCommand,
-    ResearchAlertResponse,
-    ResearchAlertUpdateCommand,
-    ResearchArchiveCommand,
-    ResearchEventAcknowledgeCommand,
-    ResearchEventPageResponse,
-    ResearchEventResponse,
-    ResearchNoteCreateCommand,
-    ResearchNoteResponse,
-    ResearchNoteUpdateCommand,
-    ResearchWatchItemCreateCommand,
-    ResearchWatchItemResponse,
-    ResearchWatchItemUpdateCommand,
-    ResearchWatchlistCreateCommand,
-    ResearchWatchlistResponse,
-    ResearchWatchlistUpdateCommand,
-    ResearchWorkbenchResponse,
-    TradeSignalEvaluationCommand,
-    TradeSignalEvaluationRunResponse,
-    TradeSignalPageResponse,
-    TradeSignalResponse,
-    TradeSignalStatsResponse,
-    AssetResearchResponse,
-    MarketScreenerRunCommand,
-    MarketScreenerRunPageResponse,
-    MarketScreenerRunResponse,
-    SavedMarketScreenerCreateCommand,
-    SavedMarketScreenerListResponse,
-    SavedMarketScreenerResponse,
-    SavedMarketScreenerUpdateCommand,
-    ResearchReportGenerateCommand,
-    ResearchReportPageResponse,
-    ResearchReportResponse,
-)
-from app.dependencies import (
-    get_research_alert_runtime,
-    get_research_service,
-    get_trade_signal_evaluation_runtime,
-    get_trade_signal_service,
-    get_asset_research_service,
-    get_market_screener_service,
-    get_research_report_service,
-)
+from app.contracts.research import ResearchAlertCreateCommand, ResearchAlertEvaluationResponse, ResearchAlertEvaluateCommand, ResearchAlertResponse, ResearchAlertUpdateCommand, ResearchArchiveCommand, ResearchEventAcknowledgeCommand, ResearchEventPageResponse, ResearchEventResponse, ResearchNoteCreateCommand, ResearchNoteResponse, ResearchNoteUpdateCommand, ResearchWatchItemCreateCommand, ResearchWatchItemResponse, ResearchWatchItemUpdateCommand, ResearchWatchlistCreateCommand, ResearchWatchlistResponse, ResearchWatchlistUpdateCommand, ResearchWorkbenchResponse, TradeSignalEvaluationCommand, TradeSignalEvaluationRunResponse, TradeSignalPageResponse, TradeSignalResponse, TradeSignalStatsResponse, AssetResearchResponse, MarketScreenerRunCommand, MarketScreenerRunPageResponse, MarketScreenerRunResponse, SavedMarketScreenerCreateCommand, SavedMarketScreenerListResponse, SavedMarketScreenerResponse, SavedMarketScreenerUpdateCommand
+from app.dependencies import get_research_alert_runtime, get_research_service, get_trade_signal_evaluation_runtime, get_trade_signal_service, get_asset_research_service, get_market_screener_service
 from app.infra.executor import run_database
 
 
 router = FrontendContractRouter(frontend_contract_target="research")
-
-
-@router.get("/research/reports", response_model=ResearchReportPageResponse)
-async def list_research_reports(
-    include_archived: bool = False,
-    offset: int = Query(default=0, ge=0),
-    limit: int = Query(default=50, ge=1, le=200),
-    service=Depends(get_research_report_service),
-):
-    return await run_database(
-        lambda: service.list_reports(include_archived=include_archived, offset=offset, limit=limit)
-    )
-
-
-@router.post("/research/reports", response_model=ResearchReportResponse)
-async def generate_research_report(body: ResearchReportGenerateCommand, service=Depends(get_research_report_service)):
-    return await service.generate(body)
-
-
-@router.get("/research/reports/{report_id}", response_model=ResearchReportResponse)
-async def get_research_report(report_id: str, service=Depends(get_research_report_service)):
-    return await run_database(lambda: service.get_report(report_id))
-
-
-@router.post("/research/reports/{report_id}/archive", response_model=ResearchReportResponse)
-async def archive_research_report(
-    report_id: str, body: ResearchArchiveCommand, service=Depends(get_research_report_service)
-):
-    return await run_database(lambda: service.archive(report_id, body, archived=True))
-
-
-@router.post("/research/reports/{report_id}/restore", response_model=ResearchReportResponse)
-async def restore_research_report(
-    report_id: str, body: ResearchArchiveCommand, service=Depends(get_research_report_service)
-):
-    return await run_database(lambda: service.archive(report_id, body, archived=False))
 
 
 @router.get("/research/screeners", response_model=SavedMarketScreenerListResponse)

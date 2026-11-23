@@ -6,7 +6,7 @@
 
   <Teleport to="body">
     <div v-if="open" class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/55 p-3 backdrop-blur-sm" @click.self="closeDialog">
-      <section ref="dialogRef" role="dialog" aria-modal="true" aria-labelledby="add-research-title" tabindex="-1" class="w-full max-w-xl border border-[#d8d1c5] bg-[#fbfaf7] p-5 shadow-2xl outline-none dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+      <section ref="dialogRef" role="dialog" aria-modal="true" aria-labelledby="add-research-title" tabindex="-1" class="w-full max-w-xl border border-[var(--ui-borderStrong)] bg-[var(--ui-panel)] p-5 shadow-2xl outline-none dark:border-slate-700 dark:bg-slate-800 sm:p-6">
         <div class="flex items-start justify-between gap-4">
           <div>
             <h2 id="add-research-title" class="text-xl font-semibold text-stone-950 dark:text-white">{{ t('research.addSymbolTitle', { symbol: displayName || symbol }) }}</h2>
@@ -54,7 +54,7 @@ import { BookmarkSquareIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { apiErrorMessage } from '@/api/request'
 import { useModalDialog } from '@/composables/useModalDialog'
 import { researchApi } from '@/modules/research'
-import type { ResearchWatchItemCreateCommand, ResearchWorkbenchResponse } from '@/modules/research/contracts'
+import type { ResearchWatchItemCreateCommand, ResearchWatchItemResponse, ResearchWorkbenchResponse } from '@/modules/research/contracts'
 
 const props = withDefaults(defineProps<{
   symbol: string
@@ -67,7 +67,7 @@ const props = withDefaults(defineProps<{
   sourceContext: () => ({}),
 })
 
-const emit = defineEmits<{ added: [symbol: string] }>()
+const emit = defineEmits<{ added: [symbol: string, item: ResearchWatchItemResponse] }>()
 const { t } = useI18n()
 const open = ref(false)
 const loading = ref(false)
@@ -109,7 +109,7 @@ const submit = async () => {
       const list = await researchApi.createWatchlist({ name: newListName.value, description: '' })
       targetListId = list.id
     }
-    await researchApi.createItem({
+    const item = await researchApi.createItem({
       watchlistId: targetListId,
       symbol: props.symbol,
       assetClass: props.assetClass,
@@ -118,7 +118,7 @@ const submit = async () => {
       tags: tags.value.split(/[,，]/).map((value) => value.trim()).filter(Boolean),
       sourceContext: props.sourceContext,
     })
-    emit('added', props.symbol)
+    emit('added', item.symbol, item)
     closeDialog()
   } catch (cause) {
     error.value = apiErrorMessage(cause, t('research.addFailed'))

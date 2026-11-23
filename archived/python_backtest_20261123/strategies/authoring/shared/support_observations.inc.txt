@@ -1,0 +1,16 @@
+                    '原做多信号':long,'原做空信号':short,'记录新信号':armed,'反向取消旧等待':cancelled,
+                    '等待过期':expired,'成交后消费信号':consumed,'挂出下一根突破委托':order is not None,'止损后准备重进':retry_armed},
+            cloud=TrendCloud(self.base+.45*self.width,self.base-.45*self.width,bar.close>self.base),entry_order=order)
+
+
+_calculation = None
+
+
+def on_bar(context):
+    global _calculation
+    if _calculation is None or _calculation.processed>=len(context.history):
+        _calculation = Calculation(context.parameters)
+    result = None
+    for i in range(_calculation.processed,len(context.history)):
+        result = _calculation.update(context.history[i],context.position,context.last_exit,decisions=i==len(context.history)-1)
+    return result

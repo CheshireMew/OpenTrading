@@ -1,0 +1,55 @@
+//@version=5
+indicator("EMA + ZigZag++（发光特效版）", overlay=true)
+
+// === EMA 均线组 ===
+ema20  = ta.ema(close, 20)
+ema60  = ta.ema(close, 60)
+ema120 = ta.ema(close, 120)
+ema200 = ta.ema(close, 200)
+ema365 = ta.ema(close, 365)
+
+plot(ema20,  title="EMA 20",  color=color.new(#f59e0b, 60), linewidth=1)
+plot(ema60,  title="EMA 60",  color=color.new(#10b981, 60), linewidth=1)
+plot(ema120, title="EMA 120", color=color.new(#3b82f6, 0), linewidth=3)
+plot(ema200, title="EMA 200", color=color.new(#a3e635, 80), linewidth=2)
+plot(ema365, title="EMA 365", color=color.new(#be185d, 80), linewidth=2)
+
+// === ZigZag 主逻辑 ===
+import DevLucem/ZigLib/1 as ZigZag
+
+Depth = input.int(12, 'Depth', minval=1, step=1, group="ZigZag Config")
+Deviation = input.int(5, 'Deviation', minval=1, step=1, group="ZigZag Config")
+Backstep = input.int(2, 'Backstep', minval=2, step=1, group="ZigZag Config")
+line_thick = input.int(2, 'ZigZag 主线粗细', minval=1, maxval=4, group="ZigZag 样式")
+glow_thick = input.int(5, '发光层粗细', minval=2, maxval=10, group="ZigZag 样式")
+glow_transp = input.int(60, "发光层透明度 (0-100)", group="ZigZag 样式")
+main_transp = input.int(30, "主线透明度 (0-100)", group="ZigZag 样式")
+
+// 主色 + 发光色（方向分色）
+upMain = color.new(#0ea5e9, main_transp)
+dnMain = color.new(#f97316, main_transp)
+upGlow = color.new(#0ea5e9, glow_transp)
+dnGlow = color.new(#f97316, glow_transp)
+
+repaint = input(true, '允许重绘')
+
+// === ZigZag 计算 ===
+[direction, z1, z2] = ZigZag.zigzag(low, high, Depth, Deviation, Backstep)
+
+// === 绘制双层线条模拟发光效果 ===
+if repaint
+    glowLine = line.new(z1, z2, xloc.bar_time, extend.none, color=(direction > 0 ? upGlow : dnGlow), width=glow_thick)
+    mainLine = line.new(z1, z2, xloc.bar_time, extend.none, color=(direction > 0 ? upMain : dnMain), width=line_thick)
+
+    if direction == direction[1]
+        line.delete(glowLine[1])
+        line.delete(mainLine[1])
+    else
+        line.set_extend(glowLine[1], extend.none)
+        line.set_extend(mainLine[1], extend.none)
+else
+    if direction != direction[1]
+        line.new(z1[1], z2[1], xloc.bar_time, extend.none, color=(direction[1] > 0 ? upGlow : dnGlow), width=glow_thick)
+        line.new(z1[1], z2[1], xloc.bar_time, extend.none, color=(direction[1] > 0 ? upMain : dnMain), width=line_thick)
+
+plotarrow(direction, "ZigZag方向", display=display.status_line)

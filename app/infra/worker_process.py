@@ -55,7 +55,7 @@ class WindowsWorkerJob:
             self.handle = None
 
 
-def start_worker(command, **kwargs):
+def start_worker(command, *, input_payload: bytes = b"", **kwargs):
     job = WindowsWorkerJob() if os.name == "nt" else None
     process = None
     try:
@@ -67,6 +67,8 @@ def start_worker(command, **kwargs):
         # The worker cannot enter strategy/data work before assignment. If the
         # owner dies before assignment, closing this pipe gives the worker EOF.
         process.stdin.write(b"1")
+        if input_payload:
+            process.stdin.write(input_payload)
         process.stdin.close()
         return process, job
     except BaseException:

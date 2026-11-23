@@ -33,7 +33,7 @@ export function useMoney() {
     sourceCurrency = 'USD',
     targetCurrency = displayCurrency.value,
   ) => {
-    const numeric = asNumber(value)
+    const numeric = value == null || value === '' ? null : asNumber(value)
     if (numeric === null) return null
     const source = normalizeCurrency(sourceCurrency)
     const target = normalizeCurrency(targetCurrency)
@@ -80,7 +80,7 @@ export function useMoney() {
   )
 
   const formatSignedMoney = (value: unknown, sourceCurrency = 'USD') => {
-    const numeric = asNumber(value)
+    const numeric = value == null || value === '' ? null : asNumber(value)
     if (numeric === null) return '--'
     return `${numeric >= 0 ? '+' : '-'}${formatMoney(Math.abs(numeric), sourceCurrency)}`
   }

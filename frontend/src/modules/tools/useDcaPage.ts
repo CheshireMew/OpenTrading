@@ -6,7 +6,7 @@ import { ensureSymbolCatalogLoaded, isIndexSymbol } from '@/modules/market'
 import { useTheme } from '@/composables/useTheme'
 import { useMoney } from '@/composables/useMoney'
 import { useUserPreferences } from '@/composables/useUserPreferences'
-import { apiErrorMessage } from '@/api/request'
+import { useRequestError } from '@/composables/useRequestError'
 import type { DCAResponse, SimulateDcaCommand } from './contracts'
 import { toolsApi } from './api'
 import { buildDcaSnapshot, createDefaultDcaConfig, createEmptyDcaConfig, createEmptyDcaSnapshot, normalizeDcaConfig, normalizeDcaSnapshot } from './pageSnapshots'
@@ -16,7 +16,7 @@ import { localIsoDateDaysAgo, todayLocalIsoDate } from '@/utils/localDate'
 
 export function useDcaPage() {
   const { theme } = useTheme()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const { timezone, setTimezone } = useUserPreferences()
   const { displayCurrency, fromDisplayAmount, formatDisplayNumber, formatMoney } = useMoney()
   const pageSnapshot = createPersistentPageSnapshot(
@@ -34,8 +34,12 @@ export function useDcaPage() {
   const marketReady = ref(false)
 
   const loading = ref(false)
-  const errorMessage = ref('')
+  const { error: errorMessage, setError, clearError } = useRequestError(t)
+  const initializing = ref(false)
+  const { error: initializationError, setError: setInitializationError, clearError: clearInitializationError } = useRequestError(t)
   const result = ref<DCAResponse | null>(null)
+  const resultContext = ref<SimulateDcaCommand | null>(null)
+  let inputVersion = 0, requestVersion = 0
   const { marketData, fetchMarketIndicators } = useDcaMarketContext({
     symbol: () => config.symbol,
     t,
@@ -50,18 +54,24 @@ export function useDcaPage() {
     theme,
     t,
     result,
+    assetLabel: computed(() => resultContext.value?.symbol || ''),
   })
 
   const runSimulation = async () => {
+    if (disposed) return
     if (!canRunSimulation.value) {
-      errorMessage.value = t('dca.invalidConfig')
+      setError(null, 'dca.invalidConfig')
       return
     }
     loading.value = true
-    errorMessage.value = ''
+    const request = ++requestVersion, inputs = inputVersion
+    const current = () => !disposed && request === requestVersion && inputs === inputVersion
+    clearError()
     result.value = null
+    resultContext.value = null
     try {
       await ensureSymbolCatalogLoaded()
+      if (!current()) return
       const payload: SimulateDcaCommand = {
         symbol: config.symbol,
         amount: config.amount,
@@ -69,9 +79,11 @@ export function useDcaPage() {
         investment_time: config.investment_time,
         timezone: config.timezone,
         strategy: config.strategy || undefined,
-        strategy_params: config.strategy_params,
+        strategy_params: { ...config.strategy_params },
       }
       const response = await toolsApi.runSimulation(payload)
+      if (!current()) return
+      resultContext.value = payload
       result.value = {
         ...response,
         current_price: typeof response.current_price !== 'undefined'
@@ -79,13 +91,13 @@ export function useDcaPage() {
           : response.history?.[response.history.length - 1]?.price,
         total_days: response.history?.length ?? response.total_days,
       }
-      await fetchMarketIndicators()
       renderCharts()
+      void fetchMarketIndicators()
     } catch (error: unknown) {
       console.error('DCA Error:', error)
-      errorMessage.value = apiErrorMessage(error, t('dca.simFailed'))
+      if (current()) setError(error, 'dca.simFailed')
     } finally {
-      loading.value = false
+      if (request === requestVersion) loading.value = false
     }
   }
 
@@ -123,22 +135,22 @@ export function useDcaPage() {
   })
 
   watch(config, () => {
+    inputVersion++
     if (result.value) result.value = null
-  }, { deep: true })
+    resultContext.value = null
+  }, { deep: true, flush: 'sync' })
 
-  watch(theme, () => {
+  watch([theme, displayCurrency, locale], () => {
     if (result.value) {
       renderCharts()
     }
   })
 
-  watch(displayCurrency, () => {
-    if (result.value) {
-      renderCharts()
-    }
-  })
-
-  onMounted(async () => {
+  const initialize = async () => {
+    if (initializing.value || disposed) return
+    initializing.value = true
+    clearInitializationError()
+    try {
     const [contractResponse] = await Promise.all([
       toolsApi.getContract(),
       ensureSymbolCatalogLoaded(),
@@ -164,7 +176,11 @@ export function useDcaPage() {
     if (result.value) {
       renderCharts()
     }
-  })
+    } catch (error) {
+      if (!disposed) setInitializationError(error, 'dca.initializeFailed')
+    } finally { initializing.value = false }
+  }
+  onMounted(() => { void initialize() })
 
   onBeforeUnmount(() => {
     disposed = true
@@ -177,7 +193,8 @@ export function useDcaPage() {
   const dcaStartMin = computed(() => localIsoDateDaysAgo(dcaMaxDays.value))
   const dcaStartMax = todayLocalIsoDate()
   const canRunSimulation = computed(() => (
-    Boolean(config.symbol)
+    marketReady.value
+    && Boolean(config.symbol)
     && Number.isFinite(config.amount)
     && config.amount > 0
     && Boolean(config.investment_time)
@@ -192,10 +209,15 @@ export function useDcaPage() {
 
   return {
     config,
+    initializing,
+    initializationError,
+    initialize,
+    ready: marketReady,
     displayAmount,
     loading,
     errorMessage,
     result,
+    resultContext,
     marketData,
     fetchMarketIndicators,
     roiChartCanvas,

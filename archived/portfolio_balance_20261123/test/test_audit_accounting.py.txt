@@ -1,0 +1,136 @@
+from datetime import datetime, timezone, timedelta
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
+
+import pytest
+from uuid import uuid4
+from pydantic import ValidationError
+from sqlalchemy import event
+
+from app.contracts.portfolios import (
+    PortfolioBackupDocument, PortfolioCollectionImportCommand, PortfolioCollectionSaveCommand,
+    PortfolioBalanceSnapshot, PortfolioTransactionCreateCommand, PortfolioTransactionArchiveCommand,
+    PortfolioSimulationResultCommand, PortfolioTransactionUpdateCommand,
+)
+from app.infra.db.database import DatabaseRuntime
+from app.infra.db.schema import Base
+from app.infra.persistence.portfolio_repository import PortfolioRepository
+from app.services.tools.portfolio_service import PortfolioService
+from test.test_portfolio_persistence import _portfolio, _simulation
+
+
+def make_service(runtime):
+    return PortfolioService(PortfolioRepository(runtime))
+
+
+def deposit(**updates):
+    return PortfolioTransactionCreateCommand(requestId=uuid4().hex, transactionType="deposit", cashAmount=1000,
+                                            occurredAt="2026-01-01T08:30:45.123+08:00", **updates)
+
+
+@pytest.mark.parametrize("field", ["currency", "feeCurrency"])
+@pytest.mark.parametrize("currency", ["CNY", "BTC", "USDT"])
+def test_unsupported_money_rejected_before_writing(field, currency, installed_database_runtime):
+    service = make_service(installed_database_runtime)
+    with pytest.raises(ValidationError, match="USD"):
+        service.create_transaction("core", deposit(**{field: currency}))
+    assert service.export_collection().transactions == []
+
+
+@pytest.mark.asyncio
+async def test_saved_price_cannot_replace_a_missing_backend_quote(installed_database_runtime):
+    service = make_service(installed_database_runtime)
+    portfolio = _portfolio()
+    portfolio.assets[0].currentPrice = 0
+    service.save_collection(PortfolioCollectionSaveCommand(expectedRevision=0, snapshot=PortfolioBalanceSnapshot(activePortfolioId="core", portfolios=[portfolio])))
+    row = service.create_transaction("core", deposit(currency=" usd ", feeCurrency="usd"))
+    service.create_transaction("core", PortfolioTransactionCreateCommand(requestId=uuid4().hex, transactionType="buy", symbol="BTC", quantity=1, unitPrice=500, occurredAt="2026-01-02T00:00:00Z"))
+    ledger = service.get_ledger("core")
+    assert row.currency == row.feeCurrency == "USD"
+    assert row.model_dump(mode="json")["occurredAt"] == "2026-01-01T00:30:45.123000Z"
+    assert ledger.summary.reliability == "incomplete"
+    assert ledger.summary.positions[0].marketValue is None
+    assert ledger.summary.totalEquity is ledger.summary.totalPnl is ledger.summary.moneyWeightedReturnPct is None
+    portfolio.assets[0].currentPrice = 700
+    service.save_collection(PortfolioCollectionSaveCommand(expectedRevision=1, snapshot=PortfolioBalanceSnapshot(activePortfolioId="core", portfolios=[portfolio])))
+    summary = service.get_ledger("core").summary
+    assert summary.totalEquity is None
+    service = PortfolioService(PortfolioRepository(installed_database_runtime), market_query_service=SimpleNamespace(
+        get_current_price=AsyncMock(return_value=SimpleNamespace(current_price=700, status="fresh",
+            timestamp=datetime.now(timezone.utc).isoformat(), valid_until=(datetime.now(timezone.utc) + timedelta(seconds=120)).isoformat()))))
+    summary = (await service.get_valued_ledger("core")).summary
+    assert summary.reliability == "complete"
+    assert summary.totalEquity == 1200 and summary.totalPnl == 200
+
+
+def test_legacy_foreign_money_remains_editable_without_fabricated_summary(installed_database_runtime):
+    repository = PortfolioRepository(installed_database_runtime)
+    service = PortfolioService(repository)
+    service.save_collection(PortfolioCollectionSaveCommand(expectedRevision=0, snapshot=PortfolioBalanceSnapshot(activePortfolioId="core", portfolios=[_portfolio()])))
+    legacy = service._transaction_payload(deposit())
+    legacy["currency"] = "CNY"
+    saved = repository.create_transaction("core", legacy)
+    ledger = service.get_ledger("core")
+    assert ledger.transactions[0].currency == "CNY"
+    assert ledger.summary.totalEquity is ledger.summary.cashBalance is None
+    assert ledger.summary.reliability == "incomplete"
+    service.update_transaction("core", saved["id"], PortfolioTransactionUpdateCommand(**deposit().model_dump(exclude={"requestId"}), expectedVersion=1))
+    assert service.get_ledger("core").summary.totalEquity == 1000
+
+
+def test_backup_merge_capacity_error_leaves_collection_unchanged(installed_database_runtime):
+    service = make_service(installed_database_runtime)
+    portfolios = [_portfolio(str(index)) for index in range(100)]
+    service.save_collection(PortfolioCollectionSaveCommand(expectedRevision=0, snapshot=PortfolioBalanceSnapshot(activePortfolioId="0", portfolios=portfolios)))
+    backup = PortfolioBackupDocument(exportedAt=datetime.now(), snapshot=PortfolioBalanceSnapshot(activePortfolioId="extra", portfolios=[_portfolio("extra")]))
+    from app.domain.portfolios import PortfolioCollectionMismatchError
+    with pytest.raises(PortfolioCollectionMismatchError, match="100"):
+        service.import_collection(PortfolioCollectionImportCommand(expectedRevision=1, document=backup))
+    assert service.get_collection().revision == 1
+    assert len(service.get_collection().snapshot.portfolios) == 100
+
+
+def test_full_backup_new_database_reopen_and_atomic_failure(installed_database_runtime, tmp_path):
+    source = make_service(installed_database_runtime)
+    source.save_collection(PortfolioCollectionSaveCommand(expectedRevision=0, snapshot=PortfolioBalanceSnapshot(activePortfolioId="core", portfolios=[_portfolio(), _portfolio("old", "Old")])))
+    source.save_simulation("old", PortfolioSimulationResultCommand(expectedRevision=1, result=_simulation()))
+    active = source.create_transaction("core", deposit())
+    archived = source.create_transaction("old", deposit())
+    source.archive_transaction("old", archived.id, PortfolioTransactionArchiveCommand(expectedVersion=1), archived=True)
+    source.save_collection(PortfolioCollectionSaveCommand(expectedRevision=1, snapshot=PortfolioBalanceSnapshot(activePortfolioId="core", portfolios=[_portfolio()])))
+    backup = PortfolioBackupDocument.model_validate_json(source.export_collection().model_dump_json())
+    assert len(backup.transactions) == 2 and backup.deletedAt["old"]
+    url = f"sqlite:///{(tmp_path / 'restored.db').as_posix()}"
+    runtime = DatabaseRuntime(database_url=url, source="test")
+    Base.metadata.create_all(runtime.engine)
+    target = make_service(runtime)
+    command = PortfolioCollectionImportCommand(expectedRevision=0, mode="replace", document=backup)
+
+    def fail_transactions(_conn, _cursor, statement, _parameters, _context, _many):
+        if statement.startswith("INSERT INTO portfolio_transactions"):
+            raise RuntimeError("injected backup write failure")
+
+    event.listen(runtime.engine, "before_cursor_execute", fail_transactions)
+    with pytest.raises(RuntimeError, match="injected"):
+        target.import_collection(command)
+    event.remove(runtime.engine, "before_cursor_execute", fail_transactions)
+    assert target.get_collection().revision == 0
+    assert not target.export_collection().snapshot.portfolios
+    assert not target.export_collection().deletedPortfolios
+    target.import_collection(command)
+    runtime.dispose()
+    reopened = DatabaseRuntime(database_url=url, source="test")
+    try:
+        target = make_service(reopened)
+        restored = target.export_collection()
+        assert restored.snapshot == backup.snapshot
+        assert restored.deletedPortfolios == backup.deletedPortfolios
+        assert restored.simulationResults == backup.simulationResults
+        assert {item.id for item in restored.transactions} == {active.id, archived.id}
+        assert restored.deletedAt == backup.deletedAt
+        assert next(item for item in restored.transactions if item.id == active.id).occurredAt == datetime(2026, 1, 1, 0, 30, 45, 123000)
+        target.restore_portfolio("old", expected_revision=1)
+        assert target.get_simulation("old").result == _simulation()
+        assert target.get_ledger("old").archivedTransactions[0].id == archived.id
+    finally:
+        reopened.dispose()

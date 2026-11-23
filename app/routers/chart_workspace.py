@@ -7,42 +7,36 @@ from starlette.requests import HTTPConnection
 from app.contracts.frontend import FrontendContractRouter
 from app.contracts.chart_workspace import (ChartSymbol, ChartBars, ChartQuote, WorkspaceDocument, WorkspaceWrite,
     PineRun, PineRunRequest, PineRecords, PineCapabilities)
-from app.dependencies import get_binance_market_intel_service, get_index_data_service
-from app.services.chart_workspace_store import ChartWorkspaceStore, WorkspaceConflict
-from app.services.chart_workspace_market import ChartWorkspaceMarket
-from app.services.chart_workspace_runs import ChartPineRuns
+from app.infra.executor import run_workspace
+from app.services.chart_workspace_store import WorkspaceConflict
+from app.services.chart_workspace_runs import PineCapacityError
 
 router = FrontendContractRouter(frontend_contract_target="chartWorkspace",prefix="/chart-workspace",tags=["图表工作台"])
 Kind = Literal["layouts","watchlists","scripts"]
 
 
-class WorkspaceServices:
-    def __init__(self, connection):
-        self.store = ChartWorkspaceStore()
-        self.store.seed()
-        self.market = ChartWorkspaceMarket(get_binance_market_intel_service(connection),get_index_data_service(connection))
-        self.runs = ChartPineRuns(self.store,self.market)
-
-    async def close(self):
-        await self.runs.close()
-        await self.market.close()
+async def services(connection: HTTPConnection):
+    runtime = connection.app.state.runtime_services.require_api().chart_workspace
+    if runtime is None or runtime.closed:
+        raise HTTPException(503, "图表工作台尚未就绪")
+    return runtime
 
 
-def services(connection: HTTPConnection):
-    if not hasattr(connection.app.state,"chart_workspace"):
-        connection.app.state.chart_workspace = WorkspaceServices(connection)
-    return connection.app.state.chart_workspace
+def document_error(exc):
+    if isinstance(exc, KeyError):
+        return HTTPException(404, "记录不存在")
+    if isinstance(exc, WorkspaceConflict):
+        return HTTPException(409, str(exc))
+    if isinstance(exc, PineCapacityError):
+        return HTTPException(429, str(exc))
+    return HTTPException(422, str(exc))
 
 
 def document_call(fn):
     try:
         return fn()
-    except KeyError:
-        raise HTTPException(404,"记录不存在")
-    except WorkspaceConflict as exc:
-        raise HTTPException(409,str(exc))
-    except ValueError as exc:
-        raise HTTPException(422,str(exc))
+    except (KeyError, ValueError) as exc:
+        raise document_error(exc) from exc
 
 
 @router.get("/symbols",response_model=list[ChartSymbol])
@@ -67,66 +61,72 @@ async def chart_quotes(symbols:str,service=Depends(services)):
 async def chart_capabilities():
     return PineCapabilities(supported=["Pine v5/v6 常用指标与 strategy", "多图、绘图、原版 v7.2", "已接入品种的多周期请求"],
         limited=["varip 支持全局标量（OpenTrading 兼容层），不支持局部变量和集合", "实时计算使用实际收到的行情更新", "历史 OHLC 成交模拟不是逐 tick 还原", "USD/USDT 采用报价数值记账，不执行汇率换算"],
-        unsupported=["OCA 联动", "强平价格与跨币种换算", "财报与经济数据", "外部 Pine 库", "lookahead_on", "Bar Magnifier"])
+        unsupported=["OCA 联动", "强平价格与跨币种换算", "财报与经济数据", "未接入的外部 Pine 库（已内置 DevLucem/ZigLib/1）", "lookahead_on", "Bar Magnifier"])
 
 
 @router.get("/pine-runs",response_model=list[PineRun])
 async def chart_pine_runs(service=Depends(services)):
-    return service.runs.list()
+    return await run_workspace(service.runs.list)
 
 
 @router.post("/pine-runs",response_model=PineRun)
 async def chart_create_pine_run(body:PineRunRequest,request:Request,service=Depends(services)):
-    return document_call(lambda:service.runs.create(body,str(request.base_url).rstrip('/')+'/api/v1/chart-workspace'))
+    try:
+        return await service.runs.create(body,str(request.base_url).rstrip('/')+'/api/v1/chart-workspace',recording="report")
+    except (KeyError, ValueError) as exc:
+        raise document_error(exc) from exc
 
 
 @router.get("/pine-runs/{key}",response_model=PineRun)
 async def chart_get_pine_run(key:str,service=Depends(services)):
-    return document_call(lambda:service.runs.get(key))
+    return await run_workspace(lambda: document_call(lambda:service.runs.get(key)))
 
 
 @router.post("/pine-runs/{key}/cancel",response_model=PineRun)
 async def chart_cancel_pine_run(key:str,service=Depends(services)):
-    document_call(lambda:service.runs.get(key))
+    await run_workspace(lambda: document_call(lambda:service.runs.get(key)))
     return await service.runs.cancel(key)
 
 
 @router.post("/pine-runs/{key}/rerun",response_model=PineRun)
 async def chart_rerun_pine(key:str,request:Request,service=Depends(services)):
-    previous = document_call(lambda:service.runs.get(key))
-    return document_call(lambda:service.runs.create(previous.request,str(request.base_url).rstrip('/')+'/api/v1/chart-workspace',frozen_from=key))
+    previous = await run_workspace(lambda: document_call(lambda:service.runs.get(key)))
+    try:
+        return await service.runs.create(previous.request,str(request.base_url).rstrip('/')+'/api/v1/chart-workspace',frozen_from=key)
+    except (KeyError, ValueError) as exc:
+        raise document_error(exc) from exc
 
 
 @router.get("/pine-runs/{key}/records",response_model=PineRecords)
 async def chart_pine_records(key:str,kind:Literal["equity","trades","open_trades","orders","fills","warnings","bars"]="trades",
-        offset:int=Query(0,ge=0),limit:int=Query(200,ge=1,le=10000),service=Depends(services)):
-    return document_call(lambda:service.runs.records(key,kind,offset,limit))
+        offset:int=Query(0,ge=0),limit:int=Query(200,ge=1,le=10000),sampled:bool=False,service=Depends(services)):
+    return await run_workspace(lambda: document_call(lambda:service.runs.records(key,kind,offset,limit,sampled=sampled)))
 
 
 @router.get("/{kind}",response_model=list[WorkspaceDocument])
 async def chart_documents(kind:Kind,service=Depends(services)):
-    return service.store.list(kind)
+    return await run_workspace(lambda: service.store.list(kind))
 
 
 @router.get("/{kind}/{key}",response_model=WorkspaceDocument)
 async def chart_document(kind:Kind,key:str,version:int|None=None,service=Depends(services)):
-    return document_call(lambda:service.store.get(kind,key,version))
+    return await run_workspace(lambda: document_call(lambda:service.store.get(kind,key,version)))
 
 
 @router.put("/{kind}/{key}",response_model=WorkspaceDocument)
 async def chart_save_document(kind:Kind,key:str,body:WorkspaceWrite,service=Depends(services)):
-    return document_call(lambda:service.store.put(kind,key,body))
+    return await run_workspace(lambda: document_call(lambda:service.store.put(kind,key,body)))
 
 
 @router.post("/{kind}/{key}/archive",response_model=dict[str,bool])
 async def chart_archive_document(kind:Kind,key:str,service=Depends(services)):
-    document_call(lambda:service.store.archive(kind,key))
+    await run_workspace(lambda: document_call(lambda:service.store.archive(kind,key)))
     return {"archived":True}
 
 
 @router.websocket("/stream")
 async def chart_stream(websocket:WebSocket):
-    service = services(websocket)
+    service = await services(websocket)
     await websocket.accept()
     queue = asyncio.Queue(maxsize=2000)
     subscriptions = {}
@@ -154,7 +154,8 @@ async def chart_stream(websocket:WebSocket):
                     if tf not in info.timeframes:
                         raise ValueError("该品种不支持此周期")
                     previous = subscriptions.get((key,tf))
-                    if previous: service.market.unsubscribe(key,tf,previous)
+                    if previous:
+                        service.market.unsubscribe(key,tf,previous)
                     listener = Subscriber(message.get("generation",0))
                     subscriptions[(key,tf)] = listener
                     service.market.subscribe(key,tf,listener)
@@ -162,7 +163,8 @@ async def chart_stream(websocket:WebSocket):
                     await websocket.send_json({"type":"status","symbol":key,"timeframe":tf,"status":"error","error":str(exc),"generation":message.get("generation",0)})
             elif message.get("type") == "unsubscribe":
                 listener = subscriptions.pop((key,tf),None)
-                if listener: service.market.unsubscribe(key,tf,listener)
+                if listener:
+                    service.market.unsubscribe(key,tf,listener)
     except WebSocketDisconnect:
         pass
     finally:

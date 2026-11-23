@@ -2,22 +2,33 @@ from __future__ import annotations
 
 from typing import Literal
 
-from fastapi import Depends, Query, Request
+from fastapi import Depends, HTTPException, Query, Request
 
 from app.contracts.frontend import FrontendContractRouter
 from app.dependencies import get_market_query_service
 from app.rate_limit import limiter
 from app.contracts.dto.market_history import (
+    BitcoinHalvingResponse,
     CurrentPriceBatchResponse,
     CurrentPriceResponse,
     KlineTailResponse,
     MarketHistoryBatchResponse,
     MarketHistoryResponse,
 )
+from app.services.market.bitcoin_halving import BitcoinHalvingService
 from config import settings
 
 
 router = FrontendContractRouter(frontend_contract_target="market", tags=["Market Data"])
+bitcoin_halving = BitcoinHalvingService()
+
+
+@router.get("/bitcoin/halving", response_model=BitcoinHalvingResponse)
+async def get_bitcoin_halving() -> BitcoinHalvingResponse:
+    estimate = await bitcoin_halving.get_estimate()
+    if estimate is None:
+        raise HTTPException(status_code=503, detail="Bitcoin block data is temporarily unavailable")
+    return estimate
 
 
 @router.get("/history", response_model=MarketHistoryResponse)

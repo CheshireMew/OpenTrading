@@ -1,0 +1,33 @@
+<template>
+  <div class="timeline mt-4"><button class="app-button-secondary" :disabled="busy" @click="offset = 0; load()">{{ busy ? tr('researchUi.loadingTimeline') : tr('researchUi.viewTimelineForTrade', { p0: tradeId }) }}</button><p v-if="error" class="error" role="alert">{{ error }}</p>
+    <template v-if="timeline"><p class="app-muted text-xs my-3">{{ tr('researchUi.timelineBasis') }}</p><p v-for="message in timeline.limitations" :key="message" class="notice">{{ message }}</p><p v-if="timeline.fallback_intervals?.length" class="text-sm my-2">{{ tr('researchUi.signalBarFallbackIntervalStarts', { p0: timeline.fallback_intervals.map(date).join('、') }) }}</p>
+      <details v-if="timeline.signals.length" class="my-3"><summary>{{ tr('researchUi.relatedOriginalSignal') }}</summary><pre>{{ JSON.stringify(timeline.signals, null, 2) }}</pre></details>
+      <div class="table-scroll"><table><thead><tr><th>{{ tr('researchUi.timeUtc') }}</th><th>{{ tr('researchUi.event') }}</th><th>{{ tr('researchUi.savedExecutionDetails') }}</th></tr></thead><tbody><tr v-for="(e,i) in timeline.items" :key="i"><td>{{ date(e.timestamp) }}</td><td>{{ names[String(e.event)] || e.event }}</td><td>{{ detail(e) }}<details><summary>{{ tr('researchUi.fullRecord') }}</summary><pre>{{ JSON.stringify(e,null,2) }}</pre></details></td></tr></tbody></table></div>
+      <div class="pager"><button :disabled="busy || !offset" @click="offset -= 100; load()">{{ tr('chartWorkspace.previous') }}</button><span>{{ offset + timeline.items.length }} / {{ timeline.total }}</span><button :disabled="busy || offset + 100 >= timeline.total" @click="offset += 100; load()">{{ tr('chartWorkspace.next') }}</button></div>
+    </template>
+  </div>
+</template>
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+import { useRequestError } from '@/composables/useRequestError'
+import { computed } from 'vue'
+import { createTradePresentation } from '@/modules/research/tradePresentation'
+import { ref, watch } from 'vue'
+import { localBacktestApi as api } from '@/modules/research/localBacktestApi'
+import type { BacktestTradeTimeline } from '@/modules/research/generatedContracts'
+
+const { t: tr, locale } = useI18n()
+const { signalStatus, exitReason } = createTradePresentation(tr)
+const { error, setError, clearError } = useRequestError(tr)
+const props=defineProps<{runId:string;tradeId:number}>()
+const timeline=ref<BacktestTradeTimeline|null>(null),busy=ref(false),offset=ref(0)
+let request=0
+const names = computed<Record<string,string>>(() => ({signal:tr('researchUi.signalGenerated'),stop_entry_order:tr('researchUi.breakoutOrderCreated'),order_checked:tr('researchUi.orderConditionsChecked'),signal_processed:tr('researchUi.signalProcessed'),entry:tr('researchUi.entryFilled'),exit:tr('researchUi.exitFilled'),protection_updated:tr('researchUi.profitProtectionUpdated'),saved_fill:tr('researchUi.savedFill'),strategy_observation:tr('researchUi.indicatorConditionsAtDecisionTime')}))
+const date=(v:unknown)=>typeof v==='number'?new Date(v).toISOString().replace('T',' ').slice(0,19):'—'
+function detail(e:Record<string,any>) { if(e.event === 'strategy_observation') return [...Object.entries(e.values ?? {}).filter(([,v])=>v != null).map(([k,v])=>`${k}：${['确认起点时间','最初信号时间'].includes(k) && typeof v === 'number' ? date(v) : v}`), ...Object.entries(e.checks ?? {}).map(([k,v])=>`${k}：${v ? tr('chartWorkspace.yes') : tr('chartWorkspace.no')}`)].join('；'); return [e.price!=null?tr('researchUi.price', { p0: e.price }):'',e.stop!=null?tr('researchUi.stopPrice', { p0: e.stop }):'',e.effective_from!=null?tr('researchUi.effectiveFrom', { p0: date(e.effective_from) }):'',e.status?tr('researchUi.status', { p0: signalStatus(e.status) }):'',e.reason?tr('researchUi.reason2', { p0: exitReason(e.reason) }):'',e.trigger_price!=null?tr('researchUi.breakoutPrice', { p0: e.trigger_price }):'',e.worst_price!=null?tr('researchUi.priceCap', { p0: e.worst_price }):'',e.resolution_ms?tr('researchUi.marketIntervalMinutes', { p0: e.resolution_ms/60000 }):'',e.fallback?tr('researchUi.signalBarFallbackInThisInterval'):''].filter(Boolean).join('；') }
+async function load(){const token=++request;busy.value=true;clearError();try{const r=await api.tradeTimeline(props.runId,props.tradeId,offset.value);if(token===request)timeline.value=r}catch(e){if(token===request)setError(e, 'ui.operationFailed')}finally{if(token===request)busy.value=false}}
+watch(()=>[props.runId,props.tradeId],()=>{request++;timeline.value=null;offset.value=0;busy.value=false;clearError()})
+</script>
+<style scoped>
+.table-scroll{overflow:auto;max-height:400px}table{width:100%;font-size:12px;text-align:left}td,th{padding:9px;border-bottom:1px solid #8883;vertical-align:top}td:first-child{white-space:nowrap}pre{font-size:11px;white-space:pre-wrap;overflow-wrap:anywhere;max-width:700px}.pager{display:flex;justify-content:space-between;margin-top:12px;font-size:12px}.notice,.error{font-size:13px;background:#8881;padding:12px;margin-top:12px}.error{color:#d55}summary{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}
+</style>

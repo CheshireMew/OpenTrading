@@ -30,9 +30,6 @@ import type {
   SavedMarketScreenerListResponse,
   SavedMarketScreenerResponse,
   SavedMarketScreenerUpdateCommand,
-  ResearchReportGenerateCommand,
-  ResearchReportPageResponse,
-  ResearchReportResponse,
 } from './contracts'
 
 export const researchApi = {
@@ -40,18 +37,6 @@ export const researchApi = {
     return apiGet('list_research_events', {
       query: { kind, unacknowledged_only: unacknowledgedOnly, limit },
     })
-  },
-  listReports(includeArchived = false, offset = 0, limit = 50): Promise<ResearchReportPageResponse> {
-    return apiGet('list_research_reports', { query: { include_archived: includeArchived, offset, limit } })
-  },
-  generateReport(body: ResearchReportGenerateCommand): Promise<ResearchReportResponse> {
-    return apiPost('generate_research_report', body, { client: 'longTask' })
-  },
-  getReport(id: string): Promise<ResearchReportResponse> {
-    return apiGet('get_research_report', { path: { report_id: id } })
-  },
-  setReportArchived(id: string, expectedVersion: number, archived: boolean): Promise<ResearchReportResponse> {
-    return apiPost(archived ? 'archive_research_report' : 'restore_research_report', { expectedVersion }, { path: { report_id: id } })
   },
   listScreeners(includeArchived = false): Promise<SavedMarketScreenerListResponse> {
     return apiGet('list_market_screeners', { query: { include_archived: includeArchived } })

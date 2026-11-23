@@ -1,0 +1,48 @@
+"""USD cash, units and external-flow rules shared by ledger and history.
+
+Transfers cross this portfolio's boundary. A transfer between two portfolios is
+an external flow for each individual portfolio; it is not an investment gain.
+unit_price on transfers is the USD fair value at the transfer instant.
+"""
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True, slots=True)
+class LedgerEffect:
+    cash: float
+    units: float
+    external_flow: float | None
+    fee: float
+    notional: float
+
+
+def ledger_effect(item: dict) -> LedgerEffect:
+    kind = item["transaction_type"]
+    quantity = float(item.get("quantity") or 0)
+    price = float(item.get("unit_price") or 0)
+    amount = float(item.get("cash_amount") or 0)
+    fee = float(item.get("fee") or 0)
+    notional = quantity * price
+    cash, units, flow = -fee, 0.0, 0.0
+    if kind == "deposit":
+        cash += amount
+        flow = amount
+    elif kind == "withdrawal":
+        cash -= amount
+        flow = -amount
+    elif kind == "fee":
+        cash -= amount
+        fee += amount
+    elif kind in {"buy", "transfer_in"}:
+        units = quantity
+        if kind == "buy":
+            cash -= notional
+        else:
+            flow = notional if price > 0 else None
+    elif kind in {"sell", "transfer_out"}:
+        units = -quantity
+        if kind == "sell":
+            cash += notional
+        else:
+            flow = -notional if price > 0 else None
+    return LedgerEffect(cash, units, flow, fee, notional)

@@ -1,5 +1,5 @@
 <template>
-  <div class="app-shell flex h-dvh flex-col overflow-hidden md:flex-row" :class="{'app-chart-mode': route.path === '/', 'app-chart-menu-open': sidebarOpen}">
+  <div class="app-shell flex h-dvh flex-col overflow-hidden md:flex-row" :class="{'app-chart-mode': route.path === '/'}">
     <a href="#main-content" class="app-skip-link">{{ t('app.skipToContent') }}</a>
 
     <header class="app-mobile-header flex h-14 flex-shrink-0 items-center justify-between border-b px-4 md:hidden">
@@ -19,10 +19,10 @@
 
     <aside
       ref="sidebarRef"
-      class="app-sidebar fixed inset-y-0 left-0 z-50 flex w-72 flex-shrink-0 flex-col overflow-hidden transition-transform duration-200 md:static md:z-auto md:w-56 md:translate-x-0"
+      class="app-sidebar fixed inset-y-0 left-0 z-50 flex w-72 flex-shrink-0 flex-col overflow-hidden transition-transform duration-200 md:static md:z-auto md:w-[184px] md:translate-x-0"
       :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-      :inert="(!desktopNavigation || route.path === '/') && !sidebarOpen"
-      :aria-hidden="(!desktopNavigation || route.path === '/') && !sidebarOpen ? 'true' : undefined"
+      :inert="!desktopNavigation && !sidebarOpen"
+      :aria-hidden="!desktopNavigation && !sidebarOpen ? 'true' : undefined"
       :role="navigationModalOpen ? 'dialog' : undefined"
       :aria-modal="navigationModalOpen ? 'true' : undefined"
       :aria-label="navigationModalOpen ? t('app.primaryNavigation') : undefined"
@@ -96,6 +96,7 @@
         </keep-alive>
       </router-view>
     </main>
+    <PriceAlertNotices />
   </div>
 </template>
 
@@ -107,7 +108,6 @@ import {
   ChartBarSquareIcon,
   ScaleIcon,
   BanknotesIcon,
-  ArrowsRightLeftIcon,
   CogIcon,
   ClockIcon,
   MoonIcon,
@@ -119,7 +119,6 @@ import {
   BookmarkSquareIcon,
   PresentationChartLineIcon,
   FunnelIcon,
-  DocumentTextIcon,
   CircleStackIcon,
 } from '@heroicons/vue/24/outline'
 import {
@@ -135,6 +134,7 @@ import { useSymbolCatalog } from '@/modules/market'
 import { setAppLocale, toggleAppLocale } from '@/i18n/config'
 import { useModalDialog } from '@/composables/useModalDialog'
 import { useDesktopAlertNotifications } from '@/modules/research/useDesktopAlertNotifications'
+import PriceAlertNotices from '@/components/chartWorkspace/PriceAlertNotices.vue'
 
 const { locale, t } = useI18n()
 const route = useRoute()
@@ -143,7 +143,7 @@ const mainContentRef = ref<HTMLElement | null>(null)
 const bootstrapError = ref(false)
 const bootstrapLoading = ref(false)
 const desktopNavigation = ref(false)
-const navigationModalOpen = computed(() => sidebarOpen.value && (!desktopNavigation.value || route.path === '/'))
+const navigationModalOpen = computed(() => sidebarOpen.value && !desktopNavigation.value)
 const { theme, toggleTheme } = useTheme()
 const { loadCurrencyRates } = useMoney()
 const { loadSymbols } = useSymbolCatalog()
@@ -153,14 +153,12 @@ const iconMap: Record<AppNavIconName, Component> = {
   ChartBarSquareIcon,
   ScaleIcon,
   BanknotesIcon,
-  ArrowsRightLeftIcon,
   CogIcon,
   ClockIcon,
   CubeTransparentIcon,
   BookmarkSquareIcon,
   PresentationChartLineIcon,
   FunnelIcon,
-  DocumentTextIcon,
   CircleStackIcon,
 }
 const navSections = APP_NAV_SECTIONS.map((section) => ({
@@ -217,9 +215,7 @@ watchEffect(() => {
   document.title = pageTitle === appTitle ? appTitle : `${pageTitle} · ${appTitle}`
 })
 
-const openWorkspaceNavigation = () => { sidebarOpen.value = true }
 onMounted(() => {
-  window.addEventListener('opentrading:open-navigation', openWorkspaceNavigation)
   desktopMediaQuery = window.matchMedia('(min-width: 768px)')
   syncDesktopNavigation(desktopMediaQuery)
   desktopMediaQuery.addEventListener('change', syncDesktopNavigation)
@@ -227,18 +223,12 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('opentrading:open-navigation', openWorkspaceNavigation)
   desktopMediaQuery?.removeEventListener('change', syncDesktopNavigation)
 })
 </script>
 
 <style>
-.app-chart-mode .app-sidebar{position:fixed!important;z-index:60!important;transform:translateX(-100%)!important}
-.app-chart-mode.app-chart-menu-open .app-sidebar{transform:translateX(0)!important;box-shadow:8px 0 40px #0005}
-.app-chart-mode .app-sidebar-header button{display:inline-flex!important}
 .app-chart-mode .app-main{overflow:hidden!important}
-.app-chart-mode>button.fixed{display:block!important}
-.app-chart-mode .app-mobile-header{display:none!important}
 
 .app-shell {
   --app-shell-bg: var(--ui-canvas);
@@ -262,17 +252,16 @@ onBeforeUnmount(() => {
   background: var(--app-shell-bg);
   color: var(--app-shell-text);
 }
-html.dark .app-shell { --app-sidebar-bg: var(--ui-canvas); --app-nav-active: #73cabb; }
 .app-sidebar {
   border-right: 1px solid var(--app-sidebar-border);
   background: var(--app-sidebar-bg);
 }
 
-.app-sidebar-header { padding: 20px 22px 18px; }
-.app-nav-link { min-height: 38px; border-radius: 4px; font-size: 13px; font-weight: 500; }
+.app-sidebar-header { padding: 18px 14px; }
+.app-nav-link { min-height: 40px; border-radius: 3px; padding-inline: 9px; font-size: 14px; font-weight: 500; }
 .app-nav-link--active { font-weight: 600; }
-.app-nav-section { margin-top: 16px; padding-top: 5px; padding-bottom: 8px; font-size: 10px; letter-spacing: 0.08em; }
-.app-sidebar-button { min-height: 36px; border-radius: 5px; padding: 7px 9px; font-size: 12px; }
+.app-nav-section { margin-top: 16px; padding: 6px 9px; font-size: 11px; letter-spacing: 0.02em; }
+.app-sidebar-button { min-height: 36px; border-radius: 4px; padding: 7px 6px; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .app-sidebar-controls { border-top-color: var(--ui-border); }
 
 .app-mobile-header {
@@ -301,7 +290,7 @@ html.dark .app-shell { --app-sidebar-bg: var(--ui-canvas); --app-nav-active: #73
   z-index: 100;
   transform: translateY(-150%);
   background: var(--app-nav-active-border);
-  color: white;
+  color: var(--ui-onAccent);
   padding: 0.625rem 1rem;
   font-weight: 600;
   transition: transform 150ms ease;
@@ -317,7 +306,10 @@ html.dark .app-shell { --app-sidebar-bg: var(--ui-canvas); --app-nav-active: #73
 
 .app-brand {
   color: var(--app-brand);
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: inherit;
+  font-size: 19px;
+  font-weight: 750;
+  letter-spacing: -0.6px;
 }
 
 .app-nav-section {

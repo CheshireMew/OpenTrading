@@ -79,7 +79,7 @@
           </label>
         </div>
 
-        <label v-if="form.provider === 'deepseek'" class="mt-5 flex items-center justify-between border border-[#e4ded3] px-4 py-3 dark:border-gray-700">
+        <label v-if="form.provider === 'deepseek'" class="mt-5 flex items-center justify-between border border-[var(--ui-border)] px-4 py-3 dark:border-gray-700">
           <span>
             <span class="block text-sm font-medium text-gray-900 dark:text-white">{{ $t('settings.reasoningMode') }}</span>
             <span class="block text-xs text-gray-500 dark:text-gray-400">
@@ -111,7 +111,6 @@
         <div v-if="systemLoading" role="status" aria-live="polite" class="py-8 text-center app-muted">{{ $t('settings.loading') }}</div>
         <div v-else-if="systemLoadError" role="alert" class="flex flex-wrap items-center justify-between gap-3 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200"><span>{{ systemLoadError }}</span><button type="button" class="app-button-secondary app-touch-target" @click="loadSystemConfig">{{ $t('common.retry') }}</button></div>
         <div v-else class="grid gap-3 text-sm text-stone-600 dark:text-gray-400 md:grid-cols-2">
-          <div>{{ $t('settings.env') }}: {{ $t('settings.production') }}</div>
           <div>{{ $t('settings.version') }}: {{ systemConfig?.version || '-' }} (Vue + FastAPI)</div>
           <div>{{ $t('settings.db') }}: {{ systemConfig?.runtime?.database_engine || '-' }}</div>
           <div>{{ $t('settings.cache') }}: {{ systemConfig?.runtime?.cache_backend ? $t(`settings.cacheBackends.${systemConfig.runtime.cache_backend}`, systemConfig.runtime.cache_backend) : '-' }}</div>
@@ -159,7 +158,7 @@ const {
 <style scoped>
 .input {
   @apply w-full border bg-white px-3 py-2 text-sm font-semibold text-stone-900 outline-none transition focus:border-emerald-700 disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:disabled:bg-gray-950 dark:disabled:text-gray-500;
-  border-color: #e4ded3;
+  border-color: var(--ui-border);
 }
 </style>
 

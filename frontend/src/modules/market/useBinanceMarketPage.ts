@@ -107,6 +107,9 @@ export function useBinanceMarketPage() {
 
   return {
     loading: market.loading,
+    monitorAvailable: market.monitorAvailable,
+    spotAvailable: market.spotAvailable,
+    contractAvailable: market.contractAvailable,
     error: market.error,
     minRisePct: market.minRisePct,
     mode: market.mode,

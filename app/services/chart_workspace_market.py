@@ -244,7 +244,7 @@ class ChartWorkspaceMarket:
                                 emit("status",status="live")
                                 live = True
                             last_open = int(row["t"])
-                            emit("bar",bar=ChartBar(time=last_open,open=float(row["o"]), high=float(row["h"]),
+                            emit("bar",live=True,bar=ChartBar(time=last_open,open=float(row["o"]), high=float(row["h"]),
                                 low=float(row["l"]),close=float(row["c"]),volume=float(row["v"]),
                                 closeTime=int(row["T"])+1,closed=bool(row["x"])).model_dump())
             except asyncio.CancelledError:

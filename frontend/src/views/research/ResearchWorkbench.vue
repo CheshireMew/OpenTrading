@@ -318,7 +318,7 @@ const emptyItemForm = () => ({ symbol: '', assetClass: 'crypto' as 'crypto' | 'i
 const itemForm = reactive(emptyItemForm())
 const editItem = reactive({ thesis: '', targetPrice: '', invalidationPrice: '', tags: '' })
 const noteForm = reactive({ kind: 'update' as 'thesis' | 'update' | 'review' | 'decision', title: '', content: '' })
-const alertMetrics = ['price', 'price_change_24h', 'breakout_score', 'funding_rate_pct', 'oi_change_1h_pct', 'portfolio_drift_pct', 'rsi'] as const
+const alertMetrics = ['price', 'price_change_24h', 'breakout_score', 'funding_rate_pct', 'oi_change_1h_pct', 'rsi'] as const
 const alertOperators = ['gt', 'gte', 'lt', 'lte', 'crosses_above', 'crosses_below', 'between', 'outside'] as const
 const alertForm = reactive({ name: '', metric: 'price', operator: 'crosses_above', threshold: '' as string | number, secondaryThreshold: '' as string | number, cooldownMinutes: 60, windows: false })
 

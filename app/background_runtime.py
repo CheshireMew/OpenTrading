@@ -138,8 +138,8 @@ class BackgroundRuntimeController:
     async def _bootstrap(self) -> None:
         try:
             await self.runtime_services.require_background().market_scheduler.start(self._owner_id)
-            if self.runtime_services.infra.signal_lab is not None:
-                await asyncio.to_thread(self.runtime_services.infra.signal_lab.start)
+            if self.runtime_services.infra.market_data is not None:
+                await asyncio.to_thread(self.runtime_services.infra.market_data.start)
             runtime_status = self.runtime_services.infra.runtime_status
             if runtime_status is not None:
                 await asyncio.to_thread(
@@ -165,7 +165,7 @@ class BackgroundRuntimeController:
             logger.error(f"后台运行时启动失败: {exc}", exc_info=True)
 
     async def _shutdown_runtime_services(self) -> None:
-        if self.runtime_services.infra.signal_lab is not None:
-            await asyncio.to_thread(self.runtime_services.infra.signal_lab.shutdown)
+        if self.runtime_services.infra.market_data is not None:
+            await asyncio.to_thread(self.runtime_services.infra.market_data.shutdown)
         if self.runtime_services.background is not None:
             await self.runtime_services.background.market_scheduler.shutdown()

@@ -1,6 +1,7 @@
 # User requested
 _references/
 /archived/
+/licenses/history/
 example/
 output/
 test_output*.txt

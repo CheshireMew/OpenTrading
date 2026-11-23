@@ -11,7 +11,7 @@ from app.infra.executor import run_database
 from app.lifecycle import build_health_payload
 from app.product import API_PREFIX
 from app.runtime import RuntimeRole, runtime_role_has_target
-from app.routers import config_router, market, research, tools, chart_workspace, signal_lab
+from app.routers import config_router, market, research, tools, chart_workspace
 from config import settings
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -94,7 +94,6 @@ def register_app_routes(app: FastAPI, *, role: RuntimeRole) -> None:
         app.include_router(tools.router, prefix=f"{API_PREFIX}/tools", tags=["工具"])
         app.include_router(research.router, prefix=API_PREFIX, tags=["研究追踪"])
         app.include_router(config_router.router, prefix=API_PREFIX, tags=["配置"])
-        app.include_router(signal_lab.router, prefix=API_PREFIX)
     app.add_api_route("/", root, methods=["GET"], include_in_schema=False)
     app.add_api_route("/health", health_check, methods=["GET"])
     app.add_api_route("/health/live", liveness_check, methods=["GET"], include_in_schema=False)

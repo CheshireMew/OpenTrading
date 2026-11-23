@@ -120,7 +120,7 @@ def _version_unmanaged_database(alembic_config, database_runtime: DatabaseRuntim
 
 
 def _assert_model_tables_present(database_runtime: DatabaseRuntime) -> None:
-    from signal_lab.storage.sql import TABLES
+    from app.infra.persistence.market.history.sql import TABLES
 
     inspector = inspect(database_runtime.engine)
     expected = set(Base.metadata.tables) | {f"signal_lab_{name}" for name in TABLES}
@@ -132,7 +132,7 @@ def _assert_model_tables_present(database_runtime: DatabaseRuntime) -> None:
 
 
 def include_app_schema_object(obj, name, type_, reflected, compare_to) -> bool:
-    from signal_lab.storage.sql import owns_table
+    from app.infra.persistence.market.history.sql import owns_table
 
     # Signal Lab's prefixed tables use their own versioned SQL contract.
     return type_ != "table" or not reflected or not owns_table(name)

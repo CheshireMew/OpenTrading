@@ -1,7 +1,7 @@
 """Add Signal Lab tables to the OpenTrading database."""
 from alembic import op
 
-from signal_lab.storage.sql import TABLES, schema_statements
+from app.infra.persistence.market.history.sql import TABLES, schema_statements
 
 revision = "022_signal_lab"
 down_revision = "021_confirmed_candle_history"

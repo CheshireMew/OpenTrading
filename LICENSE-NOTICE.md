@@ -2,6 +2,8 @@
 
 Copyright (c) 2026 CheshireMew
 
+Market-history and dollar-liquidity components include code originally developed as Signal Lab, Copyright (c) 2026 柴郡Cheshire, under the same AGPL-3.0-or-later license.
+
 OpenTrading is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
 OpenTrading is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.

@@ -4,30 +4,30 @@ OpenTrading 的「美元流动性」位于 `/indicators/market-data`。页面展
 
 ## 命令行
 
-在 OpenTrading 目录下使用同一 Python 环境运行命令。标准日线合同为 `signal-lab.history.v1`，标准输出为一个 JSON 文档。完整历史存为 Parquet，结果中的 `status` 和 `coverage.complete` 表明覆盖情况。
+在 OpenTrading 目录下使用同一 Python 环境运行 `python -m scripts.market_data_cli`。行情与流动性代码已并入主项目的领域、数据源、存储和服务层，CLI、API 与后台使用同一份应用配置和数据库。标准日线合同仍为 `signal-lab.history.v1`，保持已有调用和历史快照兼容；标准输出为一个 JSON 文档。完整历史存为 Parquet，结果中的 `status` 和 `coverage.complete` 表明覆盖情况。
 
 ```powershell
-.\signal-lab.bat instruments resolve "贵州茅台"
-.\signal-lab.bat prices history --instrument 600519.SH --period 5y
-.\signal-lab.bat prices history --instrument AAPL.US --period 6mo --basis both --cache-only
-.\signal-lab.bat prices point --instrument SPY.US --date 2024-06-30
-.\signal-lab.bat prices compare --instrument SPY.US --instrument QQQ.US --period 5y
-.\signal-lab.bat prices verify --instrument 00700.HK --period 5y
-.\signal-lab.bat macro history --series FRED:DGS10 --period 5y
+.\venv\Scripts\python.exe -m scripts.market_data_cli instruments resolve "贵州茅台"
+.\venv\Scripts\python.exe -m scripts.market_data_cli prices history --instrument 600519.SH --period 5y
+.\venv\Scripts\python.exe -m scripts.market_data_cli prices history --instrument AAPL.US --period 6mo --basis both --cache-only
+.\venv\Scripts\python.exe -m scripts.market_data_cli prices point --instrument SPY.US --date 2024-06-30
+.\venv\Scripts\python.exe -m scripts.market_data_cli prices compare --instrument SPY.US --instrument QQQ.US --period 5y
+.\venv\Scripts\python.exe -m scripts.market_data_cli prices verify --instrument 00700.HK --period 5y
+.\venv\Scripts\python.exe -m scripts.market_data_cli macro history --series FRED:DGS10 --period 5y
 ```
 
 `prices update` 用于增量更新。`prices snapshots` 可以导出、检查和导入离线快照。`prices datasets build` 支持批量构建分区数据集，`prices indicators materialize` 保存版本化技术指标产物。`instruments classifications` 支持导入和查询按日期生效的分类。`data liquidity-sync` 和 `jobs status` 可在命令行刷新和检查流动性数据。
 
 ## 从 Signal Lab 导入
 
-结构化数据与 OpenTrading 共用 `DATABASE_URL`。原始接口响应和 Parquet 文件默认保存在运行时目录下的 `signal-lab` 子目录，可用 `SIGNAL_LAB_DATA_DIR` 指定文件位置。公开流动性数据无需密钥，Tiingo 和带密钥的 FRED 数据入口可分别配置 `TIINGO_API_TOKEN` 和 `FRED_API_KEY`。
+结构化数据使用主项目的 `DATABASE_URL`。原始接口响应和 Parquet 文件默认继续保存在 `RUNTIME_ROOT_DIR/signal-lab`，以沿用已有数据；可用 `MARKET_DATA_DIR` 指定文件位置。旧的 `SIGNAL_LAB_DATA_DIR` 和存储配额变量仍作为配置别名支持，新变量优先。公开流动性数据无需密钥，Tiingo 和带密钥的 FRED 数据入口可分别配置 `TIINGO_API_TOKEN` 和 `FRED_API_KEY`。
 
 首次导入先运行数据库迁移，再检查源目录和预计导入内容。应在启动 OpenTrading 后台进程前完成首次导入，以便沿用既有的流动性任务。
 
 ```powershell
 .\venv\Scripts\python.exe -m scripts.prepare_db
-.\signal-lab.bat migrate --source E:\Code\signal-lab\.data
-.\signal-lab.bat migrate --source E:\Code\signal-lab\.data --apply
+.\venv\Scripts\python.exe -m scripts.market_data_cli migrate --source E:\Code\signal-lab\.data
+.\venv\Scripts\python.exe -m scripts.market_data_cli migrate --source E:\Code\signal-lab\.data --apply
 ```
 
 导入范围为市场数据、宏观历史、流动性和对应的任务记录。原项目保存配置回测、研究记录及相关产物。导入会检查源架构、关联记录、产物和目标库状态，记录写入在单个数据库事务内完成。同一份源数据可重复执行校验。

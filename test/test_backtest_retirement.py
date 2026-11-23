@@ -44,7 +44,7 @@ async def test_background_starts_without_a_python_backtest_queue(tmp_path, monke
     background = SimpleNamespace(market_scheduler=Scheduler())
     # No database/queue capability is provided; startup must not attempt a claim.
     runtime = SimpleNamespace(
-        infra=SimpleNamespace(runtime_status=None, signal_lab=None),
+        infra=SimpleNamespace(runtime_status=None, market_data=None),
         background=background, require_background=lambda: background,
     )
     monkeypatch.setattr(settings, "BACKGROUND_RUNTIME_LOCK_PATH", tmp_path / "background.lock")

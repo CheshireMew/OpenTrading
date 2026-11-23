@@ -2,6 +2,8 @@
 
 OpenTrading uses a small inward-facing core and an explicit outer runtime shell.
 
+Cross-asset history and dollar liquidity are part of these same layers: values and calculations live in `app/domain/market/history` and the market liquidity modules, remote clients in `app/infra/market_data`, records and artifacts in `app/infra/persistence/market/history`, and orchestration in `app/services/market`. They use `AppSettings`, the shared database engine, Alembic migrations and the existing background lifecycle. Their CLI entry is `python -m scripts.market_data_cli`; there is no separate `signal_lab` package or application version. Existing `/signal-lab` API paths, database table names, snapshot identities and artifact locations remain compatible.
+
 `app/domain` owns business values and rules. It cannot import HTTP contracts, runtime services, infrastructure, or routers. `app/application` owns use cases, ports, and application errors. It can depend on the domain, but not on contracts, infrastructure, services, routers, or FastAPI.
 
 `app/services` is deliberately the outer orchestration layer, not the application core. It adapts transport commands, schedules blocking work on the named executors, coordinates external clients, and returns transport-ready results. Its ability to use `app/contracts` and `app/infra` is intentional; inner layers must never import it.

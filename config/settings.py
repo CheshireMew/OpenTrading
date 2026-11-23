@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Annotated, Any
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import AliasChoices, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -46,6 +46,16 @@ class AppSettings(BaseSettings):
 
     DATABASE_URL: str = ""
     DATABASE_CONNECT_TIMEOUT: int = 3
+    TIINGO_API_TOKEN: str = ""
+    FRED_API_KEY: str = ""
+    MARKET_DATA_MAX_MANAGED_BYTES: int = Field(
+        default=50 * 1024**3, gt=0,
+        validation_alias=AliasChoices("MARKET_DATA_MAX_MANAGED_BYTES", "SIGNAL_LAB_MAX_MANAGED_BYTES"),
+    )
+    MARKET_DATA_MIN_FREE_BYTES: int = Field(
+        default=5 * 1024**3, gt=0,
+        validation_alias=AliasChoices("MARKET_DATA_MIN_FREE_BYTES", "SIGNAL_LAB_MIN_FREE_BYTES"),
+    )
     BLOCKING_WORKSPACE_MAX_WORKERS: int = 2
     MARKET_QUOTE_MAX_AGE_SECONDS: float = 120
     MARKET_STREAM_STALE_SECONDS: float = 120
@@ -175,6 +185,10 @@ class AppSettings(BaseSettings):
     BACKGROUND_RUNTIME_LOCK_PATH: Path = Field(default_factory=lambda: _default_runtime_root() / "runtime" / "background.lock")
     LLM_CONFIG_PATH: Path = Field(default_factory=lambda: _default_runtime_root() / "config" / "llm_provider_config.json")
     CHART_WORKSPACE_DIR: Path = Field(default_factory=lambda: _default_runtime_root() / "chart_workspace")
+    MARKET_DATA_DIR: Path = Field(
+        default_factory=lambda: _default_runtime_root() / "signal-lab",
+        validation_alias=AliasChoices("MARKET_DATA_DIR", "SIGNAL_LAB_DATA_DIR"),
+    )
     NODE_EXECUTABLE: str = ""
     PINE_RUN_CONCURRENCY: int = Field(default=2, ge=1, le=16)
     PINE_RUN_QUEUE_LIMIT: int = Field(default=8, ge=0, le=100)
@@ -187,7 +201,8 @@ class AppSettings(BaseSettings):
         defaults = {"LOG_DIR": "logs", "TEMP_DIR": "tmp",
                     "BACKGROUND_RUNTIME_LOCK_PATH": "runtime/background.lock",
                     "LLM_CONFIG_PATH": "config/llm_provider_config.json",
-                    "CHART_WORKSPACE_DIR": "chart_workspace", "KLINE_ARCHIVE_DIR": "market_archive"}
+                    "CHART_WORKSPACE_DIR": "chart_workspace", "KLINE_ARCHIVE_DIR": "market_archive",
+                    "MARKET_DATA_DIR": "signal-lab"}
         for name, suffix in defaults.items():
             if name not in self.model_fields_set:
                 object.__setattr__(self, name, self.RUNTIME_ROOT_DIR / suffix)
@@ -197,6 +212,11 @@ class AppSettings(BaseSettings):
     BLOCKING_EXTERNAL_IO_MAX_WORKERS: int = 8
     BLOCKING_BACKGROUND_MAX_WORKERS: int = 4
     BLOCKING_TOOL_MAX_WORKERS: int = 4
+
+    @field_validator("TIINGO_API_TOKEN", "FRED_API_KEY", mode="before")
+    @classmethod
+    def strip_market_data_credentials(cls, value: Any) -> str:
+        return str(value or "").strip()
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod

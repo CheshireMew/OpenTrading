@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Literal
 from config import settings
 
 if TYPE_CHECKING:
-    from app.services.signal_lab_runtime import SignalLabRuntime
+    from app.services.market_data_runtime import MarketDataRuntime
     from app.infra.cache import RedisService
     from app.infra.db.database import DatabaseRuntime
     from app.infra.persistence.market.binance_market_research_store import BinanceMarketResearchStore
@@ -70,7 +70,7 @@ class InfraRuntimeServices:
     database_runtime: "DatabaseRuntime"
     cache_service: "RedisService"
     runtime_status: "RuntimeStatusRepository | None" = None
-    signal_lab: "SignalLabRuntime | None" = None
+    market_data: "MarketDataRuntime | None" = None
 
 
 @dataclass(slots=True)
@@ -221,7 +221,7 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
     from app.infra.persistence.market.indicator_repository import MarketIndicatorRepository
     from app.infra.persistence.runtime_status_repository import RuntimeStatusRepository
     from app.services.market.indicator_service import IndicatorService
-    from app.services.signal_lab_runtime import SignalLabRuntime
+    from app.services.market_data_runtime import MarketDataRuntime
 
     database_runtime = build_database_runtime(settings)
     cache_service = build_cache_service(settings)
@@ -232,7 +232,7 @@ def build_app_runtime_services(role: RuntimeRole | None = None) -> AppRuntimeSer
         database_runtime=database_runtime,
         cache_service=cache_service,
         runtime_status=runtime_status,
-        signal_lab=SignalLabRuntime(database_runtime),
+        market_data=MarketDataRuntime(database_runtime, settings),
     )
     indicators = IndicatorRuntimeServices(
         repository=indicator_repository,

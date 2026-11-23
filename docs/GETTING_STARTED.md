@@ -39,6 +39,8 @@ DATABASE_URL=postgresql://user:password@localhost:5432/opentrading
 
 启动器在一个终端中汇总 API、后台任务与前端日志。API 存活后会启动其余组件，等待首次采集与行情连接完成后显示完整就绪状态。完整日志位于 `.opentrading_runtime/launcher/`；覆盖运行根目录时随之迁移。
 
+修改 `app/`、`config/` 或 `utils/` 下的 Python 代码会触发 API 热重载。API 使用独立的隐藏控制台，重载时不会停止启动器、后台任务或前端，日志仍汇总在原窗口。
+
 按 `Q` 或 `Ctrl+C` 停止本次启动的服务。也可以在另一个终端执行：
 
 ```powershell

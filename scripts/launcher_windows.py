@@ -6,6 +6,9 @@ from ctypes import wintypes
 import hashlib
 import os
 from pathlib import Path
+import signal
+import subprocess
+import sys
 
 
 class _BasicLimits(ctypes.Structure):
@@ -45,6 +48,10 @@ def _kernel():
     api.SetEvent.argtypes = [wintypes.HANDLE]
     api.WaitForSingleObject.argtypes = [wintypes.HANDLE, wintypes.DWORD]
     api.CloseHandle.argtypes = [wintypes.HANDLE]
+    api.AttachConsole.argtypes = [wintypes.DWORD]
+    api.FreeConsole.argtypes = []
+    api.SetConsoleCtrlHandler.argtypes = [ctypes.c_void_p, wintypes.BOOL]
+    api.GenerateConsoleCtrlEvent.argtypes = [wintypes.DWORD, wintypes.DWORD]
     return api
 
 
@@ -52,6 +59,38 @@ def _check(value):
     if not value:
         raise ctypes.WinError(ctypes.get_last_error())
     return value
+
+
+def hidden_console_options():
+    """Keep reload-generated Ctrl+C inside the API's own invisible console."""
+    startupinfo = subprocess.STARTUPINFO()
+    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    startupinfo.wShowWindow = subprocess.SW_HIDE
+    return {'creationflags': subprocess.CREATE_NEW_CONSOLE, 'startupinfo': startupinfo}
+
+
+def interrupt_console(pid):
+    """A short-lived relay signals only the console owned by this child.
+
+    Attaching the launcher itself would detach it from the user's terminal and
+    reset its control handlers. The relay has no console until it attaches.
+    """
+    subprocess.run(
+        [sys._base_executable, str(Path(__file__).resolve()), '--interrupt-console', str(pid)],
+        stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        creationflags=subprocess.CREATE_NO_WINDOW, check=True, timeout=3,
+    )
+
+
+def _interrupt_attached_console(pid):
+    api = _kernel()
+    api.FreeConsole()
+    _check(api.AttachConsole(pid))
+    try:
+        _check(api.SetConsoleCtrlHandler(None, True))  # Ignore our own broadcast.
+        _check(api.GenerateConsoleCtrlEvent(signal.CTRL_C_EVENT, 0))
+    finally:
+        api.FreeConsole()
 
 
 class ProcessJob:
@@ -136,3 +175,11 @@ class LauncherLock:
             finally:
                 self.handle.close()
                 self.handle = None
+
+
+if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Internal launcher console relay')
+    parser.add_argument('--interrupt-console', type=int, required=True)
+    _interrupt_attached_console(parser.parse_args().interrupt_console)

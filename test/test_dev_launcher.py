@@ -15,7 +15,7 @@ from unittest.mock import Mock
 import pytest
 
 from scripts.dev_launcher import Child, Launcher, read_endpoint
-from scripts.launcher_windows import LauncherLock, ProcessJob, StopEvent, request_stop
+from scripts.launcher_windows import LauncherLock, ProcessJob, StopEvent, hidden_console_options, request_stop
 
 
 def test_health_check_explains_startup_503_and_rejects_failed_worker(monkeypatch):
@@ -200,6 +200,22 @@ def test_shutdown_cleans_up_partial_startup():
     job.close.assert_called_once()
     process.wait.assert_called_once()
     reader.join.assert_called_once()
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows reload and console signals")
+@pytest.mark.parametrize("stop_mode", ["signal", "external", "q", "close"])
+def test_api_reload_preserves_launcher_and_siblings_then_stops(tmp_path, stop_mode):
+    # The probe has its own hidden console so even a regression cannot signal
+    # pytest, the user's terminal, or any running OpenTrading instance.
+    probe = Path(__file__).parent / "fixtures/launcher_reload_probe.py"
+    result = subprocess.run(
+        [sys.executable, "-u", str(probe), str(tmp_path / "probe"), stop_mode],
+        stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        text=True, encoding="utf8", errors="replace", timeout=90,
+        **hidden_console_options(),
+    )
+    assert result.returncode == 0, result.stdout[-8000:]
+    assert "PROBE_PASSED" in result.stdout
 
 
 @pytest.mark.asyncio

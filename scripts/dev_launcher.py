@@ -18,7 +18,9 @@ import time
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, build_opener, ProxyHandler
 
-from scripts.launcher_windows import LauncherLock, ProcessJob, StopEvent, request_stop
+from scripts.launcher_windows import (
+    LauncherLock, ProcessJob, StopEvent, hidden_console_options, interrupt_console, request_stop,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 ANSI = re.compile(r'\x1b\[[0-9;]*[a-zA-Z]')
@@ -60,6 +62,7 @@ class Child:
     process: subprocess.Popen
     reader: threading.Thread
     critical: bool
+    isolated_console: bool = False
 
 
 def read_endpoint(url):
@@ -115,11 +118,14 @@ class Launcher:
     def stopped(self):
         return self.stop_requested.is_set() or self.external_stop.is_set()
 
-    def start_child(self, label, command, *, cwd=None, env=None, critical=True):
+    def start_child(self, label, command, *, cwd=None, env=None, critical=True, isolated_console=False):
+        options = {}
+        if os.name == 'nt':
+            options = hidden_console_options() if isolated_console else {'creationflags': subprocess.CREATE_NEW_PROCESS_GROUP}
         process = subprocess.Popen(command, cwd=cwd or self.root, env={**self.environment, **(env or {})},
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
             text=True, encoding='utf8', errors='replace', bufsize=1,
-            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0)
+            **options)
         try:
             self.job.add(process)
         except BaseException:
@@ -138,8 +144,16 @@ class Launcher:
                     self.log.write(label, line, console=show)
         reader = threading.Thread(target=stream, name=f'launcher-{label}', daemon=True)
         reader.start()
-        self.children.append(Child(label, process, reader, critical))
+        self.children.append(Child(label, process, reader, critical, isolated_console and os.name == 'nt'))
         return process
+
+    def start_api(self):
+        return self.start_child('API', [sys.executable, str(Path(__file__).with_name('run_api.py')),
+            '--port',str(self.api_port), '--launcher-pid',str(os.getpid())],
+            env={'APP_RUNTIME_ROLE':'api'}, isolated_console=True)
+
+    def handle_signal(self, signum, _frame):
+        self.stop_requested.set()
 
     def check_children(self):
         for child in self.children:
@@ -240,8 +254,7 @@ class Launcher:
                                '-File', str(self.root / 'scripts/start_local_dependencies.ps1')])
         self.ensure_redis()
         self.run_step('数据库', [sys.executable, '-m', 'scripts.prepare_db'])
-        self.start_child('API', [sys.executable, '-m', 'uvicorn', 'app.main:app', '--host','127.0.0.1',
-            '--port',str(self.api_port), '--reload','--reload-dir','app','--reload-dir','config','--reload-dir','utils'], env={'APP_RUNTIME_ROLE':'api'})
+        self.start_api()
         self.wait_ready('API', self.api_url + '/health/live')
         self.start_child('后台', [sys.executable, '-m', 'scripts.run_background_runtime', '--report-ready'], env={'APP_RUNTIME_ROLE':'background'})
         self.start_child('前端', [node, str(vite), '--host','127.0.0.1','--port',str(self.frontend_port),'--strictPort'], cwd=self.root / 'frontend')
@@ -267,11 +280,14 @@ class Launcher:
             if child.process.poll() is None:
                 try:
                     if os.name == 'nt':
-                        child.process.send_signal(signal.CTRL_BREAK_EVENT)
+                        if child.isolated_console:
+                            interrupt_console(child.process.pid)
+                        else:
+                            child.process.send_signal(signal.CTRL_BREAK_EVENT)
                     else:
                         child.process.terminate()
-                except OSError:
-                    pass
+                except (OSError, subprocess.SubprocessError) as exc:
+                    self.log.write('停止', f'{child.label} 的停止通知未送达，将清理本次子进程：{exc}')
         deadline = time.monotonic() + 8
         while any(c.process.poll() is None for c in self.children) and time.monotonic() < deadline:
             time.sleep(.1)
@@ -313,7 +329,7 @@ def main(argv=None):
         launcher = Launcher(root=ROOT, settings=settings, log=log, job=job, stop_event=stop_event, timeout=max(args.startup_timeout,1))
         for name in ('SIGINT','SIGTERM','SIGBREAK'):
             if hasattr(signal,name):
-                signal.signal(getattr(signal,name),lambda *_: launcher.stop_requested.set())
+                signal.signal(getattr(signal,name), launcher.handle_signal)
         log.write('启动', 'OpenTrading 单窗口启动器')
         launcher.start()
         launcher.monitor()

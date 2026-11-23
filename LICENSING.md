@@ -6,7 +6,7 @@ The original application source code authored for OpenTrading is licensed under 
 
 This grant covers OpenTrading's original backend, frontend, analysis workflows, services, tests, and documentation. Market and economic data, exchange or API responses, model output, credentials, and third-party financial content are not relicensed by this repository.
 
-Files under `.agents/skills/` come from `emilkowalski/skills` and remain under their MIT license; see `.agents/skills/LICENSE` and `skills-lock.json`. Other third-party libraries, copied or vendored material, runtimes, models, fonts, media, and data remain under their own licenses or terms. A file-specific or directory-specific notice takes precedence over this repository-level grant.
+Third-party libraries, copied or vendored material, runtimes, models, fonts, media, and data remain under their own licenses or terms. A file-specific or directory-specific notice takes precedence over this repository-level grant.
 
 The bundled early BTC dataset has mixed provenance and includes a synthetic segment. Its exact boundaries and permitted interpretation are documented in [data/README.md](data/README.md). It must not be presented as wholly observed exchange history.
 

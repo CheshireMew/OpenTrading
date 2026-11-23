@@ -12,13 +12,13 @@ const candles=n=>Array.from({length:n},(_,i)=>({time:1600000000000+i*3600000,ope
 
 test('original v7.2 contract: 240 bars, 38 events, tolerance 1e-7',async()=>{
   const root=new URL('../../',import.meta.url)
-  const fixture=JSON.parse(fs.readFileSync(new URL('docs/verification/pine-v7-2-contract/runtime-fixture-20260920.json',root)))
+  const fixture=JSON.parse(fs.readFileSync(new URL('./fixtures/pine-runtime/runtime-fixture-20260920.json',import.meta.url)))
   const original=fs.readFileSync(new URL('strategies/pine/eth_ema55_manual_chart_v7_2.pine',root),'utf8').replace(/\r\n/g,'\n')
   // The renamed indicator differs from the frozen source only in its title.
   const historical = original.replace('indicator("OpenTrading ETH · EMA55 · 当前周期 v7.2",',
     'indicator("Heimdall ETH · EMA55 · 当前周期 v7.2",')
   assert.equal(crypto.createHash('sha256').update(historical).digest('hex'),fixture.source_sha256)
-  const source=fs.readFileSync(new URL('docs/verification/pine-v7-2-contract/runtime-harness-20260920.pine',root),'utf8')
+  const source=fs.readFileSync(new URL('./fixtures/pine-runtime/runtime-harness-20260920.pine',import.meta.url),'utf8')
   const logs=[],originalLog=console.log
   try{
     console.log=(...args)=>logs.push(args.join(' '))

@@ -84,7 +84,7 @@ Asset research and data checks are also available through the CLI:
 .\venv\Scripts\python.exe -m scripts.research_cli asset BTC/USDT --timeframe 1h
 ```
 
-The CLI returns structured JSON; see [research workflows](docs/RESEARCH_WORKFLOWS.md). Python backtests, parameter sweeps and research diagnostics are [archived](archived/python_backtest_20261123/README.md). Strategy simulation uses the chart workspace Pine tester.
+The CLI returns structured JSON; see [research workflows](docs/RESEARCH_WORKFLOWS.md). Python backtests, parameter sweeps and research diagnostics are retired. Strategy simulation uses the chart workspace Pine tester.
 
 ## Data and backtest limitations
 
@@ -100,4 +100,4 @@ The frontend uses Vue 3, TypeScript, and Vite. The backend uses FastAPI, SQLAlch
 
 Original project code is licensed under [AGPL-3.0-or-later](LICENSE); see [LICENSING.md](LICENSING.md) for scope. Third-party dependencies and financial data retain their own terms, as described in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-The chart workspace uses [LuxAlgo Vela](https://luxalgo.com/vela), Vela-pinets, and [PineTS](https://github.com/alaa-eddine/PineTS). Development skills in `.agents/skills/` come from [emilkowalski/skills](https://github.com/emilkowalski/skills) under the [MIT License](.agents/skills/LICENSE).
+The chart workspace uses [LuxAlgo Vela](https://luxalgo.com/vela), Vela-pinets, and [PineTS](https://github.com/alaa-eddine/PineTS).

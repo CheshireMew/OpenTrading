@@ -17,7 +17,7 @@
 | `docs/` | 当前功能、架构和维护说明 |
 | `data/` | 随仓库提供的数据及来源说明 |
 
-`archived/` 是历史材料，不是当前应用入口。架构分层见 [ARCHITECTURE.md](docs/ARCHITECTURE.md)。
+`archived/`、`docs/archive/`、`docs/verification/`、`docs/design/` 和历史项目复盘只保存在本地，不随仓库发布；`.agents/`、`.impeccable/` 和 `skills-lock.json` 也是本机开发工具材料。测试所需的固定样本保存在 `frontend/test/fixtures/`，不依赖这些本地目录。架构分层见 [ARCHITECTURE.md](docs/ARCHITECTURE.md)。
 
 ## 验证改动
 

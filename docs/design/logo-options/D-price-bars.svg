@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="title desc">
-  <title id="title">OpenTrading — D K 线</title>
-  <desc id="desc">三根不同实体与影线的 K 线，直接对应价格观察和基于历史 K 线的策略检验，不表达单向上涨。</desc>
-  <g id="mark"><g class="positive-fill" fill="#089981"><rect x="20" y="30" width="8" height="68" rx="2"/><rect x="14" y="44" width="20" height="34" rx="3"/><rect x="100" y="32" width="8" height="64" rx="2"/><rect x="94" y="54" width="20" height="24" rx="3"/></g><g class="negative-fill" fill="#f23645"><rect x="60" y="18" width="8" height="90" rx="2"/><rect x="54" y="38" width="20" height="52" rx="3"/></g></g>
-</svg>

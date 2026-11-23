@@ -84,7 +84,7 @@ Redis とモデルの API キーは任意です。PostgreSQL、手動起動、�
 .\venv\Scripts\python.exe -m scripts.research_cli asset BTC/USDT --timeframe 1h
 ```
 
-CLI は構造化 JSON を返します。コマンドは[研究ワークフロー](docs/RESEARCH_WORKFLOWS.md)を参照してください。Python バックテスト、パラメータースキャン、研究診断は[アーカイブ](archived/python_backtest_20261123/README.md)され、戦略テストは Pine に統一されています。
+CLI は構造化 JSON を返します。コマンドは[研究ワークフロー](docs/RESEARCH_WORKFLOWS.md)を参照してください。Python バックテスト、パラメータースキャン、研究診断は廃止され、戦略テストは Pine に統一されています。
 
 ## データとバックテストの制約
 
@@ -100,4 +100,4 @@ OpenTrading は研究とシミュレーション用で、取引口座に接続�
 
 プロジェクト独自のコードには [AGPL-3.0-or-later](LICENSE) を適用しています。範囲は [LICENSING.md](LICENSING.md) を参照してください。外部依存と金融データには各提供元の条件が適用されます。[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) に概要を記載しています。
 
-チャートには [LuxAlgo Vela](https://luxalgo.com/vela)、Vela-pinets、[PineTS](https://github.com/alaa-eddine/PineTS) を使用しています。`.agents/skills/` の開発用スキルは [emilkowalski/skills](https://github.com/emilkowalski/skills) に由来し、[MIT ライセンス](.agents/skills/LICENSE)です。
+チャートには [LuxAlgo Vela](https://luxalgo.com/vela)、Vela-pinets、[PineTS](https://github.com/alaa-eddine/PineTS) を使用しています。

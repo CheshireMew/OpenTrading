@@ -14,7 +14,7 @@ OpenTrading uses a small set of public data sources. Runtime configuration lives
 - Alternative.me provides Fear & Greed data.
 - Mempool.space and DefiLlama provide selected on-chain and stablecoin liquidity inputs.
 
-Market signals collect on-chain, sentiment, and Bitcoin technical data. Macro indicator collection and FRED integration were retired on 2026-10-17. Existing macro history remains stored for reference, but is excluded from indicator responses and data-health freshness checks. Stock catalogs, index price history and benchmark currency conversion remain available without a FRED API key. Archived sources are in `archived/macro_indicators/`.
+Market signals collect on-chain, sentiment, and Bitcoin technical data. Macro indicator collection and FRED integration were retired on 2026-10-17. Existing macro history remains stored for reference, but is excluded from indicator responses and data-health freshness checks. Stock catalogs, index price history and benchmark currency conversion remain available without a FRED API key. Retired source snapshots are kept only in local archives and are not included in this repository.
 
 ## Diagnostics
 

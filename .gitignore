@@ -38,6 +38,16 @@ traceback.log
 /.tox/
 /.nox/
 
+# Local development tools, drafts, and historical verification artifacts
+/.agents/
+/.impeccable/
+/skills-lock.json
+/docs/archive/
+/docs/design/
+/docs/verification/
+/docs/PROJECT_*.md
+/docs/STRATEGY_RESEARCH_RETROSPECTIVE_*.md
+
 # Python
 __pycache__/
 *.py[cod]

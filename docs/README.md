@@ -20,14 +20,13 @@
 | [Pine 策略测试器](CHART_WORKSPACE.md#策略测试器) | 脚本、时间区间、资金与费用、曲线和交易记录 |
 | [Pine 编写规范](PINE_CODE_STANDARD.md) | 项目内 Pine 代码的编写与检查约定 |
 
-Python 回测、参数扫描和研究诊断已退出页面、API、后台任务及 CLI，原实现保存在[归档目录](../archived/python_backtest_20261123/README.md)。研究记录、信号复盘和数据检查的命令可通过 `python -m scripts.research_cli --help` 查询。
+Python 回测、参数扫描和研究诊断已退出页面、API、后台任务及 CLI，原实现仅保存在本地归档中，不随仓库发布。研究记录、信号复盘和数据检查的命令可通过 `python -m scripts.research_cli --help` 查询。
 
 ## 开发
 
 - [贡献指南](../CONTRIBUTING.md)：开发环境、检查命令、生成契约与 PR 说明。
 - [架构](ARCHITECTURE.md)：前后端分层、数据库、后台任务与运行边界。
 - [界面规范](../DESIGN.md)：现有主题、字体、控件、响应式与键盘交互。
-- [界面优化验收](verification/impeccable-workflows-20261029.md)：任务布局、操作路径、宽窄屏及错误恢复的本轮验证记录。
 - [许可证范围](../LICENSING.md)与[第三方说明](../THIRD_PARTY_NOTICES.md)：源码、依赖和金融数据的使用条件。
 
-组合平衡、研究报告和组合偏离提醒已[退出](../archived/portfolio_balance_20261123/README.md)，对应旧数据库数据已按用户要求删除。
+组合平衡、研究报告和组合偏离提醒已退出，对应旧数据库数据已按用户要求删除。

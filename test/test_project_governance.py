@@ -76,19 +76,6 @@ def test_frontend_source_tree_has_no_typescript_javascript_shadow_pairs():
     assert shadows == []
 
 
-def test_archived_javascript_shadows_preserve_the_recorded_bytes():
-    archive = ROOT / "archived" / "frontend_typescript_shadow_sources" / "frontend" / "src" / "components"
-    expected = {
-        "useTradingViewChart.js": "03dac027333aac38de51e4016e90c8fc59bd99dd78c4924bad1a33b7ee711527",
-        "useTradingViewTradeOverlay.js": "e2ae68e5f1058de5f6b38029ab84920193df4887bf2b82536342523374273c9c",
-        "tradingViewChartPresentation.js": "49b1638d4b73ff9a3963ec3fc2bc2a27d81449f5983fc2cadbabc38f9598cadc",
-    }
-    assert {
-        name: hashlib.sha256((archive / name).read_bytes()).hexdigest()
-        for name in expected
-    } == expected
-
-
 def test_frontend_contract_generator_discovers_included_api_routes():
     discovered = {(route.name, route.path) for route in contract_routes()}
 
@@ -102,14 +89,11 @@ def test_repository_license_and_third_party_boundary_are_explicit():
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
     license_text = (ROOT / "LICENSE").read_text(encoding="utf-8")
     licensing = (ROOT / "LICENSING.md").read_text(encoding="utf-8")
-    skill_license = (ROOT / ".agents" / "skills" / "LICENSE").read_text(encoding="utf-8")
 
     assert root_package["license"] == "AGPL-3.0-or-later"
     assert project["license"] == "AGPL-3.0-or-later"
     assert "GNU AFFERO GENERAL PUBLIC LICENSE" in license_text
-    assert ".agents/skills/LICENSE" in licensing
-    assert "MIT License" in skill_license
-    assert "Copyright (c) 2026 Emil Kowalski" in skill_license
+    assert "third-party financial content" in licensing
 
 
 def test_bundled_btc_history_matches_its_provenance_record():

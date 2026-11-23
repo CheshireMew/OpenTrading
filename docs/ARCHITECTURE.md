@@ -19,6 +19,8 @@ Migration `021_confirmed_candle_history` preserves old OHLCV rows as unconfirmed
 
 ## Responsibility owners after the cohesion refactor
 
+Directories `archived/`, `docs/archive/`, `docs/verification/` and `docs/design/` contain local historical material and are excluded from the repository. Required Pine regression fixtures live in `frontend/test/fixtures/pine-runtime/`.
+
 Strategy simulation has one active owner: the chart workspace Pine/PineTS strategy tester. Python strategy execution, parameter sweeps, granular research diagnostics and their result indexes are archived under `archived/python_backtest_20261123`. Their HTTP and frontend routes, CLI commands and background queue workers are unregistered. Application startup no longer creates research-result SQLite indexes. Migration 024 removes the retired backtest, portfolio and report tables and their data at the user’s explicit request. Shared OHLCV history, its compressed archive, Pine and DCA remain independent.
 
 The frontend chart page composes six owners: chart SDK lifecycle, layout persistence, watchlists and quote polling, Pine document drafts, Pine execution and panel interaction. Each owner controls its request generations, timers and cleanup. It receives only its required capability callbacks, not the entire page state. The two backend periodic evaluators share `PeriodicTask` lifecycle code while retaining independent business evaluation rules.

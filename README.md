@@ -85,7 +85,7 @@ Redis 和模型 API Key 均为可选项。PostgreSQL、手动启动、日志位�
 .\venv\Scripts\python.exe -m scripts.research_cli asset BTC/USDT --timeframe 1h
 ```
 
-CLI 返回结构化 JSON，适合脚本调用，命令见[研究工作流](docs/RESEARCH_WORKFLOWS.md)。Python 回测、参数扫描和研究诊断已[归档退出](archived/python_backtest_20261123/README.md)，策略模拟统一使用图表中的 Pine 测试器。
+CLI 返回结构化 JSON，适合脚本调用，命令见[研究工作流](docs/RESEARCH_WORKFLOWS.md)。Python 回测、参数扫描和研究诊断已退出，策略模拟统一使用图表中的 Pine 测试器。
 
 ## 数据与回测边界
 
@@ -101,4 +101,4 @@ OpenTrading 用于研究与模拟，不连接交易账户下单。Pine 使用 Pi
 
 项目原创代码采用 [AGPL-3.0-or-later](LICENSE)，具体范围见 [LICENSING.md](LICENSING.md)。第三方依赖与金融数据保留各自的许可和使用条件，参见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
-图表工作台使用 [LuxAlgo Vela](https://luxalgo.com/vela)、Vela-pinets 与 [PineTS](https://github.com/alaa-eddine/PineTS)。`.agents/skills/` 中的开发技能来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)，采用 [MIT 许可证](.agents/skills/LICENSE)。
+图表工作台使用 [LuxAlgo Vela](https://luxalgo.com/vela)、Vela-pinets 与 [PineTS](https://github.com/alaa-eddine/PineTS)。

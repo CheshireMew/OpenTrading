@@ -69,7 +69,7 @@ if (typeof require !== 'undefined' && require.main === module) {
   const fs = require('node:fs');
   const crypto = require('node:crypto');
   const root = require('node:path').resolve(__dirname, '..');
-  const folder = root + '/docs/verification/pine-v7-2-contract/';
+  const folder = root + '/frontend/test/fixtures/pine-runtime/';
   const source = fs.readFileSync(root + '/strategies/pine/eth_ema55_manual_chart_v7_2.pine', 'utf8').replace(/\r\n/g, '\n');
   const fixture = JSON.parse(fs.readFileSync(folder + 'runtime-fixture-20260920.json', 'utf8'));
   const pine = makeHarness(source, fixture.bars, fixture.expected_fills);

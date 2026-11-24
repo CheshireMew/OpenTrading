@@ -5,7 +5,7 @@ from datetime import date
 from io import StringIO
 from typing import Any
 
-from app.infra.market_data.http import HttpTransport, UrllibJsonTransport
+from app.infra.market_data.http import HttpTransport, HttpxJsonTransport
 
 
 class FredObservationClient:
@@ -20,7 +20,7 @@ class FredObservationClient:
         transport: HttpTransport | None = None,
     ) -> None:
         self.api_key = api_key
-        self.transport = transport or UrllibJsonTransport()
+        self.transport = transport or HttpxJsonTransport()
 
     def fetch_latest(
         self,

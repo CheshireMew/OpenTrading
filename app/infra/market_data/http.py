@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from contextlib import contextmanager
 import logging
 from time import sleep
 from typing import Any, Protocol
@@ -9,8 +10,10 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
+import httpx
+
 from app.product import APP_VERSION
-from app.infra.structured_data import dumps_json, load_json_response, read_bounded_response
+from app.infra.structured_data import StructuredDataError, dumps_json, load_json_response, read_bounded_response
 
 
 LOGGER = logging.getLogger("app.infra.market_data.http")
@@ -77,6 +80,60 @@ class UrllibJsonTransport:
         )
 
 
+class HttpxJsonTransport(UrllibJsonTransport):
+    """Official data feeds with modern connection handling and bounded reads."""
+
+    def __init__(self, policy: HttpPolicy | None = None, *, transport: httpx.BaseTransport | None = None):
+        super().__init__(policy)
+        self.transport = transport
+
+    def get_json(self, url: str, params: dict[str, str], headers: dict[str, str]) -> Any:
+        request = Request(_url_with_query(url, params), headers=_request_headers(headers))
+        return _request_with_retry(request, self.policy, lambda response: load_json_response(
+            response, source=_safe_endpoint(request.full_url), budget=_json_budget(self.policy.max_response_bytes)),
+            opener=self._open)
+
+    def get_bytes(self, url: str, params=None, headers=None, *, max_response_bytes=None) -> bytes:
+        request = Request(_url_with_query(url, params or {}), headers=_request_headers(headers))
+        return _request_with_retry(request, self.policy, lambda response: read_bounded_response(
+            response, source=_safe_endpoint(request.full_url), max_bytes=max_response_bytes or self.policy.max_response_bytes),
+            opener=self._open)
+
+    @contextmanager
+    def _open(self, request: Request, *, timeout: float):
+        try:
+            with httpx.Client(timeout=timeout, follow_redirects=True, transport=self.transport) as client:
+                headers = {"Accept-Encoding": "identity", **dict(request.header_items())}
+                with client.stream("GET", request.full_url, headers=headers) as response:
+                    if response.status_code >= 400:
+                        raise HTTPError(request.full_url, response.status_code, response.reason_phrase, response.headers, None)
+                    if response.headers.get("Content-Encoding", "identity").lower() not in {"", "identity"}:
+                        raise StructuredDataError("response.unsupported_encoding", _safe_endpoint(request.full_url),
+                            "feed must honor identity encoding so the byte budget applies before decompression")
+                    yield _HttpxReader(response)
+        except httpx.HTTPError as exc:
+            raise URLError(type(exc).__name__) from exc
+
+
+class _HttpxReader:
+    def __init__(self, response: httpx.Response):
+        self.headers = response.headers
+        self.chunks = iter(response.iter_bytes(chunk_size=65536))
+        self.buffer = bytearray()
+
+    def read(self, size: int) -> bytes:
+        if size < 0:
+            raise ValueError("A bounded response read is required")
+        while len(self.buffer) < size:
+            chunk = next(self.chunks, None)
+            if chunk is None:
+                break
+            self.buffer.extend(chunk)
+        result = bytes(self.buffer[:size])
+        del self.buffer[:size]
+        return result
+
+
 def read_json_request(request: Request, *, policy: HttpPolicy | None = None) -> Any:
     effective = policy or HttpPolicy()
     return _request_with_retry(
@@ -109,11 +166,11 @@ def read_request(
     )
 
 
-def _request_with_retry(request: Request, policy: HttpPolicy, reader: Any) -> Any:
+def _request_with_retry(request: Request, policy: HttpPolicy, reader: Any, *, opener=None) -> Any:
     endpoint = _safe_endpoint(request.full_url)
     for attempt in range(1, policy.attempts + 1):
         try:
-            with urlopen(request, timeout=policy.timeout_seconds) as response:  # noqa: S310
+            with (opener or urlopen)(request, timeout=policy.timeout_seconds) as response:  # noqa: S310
                 return reader(response)
         except HTTPError as exc:
             retryable = exc.code == 429 or exc.code >= 500

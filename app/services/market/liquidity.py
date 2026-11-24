@@ -10,7 +10,7 @@ from typing import Any, Callable, Protocol
 
 from config.market_data import MarketDataConfig
 from app.infra.market_data.fred_client import FredObservationClient
-from app.infra.market_data.http import HttpPolicy, HttpTransport, UrllibJsonTransport
+from app.infra.market_data.http import HttpPolicy, HttpTransport, HttpxJsonTransport
 from app.infra.persistence.market.history.snapshots import RawSnapshotStore
 from app.infra.persistence.market.history import MarketHistoryDatabase
 from app.infra.persistence.market.history.macro_repository import IndicatorRepository
@@ -51,7 +51,7 @@ class PublicLiquidityClient:
     )
 
     def __init__(self, transport: HttpTransport | None = None) -> None:
-        self.transport = transport or UrllibJsonTransport(
+        self.transport = transport or HttpxJsonTransport(
             HttpPolicy(timeout_seconds=30.0),
         )
         self._fred = FredObservationClient(transport=self.transport)

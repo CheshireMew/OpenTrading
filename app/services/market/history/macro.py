@@ -12,7 +12,7 @@ import pyarrow.parquet as pq
 
 from config.market_data import MarketDataConfig
 from app.infra.market_data.fred_client import FredObservationClient
-from app.infra.market_data.http import HttpTransport, UrllibJsonTransport
+from app.infra.market_data.http import HttpTransport, HttpxJsonTransport
 from app.infra.persistence.market.history.snapshots import RawSnapshotStore
 from app.services.market.history.catalog import instrument_payload, resolve_instrument
 from app.domain.market.history.coverage import resolve_date_range
@@ -38,7 +38,7 @@ class MacroService:
         self.config = config
         self._database = MarketHistoryDatabase(self.root)
         self._history = MacroHistoryRepository(self._database)
-        self._transport = transport or UrllibJsonTransport()
+        self._transport = transport or HttpxJsonTransport()
         self._fred = FredObservationClient(config.fred_api_key, self._transport)
 
     def history(

@@ -25,7 +25,7 @@
                       :disabled="refreshing" @click="changeDays = period">{{ t('signalLab.days', { count: period }) }}</button>
             </div>
           </div>
-          <button class="liquidity-button primary" type="button" :disabled="refreshing" @click="refreshLiquidity">
+          <button v-if="!PUBLIC_SITE" class="liquidity-button primary" type="button" :disabled="refreshing" @click="refreshLiquidity">
             {{ t(refreshing ? 'signalLab.refreshing' : 'signalLab.refresh') }}
           </button>
         </div>
@@ -149,6 +149,7 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { apiGet, apiPost } from '@/api/request'
+import { PUBLIC_SITE } from '@/app/publicSite'
 import { useDateTime } from '@/composables/useDateTime'
 import { backendText } from '@/i18n/backendText'
 import type { SignalLabIndicator, SignalLabLiquidityResponse, SignalLabPoint, SignalLabPressureComponent } from '@/modules/market/contracts'
@@ -197,6 +198,7 @@ function loadLiquidity() {
 }
 
 async function refreshLiquidity() {
+  if (PUBLIC_SITE) return loadLiquidity()
   refreshing.value = true
   refreshSummary.value = undefined
   try {

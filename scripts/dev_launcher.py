@@ -50,7 +50,14 @@ class SessionLog:
         with self.lock:
             self.file.write(rendered + '\n')
             if console:
-                print(rendered, flush=True)
+                try:
+                    print(rendered, flush=True)
+                except UnicodeEncodeError:
+                    # Redirected Windows output can use a legacy code page.
+                    # Keep the UTF-8 file intact and never crash service owners
+                    # or output-reader threads because a label cannot print.
+                    encoding = getattr(sys.stdout, 'encoding', None) or 'utf-8'
+                    print(rendered.encode(encoding, errors='backslashreplace').decode(encoding), flush=True)
 
     def close(self):
         self.file.close()

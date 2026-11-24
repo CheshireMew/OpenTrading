@@ -35,6 +35,7 @@ tzdata>=2026.2
 yfinance>=0.2.0          # 公开市场指数历史数据兜底源
 baostock>=0.8.9          # A 股指数日线历史数据兜底源
 akshare>=1.18.0          # 港股指数历史日线数据源
+mini-racer==0.14.1      # maintained py_mini_racer runtime on Windows and Linux
 TA-Lib==0.6.8
 
 # 开发依赖

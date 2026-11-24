@@ -14,6 +14,7 @@ dependencies = [
   "exchange-calendars==4.13.2",
   "fastapi>=0.100.0",
   "httpx>=0.24.0",
+  "mini-racer==0.14.1",
   "pandas>=2.0.0",
   "psycopg2-binary>=2.9.0",
   "pyarrow==23.0.1",
@@ -41,6 +42,10 @@ test = [
 
 [tool.pdm]
 distribution = false
+
+[tool.pdm.resolution]
+# The maintained fork supplies the same py_mini_racer import on both platforms.
+excludes = ["py-mini-racer"]
 
 [tool.pdm.resolution.overrides]
 aiohttp = ">=3.14.4"

@@ -11,10 +11,11 @@ def test_data_pipeline(mock_kline_data):
     highs = [item[2] for item in kline_data]
     lows = [item[3] for item in kline_data]
 
+    macd = TechnicalAnalysis.calculate_macd(closes, 12, 26, 9)
     indicators = {
         "ema": TechnicalAnalysis.calculate_ema(closes, 20),
         "rsi": TechnicalAnalysis.calculate_rsi(closes, 14),
-        "macd": TechnicalAnalysis.calculate_macd(closes, 12, 26, 9),
+        "macd": dict(zip(("dif", "dea", "histogram"), macd)),
         "atr": TechnicalAnalysis.calculate_atr(highs, lows, closes, 14),
     }
 
@@ -23,7 +24,7 @@ def test_data_pipeline(mock_kline_data):
     assert len(kline_data) == 80
     assert indicators["ema"] is not None
     assert indicators["rsi"] is not None
-    assert indicators["macd"][0] is not None
+    assert indicators["macd"]["dif"] is not None
     assert indicators["atr"] is not None
     assert "BTC/USDT" in prompt
     assert '"signal": "BUY/SELL/HOLD"' in prompt

@@ -18,7 +18,7 @@ def prepare_dca_dataset(
     target_hour: int | None,
 ) -> pd.DataFrame:
     all_df = pd.DataFrame(klines, columns=["timestamp", "open", "high", "low", "close", "volume"])
-    all_df["datetime"] = pd.to_datetime(all_df["timestamp"], unit="ms", utc=True)
+    all_df["datetime"] = pd.to_datetime(all_df["timestamp"], unit="ms", utc=True).astype("datetime64[ns, UTC]")
     tz_obj = get_timezone(timezone)
     all_df["local_dt"] = all_df["datetime"].dt.tz_convert(tz_obj)
 
@@ -45,7 +45,7 @@ def prepare_dca_dataset(
     # A UTC daily close is only available at the following UTC midnight.
     # Execute hourly schedules at the selected candle OPEN, without using its future close.
     indicators = daily_df[["ema20", "rsi", "ahr999"]].copy()
-    indicators["available_at"] = indicators.index + pd.Timedelta(days=1)
+    indicators["available_at"] = (indicators.index + pd.Timedelta(days=1)).astype("datetime64[ns, UTC]")
     dataset = pd.merge_asof(all_df.sort_values("datetime"), indicators.reset_index(drop=True),
                             left_on="datetime", right_on="available_at", direction="backward")
     dataset["close"] = dataset["open"]

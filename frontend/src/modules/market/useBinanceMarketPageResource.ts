@@ -47,6 +47,7 @@ export const useBinanceMarketPageResource = (
   let disposed = false
   let stopped = false
   let generation = 0
+  let lastLoadedAt = 0
 
   const setLoadFailures = (labels: string[]) => {
     if (!labels.length) {
@@ -112,6 +113,7 @@ export const useBinanceMarketPageResource = (
         })
         if (disposed || current !== generation || key !== requestKey()) return
         applyPayload(response)
+        lastLoadedAt = Date.now()
         schedulePendingRefresh(response)
         binanceMarketWarmSnapshot.write(response, requestedRise, MARKET_PAGE_QUOTE_ASSET)
       } catch (requestError) {
@@ -153,6 +155,10 @@ export const useBinanceMarketPageResource = (
     thresholdTimer = null
     pendingRefreshTimer = null
   }
+  const resume = () => {
+    startAutoRefresh()
+    if (!lastLoadedAt || Date.now() - lastLoadedAt >= 60_000) void fetchData()
+  }
   onScopeDispose(() => { disposed = true; stopAutoRefresh() })
 
   watch(autoRefresh, startAutoRefresh)
@@ -175,5 +181,6 @@ export const useBinanceMarketPageResource = (
     fetchData,
     startAutoRefresh,
     stopAutoRefresh,
+    resume,
   }
 }

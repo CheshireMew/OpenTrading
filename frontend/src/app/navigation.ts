@@ -146,19 +146,13 @@ const hasNav = (
   'nav' in route
 )
 
-const hasKeepAlive = (
-  route: (typeof APP_ROUTE_DEFINITIONS)[number],
-): route is Extract<(typeof APP_ROUTE_DEFINITIONS)[number], { keepAlive: true }> => (
-  'keepAlive' in route && route.keepAlive === true
-)
-
 // Keep saved research pages and direct URLs available while their menu is hidden.
 export const APP_NAV_ITEMS = APP_ROUTE_DEFINITIONS.filter(hasNav)
   .filter((route) => route.nav.section !== 'research')
   .filter((route) => !PUBLIC_SITE || route.name !== 'DataHealth')
-export const APP_KEEP_ALIVE_ROUTE_NAMES = APP_ROUTE_DEFINITIONS
-  .filter(hasKeepAlive)
-  .map((route: { name: string }) => route.name)
+// Reserve a browser-side instance for every page, including local-only pages.
+// Nested macro tabs have their own cache inside MacroSignals.
+export const APP_PAGE_CACHE_LIMIT = APP_ROUTE_DEFINITIONS.filter(route => 'component' in route).length
 
 export type AppNavItem = (typeof APP_NAV_ITEMS)[number]
 export type AppNavSectionKey = (typeof APP_NAV_SECTIONS)[number]['key']

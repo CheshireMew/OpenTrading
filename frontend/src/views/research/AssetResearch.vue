@@ -6,7 +6,7 @@
         <div class="flex flex-wrap gap-2"><select :aria-label="t('assetResearch.timeframe')" v-model="timeframe" class="app-control"><option v-for="value in timeframes" :key="value" :value="value">{{ value }}</option></select><button type="button" class="app-button-secondary" :disabled="loading" @click="load">{{ t('assetResearch.refresh') }}</button><router-link v-if="compareTarget" :to="compareTarget" class="app-button-secondary">{{ t('assetResearch.openCompare') }}</router-link><AddToResearchButton v-if="asset" :symbol="asset.symbol" :asset-class="asset.assetClass" :display-name="asset.symbol" :source-context="researchSourceContext" @added="onResearchAdded" /></div>
       </section>
       <div v-if="error" class="border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200" role="alert">{{ error }}</div>
-      <div v-if="loading" class="app-panel p-10 text-center app-muted">{{ t('assetResearch.loading') }}</div>
+      <div v-if="loading && !asset" class="app-panel p-10 text-center app-muted">{{ t('assetResearch.loading') }}</div>
       <template v-else-if="asset">
         <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
           <article class="app-panel p-5"><p class="text-xs app-muted">{{ t('assetResearch.currentPrice') }}</p><p class="mt-2 text-2xl font-semibold">{{ number(asset.currentPrice) }}</p></article>
@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'; import { useDateTime } from '@/composables/useDateTime'
 import { useRequestError } from '@/composables/useRequestError'
@@ -45,7 +45,26 @@ import SignalLabChart from '@/components/market/SignalLabChart.vue'
 const route = useRoute(); const { t, locale } = useI18n(); const asset = ref<AssetResearchResponse | null>(null); const loading = ref(false); const { error, setError, clearError } = useRequestError(t); const timeframe = ref('1h'); const timeframes = ['15m','1h','4h','1d']
 const routeSymbol = computed(() => String(route.params.symbol || '').replace(/~/g, '/'))
 let loadVersion = 0
-const load = async () => { const version = ++loadVersion; loading.value = true; clearError(); try { const response = await researchApi.getAsset(routeSymbol.value, timeframe.value, 365, { assetClass: typeof route.query.asset_class === 'string' ? route.query.asset_class : undefined, chainId: typeof route.query.chain_id === 'string' ? route.query.chain_id : undefined, platform: typeof route.query.platform === 'string' ? route.query.platform : undefined }); if (version === loadVersion) asset.value = response } catch (reason) { if (version === loadVersion) setError(reason, 'assetResearch.loadFailed') } finally { if (version === loadVersion) loading.value = false } }
+let loadedKey = '', pendingKey = ''
+const requestKey = () => JSON.stringify([routeSymbol.value, timeframe.value, route.query.asset_class, route.query.chain_id, route.query.platform])
+const load = async () => {
+  if (route.name !== 'AssetResearch') return
+  const key = requestKey()
+  if (loading.value && pendingKey === key) return
+  const version = ++loadVersion
+  if (loadedKey !== key) asset.value = null
+  pendingKey = key; loading.value = true; clearError()
+  try {
+    const response = await researchApi.getAsset(routeSymbol.value, timeframe.value, 365, {
+      assetClass: typeof route.query.asset_class === 'string' ? route.query.asset_class : undefined,
+      chainId: typeof route.query.chain_id === 'string' ? route.query.chain_id : undefined,
+      platform: typeof route.query.platform === 'string' ? route.query.platform : undefined,
+    })
+    if (version === loadVersion) { asset.value = response; loadedKey = key }
+  } catch (reason) { if (version === loadVersion) setError(reason, 'assetResearch.loadFailed') }
+  finally { if (version === loadVersion) { loading.value = false; pendingKey = '' } }
+}
+const loadRoute = () => { if (route.name === 'AssetResearch' && (!asset.value || requestKey() !== loadedKey)) void load() }
 function onResearchAdded(symbol: string, item: ResearchWatchItemResponse) {
   const current = asset.value
   if (!current || current.symbol !== symbol) return
@@ -90,5 +109,6 @@ const compareTarget = computed(() => {
 })
 const researchSourceContext = computed(() => ({ route: route.fullPath, ...(asset.value?.assetClass === 'web3' ? { chainId: web3Context.value.chainId, platform: web3Context.value.platform, contractAddress: web3Context.value.contractAddress } : {}) }))
 onBeforeUnmount(() => { loadVersion++ })
-watch(() => [route.params.symbol, route.query.asset_class, route.query.chain_id, route.query.platform], load); onMounted(load)
+watch(() => [route.params.symbol, route.query.asset_class, route.query.chain_id, route.query.platform], loadRoute)
+onMounted(loadRoute); onActivated(loadRoute)
 </script>

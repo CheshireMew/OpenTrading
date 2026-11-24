@@ -14,6 +14,54 @@ function load(name, modules) {
     id in modules ? modules[id] : (() => { throw Error('Missing test boundary: ' + id) })(), exports)
   return exports
 }
+
+test('all registered pages retain independent state across navigation and dispose on app exit', async () => {
+  const navigation = load('../../app/navigation', {
+    '@/modules/market/macroSections': { MACRO_SECTIONS: [], preferredMacroSection: () => ({ name: 'MacroDollarLiquidity' }) },
+    './publicSite': { PUBLIC_SITE: true },
+  })
+  const componentName = fs.readFileSync(new URL('../src/views/ChartWorkspace.vue', import.meta.url), 'utf8')
+    .match(/defineOptions\(\{\s*name:\s*'([^']+)'/)[1]
+  const node = () => ({ children: [], parent: null })
+  const remove = child => {
+    if (child.parent) child.parent.children.splice(child.parent.children.indexOf(child), 1)
+    child.parent = null
+  }
+  const { render } = vue.createRenderer({
+    createElement: node, createText: node, createComment: node,
+    insert(child, parent, anchor) { remove(child); child.parent = parent; const at = parent.children.indexOf(anchor); parent.children.splice(at < 0 ? parent.children.length : at, 0, child) },
+    remove, parentNode: child => child.parent,
+    nextSibling: child => child.parent?.children[child.parent.children.indexOf(child) + 1],
+    patchProp() {}, setText() {}, setElementText() {},
+  })
+  const pages = navigation.APP_ROUTE_DEFINITIONS.filter(route => 'component' in route)
+  const mounts = new Map(), states = new Map()
+  let unmounts = 0
+  const components = new Map(pages.map(route => [route.name, {
+    name: route.name === 'Dashboard' ? componentName : route.name,
+    setup() {
+      mounts.set(route.name, (mounts.get(route.name) ?? 0) + 1)
+      const state = vue.ref('initial'); states.set(route.name, state)
+      vue.onUnmounted(() => unmounts++)
+      return () => vue.h('div', state.value)
+    },
+  }]))
+  const selected = vue.ref(pages[0].name), host = node()
+  render(vue.h({ setup: () => () => vue.h(vue.KeepAlive, { max: navigation.APP_PAGE_CACHE_LIMIT }, { default: () => vue.h(components.get(selected.value), { key: selected.value }) }) }), host)
+  try {
+    for (const page of pages) {
+      selected.value = page.name; await vue.nextTick()
+      states.get(page.name).value = 'edited:' + page.name
+    }
+    for (const page of [...pages].reverse()) {
+      selected.value = page.name; await vue.nextTick()
+      assert.equal(states.get(page.name).value, 'edited:' + page.name)
+      assert.equal(mounts.get(page.name), 1)
+    }
+    assert.equal(unmounts, 0)
+  } finally { render(null, host) }
+  assert.equal(unmounts, pages.length)
+})
 function documents({ api = {}, drafts = {} } = {}) {
   const errors = [], writes = []
   const { createPineDocuments } = load('pineDocuments', {
@@ -135,6 +183,26 @@ function watchlists(api) {
   })
   return createWorkspaceWatchlists({ activeSymbolId: vue.ref('BTC'), requestName: async () => 'renamed', onError: error => { throw error } })
 }
+
+test('hidden workspace pauses quotes, ignores an old response and resumes with retained prices', async () => {
+  const requests = [deferred(), deferred()]
+  let calls = 0
+  const lists = watchlists({ quotes: () => requests[calls++].promise })
+  try {
+    lists.quotes.value.BTC = { id: 'BTC', price: 10 }
+    const first = lists.refreshQuotes()
+    lists.pause()
+    await lists.refreshQuotes()
+    requests[0].resolve([{ id: 'BTC', price: 20 }]); await first
+    assert.equal(calls, 1)
+    assert.equal(lists.quotes.value.BTC.price, 10)
+    lists.resume()
+    assert.equal(calls, 2)
+    assert.equal(lists.quotes.value.BTC.price, 10)
+    requests[1].resolve([{ id: 'BTC', price: 30 }]); await tick()
+    assert.equal(lists.quotes.value.BTC.price, 30)
+  } finally { lists.dispose() }
+})
 test('watchlist quotes discard old requests and cannot restart after disposal', async () => {
   const requests = [deferred(), deferred()]
   let calls = 0

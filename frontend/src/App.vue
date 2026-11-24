@@ -90,9 +90,9 @@
         </button>
       </div>
       <ResearchNavigation v-if="route.path === '/research' || route.path.startsWith('/research/')" />
-      <router-view v-slot="{ Component }">
-        <keep-alive :include="keepAliveRoutes">
-          <component :is="Component" />
+      <router-view v-slot="{ Component, route: viewRoute }">
+        <keep-alive :max="APP_PAGE_CACHE_LIMIT">
+          <component :is="Component" :key="viewRoute.matched[0]?.name ?? viewRoute.name ?? viewRoute.path" />
         </keep-alive>
       </router-view>
     </main>
@@ -122,7 +122,7 @@ import {
   CircleStackIcon,
 } from '@heroicons/vue/24/outline'
 import {
-  APP_KEEP_ALIVE_ROUTE_NAMES,
+  APP_PAGE_CACHE_LIMIT,
   APP_NAV_ITEMS,
   APP_NAV_SECTIONS,
   type AppNavIconName,
@@ -148,7 +148,6 @@ const { theme, toggleTheme } = useTheme()
 const { loadCurrencyRates } = useMoney()
 const { loadSymbols } = useSymbolCatalog()
 useDesktopAlertNotifications()
-const keepAliveRoutes = APP_KEEP_ALIVE_ROUTE_NAMES
 const iconMap: Record<AppNavIconName, Component> = {
   ChartBarSquareIcon,
   ScaleIcon,
@@ -200,10 +199,13 @@ const loadBootstrapResources = async () => {
 }
 
 watch(() => route.fullPath, closeSidebar)
-watch(() => route.path, async (_next, previous) => {
+const pageScrollPositions = new Map<string, { top: number; left: number }>()
+watch(() => route.path, async (next, previous) => {
   if (!previous) return
+  const main = mainContentRef.value
+  if (main) pageScrollPositions.set(previous, { top: main.scrollTop, left: main.scrollLeft })
   await nextTick()
-  mainContentRef.value?.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  mainContentRef.value?.scrollTo({ ...(pageScrollPositions.get(next) ?? { top: 0, left: 0 }), behavior: 'auto' })
   mainContentRef.value?.focus({ preventScroll: true })
 })
 

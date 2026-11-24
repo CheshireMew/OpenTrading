@@ -26,20 +26,20 @@ export function createWorkspaceWatchlists(deps: {
   const dragIndex = ref(-1)
   const watchlist = computed(() => watchlists.value.find(list => list.id === watchlistId.value))
   const watchSymbols = computed(() => (watchlist.value?.data.symbols as string[] | undefined) ?? [])
-  let disposed = false, quoteEpoch = 0
+  let disposed = false, paused = false, quoteEpoch = 0
   let timer: ReturnType<typeof setTimeout> | undefined
   async function refreshQuotes() {
     clearTimeout(timer)
-    if (disposed) return
+    if (disposed || paused) return
     const epoch = ++quoteEpoch, keys = [...new Set([...watchSymbols.value, deps.activeSymbolId.value])]
     try {
       for (let i = 0; i < keys.length; i += 100) {
         const data = await chartApi.quotes(keys.slice(i, i + 100))
-        if (disposed || epoch !== quoteEpoch) return
+        if (disposed || paused || epoch !== quoteEpoch) return
         for (const quote of data) quotes.value[quote.id] = quote
       }
-    } catch (error) { if (!disposed && epoch === quoteEpoch) deps.onError(error) }
-    finally { if (!disposed && epoch === quoteEpoch) timer = setTimeout(refreshQuotes, 5000) }
+    } catch (error) { if (!disposed && !paused && epoch === quoteEpoch) deps.onError(error) }
+    finally { if (!disposed && !paused && epoch === quoteEpoch) timer = setTimeout(refreshQuotes, 5000) }
   }
   async function persistWatch(items: string[]) {
     const list = watchlist.value
@@ -126,9 +126,11 @@ export function createWorkspaceWatchlists(deps: {
     if (watchlists.value.some(list => list.id === id)) selectedId.value = id
   }
   const stopWatch = watch(watchlistId, () => void refreshQuotes())
+  function pause() { paused = true; quoteEpoch++; clearTimeout(timer) }
+  function resume() { if (!disposed && paused) { paused = false; void refreshQuotes() } }
   function dispose() { disposed = true; quoteEpoch++; clearTimeout(timer); stopWatch() }
   return { watchlists, watchlistId, watchlist, watchSymbols, pendingWatch, quotes, dragIndex,
-    persistWatch, removeWatch, moveWatch, newWatchlist, renameWatchlist, refreshQuotes, initialize, loadWatchlists, restoreSelection, dispose }
+    persistWatch, removeWatch, moveWatch, newWatchlist, renameWatchlist, refreshQuotes, initialize, loadWatchlists, restoreSelection, pause, resume, dispose }
 }
 
 export const createSharedWorkspaceWatchlists = (deps: Parameters<typeof createWorkspaceWatchlists>[0]) =>

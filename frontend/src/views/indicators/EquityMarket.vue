@@ -139,7 +139,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { AdjustmentsHorizontalIcon, ArrowPathIcon, ArrowUpRightIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, CircleStackIcon, MagnifyingGlassIcon, TableCellsIcon, ViewColumnsIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { apiErrorMessage } from '@/api/request'
@@ -233,5 +233,7 @@ async function load(refresh = false) {
   finally { if (active) loading.value = false }
 }
 onMounted(() => { load(); window.addEventListener('keydown', searchShortcut) })
+onActivated(() => window.addEventListener('keydown', searchShortcut))
+onDeactivated(() => window.removeEventListener('keydown', searchShortcut))
 onBeforeUnmount(() => { active = false; window.removeEventListener('keydown', searchShortcut) })
 </script>

@@ -97,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowPathIcon, MagnifyingGlassIcon, StarIcon } from '@heroicons/vue/24/outline'
 import WorkspaceNamePrompt from '@/components/chartWorkspace/WorkspaceNamePrompt.vue'
@@ -179,6 +179,8 @@ onMounted(() => {
   void refreshWatchlist()
 })
 onBeforeUnmount(listsController.dispose)
+onActivated(listsController.resume)
+onDeactivated(listsController.pause)
 </script>
 
 <style scoped>

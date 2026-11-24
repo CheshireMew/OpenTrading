@@ -28,6 +28,7 @@ export const useResearchWorkbench = () => {
     unacknowledgedEventCount: 0,
   })
   const loading = ref(false)
+  const initialized = ref(false)
   const saving = ref(false)
   const error = ref('')
   const activeWatchlistId = ref('')
@@ -70,6 +71,7 @@ export const useResearchWorkbench = () => {
       error.value = apiErrorMessage(cause, '研究数据加载失败')
     } finally {
       loading.value = false
+      initialized.value = true
     }
   }
 
@@ -224,6 +226,7 @@ export const useResearchWorkbench = () => {
   return {
     workbench,
     loading,
+    initialLoading: computed(() => loading.value && !initialized.value),
     saving,
     error,
     activeWatchlistId,

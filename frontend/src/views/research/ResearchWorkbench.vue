@@ -37,7 +37,7 @@
         </div>
       </section>
 
-      <AppLoadingState v-if="loading && !activeWatchlists.length" :label="t('research.loading')" />
+      <AppLoadingState v-if="initialLoading && !activeWatchlists.length" :label="t('research.loading')" />
       <AppEmptyState v-else-if="!activeWatchlists.length && !archivedWatchlists.length && !showNewList" :title="t('ui.researchEmptyTitle')" :description="t('ui.researchEmptyHint')" :icon="BookmarkSquareIcon"><button type="button" class="app-button-primary" @click="showNewList = true">{{ t('research.newWatchlist') }}</button></AppEmptyState>
       <div v-if="activeWatchlists.length || archivedWatchlists.length" class="research-workspace" :class="{ 'has-detail': activeItem }">
         <aside class="research-list-pane min-w-0">
@@ -284,7 +284,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
 import { BookmarkSquareIcon } from '@heroicons/vue/24/outline'
 import AppEmptyState from '@/components/AppEmptyState.vue'
 import AppLoadingState from '@/components/AppLoadingState.vue'
@@ -297,7 +297,7 @@ import type { MarketSymbolSearchItem } from '@/modules/market/contracts'
 const { t } = useI18n()
 const { formatDateTime } = useDateTime()
 const {
-  workbench, loading, saving, error, activeWatchlistId, activeItemId,
+  workbench, loading, initialLoading, saving, error, activeWatchlistId, activeItemId,
   activeWatchlists, archivedWatchlists, activeWatchlist, activeItems, archivedItems,
   activeItem, itemNotes, archivedNotes, itemAlerts, archivedAlerts,
   load, createWatchlist, setWatchlistArchived, createItem, saveItem, setItemArchived,
@@ -446,7 +446,13 @@ const evaluateNow = async () => {
   }))
 }
 
-watch(activeItem, (item) => {
+watch(activeItem, (item, previous) => {
+  if (previous && item?.id === previous.id && (
+    editItem.thesis !== (previous.thesis || '')
+    || editItem.targetPrice !== (previous.targetPrice == null ? '' : String(previous.targetPrice))
+    || editItem.invalidationPrice !== (previous.invalidationPrice == null ? '' : String(previous.invalidationPrice))
+    || editItem.tags !== (previous.tags || []).join(', ')
+  )) return
   editItem.thesis = item?.thesis || ''
   editItem.targetPrice = item?.targetPrice == null ? '' : String(item.targetPrice)
   editItem.invalidationPrice = item?.invalidationPrice == null ? '' : String(item.invalidationPrice)
@@ -454,6 +460,7 @@ watch(activeItem, (item) => {
 }, { immediate: true })
 
 onMounted(load)
+onActivated(load)
 </script>
 
 <style scoped>

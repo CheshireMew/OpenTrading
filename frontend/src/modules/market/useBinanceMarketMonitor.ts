@@ -108,6 +108,7 @@ export function useBinanceMarketMonitor(snapshot: BinanceMarketSnapshot) {
     fetchData,
     startAutoRefresh,
     stopAutoRefresh,
+    resume: resource.resume,
     toggleSpotSort,
     toggleContractSort,
     openMonitorDetail,

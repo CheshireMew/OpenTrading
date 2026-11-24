@@ -51,7 +51,7 @@
 <script setup lang="ts">
 import WorkspacePopover from '@/components/chartWorkspace/WorkspacePopover.vue'
 import { useRequestError } from '@/composables/useRequestError'
-import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, nextTick, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref, watch } from 'vue'
 import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon, SunIcon, MoonIcon, ChevronDownIcon, BellIcon } from '@heroicons/vue/24/outline'
 import { useI18n } from 'vue-i18n'
 import { useModalDialog } from '@/composables/useModalDialog'
@@ -139,6 +139,16 @@ async function initialize() {
   finally { initializing = false; if (!disposed) loading.value = false }
 }
 onMounted(initialize)
+onActivated(async () => {
+  await nextTick()
+  if (disposed) return
+  workspace.value?.resize()
+  listsController.resume(); alertsController.resume()
+})
+onDeactivated(() => {
+  listsController.pause(); alertsController.pause()
+  void layoutsController.saveNow()
+})
 onBeforeUnmount(() => {
   disposed = true
   alertsController.dispose(); execution.dispose(); documents.dispose(); listsController.dispose()

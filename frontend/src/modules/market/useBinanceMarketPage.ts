@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted } from 'vue'
+import { onActivated, onDeactivated, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { createPersistentPageSnapshot, PAGE_SNAPSHOT_KEYS } from '@/composables/pageSnapshot'
@@ -77,8 +77,12 @@ export function useBinanceMarketPage() {
 
   onMounted(async () => {
     await market.fetchData()
-    market.startAutoRefresh()
+    if (routeActive) market.startAutoRefresh()
   })
+
+  let routeActive = true
+  onActivated(() => { routeActive = true; market.resume() })
+  onDeactivated(() => { routeActive = false; market.stopAutoRefresh() })
 
   onUnmounted(() => {
     market.stopAutoRefresh()

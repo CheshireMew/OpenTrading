@@ -1,5 +1,5 @@
 import { DARK_PALETTE } from '@/theme/palette.mjs'
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch, type WatchStopHandle } from 'vue'
+import { computed, nextTick, onActivated, onBeforeUnmount, onMounted, reactive, ref, watch, type WatchStopHandle } from 'vue'
 
 import { createPersistentPageSnapshot, PAGE_SNAPSHOT_KEYS } from '@/composables/pageSnapshot'
 import { ensureSymbolCatalogLoaded, isIndexSymbol } from '@/modules/market'
@@ -166,6 +166,21 @@ export function useComparePage() {
 
   const symbolLabel = (symbol: string) => isIndexSymbol(symbol) ? symbol : `${symbol}/USDT`
 
+  const applyRouteInputs = () => {
+    const previous = JSON.stringify(config)
+    const queryDays = Number(route.query.days)
+    if (typeof route.query.symbol_a === 'string' && route.query.symbol_a) config.symbolA = route.query.symbol_a
+    if (typeof route.query.symbol_b === 'string' && route.query.symbol_b) config.symbolB = route.query.symbol_b
+    if (Number.isFinite(queryDays) && queryDays >= 1 && queryDays <= 90) config.days = queryDays
+    if (typeof route.query.timeframe === 'string' && ['5m', '15m', '1h', '4h', '1d', '1w', '1M'].includes(route.query.timeframe)) config.timeframe = route.query.timeframe
+    return previous !== JSON.stringify(config)
+  }
+  const applyActiveRoute = () => {
+    if (route.name === 'Compare' && ready.value && applyRouteInputs() && canCompare.value) void fetchComparisonData()
+  }
+  onActivated(applyActiveRoute)
+  watch(() => [route.name, route.query.symbol_a, route.query.symbol_b, route.query.days, route.query.timeframe], applyActiveRoute)
+
   const initialize = async () => {
     if (initializing.value || disposed) return
     initializing.value = true
@@ -183,11 +198,7 @@ export function useComparePage() {
           ? normalizeCompareSnapshot(restoredSnapshot, defaultSnapshot).config
           : defaultSnapshot.config,
       )
-      const queryDays = Number(route.query.days)
-      if (typeof route.query.symbol_a === 'string' && route.query.symbol_a) config.symbolA = route.query.symbol_a
-      if (typeof route.query.symbol_b === 'string' && route.query.symbol_b) config.symbolB = route.query.symbol_b
-      if (Number.isFinite(queryDays) && queryDays >= 1 && queryDays <= 90) config.days = queryDays
-      if (typeof route.query.timeframe === 'string' && ['5m', '15m', '1h', '4h', '1d', '1w', '1M'].includes(route.query.timeframe)) config.timeframe = route.query.timeframe
+      applyRouteInputs()
       if (!snapshotStop) {
         snapshotStop = pageSnapshot.bind(
           config,

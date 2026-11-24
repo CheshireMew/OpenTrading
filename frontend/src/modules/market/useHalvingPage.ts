@@ -1,4 +1,4 @@
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Chart } from 'chart.js'
 
@@ -115,6 +115,16 @@ export function useHalvingPage() {
       if (page) resizeObserver.observe(page)
     }
     void loadHalvingChartRuntime().then(syncChart)
+  })
+  onDeactivated(() => {
+    if (clockTimer !== null) window.clearInterval(clockTimer)
+    clockTimer = null
+  })
+  onActivated(() => {
+    if (clockTimer === null) {
+      now.value = Date.now()
+      clockTimer = window.setInterval(() => { now.value = Date.now() }, 60_000)
+    }
   })
   snapshot.bind(
     [showPhases, scaleType],

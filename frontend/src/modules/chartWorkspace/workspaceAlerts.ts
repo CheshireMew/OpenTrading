@@ -18,7 +18,7 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
   const visibleAlerts = computed(() => alerts.value.filter(alert => !alert.archivedAt && alert.configuration?.chartSymbolId))
   let pending: { symbolId: string; price: number } | undefined
   let writeEpoch = 0
-  let disposed = false, loading = false, timer: ReturnType<typeof setInterval> | undefined
+  let disposed = false, paused = false, loading = false, timer: ReturnType<typeof setInterval> | undefined
   let offMenu: (() => void)[] = [], host: HTMLElement | undefined
   const offs: (() => void)[] = []
   function roundedPrice(price: number, symbolId: string) {
@@ -36,13 +36,13 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
     }
   }
   async function refresh() {
-    if (disposed || loading) return
+    if (disposed || paused || loading) return
     loading = true
     const epoch = writeEpoch
     try {
       const result = await researchApi.getWorkbench(1, 1)
-      if (!disposed && epoch === writeEpoch) { alerts.value = result.alerts ?? []; project() }
-    } catch (error) { if (open.value && !disposed) fail(error) }
+      if (!disposed && !paused && epoch === writeEpoch) { alerts.value = result.alerts ?? []; project() }
+    } catch (error) { if (open.value && !disposed && !paused) fail(error) }
     finally { loading = false }
   }
   function startForm(request?: { symbolId: string; price: number }) {
@@ -126,18 +126,24 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
       run: () => startForm(pending),
     }))
     offs.push(workspace.on('state:changed', project), workspace.on('cell:created', project))
-    void refresh(); timer = setInterval(() => void refresh(), 10_000)
+    if (!paused) { void refresh(); timer = setInterval(() => void refresh(), 10_000) }
     window.addEventListener('opentrading:alert-triggered', onTriggered)
     window.addEventListener('opentrading:open-alerts', show)
   }
   function onTriggered() { void refresh() }
   const stop = watch(deps.workspace, attach, { flush: 'sync' })
-  function show() { error.value = ''; open.value = true; editing.value = false; void refresh() }
+  function show() { if (!paused && !disposed) { error.value = ''; open.value = true; editing.value = false; void refresh() } }
+  function pause() { paused = true; clearInterval(timer) }
+  function resume() {
+    if (disposed || !paused) return
+    paused = false
+    if (host) { void refresh(); timer = setInterval(() => void refresh(), 10_000) }
+  }
   function dispose() {
     disposed = true; stop(); clearInterval(timer)
     host?.removeEventListener('contextmenu', capture, true); offMenu.forEach(off => off()); offs.forEach(off => off())
     window.removeEventListener('opentrading:alert-triggered', onTriggered)
     window.removeEventListener('opentrading:open-alerts', show)
   }
-  return { alerts: visibleAlerts, open, editing, saving, error, form, selectedSymbol, refresh, startForm, edit, save, change, show, dispose }
+  return { alerts: visibleAlerts, open, editing, saving, error, form, selectedSymbol, refresh, startForm, edit, save, change, show, pause, resume, dispose }
 }

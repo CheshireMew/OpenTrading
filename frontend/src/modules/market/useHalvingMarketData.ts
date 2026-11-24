@@ -1,4 +1,4 @@
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref } from 'vue'
 
 import type { BitcoinHalvingResponse, OhlcvPointResponse } from './contracts'
 import { marketHistoryApi } from './api'
@@ -108,15 +108,25 @@ export const useHalvingMarketData = (translate: (key: string) => string) => {
     halvingRequest?.abort()
   }
 
-  onMounted(() => {
-    void Promise.all([fetchHistory(), refreshCurrentPrice(), refreshHalvingEstimate()])
+  const startRefresh = () => {
+    if (refreshTimer !== null) window.clearInterval(refreshTimer)
+    if (halvingTimer !== null) window.clearInterval(halvingTimer)
     halvingTimer = window.setInterval(refreshHalvingEstimate, HALVING_REFRESH_INTERVAL_MS)
     refreshTimer = window.setInterval(() => {
       if (refreshPending) return
       refreshPending = true
       refreshCurrentPrice().finally(() => { refreshPending = false })
     }, CURRENT_PRICE_REFRESH_INTERVAL_MS)
+  }
+  onMounted(() => {
+    void Promise.all([fetchHistory(), refreshCurrentPrice(), refreshHalvingEstimate()])
+    startRefresh()
   })
+  onActivated(() => {
+    startRefresh()
+    if (currentPrice.value !== null) void refreshCurrentPrice()
+  })
+  onDeactivated(stopRefresh)
   onBeforeUnmount(stopRefresh)
 
   const retry = () => Promise.all([fetchHistory(true), refreshCurrentPrice(), refreshHalvingEstimate()])

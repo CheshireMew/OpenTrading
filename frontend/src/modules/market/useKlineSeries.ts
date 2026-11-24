@@ -72,7 +72,7 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
     if (options.source) {
       const items = await options.source.latest(1000)
       if (!isRouteActive || !enabled.value || version !== requestVersion || requestKey !== cacheKey.value) return
-      sourceKlineData.value = mergeKlines(items).slice(-1000)
+      sourceKlineData.value = mergeKlines(sourceKlineData.value, items)
       return
     }
     if (isIndexSymbol(requestSymbol)) {
@@ -112,7 +112,7 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
         })).kline_data || []
     if (!isRouteActive || !enabled.value || version !== requestVersion || requestKey !== cacheKey.value) return
     if (tail.length === 0) return
-    if (options.source) sourceKlineData.value = mergeKlines(sourceKlineData.value, tail).slice(-1000)
+    if (options.source) sourceKlineData.value = mergeKlines(sourceKlineData.value, tail)
     else klineStore.applyKlineTail(requestSymbol, requestTimeframe, tail, 1000)
   }
 
@@ -143,7 +143,7 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
 
   const loadLatest = async (fetchOptions: { force?: boolean } = {}) => {
     const version = ++requestVersion
-    loading.value = true
+    loading.value = klineData.value.length === 0
     loadError.value = false
     try {
       await fetchLatest(fetchOptions, version)
@@ -242,6 +242,11 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
     if (!enabled.value || !symbol.value || !timeframe.value) return
     if (shouldRefreshOnActivate) {
       shouldRefreshOnActivate = false
+      if (klineData.value.length && (options.source || !isIndexSymbol(symbol.value))) {
+        void refreshTail().catch(() => { loadError.value = true })
+        startAutoRefresh()
+        return
+      }
       void loadLatest()
       return
     }

@@ -1,4 +1,4 @@
-import { nextTick, onBeforeUnmount, ref, watch, type Ref } from 'vue'
+import { nextTick, onActivated, onBeforeUnmount, onDeactivated, ref, watch, type Ref } from 'vue'
 
 const FOCUSABLE_SELECTOR = [
   'a[href]',
@@ -20,6 +20,7 @@ export const useModalDialog = (
 ) => {
   const dialogRef = ref<HTMLElement | null>(null)
   const modalId = Symbol('modal')
+  const pageActive = ref(true)
   let previouslyFocused: HTMLElement | null = null
   let active = false
   const background = new Set<HTMLElement>()
@@ -111,8 +112,8 @@ export const useModalDialog = (
     previouslyFocused = null
   }
 
-  watch(open, async (isOpen) => {
-    if (!isOpen) {
+  watch([open, pageActive], async ([isOpen, isPageActive]) => {
+    if (!isOpen || !isPageActive) {
       deactivate()
       return
     }
@@ -124,12 +125,15 @@ export const useModalDialog = (
     document.body.style.overflow = 'hidden'
     window.addEventListener('keydown', handleKeydown, true)
     await nextTick()
-    if (!open.value || !active || !isTopmost()) return
+    if (!open.value || !pageActive.value || !active || !isTopmost()) return
     isolateBackground()
     const firstFocusable = initialFocus?.value ?? focusableElements()[0]
     if (firstFocusable) firstFocusable.focus()
     else dialogRef.value?.focus()
   }, { immediate: true })
+
+  onActivated(() => { pageActive.value = true })
+  onDeactivated(() => { pageActive.value = false; deactivate() })
 
   onBeforeUnmount(() => {
     deactivate()

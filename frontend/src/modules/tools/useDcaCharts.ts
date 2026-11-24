@@ -1,12 +1,10 @@
 import { DARK_PALETTE } from '@/theme/palette.mjs'
 import { nextTick, onBeforeUnmount, ref, type Ref } from 'vue'
-import { Chart, registerables } from 'chart.js'
+import { Chart } from '@/utils/chartJsRuntime'
 
 import { useMoney } from '@/composables/useMoney'
 import type { DCAResponse } from './contracts'
 
-
-Chart.register(...registerables)
 
 interface UseDcaChartsOptions {
   theme: Ref<string>

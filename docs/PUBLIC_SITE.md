@@ -10,6 +10,8 @@ Pine 回测在浏览器 Worker 内运行，服务器只提供行情。计算最�
 
 `deployment/` 保存此站独立的 Nginx 和 systemd 配置。Nginx 负责 HTTPS、静态资源、短时共享行情缓存、真实访客 IP 和请求限制；后端只监听 `127.0.0.1:4335`，只信任本机代理。主页面禁止动态 JavaScript 求值，Pine Worker 单独允许引擎需要的编译能力，其网络连接仍限于本站。Cloudflare 可信地址从官方地址列表生成到 shared/cloudflare-real-ip.conf，不信任访客自行提交的转发头。
 
+公开站关闭包含查询参数的常规访问日志，不把自选请求和定投金额写入日常访问记录。Linux 部署按锁定依赖安装，使用 `uv pip install --no-deps --require-hashes -r requirements.lock`，由项目锁提供完整依赖集。两种平台均使用维护中的 `mini-racer`，它提供 `py_mini_racer` 导入接口；PDM 明确排除旧同名发行包，避免在 Linux 上混装旧引擎。
+
 程序位于 `/srv/opentrading/releases/<commit>`，`current` 指向当前版本，环境和数据位于 `shared`，数据库使用本机 Unix socket。更新先准备新版本、检查数据库迁移及前端资源，再切换指针并重启本站服务。旧版本保留供回退，不在部署过程中清空数据。两项应用服务共用一个 CPU 核心及 1.5 GB 内存上限，公开计算同时只接收一个；实时上游连接按品种和周期复用，全站最多 32 条，每个浏览器连接最多订阅八组。
 
 通过 `systemctl status opentrading-api opentrading-background` 和 `journalctl -u opentrading-api -u opentrading-background` 检查本站；`https://trade.blacknico.com/health` 检查实际公开链路。配置和凭据不进入 Git。公开部署的安全限制应使用 `test/test_public_site.py` 回归；依赖更新后重新查询漏洞数据库。

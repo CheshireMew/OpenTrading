@@ -57,9 +57,10 @@ class DCAService:
             else:
                 end_dt_local = now_local.replace(tzinfo=None)
 
-            logger.info(
-                f"计算定投: {symbol}, 日投 {daily_investment}, {start_dt_local} - {end_dt_local} (Local), 时区 {timezone}"
-            )
+            if not settings.PUBLIC_SITE:
+                logger.info(
+                    f"计算定投: {symbol}, 日投 {daily_investment}, {start_dt_local} - {end_dt_local} (Local), 时区 {timezone}"
+                )
 
             buffer_days = settings.DCA_INDICATOR_BUFFER_DAYS
             fetch_start_utc = to_utc(start_dt_local - timedelta(days=buffer_days + 1), timezone)

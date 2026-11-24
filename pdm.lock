@@ -13,6 +13,10 @@ platform = "windows_amd64"
 implementation = "cpython"
 gil_disabled = false
 
+[[metadata.targets]]
+requires_python = ">=3.12,<3.13"
+platform = "manylinux_2_28_x86_64"
+
 [[package]]
 name = "aiohappyeyeballs"
 version = "2.7.1"
@@ -74,6 +78,18 @@ dependencies = [
 files = [
     {file = "aiosignal-1.4.0-py3-none-any.whl", hash = "sha256:053243f8b92b990551949e63930a839ff0cf0b0ebbe0597b0f3fb19e1a0fe82e"},
     {file = "aiosignal-1.4.0.tar.gz", hash = "sha256:f47eecd9468083c2029cc99945502cb7708b082c232f9aca65da147157b251c7"},
+]
+
+[[package]]
+name = "akracer"
+version = "0.0.14"
+requires_python = ">=3.8"
+summary = "akracer is next version of py_mini_racer"
+groups = ["default"]
+marker = "platform_system == \"Linux\""
+files = [
+    {file = "akracer-0.0.14-py3-none-any.whl", hash = "sha256:629eaccd0e1d18366804b797eb2692ed47bed0028f55b5a5af3cc277d521df04"},
+    {file = "akracer-0.0.14.tar.gz", hash = "sha256:e084c14bf6d9a02d5da375e3af1cba3d46f103aa1cf3a2010593b3e95bf1c29a"},
 ]
 
 [[package]]
@@ -351,7 +367,7 @@ version = "21.0.0"
 requires_python = ">=3.9"
 summary = "Safest and fastest Python library for secp256k1 elliptic curve operations"
 groups = ["default"]
-marker = "implementation_name == \"cpython\" and python_version < \"3.14\" and platform_machine in \"x86_64 AMD64 aarch64 arm64 ARM64 i686\" and platform_machine != \"x86\""
+marker = "implementation_name == \"cpython\" and platform_machine in \"x86_64 AMD64 aarch64 arm64 ARM64 i686\" and platform_machine != \"x86\""
 files = [
     {file = "coincurve-21.0.0-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:f60ad56113f08e8c540bb89f4f35f44d434311433195ffff22893ccfa335070c"},
     {file = "coincurve-21.0.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:1cb1cd19fb0be22e68ecb60ad950b41f18b9b02eebeffaac9391dc31f74f08f2"},
@@ -873,7 +889,7 @@ version = "3.11.9"
 requires_python = ">=3.10"
 summary = "Fast, correct Python JSON library supporting dataclasses, datetimes, and numpy"
 groups = ["default"]
-marker = "implementation_name == \"cpython\" and python_version < \"3.15\" and platform_machine in \"x86_64 AMD64 aarch64 arm64 armv7l i686 ppc64le s390x\""
+marker = "implementation_name == \"cpython\" and platform_machine in \"x86_64 AMD64 aarch64 arm64 armv7l i686 ppc64le s390x\""
 files = [
     {file = "orjson-3.11.9-cp312-cp312-macosx_10_15_x86_64.macosx_11_0_arm64.macosx_10_15_universal2.whl", hash = "sha256:9ef6fe90aadef185c7b128859f40beb24720b4ecea95379fc9000931179c3a49"},
     {file = "orjson-3.11.9-cp312-cp312-macosx_15_0_arm64.whl", hash = "sha256:e5c9b8f28e726e97d97696c826bc7bea5d71cecd63576dba92924a32c1961291"},
@@ -1027,6 +1043,17 @@ files = [
     {file = "psycopg2_binary-2.9.12-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:7af18183109e23502c8b2ae7f6926c0882766f35b5175a4cd737ad825e4d7a1b"},
     {file = "psycopg2_binary-2.9.12-cp312-cp312-win_amd64.whl", hash = "sha256:398fcd4db988c7d7d3713e2b8e18939776fd3fb447052daae4f24fa39daede4c"},
     {file = "psycopg2_binary-2.9.12.tar.gz", hash = "sha256:5ac9444edc768c02a6b6a591f070b8aae28ff3a99be57560ac996001580f294c"},
+]
+
+[[package]]
+name = "py-mini-racer"
+version = "0.6.0"
+summary = "Minimal, modern embedded V8 for Python."
+groups = ["default"]
+marker = "platform_system == \"Linux\""
+files = [
+    {file = "py_mini_racer-0.6.0-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:42896c24968481dd953eeeb11de331f6870917811961c9b26ba09071e07180e2"},
+    {file = "py_mini_racer-0.6.0.tar.gz", hash = "sha256:f71e36b643d947ba698c57cd9bd2232c83ca997b0802fc2f7f79582377040c11"},
 ]
 
 [[package]]
@@ -1514,6 +1541,18 @@ dependencies = [
 files = [
     {file = "uvicorn-0.52.4-py3-none-any.whl", hash = "sha256:f86e41a149d7d05a9969337e3946a9c171c06a5d42680896daaba624aeac8da1"},
     {file = "uvicorn-0.52.4.tar.gz", hash = "sha256:73acfee47a0b133c5de13d219492d62d8a31e935f4fe6e41a232451a15379f86"},
+]
+
+[[package]]
+name = "uvloop"
+version = "0.22.1"
+requires_python = ">=3.8.1"
+summary = "Fast implementation of asyncio event loop on top of libuv"
+groups = ["default"]
+marker = "platform_system != \"Windows\" and implementation_name == \"cpython\""
+files = [
+    {file = "uvloop-0.22.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:7b5b1ac819a3f946d3b2ee07f09149578ae76066d70b44df3fa990add49a82e4"},
+    {file = "uvloop-0.22.1.tar.gz", hash = "sha256:6c84bae345b9147082b17371e3dd5d42775bddce91f885499017f4607fdaf39f"},
 ]
 
 [[package]]

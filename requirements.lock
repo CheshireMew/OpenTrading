@@ -14,6 +14,9 @@ aiohttp-fast-zlib==0.3.0 \
 aiosignal==1.4.0 \
     --hash=sha256:053243f8b92b990551949e63930a839ff0cf0b0ebbe0597b0f3fb19e1a0fe82e \
     --hash=sha256:f47eecd9468083c2029cc99945502cb7708b082c232f9aca65da147157b251c7
+akracer==0.0.14; platform_system == "Linux" \
+    --hash=sha256:629eaccd0e1d18366804b797eb2692ed47bed0028f55b5a5af3cc277d521df04 \
+    --hash=sha256:e084c14bf6d9a02d5da375e3af1cba3d46f103aa1cf3a2010593b3e95bf1c29a
 akshare==1.18.94 \
     --hash=sha256:5c2fc655a2569642b5888e637756beda14f60ea2fe3ac81b6d3361bd9f4b1933 \
     --hash=sha256:a66901c646865781da353d294dbab9ac760955e00e5c761ff5028583431c6771
@@ -86,7 +89,7 @@ charset-normalizer==3.4.7 \
 click==8.4.2 \
     --hash=sha256:9a6cea6e60b17ebe0a44c5cc636d94f09bd66142c1cd7d8b4cd731c4917a15f6 \
     --hash=sha256:e6f9f66136c816745b9d65817da91d61d957fb16e02e4dcd0552553c5a197b76
-coincurve==21.0.0; implementation_name == "cpython" and python_version < "3.14" and platform_machine in "x86_64 AMD64 aarch64 arm64 ARM64 i686" and platform_machine != "x86" \
+coincurve==21.0.0; implementation_name == "cpython" and platform_machine in "x86_64 AMD64 aarch64 arm64 ARM64 i686" and platform_machine != "x86" \
     --hash=sha256:05d7e255a697b3475d7ae7640d3bdef3d5bc98ce9ce08dd387f780696606c33b \
     --hash=sha256:1b04778b75339c6e46deb9ae3bcfc2250fbe48d1324153e4310fc4996e135715 \
     --hash=sha256:1cb1cd19fb0be22e68ecb60ad950b41f18b9b02eebeffaac9391dc31f74f08f2 \
@@ -308,7 +311,7 @@ numpy==2.5.2 \
 openpyxl==3.1.5 \
     --hash=sha256:5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2 \
     --hash=sha256:cf0e3cf56142039133628b5acffe8ef0c12bc902d2aadd3e0fe5878dc08d1050
-orjson==3.11.9; implementation_name == "cpython" and python_version < "3.15" and platform_machine in "x86_64 AMD64 aarch64 arm64 armv7l i686 ppc64le s390x" \
+orjson==3.11.9; implementation_name == "cpython" and platform_machine in "x86_64 AMD64 aarch64 arm64 armv7l i686 ppc64le s390x" \
     --hash=sha256:011382e2a60fda9d46f1cdee31068cfc52ffe952b587d683ec0463002802a0f4 \
     --hash=sha256:26a473dbb4162108b27901492546f83c76fdcea3d0eadff00ae7a07e18dcce09 \
     --hash=sha256:2d057a602cdd19a0ad680417527c45b6961a095081c0f46fe0e03e304aac6470 \
@@ -390,6 +393,9 @@ psycopg2-binary==2.9.12 \
     --hash=sha256:9fe06d93e72f1c048e731a2e3e7854a5bfaa58fc736068df90b352cefe66f03f \
     --hash=sha256:b9a339b79d37c1b45f3235265f07cdeb0cb5ad7acd2ac7720a5920989c17c24e \
     --hash=sha256:d3227a3bc228c10d21011a99245edca923e4e8bf461857e869a507d9a41fe9f6
+py-mini-racer==0.6.0; platform_system == "Linux" \
+    --hash=sha256:42896c24968481dd953eeeb11de331f6870917811961c9b26ba09071e07180e2 \
+    --hash=sha256:f71e36b643d947ba698c57cd9bd2232c83ca997b0802fc2f7f79582377040c11
 pyarrow==23.0.1 \
     --hash=sha256:07deae7783782ac7250989a7b2ecde9b3c343a643f82e8a4df03d93b633006f0 \
     --hash=sha256:b8c5873e33440b2bc2f4a79d2b47017a89c5a24116c055625e6f2ee50523f019
@@ -521,6 +527,9 @@ urllib3==2.8.0 \
 uvicorn==0.52.4 \
     --hash=sha256:73acfee47a0b133c5de13d219492d62d8a31e935f4fe6e41a232451a15379f86 \
     --hash=sha256:f86e41a149d7d05a9969337e3946a9c171c06a5d42680896daaba624aeac8da1
+uvloop==0.22.1; platform_system != "Windows" and implementation_name == "cpython" \
+    --hash=sha256:6c84bae345b9147082b17371e3dd5d42775bddce91f885499017f4607fdaf39f \
+    --hash=sha256:7b5b1ac819a3f946d3b2ee07f09149578ae76066d70b44df3fa990add49a82e4
 webencodings==0.6.1 \
     --hash=sha256:565f9ad031c702dae404e27a099e3e09186a3ab1b9520f06d215502b651fd910 \
     --hash=sha256:7fab6269c8bf237c657876b52058ccb182e861518d1c695c1a9aaa8c1c105d5b

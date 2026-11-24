@@ -15,6 +15,12 @@ router = FrontendContractRouter(frontend_contract_target="chartWorkspace",prefix
 Kind = Literal["layouts","watchlists","scripts"]
 
 
+@router.get("/defaults/{kind}", response_model=list[WorkspaceDocument])
+async def workspace_defaults(kind: Kind):
+    from app.services.chart_workspace_seed import default_documents
+    return default_documents(kind)
+
+
 async def services(connection: HTTPConnection):
     runtime = connection.app.state.runtime_services.require_api().chart_workspace
     if runtime is None or runtime.closed:
@@ -147,7 +153,8 @@ async def chart_stream(websocket:WebSocket):
             message = await websocket.receive_json()
             key,tf = str(message.get("symbol","")),str(message.get("timeframe",""))
             if message.get("type") == "subscribe":
-                if len(subscriptions)>=32:
+                from config import settings
+                if len(subscriptions)>=(8 if settings.PUBLIC_SITE else 32) and (key, tf) not in subscriptions:
                     continue
                 try:
                     info = await service.market.resolve(key)

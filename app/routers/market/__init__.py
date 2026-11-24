@@ -14,15 +14,9 @@ from app.routers.market.insight import router as insight_router
 from app.routers.market.realtime import router as realtime_router
 
 router = APIRouter()
-router.include_router(catalog_router)
-router.include_router(equity_catalog_router)
-router.include_router(realtime_router)
-router.include_router(history_router)
-router.include_router(indexes_router)
-router.include_router(insight_router)
-router.include_router(binance_page_router)
-router.include_router(binance_web3_ranks_router)
-router.include_router(binance_web3_tokens_router)
-router.include_router(data_router)
+MARKET_ROUTERS = (catalog_router, equity_catalog_router, realtime_router, history_router, indexes_router,
+    insight_router, binance_page_router, binance_web3_ranks_router, binance_web3_tokens_router, data_router)
+for market_router in MARKET_ROUTERS:
+    router.include_router(market_router)
 
 __all__ = ["router", "list_market_symbols"]

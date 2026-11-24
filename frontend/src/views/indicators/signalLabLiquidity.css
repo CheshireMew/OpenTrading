@@ -67,6 +67,7 @@ html.dark .liquidity-page {
 }
 
 .liquidity-header h1 { margin-top: 1px; font: 600 25px/1.2 Georgia, "Songti SC", serif; letter-spacing: -.02em; }
+.liquidity-page--embedded .liquidity-header { justify-content: flex-end; min-height: 64px; padding: 12px 24px; }
 .header-actions { display: flex; align-items: center; gap: 10px; }
 .date-pill { padding: 7px 10px; color: var(--muted); border-right: 1px solid var(--line); font-size: 12px; }
 .liquidity-content { max-width: 1540px; margin: 0 auto; padding: 28px 38px 60px; container-type: inline-size; }

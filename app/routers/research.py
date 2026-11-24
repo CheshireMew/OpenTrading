@@ -8,9 +8,18 @@ from app.contracts.frontend import FrontendContractRouter
 from app.contracts.research import ResearchAlertCreateCommand, ResearchAlertEvaluationResponse, ResearchAlertEvaluateCommand, ResearchAlertResponse, ResearchAlertUpdateCommand, ResearchArchiveCommand, ResearchEventAcknowledgeCommand, ResearchEventPageResponse, ResearchEventResponse, ResearchNoteCreateCommand, ResearchNoteResponse, ResearchNoteUpdateCommand, ResearchWatchItemCreateCommand, ResearchWatchItemResponse, ResearchWatchItemUpdateCommand, ResearchWatchlistCreateCommand, ResearchWatchlistResponse, ResearchWatchlistUpdateCommand, ResearchWorkbenchResponse, TradeSignalEvaluationCommand, TradeSignalEvaluationRunResponse, TradeSignalPageResponse, TradeSignalResponse, TradeSignalStatsResponse, AssetResearchResponse, MarketScreenerRunCommand, MarketScreenerRunPageResponse, MarketScreenerRunResponse, SavedMarketScreenerCreateCommand, SavedMarketScreenerListResponse, SavedMarketScreenerResponse, SavedMarketScreenerUpdateCommand
 from app.dependencies import get_research_alert_runtime, get_research_service, get_trade_signal_evaluation_runtime, get_trade_signal_service, get_asset_research_service, get_market_screener_service
 from app.infra.executor import run_database
+from app.contracts.research import MarketScreenerFilters
 
 
 router = FrontendContractRouter(frontend_contract_target="research")
+
+
+@router.post("/research/screener-preview", response_model=MarketScreenerRunResponse)
+async def evaluate_browser_screener(body: MarketScreenerFilters, service=Depends(get_market_screener_service)):
+    result = await service.preview(body.model_dump())
+    return MarketScreenerRunResponse(id="preview", screenerId="browser", filters=body,
+        resultItems=result["result_items"], resultCount=result["result_count"],
+        snapshotAsOf=result["snapshot_as_of"], evaluatedAt=result["evaluated_at"])
 
 
 @router.get("/research/screeners", response_model=SavedMarketScreenerListResponse)

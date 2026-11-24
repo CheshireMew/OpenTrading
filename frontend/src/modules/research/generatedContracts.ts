@@ -1,6 +1,35 @@
 // This file is generated from backend FastAPI route contracts.
 // Do not edit manually.
 
+export interface MarketScreenerRunResponse {
+  id: string
+  screenerId: string
+  filters: MarketScreenerFilters
+  resultItems?: Array<{ [key: string]: string | number | boolean | Array<string | number | boolean | null> | { [key: string]: string | number | boolean | null } | Array<{ [key: string]: string | number | boolean | null }> | { [key: string]: Array<string | number | boolean | null> } | null }>
+  resultCount: number
+  snapshotAsOf: string
+  evaluatedAt: string
+  historicalReplay?: boolean
+}
+
+export interface MarketScreenerFilters {
+  market?: "spot" | "usdm" | "all"
+  quoteAsset?: string
+  minPriceChangePct?: number | null
+  maxPriceChangePct?: number | null
+  minQuoteVolume?: number | null
+  maxFundingRatePct?: number | null
+  minBreakoutScore?: number | null
+  minOiChange1hPct?: number | null
+  minRsi?: number | null
+  maxRsi?: number | null
+  includeWeb3?: boolean
+  web3ChainId?: string | null
+  maxWeb3RiskLevel?: number | null
+  symbols?: Array<string>
+  limit?: number
+}
+
 export interface SavedMarketScreenerListResponse {
   items?: Array<SavedMarketScreenerResponse>
 }
@@ -31,17 +60,6 @@ export interface SavedMarketScreenerUpdateCommand {
 
 export interface ResearchArchiveCommand {
   expectedVersion: number
-}
-
-export interface MarketScreenerRunResponse {
-  id: string
-  screenerId: string
-  filters: MarketScreenerFilters
-  resultItems?: Array<{ [key: string]: string | number | boolean | Array<string | number | boolean | null> | { [key: string]: string | number | boolean | null } | Array<{ [key: string]: string | number | boolean | null }> | { [key: string]: Array<string | number | boolean | null> } | null }>
-  resultCount: number
-  snapshotAsOf: string
-  evaluatedAt: string
-  historicalReplay?: boolean
 }
 
 export interface MarketScreenerRunCommand {
@@ -343,24 +361,6 @@ export interface MACDResponse {
   dif: number | null
   dea: number | null
   histogram: number | null
-}
-
-export interface MarketScreenerFilters {
-  market?: "spot" | "usdm" | "all"
-  quoteAsset?: string
-  minPriceChangePct?: number | null
-  maxPriceChangePct?: number | null
-  minQuoteVolume?: number | null
-  maxFundingRatePct?: number | null
-  minBreakoutScore?: number | null
-  minOiChange1hPct?: number | null
-  minRsi?: number | null
-  maxRsi?: number | null
-  includeWeb3?: boolean
-  web3ChainId?: string | null
-  maxWeb3RiskLevel?: number | null
-  symbols?: Array<string>
-  limit?: number
 }
 
 export interface OhlcvPointResponse {

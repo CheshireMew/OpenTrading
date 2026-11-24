@@ -1,7 +1,7 @@
 <template>
-  <section class="liquidity-page" :aria-label="t('nav.signalLab')">
+  <section class="liquidity-page" :class="{ 'liquidity-page--embedded': embedded }" :aria-label="t('nav.signalLab')">
     <header class="liquidity-header">
-      <div><p class="eyebrow">{{ t('signalLab.pageKicker') }}</p><h1>{{ t('nav.signalLab') }}</h1></div>
+      <div v-if="!embedded"><p class="eyebrow">{{ t('signalLab.pageKicker') }}</p><h1>{{ t('nav.signalLab') }}</h1></div>
       <div class="header-actions">
         <span class="date-pill">{{ today }}</span>
         <button type="button" class="liquidity-button" :disabled="loading || refreshing" @click="loadLiquidity">{{ t('signalLab.reload') }}</button>
@@ -153,6 +153,8 @@ import { useDateTime } from '@/composables/useDateTime'
 import { backendText } from '@/i18n/backendText'
 import type { SignalLabIndicator, SignalLabLiquidityResponse, SignalLabPoint, SignalLabPressureComponent } from '@/modules/market/contracts'
 import { useSignalResource } from '@/modules/market/signalLab'
+
+defineProps<{ embedded?: boolean }>()
 
 const { t, locale } = useI18n()
 const { formatDate } = useDateTime()

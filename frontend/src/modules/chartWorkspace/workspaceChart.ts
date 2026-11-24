@@ -5,9 +5,10 @@ import { CHART_FONT, chartPalette, chartTheme, WorkspaceRenderer } from './chart
 import { OpenTradingPineEngine } from './pineEngine'
 import { OpenTradingProvider, fromVela, velaSymbol, timeframes } from './provider'
 import { chartApi, type ChartSymbol, type PineRun } from './api'
-import { installMarketDrawings } from './persistence'
+import { bindWorkspaceRenderer, installMarketDrawings } from './persistence'
 import { localizeChart } from './localize'
 import { cw, formatDate, formatNumber } from './locale'
+import { installDrawingToolbarIcons } from './drawingToolbarIcons'
 
 const DIRECT_CHART_MOTION = { zoom: false, pan: false, autoscale: false } as const
 
@@ -44,7 +45,7 @@ export function createWorkspaceChart(deps: {
   const feedText = computed(() => ({ connecting: cw('connecting'), live: cw('live'), polling: cw('polling'), offline: cw('offline'), error: cw('dataError') }[feedStatus.value] ?? feedStatus.value))
   const engines = new Set<OpenTradingPineEngine>(), configuredCharts = new WeakSet<Vela>()
   let provider: OpenTradingProvider | undefined, snapshotChart: Vela | undefined
-  let disposeDrawings: (() => void) | undefined, disposeLocale: (() => void) | undefined
+  let disposeDrawings: (() => void) | undefined, disposeLocale: (() => void) | undefined, disposeToolbarIcons: (() => void) | undefined
   let disposed = false, marketEpoch = 0
   function initializationFailed() { feedStatus.value = 'error' }
   function returnLive() {
@@ -67,6 +68,13 @@ export function createWorkspaceChart(deps: {
   function configureCells() {
     for (const cell of workspace.value?.cells() ?? []) {
       if (configuredCharts.has(cell.chart)) continue
+      bindWorkspaceRenderer(cell.chart, cell.host)
+      // Vela's menu reset frames ALL loaded history. Reset this cell to the
+      // same candle size as startup instead, while restoring automatic scaling.
+      cell.resetView = () => {
+        cell.chart.renderer.set('autoScale', true)
+        WorkspaceRenderer.forHost(cell.host)?.frameRecentCandles()
+      }
       // Pooled cells can carry animation settings from an older saved layout.
       cell.chart.renderer.applyConfig({ animations: DIRECT_CHART_MOTION })
       configuredCharts.add(cell.chart)
@@ -182,7 +190,8 @@ export function createWorkspaceChart(deps: {
     applyChartTheme()
     chart.on('cell:created', configureCells)
     disposeDrawings = installMarketDrawings(chart, deps.dirty)
-    disposeLocale = localizeChart(deps.host.value)
+    disposeLocale = localizeChart(deps.host.value, () => symbols.value)
+    disposeToolbarIcons = installDrawingToolbarIcons(deps.host.value)
     chart.sync.set('drawings', false)
     chart.on('state:changed', () => { projectActive(); deps.dirty() })
     chart.on('cell:active', () => { marketEpoch++; projectActive() })
@@ -195,7 +204,7 @@ export function createWorkspaceChart(deps: {
     disposed = true
     marketEpoch++
     stopTheme()
-    disposeLocale?.(); disposeDrawings?.()
+    disposeLocale?.(); disposeDrawings?.(); disposeToolbarIcons?.()
     workspace.value?.destroy()
     workspace.value = undefined
     provider?.destroy()

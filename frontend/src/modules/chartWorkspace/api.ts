@@ -1,5 +1,8 @@
 import type { ChartSymbol, ChartBars, ChartQuote, WorkspaceDocument, WorkspaceWrite, PineRun, PineRunRequest, PineRecords, PineCapabilities } from './generatedContracts'
 import { ApiRequestError } from '@/api/request'
+import { createBrowserDocuments } from './browserDocuments'
+import { PUBLIC_SITE } from '@/app/publicSite'
+import { browserPineRuns } from './browserPineRuns'
 export type * from './generatedContracts'
 export const BASE = '/api/v1/chart-workspace'
 export async function request<T>(path:string, init:RequestInit = {}):Promise<T> {
@@ -16,9 +19,14 @@ export async function request<T>(path:string, init:RequestInit = {}):Promise<T> 
   return payload as T
 }
 export type DocumentKind = 'layouts'|'watchlists'|'scripts'
+export const browserWorkspaceDocuments = createBrowserDocuments({
+  list: kind => request<WorkspaceDocument[]>(PUBLIC_SITE ? `/defaults/${kind}` : `/${kind}`),
+  version: (kind, id, version) => request<WorkspaceDocument>(`/${kind}/${encodeURIComponent(id)}?version=${version}`),
+})
 const pendingWrites = new Set<Promise<WorkspaceDocument>>()
+export const waitForWorkspaceWrites = () => Promise.allSettled([...pendingWrites])
 async function saveDocument(kind:DocumentKind,id:string,body:WorkspaceWrite) {
-  const pending=request<WorkspaceDocument>(`/${kind}/${encodeURIComponent(id)}`,{method:'PUT',body:JSON.stringify(body)})
+  const pending=browserWorkspaceDocuments.save(kind,id,body)
   pendingWrites.add(pending)
   try{return await pending}finally{pendingWrites.delete(pending)}
 }
@@ -27,14 +35,15 @@ export const chartApi = {
   symbols: () => request<ChartSymbol[]>('/symbols'),
   bars: (query:Record<string,string|number>, signal?:AbortSignal) => request<ChartBars>('/bars?' + new URLSearchParams(Object.entries(query).map(([k,v])=>[k,String(v)])),{signal}),
   quotes: (symbols:string[]) => request<ChartQuote[]>('/quotes?'+new URLSearchParams({symbols:symbols.join(',')})),
-  documents: async (kind:DocumentKind) => {await Promise.allSettled([...pendingWrites]);return request<WorkspaceDocument[]>(`/${kind}`)},
-  document: (kind:DocumentKind,id:string,version?:number) => request<WorkspaceDocument>(`/${kind}/${encodeURIComponent(id)}${version===undefined?'':'?version='+version}`),
+  documents: async (kind:DocumentKind) => {await waitForWorkspaceWrites();return browserWorkspaceDocuments.list(kind)},
+  document: (kind:DocumentKind,id:string,version?:number) => browserWorkspaceDocuments.get(kind,id,version),
   save: saveDocument,
-  archive: (kind:DocumentKind,id:string) => request(`/${kind}/${encodeURIComponent(id)}/archive`,{method:'POST'}),
+  archive: (kind:DocumentKind,id:string) => browserWorkspaceDocuments.archive(kind,id),
   runs: () => request<PineRun[]>('/pine-runs'),
   run: (body:PineRunRequest) => request<PineRun>('/pine-runs',{method:'POST',body:JSON.stringify(body)}),
   getRun: (id:string) => request<PineRun>(`/pine-runs/${id}`),
   cancel: (id:string) => request<PineRun>(`/pine-runs/${id}/cancel`,{method:'POST'}),
   rerun: (id:string) => request<PineRun>(`/pine-runs/${id}/rerun`,{method:'POST'}),
   records: (id:string,kind:string,offset=0,limit=200,sampled=false) => request<PineRecords>(`/pine-runs/${id}/records?${new URLSearchParams({kind,offset:String(offset),limit:String(limit),sampled:String(sampled)})}`),
+  ...(PUBLIC_SITE ? browserPineRuns : {}),
 }

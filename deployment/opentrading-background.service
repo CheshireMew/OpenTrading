@@ -1,0 +1,25 @@
+[Unit]
+Description=OpenTrading shared market data collection
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=opentrading
+Group=opentrading
+WorkingDirectory=/srv/opentrading/current
+EnvironmentFile=/srv/opentrading/shared/opentrading.env
+Environment=APP_RUNTIME_ROLE=background
+ExecStart=/srv/opentrading/venv/bin/python -m scripts.run_background_runtime
+Restart=on-failure
+RestartSec=10
+Slice=opentrading.slice
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/opentrading/shared
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

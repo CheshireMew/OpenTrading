@@ -7,6 +7,7 @@ import type {
   SystemConfigResponse,
 } from './contracts'
 import { systemApi } from './api'
+import { PUBLIC_SITE } from '@/app/publicSite'
 
 interface LlmConfigForm {
   provider: string
@@ -147,7 +148,7 @@ export const useSystemSettingsPage = () => {
   }
 
   onMounted(() => {
-    void Promise.all([loadSystemConfig(), loadLlmConfig()])
+    void Promise.all([loadSystemConfig(), ...(PUBLIC_SITE ? [] : [loadLlmConfig()])])
   })
 
   return {

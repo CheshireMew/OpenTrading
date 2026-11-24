@@ -15,6 +15,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useUserPreferences } from '@/composables/useUserPreferences'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
   modelValue?: string
@@ -26,13 +27,16 @@ const emit = defineEmits<{
 }>()
 
 const { timezone, timezoneOptions, setTimezone } = useUserPreferences()
+const { t, te } = useI18n()
 
 const selectedValue = computed(() => props.modelValue ?? timezone.value)
 const options = computed(() => {
-  if (timezoneOptions.value.some((option) => option.value === selectedValue.value)) {
-    return timezoneOptions.value
-  }
-  return [{ value: selectedValue.value, label: selectedValue.value }, ...timezoneOptions.value]
+  const values = timezoneOptions.value.some(option => option.value === selectedValue.value) ? timezoneOptions.value
+    : [{ value: selectedValue.value, label: selectedValue.value }, ...timezoneOptions.value]
+  return values.map(option => {
+    const key = 'settings.timezoneNames.' + option.value
+    return { ...option, label: te(key) ? t(key) : option.label }
+  })
 })
 
 const handleChange = (event: Event) => {

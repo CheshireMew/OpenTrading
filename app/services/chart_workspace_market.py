@@ -184,7 +184,18 @@ class ChartWorkspaceMarket:
         now = int(time.time()*1000)
         await self.symbols()
         batches = {}
+        if settings.PUBLIC_SITE:
+            # Reuse the shared live market feed, independent of each visitor's
+            # watchlist. Do not issue another exchange request per watchlist.
+            snapshot = await self.binance.snapshot_service.get_market_page_snapshot_data()
+            for market in ("spot", "usdm"):
+                batches[market] = {row["symbol"]: {"symbol": row["symbol"], "lastPrice": row.get("last_price"),
+                    "priceChange": row.get("price_change"), "priceChangePercent": row.get("price_change_pct"),
+                    "closeTime": row.get("close_time") or snapshot.get("updated_at") or now}
+                    for row in snapshot.get(market + "_ticker", {}).get("items", [])}
         async def batch(market):
+            if settings.PUBLIC_SITE:
+                return
             requested = [self.catalog[k].symbol for k in keys if k in self.catalog and self.catalog[k].exchange == "binance" and self.catalog[k].market == market]
             if not requested:
                 return
@@ -223,6 +234,8 @@ class ChartWorkspaceMarket:
     def subscribe(self, key, timeframe, queue):
         identity = (key,timeframe)
         if identity not in self.channels:
+            if settings.PUBLIC_SITE and len(self.channels) >= 32:
+                raise ValueError("实时行情连接已满，请稍后重试")
             listeners = set()
             self.channels[identity] = (asyncio.create_task(self._pump(key,timeframe,listeners)), listeners)
         self.channels[identity][1].add(queue)

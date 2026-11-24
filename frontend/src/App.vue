@@ -317,7 +317,6 @@ onBeforeUnmount(() => {
 }
 
 .app-nav-link {
-  border-left: 2px solid transparent;
   color: var(--app-nav);
 }
 
@@ -327,7 +326,6 @@ onBeforeUnmount(() => {
 }
 
 .app-nav-link--active {
-  border-left-color: var(--app-nav-active-border);
   background: var(--app-nav-active-bg);
   color: var(--app-nav-active);
   font-weight: 700;

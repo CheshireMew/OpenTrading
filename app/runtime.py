@@ -168,9 +168,9 @@ class AppRuntimeServices:
                 )
             )
             await self.api.market.binance_intel.start()
-            if self.api.research_alerts is not None:
+            if self.api.research_alerts is not None and not settings.PUBLIC_SITE:
                 await self.api.research_alerts.start(chart_market=self.api.chart_workspace.market)
-            if self.api.trade_signal_evaluations is not None:
+            if self.api.trade_signal_evaluations is not None and not settings.PUBLIC_SITE:
                 await self.api.trade_signal_evaluations.start()
 
     async def shutdown(self) -> None:

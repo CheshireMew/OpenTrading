@@ -162,7 +162,24 @@
     "bothShort": "Both",
     "clearSearch": "Clear search",
     "emptyHint": "Try a different name or remove some filters.",
-    "notListed": "Missing records do not mean a platform does not support an asset. The complete Bitget Stock+ catalog has not been verified."
+    "notListed": "Missing records do not mean a platform does not support an asset. The complete Bitget Stock+ catalog has not been verified.",
+    "sourceLabels": {
+      "binance_stocks": "Binance Stocks",
+      "binance_bstocks": "bStocks",
+      "binance_alpha": "Binance Alpha · Ondo",
+      "binance_perpetual": "Binance Futures",
+      "okx_spot": "OKX Unified Tokenized Stocks",
+      "okx_perpetual": "OKX Stock Perpetuals",
+      "bitget_spot": "Bitget Stocks · Reality / Ondo",
+      "bitget_stockplus": "Bitget Stock+",
+      "bitget_perpetual": "Bitget Stock Perpetuals"
+    },
+    "productLabels": {
+      "stocks": "Stocks",
+      "futures": "Futures",
+      "tokenizedStocks": "Unified Tokenized Stocks",
+      "stockPerpetuals": "Stock Perpetuals"
+    }
   },
   "pages": {
     "notFound": "Page not found"
@@ -254,7 +271,8 @@
     "system": "System",
     "settings": "Settings",
     "dataHealth": "Data Health",
-    "researchResults": "Research results"
+    "researchResults": "Research results",
+    "macroSignals": "Macro signals"
   },
   "theme": {
     "dark": "Dark Mode",
@@ -421,6 +439,23 @@
       "ambiguous": "Both in one candle",
       "expired": "Expired",
       "unavailable": "Data unavailable"
+    },
+    "averageMfe": "Avg MFE",
+    "averageMae": "Avg MAE",
+    "side": "Side",
+    "entry": "Entry",
+    "target": "Target",
+    "stop": "Stop",
+    "confidence": "Confidence",
+    "sources": {
+      "rules": "Rules",
+      "ai": "AI"
+    },
+    "sides": {
+      "long": "Long",
+      "short": "Short",
+      "buy": "Buy",
+      "sell": "Sell"
     }
   },
   "assetResearch": {
@@ -535,7 +570,8 @@
       "all": "All markets",
       "spot": "Spot",
       "usdm": "USDⓈ-M futures"
-    }
+    },
+    "symbolsPlaceholder": "BTCUSDT, ETHUSDT, token address"
   },
   "reports": {
     "title": "Research Reports",
@@ -849,7 +885,18 @@
       "verified": "Verified",
       "unverified": "Unverified"
     },
-    "noAddresses": "No address rankings are available for this chain"
+    "noAddresses": "No address rankings are available for this chain",
+    "sentiments": {
+      "bullish": "Bullish",
+      "bearish": "Bearish",
+      "neutral": "Neutral"
+    },
+    "riskLevels": {
+      "low": "Low risk",
+      "medium": "Medium risk",
+      "high": "High risk",
+      "unknown": "Unknown risk"
+    }
   },
   "compare": {
     "symbolA": "Symbol A",
@@ -1273,6 +1320,16 @@
       "redis": "Redis with in-memory cache",
       "memory_fallback": "In-memory fallback (Redis unavailable)",
       "unavailable": "Unavailable"
+    },
+    "baseUrl": "Base URL",
+    "modelId": "Model ID",
+    "customProvider": "Custom / Local",
+    "timezoneNames": {
+      "UTC": "UTC",
+      "Asia/Shanghai": "Shanghai",
+      "America/New_York": "New York",
+      "Europe/London": "London",
+      "Asia/Tokyo": "Tokyo"
     }
   },
   "common": {
@@ -1326,7 +1383,7 @@
     "alertSound": "Sound",
     "alertDesktop": "System notification",
     "alertTestSound": "Test sound",
-    "alertRuntimeHint": "Prices are monitored while the backend is running. Keep this website open for sound and system notifications; other pages and windows may be active. Mobile supports in-page alerts; closed-page and lock-screen push are not connected yet.",
+    "alertRuntimeHint": "On the public website, alerts stay in this browser and prices are checked while a page remains open. Closing the website stops monitoring; lock-screen push is unavailable.",
     "alertNotificationsUnsupported": "System notifications are unavailable here. Open in a desktop browser using localhost or HTTPS. In-page alerts remain available.",
     "alertNotificationsDenied": "Allow notifications in this browser’s site settings. In-page alerts and enabled sounds remain available.",
     "alertSoundBlocked": "Your browser paused audio. Click Test sound to enable it.",
@@ -1379,7 +1436,6 @@
     "strategyTester": "Strategy tester",
     "runLogs": "Run logs",
     "activeChart": "Active chart {cell}",
-    "myScripts": "My scripts",
     "original": "Original",
     "newIndicator": "New indicator",
     "newStrategy": "New strategy",
@@ -1646,7 +1702,28 @@
     "capFinancial": "Financial and economic data",
     "capLibraries": "Other Pine libraries (DevLucem/ZigLib/1 is bundled)",
     "loadFailed": "Chart data could not be loaded. Try again.",
-    "emptyWatchlist": "This watchlist has no symbols yet."
+    "emptyWatchlist": "This watchlist has no symbols yet.",
+    "binance": "Binance",
+    "watchlistActions": "Watchlist actions",
+    "createWatchlist": "Create watchlist",
+    "editWatchlist": "Manage symbols",
+    "finishWatchlistEditing": "Done",
+    "lastPrice": "Last",
+    "browserDocumentConflict": "This content changed in another tab. Reload before saving; your browser draft is retained.",
+    "browserDocumentMissing": "This record is not available in this browser.",
+    "browserStorageUnavailable": "Browser storage is unavailable. Check site storage permissions; changes were not uploaded to the server.",
+    "browserStorageBlocked": "Close other pages running an older version and try again.",
+    "browserStorageFull": "Browser storage is full. Export a personal data backup first.",
+    "browserImportedCopy": "{name} (imported copy)",
+    "browserDataTitle": "Browser personal data",
+    "browserDataHint": "Chart layouts, drawings, watchlists, favorite indicators and custom scripts are saved in this browser and restored automatically.",
+    "browserBackupHint": "Export saved data before changing browser or site address, or clearing site data. Public-site alerts, research records and backtest reports also stay in this browser; backtests run on your device.",
+    "browserBackupExport": "Export backup",
+    "browserBackupImport": "Import backup",
+    "browserBackupApply": "Reload and apply",
+    "browserBackupExported": "Personal data backup exported.",
+    "browserBackupImported": "Imported {count} records. Conflicting content was saved as a copy. Reload to apply.",
+    "browserBackupInvalid": "This is not a valid OpenTrading personal data backup."
   },
   "ui": {
     "filters": "Filters",
@@ -2451,5 +2528,9 @@
     "previewLocalOnly": "Checks local cache timestamps only. The earliest cached date is not the exchange listing date. Missing data is fetched at runtime; this preview does not download prices or submit a run.",
     "previewCoverage": "Comparable intervals have continuous local data and full warmup coverage. They do not replace the requested interval. Prices, lower-timeframe OHLC alignment and the final snapshot are validated at runtime.",
     "barCount": "{count} bars"
+  },
+  "macroSignals": {
+    "bitcoin": "Bitcoin",
+    "sections": "Market sections"
   }
 }

@@ -882,6 +882,11 @@ export interface GetMarketIndicatorsQueryParams {
   days?: number
 }
 
+export interface GetMarketObservationsQueryParams {
+  symbols: string
+  extended?: boolean
+}
+
 export interface GetRealtimeAnalysisQueryParams {
   symbol: string
   timeframe?: string | null

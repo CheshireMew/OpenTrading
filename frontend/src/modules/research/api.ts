@@ -1,4 +1,6 @@
 import { apiGet, apiPost, apiPut } from '@/api/request'
+import { PUBLIC_SITE } from '@/app/publicSite'
+import { createBrowserResearchApi } from './browserResearch'
 import type {
   ResearchAlertCreateCommand,
   ResearchAlertEvaluationResponse,
@@ -32,7 +34,7 @@ import type {
   SavedMarketScreenerUpdateCommand,
 } from './contracts'
 
-export const researchApi = {
+export const serverResearchApi = {
   listEvents(kind = 'alert_triggered', unacknowledgedOnly = true, limit = 100): Promise<ResearchEventPageResponse> {
     return apiGet('list_research_events', {
       query: { kind, unacknowledged_only: unacknowledgedOnly, limit },
@@ -131,3 +133,4 @@ export const researchApi = {
     return apiPut('acknowledge_research_event', body, { path: { event_id: id } })
   },
 }
+export const researchApi: typeof serverResearchApi = PUBLIC_SITE ? createBrowserResearchApi(serverResearchApi) : serverResearchApi

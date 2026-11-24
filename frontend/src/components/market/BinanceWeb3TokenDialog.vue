@@ -136,7 +136,7 @@
           <div class="mt-5 border border-[var(--ui-border)] p-4 text-sm dark:border-slate-700">
             <div class="flex items-center justify-between">
               <span class="text-slate-500 dark:text-slate-400">{{ t('web3Rank.dialog.sentiment') }}</span>
-              <span class="font-semibold text-slate-900 dark:text-white">{{ token.sentiment || '--' }}</span>
+              <span class="font-semibold text-slate-900 dark:text-white">{{ sentimentLabel(token.sentiment) }}</span>
             </div>
             <p v-if="token.summary" class="mt-3 text-xs leading-5 text-slate-500 dark:text-slate-400">{{ token.summary }}</p>
             <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
@@ -162,7 +162,7 @@
           <div class="mt-5 border border-[var(--ui-border)] p-4 text-sm dark:border-slate-700">
             <div class="flex items-center justify-between">
               <span class="text-slate-500 dark:text-slate-400">{{ t('web3Rank.dialog.contractRisk') }}</span>
-              <span class="font-semibold text-slate-900 dark:text-white">{{ audit?.risk_level_enum || audit?.risk_level || '--' }}</span>
+              <span class="font-semibold text-slate-900 dark:text-white">{{ riskLabel(audit?.risk_level_enum) ?? audit?.risk_level ?? '--' }}</span>
             </div>
             <div class="mt-3 flex items-center justify-between">
               <span class="text-slate-500 dark:text-slate-400">{{ t('web3Rank.dialog.buySellTax') }}</span>
@@ -233,6 +233,10 @@ const emit = defineEmits<{
 }>()
 
 const { dialogRef } = useModalDialog(computed(() => props.open && !props.inline), () => emit('close'))
+const sentimentLabel = (value?: string | null) => value && ['bullish', 'bearish', 'neutral'].includes(value.toLowerCase())
+  ? t('web3Rank.sentiments.' + value.toLowerCase()) : value || '--'
+const riskLabel = (value?: string | null) => value && ['low', 'medium', 'high', 'unknown'].includes(value.toLowerCase())
+  ? t('web3Rank.riskLevels.' + value.toLowerCase()) : value
 </script>
 
 <style scoped>

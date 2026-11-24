@@ -46,9 +46,9 @@
 .app-metric-strip > button[aria-pressed=true] { background: color-mix(in srgb, var(--ui-accent) 10%, var(--ui-canvas)); }
 .app-metric-strip > button[aria-pressed=true] :is(.app-metric-value, .app-metric-label) { color: var(--ui-accent); }
 .app-tabs { display: flex; align-items: stretch; gap: 24px; min-width: 0; overflow-x: auto; border-bottom: 1px solid var(--ui-border); scrollbar-width: none; }
-.app-tabs > button { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 8px 0 12px; border-bottom: 2px solid transparent; font-size: 14px; font-weight: 500; color: var(--ui-muted); transition: color 160ms ease, border-color 160ms ease; }
+.app-tabs > button { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 8px 12px; border-radius: 4px; font-size: 14px; font-weight: 500; color: var(--ui-muted); transition: color 160ms ease, background 160ms ease; }
 .app-tabs > button:hover { color: var(--ui-title); }
-.app-tabs > button.is-active { color: var(--ui-accent); border-bottom-color: var(--ui-accent); font-weight: 600; }
+.app-tabs > button.is-active { color: var(--ui-accent); background: var(--ui-elevated); font-weight: 600; }
 .app-tabs > button:focus-visible { outline-offset: -3px; }
 .app-tab-count { padding: 2px 6px; border-radius: 4px; background: var(--ui-elevated); color: var(--ui-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
 .app-empty-state { display: flex; min-height: 220px; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 40px 24px; text-align: center; }

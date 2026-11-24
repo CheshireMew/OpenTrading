@@ -59,6 +59,8 @@ class ChartQuote(BaseModel):
 class PineRunRequest(BaseModel):
     script_id: str
     script_version: int = Field(ge=1)
+    script_source: str | None = Field(None, min_length=1)
+    script_name: str | None = Field(None, min_length=1, max_length=160)
     symbol: str
     timeframe: str
     start: int

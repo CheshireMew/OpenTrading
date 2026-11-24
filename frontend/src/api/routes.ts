@@ -47,6 +47,7 @@ const routeTemplates = {
   create_research_watch_item: "/research/items",
   create_research_watchlist: "/research/watchlists",
   dca_simulate: "/tools/dca_simulate",
+  evaluate_browser_screener: "/research/screener-preview",
   evaluate_research_alerts: "/research/alerts/evaluate",
   evaluate_trade_signals: "/research/signals/evaluate",
   get_api_status: "/status",
@@ -75,6 +76,7 @@ const routeTemplates = {
   get_market_full_history_batch: "/full_history/batch",
   get_market_history: "/history",
   get_market_indicators: "/indicators",
+  get_market_observations: "/binance/market/observations",
   get_realtime_analysis: "/realtime",
   get_research_workbench: "/research/workbench",
   get_tools_contract: "/tools/contract",
@@ -104,6 +106,7 @@ const routeTemplates = {
   update_research_note: "/research/notes/{note_id}",
   update_research_watch_item: "/research/items/{item_id}",
   update_research_watchlist: "/research/watchlists/{watchlist_id}",
+  workspace_defaults: "/chart-workspace/defaults/{kind}",
 } as const
 
 export type ApiRouteName = keyof typeof routeTemplates
@@ -167,6 +170,7 @@ const endpointQueryContracts = {
   create_research_watch_item: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   create_research_watchlist: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   dca_simulate: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
+  evaluate_browser_screener: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   evaluate_research_alerts: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   evaluate_trade_signals: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   get_api_status: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
@@ -195,6 +199,7 @@ const endpointQueryContracts = {
   get_market_full_history_batch: {"repeatedKeys": ["symbols"], "aliases": {}} as EndpointQueryContract,
   get_market_history: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   get_market_indicators: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
+  get_market_observations: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   get_realtime_analysis: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   get_research_workbench: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   get_tools_contract: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
@@ -224,6 +229,7 @@ const endpointQueryContracts = {
   update_research_note: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   update_research_watch_item: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   update_research_watchlist: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
+  workspace_defaults: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
 } as const
 
 export type ApiRouteResponseMap = {
@@ -255,6 +261,7 @@ export type ApiRouteResponseMap = {
   create_research_watch_item: ResearchTypes.ResearchWatchItemResponse
   create_research_watchlist: ResearchTypes.ResearchWatchlistResponse
   dca_simulate: ToolsTypes.DCAResponse
+  evaluate_browser_screener: ResearchTypes.MarketScreenerRunResponse
   evaluate_research_alerts: ResearchTypes.ResearchAlertEvaluationResponse
   evaluate_trade_signals: ResearchTypes.TradeSignalEvaluationRunResponse
   get_api_status: MarketTypes.ApiStatusResponse
@@ -283,6 +290,7 @@ export type ApiRouteResponseMap = {
   get_market_full_history_batch: MarketTypes.MarketHistoryBatchResponse
   get_market_history: MarketTypes.MarketHistoryResponse
   get_market_indicators: Array<MarketTypes.MarketIndicatorResponse>
+  get_market_observations: Record<string, Record<string, number>>
   get_realtime_analysis: MarketTypes.RealtimeResponse
   get_research_workbench: ResearchTypes.ResearchWorkbenchResponse
   get_tools_contract: ToolsTypes.ToolsPageContractResponse
@@ -312,6 +320,7 @@ export type ApiRouteResponseMap = {
   update_research_note: ResearchTypes.ResearchNoteResponse
   update_research_watch_item: ResearchTypes.ResearchWatchItemResponse
   update_research_watchlist: ResearchTypes.ResearchWatchlistResponse
+  workspace_defaults: Array<ChartWorkspaceTypes.WorkspaceDocument>
 }
 
 export type ApiRouteBodyMap = {
@@ -343,6 +352,7 @@ export type ApiRouteBodyMap = {
   create_research_watch_item: ResearchTypes.ResearchWatchItemCreateCommand
   create_research_watchlist: ResearchTypes.ResearchWatchlistCreateCommand
   dca_simulate: ToolsTypes.SimulateDcaCommand
+  evaluate_browser_screener: ResearchTypes.MarketScreenerFilters
   evaluate_research_alerts: ResearchTypes.ResearchAlertEvaluateCommand
   evaluate_trade_signals: ResearchTypes.TradeSignalEvaluationCommand
   get_api_status: never
@@ -371,6 +381,7 @@ export type ApiRouteBodyMap = {
   get_market_full_history_batch: never
   get_market_history: never
   get_market_indicators: never
+  get_market_observations: never
   get_realtime_analysis: never
   get_research_workbench: never
   get_tools_contract: never
@@ -400,6 +411,7 @@ export type ApiRouteBodyMap = {
   update_research_note: ResearchTypes.ResearchNoteUpdateCommand
   update_research_watch_item: ResearchTypes.ResearchWatchItemUpdateCommand
   update_research_watchlist: ResearchTypes.ResearchWatchlistUpdateCommand
+  workspace_defaults: never
 }
 
 export type ApiRoutePathMap = {
@@ -431,6 +443,7 @@ export type ApiRoutePathMap = {
   create_research_watch_item: never
   create_research_watchlist: never
   dca_simulate: never
+  evaluate_browser_screener: never
   evaluate_research_alerts: never
   evaluate_trade_signals: never
   get_api_status: never
@@ -459,6 +472,7 @@ export type ApiRoutePathMap = {
   get_market_full_history_batch: never
   get_market_history: never
   get_market_indicators: never
+  get_market_observations: never
   get_realtime_analysis: never
   get_research_workbench: never
   get_tools_contract: never
@@ -488,6 +502,7 @@ export type ApiRoutePathMap = {
   update_research_note: { note_id: string | number }
   update_research_watch_item: { item_id: string | number }
   update_research_watchlist: { watchlist_id: string | number }
+  workspace_defaults: { kind: string | number }
 }
 
 export type ApiRouteQueryMap = {
@@ -519,6 +534,7 @@ export type ApiRouteQueryMap = {
   create_research_watch_item: never
   create_research_watchlist: never
   dca_simulate: never
+  evaluate_browser_screener: never
   evaluate_research_alerts: never
   evaluate_trade_signals: never
   get_api_status: never
@@ -547,6 +563,7 @@ export type ApiRouteQueryMap = {
   get_market_full_history_batch: MarketTypes.GetMarketFullHistoryBatchQueryParams
   get_market_history: MarketTypes.GetMarketHistoryQueryParams
   get_market_indicators: MarketTypes.GetMarketIndicatorsQueryParams
+  get_market_observations: MarketTypes.GetMarketObservationsQueryParams
   get_realtime_analysis: MarketTypes.GetRealtimeAnalysisQueryParams
   get_research_workbench: ResearchTypes.GetResearchWorkbenchQueryParams
   get_tools_contract: never
@@ -576,6 +593,7 @@ export type ApiRouteQueryMap = {
   update_research_note: never
   update_research_watch_item: never
   update_research_watchlist: never
+  workspace_defaults: never
 }
 
 export type ApiRouteResponse<N extends ApiRouteName> = ApiRouteResponseMap[N]

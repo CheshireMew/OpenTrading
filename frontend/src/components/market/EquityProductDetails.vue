@@ -8,10 +8,10 @@
       <ul>
         <li v-for="offering in group.offerings" :key="`${offering.source_id}:${offering.symbol}`" class="eq-product">
           <span class="eq-product-kind">{{ t(`equities.${offering.trading_type}`) }}</span>
-          <a :href="offering.url" target="_blank" rel="noopener noreferrer" :title="offering.product">
+          <a :href="offering.url" target="_blank" rel="noopener noreferrer" :title="equityProductLabel(offering.product)">
             {{ offering.symbol }}<ArrowUpRightIcon aria-hidden="true" />
           </a>
-          <span class="eq-product-name">{{ offering.product }}</span>
+          <span class="eq-product-name">{{ equityProductLabel(offering.product) }}</span>
           <span class="eq-product-quote">{{ offering.quote }}</span>
           <span v-if="restricted(offering.status) || stale(offering.source_id)" class="eq-product-warning">
             {{ restricted(offering.status) ? t('equities.restricted') : t('equities.cached') }}
@@ -27,6 +27,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowUpRightIcon } from '@heroicons/vue/24/outline'
 import type { EquityCatalogItemResponse, EquityCatalogSourceResponse } from '@/modules/market/contracts'
+import { equityProductLabel } from '@/modules/market/equityCatalog'
 
 const props = defineProps<{
   item: EquityCatalogItemResponse

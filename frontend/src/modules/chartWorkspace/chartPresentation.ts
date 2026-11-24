@@ -2,8 +2,13 @@ import { NativeRenderer, type ChartConfig, type OHLCV, type VelaTheme } from '@l
 import { registerRendererLayer } from '@luxalgo/vela/plugin'
 import { DARK_PALETTE, LIGHT_PALETTE } from '@/theme/palette.mjs'
 import { PRICE_ALERT_LAYER, type PriceAlertLayerSource } from './priceAlertLayer'
+import { localizeCanvasDates } from './canvasLocale'
 
 export const CHART_FONT = 'Arial, "Microsoft YaHei", sans-serif'
+// Native candle bodies occupy 70% of this pitch: 14px gives a roughly 10px
+// body, instead of the previous 4px body at a 7px pitch.
+export const DEFAULT_CANDLE_SPACING = 14
+const RIGHT_MARGIN_BARS = 6
 export const chartPalette = (mode: 'light' | 'dark') => mode === 'dark' ? DARK_PALETTE : LIGHT_PALETTE
 export function chartTheme(mode: 'light' | 'dark'): VelaTheme {
   const colors = chartPalette(mode)
@@ -27,12 +32,12 @@ export function gridStep(span: number, target: number): number {
 }
 
 export function readableCandleRange(bars: readonly OHLCV[], width: number) {
-  if (bars.length < 2) return null
-  const count = Math.min(bars.length, 120, Math.max(30, Math.floor((width - 80) / 10)))
+  if (bars.length < 2 || !Number.isFinite(width) || width <= 0) return null
+  const count = Math.min(bars.length, Math.max(2, Math.floor(width / DEFAULT_CANDLE_SPACING) - RIGHT_MARGIN_BARS + 1))
   const last = bars[bars.length - 1].time
   const interval = last - bars[bars.length - 2].time
   if (interval <= 0) return null
-  return { from: bars[bars.length - count].time, to: last + interval * 6 }
+  return { from: bars[bars.length - count].time, to: last + interval * RIGHT_MARGIN_BARS }
 }
 
 type GridSource = () => { config: ChartConfig; visible: boolean }
@@ -130,11 +135,13 @@ export class WorkspaceRenderer extends NativeRenderer {
   private chartHost?: HTMLElement
   private priceBars: readonly OHLCV[] = []
   private framed = false
+  private disposeLocale?: () => void
   get hasReadableViewport() { return this.framed }
 
   override mount(container: HTMLElement, theme: VelaTheme) {
     this.chartHost = container
     super.mount(container, theme)
+    this.disposeLocale = localizeCanvasDates(container, () => this.applyConfig({}))
     WorkspaceRenderer.mounted.add(this)
     this.priceAlerts.host = container
     this.setNativeData(PRICE_ALERT_LAYER, this.priceAlerts)
@@ -148,12 +155,16 @@ export class WorkspaceRenderer extends NativeRenderer {
   }
 
   override destroy() {
+    this.disposeLocale?.()
     WorkspaceRenderer.mounted.delete(this)
     super.destroy()
   }
 
   frameRecentCandles() {
-    const width = this.chartHost?.clientWidth ?? 0
+    if (!this.chartHost) return
+    const style = getComputedStyle(this.chartHost)
+    const width = this.chartHost.clientWidth - (parseFloat(style.getPropertyValue('--vela-toolbar-gutter')) || 0)
+      - (parseFloat(style.getPropertyValue('--vela-scale-gutter')) || 0)
     if (width <= 0) return
     const range = readableCandleRange(this.priceBars, width)
     if (!range) return

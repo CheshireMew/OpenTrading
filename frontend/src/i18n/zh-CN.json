@@ -162,7 +162,24 @@
     "bothShort": "两者都有",
     "clearSearch": "清空搜索",
     "emptyHint": "试试其他名称，或减少筛选条件。",
-    "notListed": "未收录的产品不代表平台不支持。Bitget Stock+ 完整名单尚未核实。"
+    "notListed": "未收录的产品不代表平台不支持。Bitget Stock+ 完整名单尚未核实。",
+    "sourceLabels": {
+      "binance_stocks": "币安股票",
+      "binance_bstocks": "bStocks",
+      "binance_alpha": "币安 Alpha · Ondo",
+      "binance_perpetual": "币安合约",
+      "okx_spot": "OKX 股票代币",
+      "okx_perpetual": "OKX 股票永续",
+      "bitget_spot": "Bitget 股票 · Reality / Ondo",
+      "bitget_stockplus": "Bitget Stock+",
+      "bitget_perpetual": "Bitget 股票永续"
+    },
+    "productLabels": {
+      "stocks": "股票",
+      "futures": "合约",
+      "tokenizedStocks": "股票代币",
+      "stockPerpetuals": "股票永续"
+    }
   },
   "pages": {
     "notFound": "页面未找到"
@@ -188,21 +205,21 @@
     "readError": "美元流动性暂时无法读取。",
     "scoreCoverage": "当前评分覆盖 {coverage}% 的模型权重；下方可检查每项指标的数据日期和贡献。",
     "noScore": "数据库里还没有足够的宏观历史。点击“更新官方数据”从 FRED 和美国财政部公开接口建立数据。",
-    "currentRegime": "CURRENT REGIME",
+    "currentRegime": "当前状态",
     "scoreDirection": "分数越高，美元流动性收紧压力越强",
     "coverage": "有效覆盖",
     "rawScore": "原始合成值",
     "historySample": "历史样本",
     "lastObserved": "最新观测：{date}",
     "noObservation": "尚无观测",
-    "pressureKicker": "PRESSURE PERCENTILE",
+    "pressureKicker": "压力百分位",
     "pressure": "综合压力",
     "pressureHistory": "历史压力分位",
     "noPressure": "历史数据不足，更新官方数据后会显示曲线",
-    "driversKicker": "WHAT MOVED",
+    "driversKicker": "主要变化",
     "drivers": "当前主要驱动",
     "noDrivers": "暂无驱动说明",
-    "indicatorsKicker": "COMPONENTS",
+    "indicatorsKicker": "组成指标",
     "indicators": "指标明细",
     "indicator": "指标",
     "value": "当前值",
@@ -216,7 +233,7 @@
     "date": "数据日期",
     "observationOnly": "观察项",
     "noData": "无数据",
-    "methodKicker": "METHODOLOGY",
+    "methodKicker": "计算方法",
     "methodTitle": "这个分数是怎么来的",
     "methodDirection": "① 统一方向",
     "methodDirectionBody": "把每项指标转换成“数值越高，收紧压力越大”的方向。",
@@ -245,7 +262,7 @@
     "screeners": "市场筛选器",
     "reports": "研究报告",
     "researchSection": "研究",
-    "tokenResearch": "Token 研究",
+    "tokenResearch": "代币研究",
     "tools": "工具箱",
     "compare": "币种对比",
     "dca": "DCA模拟",
@@ -254,7 +271,8 @@
     "system": "系统",
     "settings": "配置中心",
     "dataHealth": "数据健康",
-    "researchResults": "研究结果目录"
+    "researchResults": "研究结果目录",
+    "macroSignals": "宏观信号"
   },
   "theme": {
     "dark": "深色模式",
@@ -421,6 +439,23 @@
       "ambiguous": "同根 K 线同时触发",
       "expired": "已到期",
       "unavailable": "数据暂不可用"
+    },
+    "averageMfe": "平均 MFE",
+    "averageMae": "平均 MAE",
+    "side": "方向",
+    "entry": "入场价",
+    "target": "目标价",
+    "stop": "止损价",
+    "confidence": "置信度",
+    "sources": {
+      "rules": "规则",
+      "ai": "AI"
+    },
+    "sides": {
+      "long": "做多",
+      "short": "做空",
+      "buy": "买入",
+      "sell": "卖出"
     }
   },
   "assetResearch": {
@@ -535,7 +570,8 @@
       "all": "全部市场",
       "spot": "现货",
       "usdm": "U 本位合约"
-    }
+    },
+    "symbolsPlaceholder": "BTCUSDT, ETHUSDT, 代币地址"
   },
   "reports": {
     "title": "研究报告",
@@ -658,8 +694,8 @@
     }
   },
   "binanceMarket": {
-    "eyebrow": "BINANCE",
-    "title": "Binance 市场看板",
+    "eyebrow": "币安",
+    "title": "币安市场看板",
     "subtitle": "现货强弱和永续结构放在一页里看。",
     "refresh": "刷新",
     "refreshing": "刷新中...",
@@ -784,7 +820,7 @@
     }
   },
   "web3Rank": {
-    "eyebrow": "Binance Web3",
+    "eyebrow": "币安 Web3",
     "title": "Web3 榜单",
     "subtitle": "热度榜统一吸收搜索、趋势、社交、交易、聪明钱和 Meme 信号；地址收益榜独立展示钱包维度。",
     "updatedAt": "数据更新时间：{time}",
@@ -792,10 +828,10 @@
     "allChains": "综合",
     "refresh": "刷新",
     "refreshing": "刷新中...",
-    "loadFailed": "加载 Binance Web3 榜单失败。",
+    "loadFailed": "加载币安 Web3 榜单失败。",
     "heatRankRefreshFailedWithCache": "Web3 热度榜刷新失败，继续显示缓存数据",
     "heatRankLoadFailed": "Web3 热度榜加载失败",
-    "tokenDetailLoadFailed": "Token 详情加载失败",
+    "tokenDetailLoadFailed": "代币详情加载失败",
     "heatRank": {
       "title": "Web3 热度榜",
       "subtitle": "搜索、趋势、社交、交易和聪明钱合成",
@@ -834,11 +870,11 @@
       "volume24h": "24H 成交",
       "holders": "持有人",
       "trades": "交易次数",
-      "topSearch": "Top Search",
-      "trending": "Trending",
-      "social": "Social",
-      "volumeTx": "Volume / Tx",
-      "smartMoney": "Smart Money",
+      "topSearch": "热门搜索",
+      "trending": "热门趋势",
+      "social": "社交热度",
+      "volumeTx": "成交量 / 交易笔数",
+      "smartMoney": "聪明钱",
       "meme": "Meme",
       "sentiment": "社交情绪",
       "socialHype": "社交热度",
@@ -849,7 +885,18 @@
       "verified": "已验证",
       "unverified": "未验证"
     },
-    "noAddresses": "该网络暂无地址排行数据"
+    "noAddresses": "该网络暂无地址排行数据",
+    "sentiments": {
+      "bullish": "看涨",
+      "bearish": "看跌",
+      "neutral": "中性"
+    },
+    "riskLevels": {
+      "low": "低风险",
+      "medium": "中等风险",
+      "high": "高风险",
+      "unknown": "风险未知"
+    }
   },
   "compare": {
     "symbolA": "币种 A",
@@ -1065,7 +1112,7 @@
     "restore": "恢复",
     "loadingSavedPortfolios": "正在读取已保存的组合…",
     "saving": "正在保存…",
-    "eyebrow": "Portfolio Rebalance",
+    "eyebrow": "组合再平衡",
     "title": "投资组合平衡",
     "subtitle": "系统用实时价格跟踪组合当前价值，并直接算出各标的该加多少、减多少。",
     "strategyTitle": "默认策略",
@@ -1273,6 +1320,16 @@
       "redis": "Redis + 内存缓存",
       "memory_fallback": "内存备用缓存（Redis 不可用）",
       "unavailable": "不可用"
+    },
+    "baseUrl": "API 地址",
+    "modelId": "模型 ID",
+    "customProvider": "自定义 / 本地",
+    "timezoneNames": {
+      "UTC": "UTC",
+      "Asia/Shanghai": "北京时间",
+      "America/New_York": "纽约时间",
+      "Europe/London": "伦敦时间",
+      "Asia/Tokyo": "东京时间"
     }
   },
   "common": {
@@ -1326,7 +1383,7 @@
     "alertSound": "声音",
     "alertDesktop": "系统通知",
     "alertTestSound": "试听声音",
-    "alertRuntimeHint": "后台服务运行时持续监测价格。声音和系统通知需要保持网页打开，可切换到其他页面或窗口。手机支持页面内提醒，尚不支持关闭网页或锁屏推送。",
+    "alertRuntimeHint": "公开网站的提醒保存在当前浏览器，网页打开时检查价格。关闭网页后停止检查，不支持锁屏推送。",
     "alertNotificationsUnsupported": "当前环境无法发送系统通知，请使用电脑浏览器通过 localhost 或 HTTPS 打开。页面内提醒仍然可用。",
     "alertNotificationsDenied": "系统通知尚未获准，请在浏览器的网站权限中允许通知。页面内提醒和已启用的声音仍然可用。",
     "alertSoundBlocked": "浏览器暂停了声音，请点击“试听声音”启用。",
@@ -1379,7 +1436,6 @@
     "strategyTester": "策略测试器",
     "runLogs": "运行日志",
     "activeChart": "活动图 {cell}",
-    "myScripts": "我的脚本",
     "original": "原版",
     "newIndicator": "新建指标",
     "newStrategy": "新建策略",
@@ -1455,9 +1511,9 @@
     "atr": "ATR · 平均真实波幅",
     "vwap": "VWAP · 成交量加权均价",
     "volume": "成交量",
-    "binancePerpetual": "Binance 永续",
+    "binancePerpetual": "币安永续",
     "okxSpot": "OKX 现货",
-    "binanceSpot": "Binance 现货",
+    "binanceSpot": "币安现货",
     "watchlistName": "自选列表名称",
     "newWatchlist": "新的自选",
     "defaultLayout": "默认布局",
@@ -1583,7 +1639,7 @@
     "externalLibrary": "暂不支持外部 Pine 库，请提供完整源码",
     "ocaUnsupported": "暂不支持 OCA 订单联动",
     "conversionUnsupported": "暂不支持强平价格或跨币种换算",
-    "magnifierUnsupported": "暂不支持 Bar Magnifier 成交模拟",
+    "magnifierUnsupported": "暂不支持细周期成交模拟（Bar Magnifier）",
     "lookaheadUnsupported": "暂不支持使用未来数据的 lookahead_on",
     "pineVersionRequired": "请使用带有 //{'@'}version=5 或 //{'@'}version=6 声明的 Pine 脚本",
     "errorLocation": "{detail}（第 {line} 行，第 {column} 列）",
@@ -1634,19 +1690,40 @@
     "engineUnsupported": "脚本使用了引擎尚未支持的功能：{detail}",
     "runtimeRollback": "Pine 引擎回滚接口改变，需要重新验证兼容层",
     "missingMetadata": "没有 {symbol} 的真实品种元数据",
-    "capCommon": "Pine v5/v6 常用指标与 strategy",
+    "capCommon": "Pine v5/v6 常用指标与策略",
     "capCharts": "多图、绘图、原版 v7.2",
     "capRequests": "已接入品种的多周期请求",
     "capVarip": "varip 支持全局标量（OpenTrading 兼容层），不支持局部变量和集合",
     "capLive": "实时计算使用实际收到的行情更新",
-    "capHistory": "历史 OHLC 成交模拟不是逐 tick 还原",
+    "capHistory": "历史 OHLC 成交模拟不是逐笔还原",
     "capCurrency": "USD/USDT 采用报价数值记账，不执行汇率换算",
     "capOca": "OCA 联动",
     "capConversion": "强平价格与跨币种换算",
     "capFinancial": "财报与经济数据",
     "capLibraries": "未接入的外部 Pine 库（已内置 DevLucem/ZigLib/1）",
     "loadFailed": "图表数据加载失败，请重试。",
-    "emptyWatchlist": "这个自选列表还没有品种。"
+    "emptyWatchlist": "这个自选列表还没有品种。",
+    "binance": "币安",
+    "watchlistActions": "自选列表操作",
+    "createWatchlist": "新建自选列表",
+    "editWatchlist": "管理品种",
+    "finishWatchlistEditing": "完成管理",
+    "lastPrice": "最新价",
+    "browserDocumentConflict": "内容已在另一个窗口更新，请重新载入后保存；浏览器草稿仍保留。",
+    "browserDocumentMissing": "当前浏览器中没有这条记录。",
+    "browserStorageUnavailable": "无法保存到浏览器，请检查网站存储权限；更改未上传到服务器。",
+    "browserStorageBlocked": "请关闭其他旧版本的页面后重试。",
+    "browserStorageFull": "浏览器存储空间不足，请先导出个人数据备份。",
+    "browserImportedCopy": "{name}（导入副本）",
+    "browserDataTitle": "浏览器个人数据",
+    "browserDataHint": "图表布局、画线、自选、收藏指标和自定义脚本保存在当前浏览器，打开后自动恢复。",
+    "browserBackupHint": "更换浏览器、网址或清除网站数据前，请导出已保存的数据。公开网站的提醒、研究记录和回测报告也保存在浏览器；回测在自己的设备上计算。",
+    "browserBackupExport": "导出备份",
+    "browserBackupImport": "导入备份",
+    "browserBackupApply": "刷新并应用",
+    "browserBackupExported": "已导出个人数据备份。",
+    "browserBackupImported": "已导入 {count} 条记录，冲突内容另存副本。刷新页面后应用。",
+    "browserBackupInvalid": "这不是有效的 OpenTrading 个人数据备份。"
   },
   "ui": {
     "filters": "筛选",
@@ -2171,7 +2248,7 @@
   },
   "backendText": {
     "adaptive_cloud_name": "趋势云带核验",
-    "adaptive_cloud_description": "original 按用户提供的 Pine 规则计算；cross 为截图拟合的穿越候选。保留每根指标和条件，不自动把 TP/SL 标签当成交易订单。",
+    "adaptive_cloud_description": "原规则按用户提供的 Pine 规则计算；穿越规则为截图拟合的候选。保留每根指标和条件，不自动把 TP/SL 标签当成交易订单。",
     "adaptive_cloud_parameters_mode_label": "信号规则",
     "adaptive_cloud_parameters_mode_options_0_label": "原 Pine 反转规则",
     "adaptive_cloud_parameters_mode_options_1_label": "截图拟合穿越候选",
@@ -2181,10 +2258,10 @@
     "adaptive_cloud_parameters_ema_length_label": "EMA 长度",
     "adaptive_cloud_parameters_atr_length_label": "ATR 长度",
     "adaptive_cloud_parameters_cloud_mult_label": "可见云带 ATR 系数",
-    "adaptive_cloud_parameters_trigger_mult_label": "cross 信号门槛 ATR 系数",
+    "adaptive_cloud_parameters_trigger_mult_label": "穿越信号门槛 ATR 系数",
     "adaptive_cloud_parameters_rsi_length_label": "RSI 长度",
-    "adaptive_cloud_parameters_volume_mult_label": "original 成交量倍数",
-    "adaptive_cloud_parameters_cooldown_label": "original 冷却根数（须严格大于）",
+    "adaptive_cloud_parameters_volume_mult_label": "原规则成交量倍数",
+    "adaptive_cloud_parameters_cooldown_label": "原规则冷却根数（须严格大于）",
     "adaptive_cloud_warmup_rule_explanation": "按当前参数取各指标所需历史的最大值。EMA／RMA 初始值权重降至 1e-8 以下，再覆盖已声明回看窗口；这是数值初始化标准，不保证价格或信号完全相同。",
     "adaptive_cloud_parameter_constraints_0_message": "原 Pine 规则的均线价格必须为收盘价",
     "cross_market_trend_v1_name": "跨标的趋势基准 v1：突破、双均线、涨跌方向",
@@ -2439,7 +2516,7 @@
     "macroName_US10Y_REAL": "美国 10 年期实际利率",
     "macroDescription_US10Y_REAL": "实际利率上行会抬高风险资产估值折现压力。",
     "macroName_NET_LIQUIDITY": "净流动性",
-    "macroDescription_NET_LIQUIDITY": "Fed 总资产减 TGA 与 ON RRP 后的观察项，不纳入综合评分。",
+    "macroDescription_NET_LIQUIDITY": "美联储总资产减 TGA 与 ON RRP 后的观察项，不纳入综合评分。",
     "macroName_M2": "美国 M2 货币供应",
     "macroDescription_M2": "广义货币环境观察项，不纳入综合评分。",
     "policyGroup": "政策与准备金池",
@@ -2451,5 +2528,9 @@
     "previewLocalOnly": "只检查本地缓存时间戳；缓存最早时间不等于交易所上市时间。缺失数据由运行时获取，预览不下载行情、不提交任务。",
     "previewCoverage": "共同可比区间表示本地连续数据及完整预热覆盖；不会自动替换请求区间。行情值、细周期 OHLC 对齐和最终快照仍由运行时校验。",
     "barCount": "{count} 根"
+  },
+  "macroSignals": {
+    "bitcoin": "比特币",
+    "sections": "市场分区"
   }
 }

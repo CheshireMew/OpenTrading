@@ -1,7 +1,7 @@
 import type { DataProvider, BarRange, SymbolDescriptor, SymbolInfo } from '@luxalgo/vela'
 import type { OHLCV } from '@luxalgo/vela'
 import { chartApi, type ChartSymbol, BASE } from './api'
-import { cw } from './locale'
+import { cw, exchangeLabel } from './locale'
 
 export const timeframes:Record<string,string> = {'1':'1m','5':'5m','15':'15m','30':'30m','60':'1h','240':'4h','D':'1d','1D':'1d','W':'1w','1W':'1w','M':'1M','1M':'1M'}
 export const velaSymbol = (id:string) => 'opentrading:' + id
@@ -32,7 +32,7 @@ export class OpenTradingProvider implements DataProvider {
   }
   async listSymbols():Promise<SymbolDescriptor[]> {
     if (!this.catalog.length) this.catalog = await chartApi.symbols()
-    return this.catalog.map(s=>({ticker:s.id,description:`${s.name} · ${s.exchange.toUpperCase()} · ${cw(s.market==='usdm'?'perpetual':s.market==='spot'?'spot':'index')}`,type:s.market==='index'?'index':'crypto',market:s.market}))
+    return this.catalog.map(s=>({ticker:s.id,description:`${s.name} · ${exchangeLabel(s.exchange)} · ${cw(s.market==='usdm'?'perpetual':s.market==='spot'?'spot':'index')}`,type:s.market==='index'?'index':'crypto',market:s.market}))
   }
   async getSymbolInfo(ticker:string):Promise<SymbolInfo> {
     const s = await this.resolve(ticker)

@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import os
 
-from fastapi import FastAPI, Request
+from fastapi import APIRouter, FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 
 from app.exceptions import NotFoundError
@@ -89,11 +89,20 @@ async def frontend_fallback(full_path: str, request: Request):
 
 def register_app_routes(app: FastAPI, *, role: RuntimeRole) -> None:
     if runtime_role_has_target(role, "api"):
-        app.include_router(chart_workspace.router, prefix=API_PREFIX)
-        app.include_router(market.router, prefix=API_PREFIX, tags=["市场数据"])
-        app.include_router(tools.router, prefix=f"{API_PREFIX}/tools", tags=["工具"])
-        app.include_router(research.router, prefix=API_PREFIX, tags=["研究追踪"])
-        app.include_router(config_router.router, prefix=API_PREFIX, tags=["配置"])
+        if settings.PUBLIC_SITE:
+            from app.public_site import public_route
+            # Select the leaf routes before inclusion. FastAPI may defer nested
+            # router resolution; inspecting app.routes after inclusion misses it.
+            for source in (chart_workspace.router, *market.MARKET_ROUTERS, tools.router, research.router, config_router.router):
+                selected = APIRouter()
+                selected.routes.extend(route for route in source.routes if public_route(route))
+                app.include_router(selected, prefix=f"{API_PREFIX}/tools" if source is tools.router else API_PREFIX)
+        else:
+            app.include_router(chart_workspace.router, prefix=API_PREFIX)
+            app.include_router(market.router, prefix=API_PREFIX, tags=["市场数据"])
+            app.include_router(tools.router, prefix=f"{API_PREFIX}/tools", tags=["工具"])
+            app.include_router(research.router, prefix=API_PREFIX, tags=["研究追踪"])
+            app.include_router(config_router.router, prefix=API_PREFIX, tags=["配置"])
     app.add_api_route("/", root, methods=["GET"], include_in_schema=False)
     app.add_api_route("/health", health_check, methods=["GET"])
     app.add_api_route("/health/live", liveness_check, methods=["GET"], include_in_schema=False)

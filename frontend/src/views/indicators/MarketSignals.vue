@@ -1,8 +1,8 @@
 <template>
-  <div :class="['signal-page min-h-full text-slate-900 transition-colors dark:text-slate-100', theme === 'dark' ? 'signal-page--dark' : 'signal-page--light']">
+  <div :class="['signal-page min-h-full text-slate-900 transition-colors dark:text-slate-100', { 'signal-page--embedded': embedded }, theme === 'dark' ? 'signal-page--dark' : 'signal-page--light']">
     <section class="flex w-full flex-col gap-8 px-3 py-5 sm:px-4 lg:px-5 xl:px-6">
       <header class="app-page-header flex flex-wrap items-center justify-between gap-4">
-        <h1 class="app-title">
+        <h1 v-if="!embedded" class="app-title">
           {{ t('marketSignals.title') }}
         </h1>
         <div class="flex flex-wrap items-center gap-3"><AppLayoutSwitch v-model="pageLayout" :options="layoutOptions" />
@@ -108,6 +108,8 @@ import IndicatorChart from '@/components/IndicatorChart.vue'
 import { useTheme } from '@/composables/useTheme'
 import { useMarketSignalIndicators } from '@/modules/market'
 
+defineProps<{ embedded?: boolean }>()
+
 const { theme } = useTheme()
 const { t } = useI18n()
 const { loading, error, groups, totalCount, load, refresh, changeDays } = useMarketSignalIndicators()
@@ -138,6 +140,7 @@ const selectIndicator = (id: string) => { selectedId.value = selectedId.value ==
 
 <style scoped>
 .signal-page { background: var(--ui-canvas); }
+.signal-page--embedded .app-page-header { justify-content: flex-end; }
 .signal-panel, .metric-card { min-width: 0; border: 1px solid var(--ui-border); background: var(--ui-panel); border-radius: 8px; }
 .summary-card { min-width: 0; padding: 12px 16px; border: 1px solid var(--ui-border); border-radius: 6px; background: var(--ui-toolbar); }
 .summary-card span, .summary-card em { display: block; color: var(--ui-muted); font-size: 12px; font-style: normal; }

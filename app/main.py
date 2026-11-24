@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
@@ -30,6 +31,9 @@ def create_app(role: RuntimeRole | None = None) -> FastAPI:
         description="AI-Powered Crypto Trading Intelligence",
         version=APP_VERSION,
         lifespan=lifespan,
+        docs_url=None if settings.PUBLIC_SITE else "/docs",
+        redoc_url=None if settings.PUBLIC_SITE else "/redoc",
+        openapi_url=None if settings.PUBLIC_SITE else "/openapi.json",
     )
 
     app.state.limiter = limiter
@@ -49,6 +53,10 @@ def create_app(role: RuntimeRole | None = None) -> FastAPI:
         allow_headers=["*"],
     )
     app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=5)
+    if settings.PUBLIC_SITE:
+        from app.public_site import PublicRequestMiddleware
+        app.add_middleware(PublicRequestMiddleware)
+        app.add_middleware(TrustedHostMiddleware, allowed_hosts=[settings.PUBLIC_HOST, "127.0.0.1", "localhost"])
     app.state.runtime_role = resolved_role
     register_app_routes(app, role=resolved_role)
 

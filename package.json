@@ -9,6 +9,7 @@
   "scripts": {
     "sync:contracts": "node scripts/run_backend_python.mjs -m scripts.generate_frontend_contracts",
     "build:frontend": "npm run sync:contracts && npm --prefix frontend run build",
+    "build:public": "npm run sync:contracts && npm --prefix frontend run build:public",
     "test": "node scripts/run_backend_python.mjs -m pytest",
     "test:backend": "node scripts/run_backend_python.mjs -m pytest"
   },

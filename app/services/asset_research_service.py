@@ -10,6 +10,7 @@ from app.contracts.research import AssetResearchResponse
 from app.domain.market.constants import timeframe_to_milliseconds
 from app.infra.executor import run_database, run_tool
 from app.services.market.symbol_catalog import resolve_market_asset
+from config import settings
 
 
 class AssetResearchService:
@@ -44,7 +45,8 @@ class AssetResearchService:
         chain_id: str | None = None,
         platform: str | None = None,
     ) -> AssetResearchResponse:
-        workbench = await run_database(lambda: self._research.get_workbench(event_limit=500, note_limit=1_000))
+        workbench = ({"items": [], "notes": [], "alerts": [], "events": []} if settings.PUBLIC_SITE else
+                     await run_database(lambda: self._research.get_workbench(event_limit=500, note_limit=1_000)))
         web3_item = next(
             (
                 item
@@ -70,7 +72,7 @@ class AssetResearchService:
         normalized = web3_item["symbol"] if web3_item else resolved["symbol"]
         asset_class = "web3" if web3_item else resolved["asset_class"]
         now = datetime.now(timezone.utc)
-        signals_task = run_database(
+        signals_task = asyncio.sleep(0, result=([], 0)) if settings.PUBLIC_SITE else run_database(
             lambda: self._signals.list_signals(
                 symbol=normalized,
                 outcome_status=None,

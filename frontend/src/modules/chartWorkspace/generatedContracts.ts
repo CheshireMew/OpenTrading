@@ -1,6 +1,15 @@
 // This file is generated from backend FastAPI route contracts.
 // Do not edit manually.
 
+export interface WorkspaceDocument {
+  id: string
+  name: string
+  version: number
+  data: { [key: string]: unknown }
+  updated_at: number
+  readonly?: boolean
+}
+
 export interface ChartSymbol {
   id: string
   symbol: string
@@ -56,6 +65,8 @@ export interface PineRun {
 export interface PineRunRequest {
   script_id: string
   script_version: number
+  script_source?: string | null
+  script_name?: string | null
   symbol: string
   timeframe: string
   start: number
@@ -68,15 +79,6 @@ export interface PineRecords {
   items: Array<{ [key: string]: unknown }>
   total: number
   offset: number
-}
-
-export interface WorkspaceDocument {
-  id: string
-  name: string
-  version: number
-  data: { [key: string]: unknown }
-  updated_at: number
-  readonly?: boolean
 }
 
 export interface WorkspaceWrite {

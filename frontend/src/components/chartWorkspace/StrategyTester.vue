@@ -110,7 +110,7 @@ async function run(){
     if(!Number.isFinite(begin)||!Number.isFinite(finish)||begin>=finish)throw new Error(cw('invalidDates'))
     const typedInputs={...inputs.value}
     for(const f of inputFields.value)if(['int','float','price','time'].includes(f.type))typedInputs[f.title??f.varId]=Number(typedInputs[f.title??f.varId])
-    const item=await chartApi.run({script_id:props.script.id,script_version:props.script.version,symbol:props.symbol.id,timeframe:props.timeframe,start:begin,end:finish,inputs:typedInputs,props:overrides.value})
+    const item=await chartApi.run({script_id:props.script.id,script_version:props.script.version,script_source:String(props.script.data.source),script_name:props.script.name,symbol:props.symbol.id,timeframe:props.timeframe,start:begin,end:finish,inputs:typedInputs,props:overrides.value})
     if(disposed||generation!==selectionGeneration||previousId!==selectedId.value)return
     ++selectionGeneration;++recordGeneration;clearTimeout(timer)
     const accepted=selectionGeneration

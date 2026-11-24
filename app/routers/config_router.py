@@ -41,6 +41,8 @@ async def repair_data_source(body: DataRepairCommand, service=Depends(get_data_h
 
 
 def _require_local_settings_request(request: Request) -> None:
+    if settings.PUBLIC_SITE:
+        raise AppError("公开网站不提供模型配置", status_code=404)
     host = request.client.host if request.client else ""
     if not host or host == "testclient":
         return

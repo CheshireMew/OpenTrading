@@ -9,7 +9,7 @@
         </div>
         <div class="symbol-results">
           <button v-for="item in results" :key="item.id" type="button" @click="pick(item.id)">
-            <strong>{{ item.name }}</strong><span>{{ item.exchange.toUpperCase() }}</span><small>{{ workspaceMarketLabel(item.id) }}</small>
+            <strong>{{ item.name }}</strong><small>{{ workspaceMarketLabel(item.id) }}</small>
           </button>
           <p v-if="!results.length">{{ cw('noSymbols') }}</p>
         </div>
@@ -33,7 +33,7 @@ const market = ref('all')
 const searchInput = ref<HTMLInputElement>()
 const filters = [{ value: 'all', label: 'all' }, { value: 'spot', label: 'spot' }, { value: 'usdm', label: 'perpetual' }, { value: 'index', label: 'index' }]
 const results = computed(() => props.symbols.filter(item => (market.value === 'all' || item.market === market.value)
-  && `${item.id} ${item.name}`.toLowerCase().includes(query.value.trim().toLowerCase())).slice(0, 100))
+  && `${item.id} ${item.name} ${workspaceMarketLabel(item.id)}`.toLowerCase().includes(query.value.trim().toLowerCase())).slice(0, 100))
 const { dialogRef } = useModalDialog(open, () => { open.value = false }, searchInput)
 function pick(id: string) {
   emit('select', id)

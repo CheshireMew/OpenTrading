@@ -7,6 +7,8 @@ import {
   WINDOWS_NOTIFICATION_DELIVERED_KEY,
 } from './notificationEvents'
 import { deliverAlertEvent } from './alertDelivery'
+import { PUBLIC_SITE } from '@/app/publicSite'
+import { evaluateBrowserAlerts } from './browserResearch'
 
 const POLL_INTERVAL_MS = 3_000
 
@@ -17,6 +19,7 @@ export const useDesktopAlertNotifications = () => {
   const memoryDelivered = new Set<string>()
 
   const deliverPending = async () => {
+      if (PUBLIC_SITE) await evaluateBrowserAlerts()
       const storage = getLocalStorage()
       let stored: string | null = null
       try { stored = storage ? readStorageValue(storage, WINDOWS_NOTIFICATION_DELIVERED_KEY) : null } catch { /* In-memory delivery remains available. */ }

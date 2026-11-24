@@ -130,7 +130,7 @@
         <div class="eq-source-body">
           <p>{{ t('equities.scope') }}</p>
           <p>{{ t('equities.notListed') }}</p>
-          <ul><li v-for="source in catalog.sources" :key="source.id"><a :href="source.url" target="_blank" rel="noopener noreferrer">{{ source.label }}<ArrowUpRightIcon aria-hidden="true" /></a><span>{{ source.count.toLocaleString() }} · {{ source.updated_at ? formatDateTime(source.updated_at) : '—' }}</span><span :class="{ 'eq-source-warning': source.status !== 'ok' }">{{ source.error === 'catalog_not_verified' ? t('equities.sourceNotVerified') : t(`equities.sourceStatus.${source.status}`) }}</span></li></ul>
+          <ul><li v-for="source in catalog.sources" :key="source.id"><a :href="source.url" target="_blank" rel="noopener noreferrer">{{ equitySourceLabel(source) }}<ArrowUpRightIcon aria-hidden="true" /></a><span>{{ source.count.toLocaleString() }} · {{ source.updated_at ? formatDateTime(source.updated_at) : '—' }}</span><span :class="{ 'eq-source-warning': source.status !== 'ok' }">{{ source.error === 'catalog_not_verified' ? t('equities.sourceNotVerified') : t(`equities.sourceStatus.${source.status}`) }}</span></li></ul>
           <p>{{ t('equities.availability') }}</p>
         </div>
       </details>
@@ -149,7 +149,7 @@ import AppLoadingState from '@/components/AppLoadingState.vue'
 import EquityCompanyLogo from '@/components/market/EquityCompanyLogo.vue'
 import EquityCatalogFilters from '@/components/market/EquityCatalogFilters.vue'
 import EquityProductDetails from '@/components/market/EquityProductDetails.vue'
-import { equityCatalogApi } from '@/modules/market/equityCatalog'
+import { equityCatalogApi, equitySourceLabel } from '@/modules/market/equityCatalog'
 import type { EquityCatalogItemResponse, EquityCatalogResponse } from '@/modules/market/contracts'
 import './equityMarket.css'
 
@@ -192,7 +192,7 @@ const platformOfferings = (item: EquityCatalogItemResponse, value: string) => it
 const offeringCount = (item: EquityCatalogItemResponse, value: string, kind: string) => item.offerings.filter(offering => offering.platform === value && offering.trading_type === kind).length
 const spotCount = computed(() => catalog.value ? catalog.value.items.filter(item => item.trading_types.includes('spot')).length : null)
 const perpetualCount = computed(() => catalog.value ? catalog.value.items.filter(item => item.trading_types.includes('perpetual')).length : null)
-const unavailableLabels = computed(() => catalog.value?.sources.filter(source => source.status !== 'ok' && source.error !== 'catalog_not_verified').map(source => source.label).join(' / '))
+const unavailableLabels = computed(() => catalog.value?.sources.filter(source => source.status !== 'ok' && source.error !== 'catalog_not_verified').map(source => equitySourceLabel(source)).join(' / '))
 const hasFilters = computed(() => Boolean(search.value || platform.value !== 'all' || tradingType.value !== 'all' || assetType.value !== 'all' || sharedOnly.value))
 const filterCount = computed(() => [platform.value !== 'all', tradingType.value !== 'all', assetType.value !== 'all', sharedOnly.value].filter(Boolean).length)
 const filtered = computed(() => {

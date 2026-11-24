@@ -6,7 +6,7 @@ import subprocess
 import time
 import uuid
 
-from app.contracts.chart_workspace import PineRun, PineRunRequest, WorkspaceWrite
+from app.contracts.chart_workspace import PineRun, PineRunRequest, WorkspaceWrite, WorkspaceDocument
 from app.infra.worker_process import start_worker
 from app.infra.node_runtime import resolve_node
 from app.infra.executor import run_workspace
@@ -72,7 +72,12 @@ class ChartPineRuns:
                 raise ValueError("未知回测保存方式")
             if frozen_from and self.get(frozen_from).recording == "report":
                 raise ValueError("本次仅保存回测报告，请按所需参数重新运行")
-            script = await run_workspace(lambda: self.store.get("scripts",request.script_id,request.script_version))
+            # Browser-owned scripts are supplied for this explicit computation;
+            # never create or update a server-side personal script document.
+            script = WorkspaceDocument(id=request.script_id, name=request.script_name or request.script_id,
+                version=request.script_version, data={"source": request.script_source, "language": "pine"},
+                updated_at=int(time.time()*1000)) if request.script_source is not None else await run_workspace(
+                    lambda: self.store.get("scripts",request.script_id,request.script_version))
             key = uuid.uuid4().hex
             run = PineRun(id=key,status="queued",created_at=int(time.time()*1000),request=request,recording=recording)
             def persist():

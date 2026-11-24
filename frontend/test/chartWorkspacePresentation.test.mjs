@@ -3,11 +3,65 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import { computed } from 'vue'
 import { createI18n } from 'vue-i18n'
+import ts from 'typescript'
 import { payoffRatio } from '../src/modules/chartWorkspace/metrics.mjs'
 import { createMessageTranslator } from '../src/modules/chartWorkspace/messageTranslation.mjs'
 
 const zh = JSON.parse(fs.readFileSync(new URL('../src/i18n/zh-CN.json', import.meta.url))).chartWorkspace
 const en = JSON.parse(fs.readFileSync(new URL('../src/i18n/en.json', import.meta.url))).chartWorkspace
+
+const load = (path, modules) => {
+  const source = fs.readFileSync(new URL('../src/modules/chartWorkspace/' + path, import.meta.url), 'utf8')
+  const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
+  const exports = {}
+  new Function('require', 'exports', code)(id => modules[id], exports)
+  return exports
+}
+
+test('default candle bodies remain about 10px wide across chart widths and history depths', () => {
+  const { readableCandleRange } = load('chartPresentation.ts', {
+    '@luxalgo/vela': { NativeRenderer: class {} }, '@luxalgo/vela/plugin': { registerRendererLayer() {} },
+    '@/theme/palette.mjs': {}, './priceAlertLayer': {}, './canvasLocale': {},
+  })
+  const interval = 15 * 60_000
+  const bars = Array.from({ length: 1000 }, (_, index) => ({ time: index * interval }))
+  for (const width of [360, 800, 1600, 2400]) {
+    const range = readableCandleRange(bars, width)
+    const spacing = width / ((range.to - range.from) / interval)
+    assert.ok(spacing >= 14 && spacing <= 14.5, `width ${width}: ${spacing}`)
+    assert.ok(Math.floor(spacing * 0.7) >= 9, `candle body at width ${width}`)
+    assert.equal(range.to, bars.at(-1).time + 6 * interval)
+    assert.equal(range.to - range.from, readableCandleRange(bars.slice(-500), width).to - readableCandleRange(bars.slice(-500), width).from)
+  }
+  assert.equal(readableCandleRange([], 800), null)
+  assert.equal(readableCandleRange(bars, 0), null)
+})
+
+test('viewport migration binds the native renderer through the cell host, then preserves saved zoom', () => {
+  const handlers = new Map(), host = {}, moves = [], events = new Map()
+  let frames = 0
+  const native = { hasReadableViewport: true, frameRecentCandles: () => frames++ }
+  const { bindWorkspaceRenderer } = load('persistence.ts', {
+    '@luxalgo/vela/plugin': { registerStatePersistence(handler) { handlers.set(handler.key, handler) } },
+    './pineCompatibility.mjs': {}, './chartPresentation': { WorkspaceRenderer: { forHost: element => element === host ? native : undefined } },
+  })
+  // Vela's public chart.renderer is a control object, not the native renderer.
+  const chart = { renderer: {}, getVisibleRange: () => ({ from: 10, to: 40 }), setVisibleRange: range => moves.push(range),
+    on(event, callback) { events.set(event, callback); return () => events.delete(event) } }
+  bindWorkspaceRenderer(chart, host)
+  const handler = handlers.get('opentrading.viewport'), ctx = { chart }
+  handler.restore({ version: 4, range: { from: 0, to: 1000 } }, ctx)
+  assert.equal(frames, 1)
+  events.get('load:end')()
+  assert.equal(frames, 2)
+  assert.equal(events.has('load:end'), false)
+  const saved = handler.serialize(ctx)
+  assert.deepEqual(saved, { version: 5, range: { from: 10, to: 40 } })
+  handler.restore(saved, ctx)
+  events.get('load:end')()
+  assert.equal(frames, 2)
+  assert.deepEqual(moves, [saved.range, saved.range])
+})
 
 test('historical closed-trade totals distinguish average win/loss from profit factor', () => {
   // Two wins (80 + 20), one loss (-25) and three breakeven trades.

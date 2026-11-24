@@ -1,0 +1,8 @@
+[Unit]
+Description=OpenTrading resource budget
+
+[Slice]
+CPUQuota=100%
+MemoryHigh=1G
+MemoryMax=1536M
+TasksMax=128

@@ -29,7 +29,9 @@ class LLMClientFactory:
             limits=httpx.Limits(max_connections=16, max_keepalive_connections=8),
         )
 
-    def __call__(self) -> "LLMClient":
+    def __call__(self) -> "LLMClient | None":
+        if settings.PUBLIC_SITE:
+            return None
         return LLMClient(
             llm_config=self._llm_config_service.read_effective_config(),
             http_client=self._http_client,

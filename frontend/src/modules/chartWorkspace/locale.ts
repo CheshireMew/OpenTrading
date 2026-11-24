@@ -7,7 +7,11 @@ export const cw = (key: string, params: Record<string, string | number> = {}) =>
   i18n.global.t('chartWorkspace.' + key, params)
 
 export const messageText = createMessageTranslator(
-  [zh.chartWorkspace, en.chartWorkspace], cw,
+  [zh.chartWorkspace, en.chartWorkspace, {
+    magnifierUnsupported: '暂不支持 Bar Magnifier 成交模拟',
+    capCommon: 'Pine v5/v6 常用指标与 strategy',
+    capHistory: '历史 OHLC 成交模拟不是逐 tick 还原',
+  }], cw,
 )
 
 export function formatNumber(value: unknown, digits = 4): string {
@@ -22,3 +26,6 @@ export function formatDate(value: number, timeOnly = false): string {
 
 export const workspaceMarketLabel = (id: string) => id.includes(':usdm:') ? cw('binancePerpetual')
   : id.startsWith('index:') ? cw('index') : id.startsWith('okx:') ? cw('okxSpot') : cw('binanceSpot')
+
+export const exchangeLabel = (exchange: string) => exchange.toLowerCase() === 'binance'
+  ? cw('binance') : exchange.toUpperCase()

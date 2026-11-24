@@ -9,6 +9,7 @@ from config.settings import BASE_DIR as ROOT
 
 
 BUNDLED_LIBRARIES = (
+    "frontend/src/modules/chartWorkspace/pineComputation.mjs",
     "frontend/src/modules/chartWorkspace/pineLibraries.mjs",
     "frontend/src/modules/chartWorkspace/pineLibraries/ziglibV1.mjs",
 )

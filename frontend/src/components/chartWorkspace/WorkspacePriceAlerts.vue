@@ -5,7 +5,7 @@
         <header><strong>{{ cw(editing ? 'addPriceAlert' : 'priceAlerts') }}</strong><button class="app-icon-button" type="button" :aria-label="cw('close')" @click="close">×</button></header>
         <div v-if="error" class="alert-message" role="alert">{{ error }}</div>
         <form v-if="editing" @submit.prevent="save">
-          <p class="alert-symbol">{{ selectedSymbol?.name }} · {{ selectedSymbol?.exchange.toUpperCase() }} · {{ cw(selectedSymbol?.market === 'usdm' ? 'perpetual' : selectedSymbol?.market === 'index' ? 'index' : 'spot') }}</p>
+          <p class="alert-symbol">{{ selectedSymbol?.name }} · {{ selectedSymbol ? workspaceMarketLabel(selectedSymbol.id) : '' }}</p>
           <label>{{ cw('alertCondition') }}<select v-model="form.operator" class="app-control"><option value="crosses">{{ cw('alertCrosses') }}</option><option value="crosses_above">{{ cw('alertCrossesAbove') }}</option><option value="crosses_below">{{ cw('alertCrossesBelow') }}</option><option value="gte">{{ cw('alertAbove') }}</option><option value="lte">{{ cw('alertBelow') }}</option></select></label>
           <label>{{ cw('alertPrice') }}<input v-model="form.price" class="app-control" type="number" inputmode="decimal" step="any" min="0" required /></label>
           <label>{{ cw('alertFrequency') }}<select v-model="form.once" class="app-control"><option :value="true">{{ cw('alertOnce') }}</option><option :value="false">{{ cw('alertRepeat') }}</option></select></label>
@@ -31,7 +31,7 @@
 <script setup lang="ts">
 import { useModalDialog } from '@/composables/useModalDialog'
 import type { createWorkspaceAlerts } from '@/modules/chartWorkspace/workspaceAlerts'
-import { cw, formatNumber, formatDate } from '@/modules/chartWorkspace/locale'
+import { cw, formatNumber, formatDate, workspaceMarketLabel } from '@/modules/chartWorkspace/locale'
 import { alertDeliveryStatus, enableAlertDelivery, playAlertSound } from '@/modules/research/alertDelivery'
 const props = defineProps<{ controller: ReturnType<typeof createWorkspaceAlerts> }>()
 const { open, editing, saving, error, form, selectedSymbol, alerts, startForm, edit, save, change } = props.controller

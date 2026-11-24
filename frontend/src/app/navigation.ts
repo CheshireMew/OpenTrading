@@ -1,3 +1,6 @@
+import { MACRO_SECTIONS, preferredMacroSection } from '@/modules/market/macroSections'
+import { PUBLIC_SITE } from './publicSite'
+
 export const APP_ROUTE_DEFINITIONS = [
   {
     path: '/',
@@ -18,11 +21,20 @@ export const APP_ROUTE_DEFINITIONS = [
     nav: { section: 'primary', labelKey: 'observation.title', icon: 'PresentationChartLineIcon' },
   },
   {
+    path: '/indicators/macro-signals',
+    name: 'MacroSignals',
+    component: () => import('@/views/indicators/MacroSignals.vue'),
+    meta: { titleKey: 'nav.macroSignals' },
+    nav: { section: 'indicators', labelKey: 'nav.macroSignals', icon: 'PresentationChartLineIcon' },
+    children: [
+      { path: '', redirect: () => ({ name: preferredMacroSection().name }) },
+      ...MACRO_SECTIONS.map(section => ({ path: section.id, name: section.name, component: section.component, meta: { titleKey: section.label } })),
+    ],
+  },
+  {
     path: '/indicators/market-signals',
     name: 'IndicatorsMarketSignals',
-    component: () => import('@/views/indicators/MarketSignals.vue'),
-    meta: { titleKey: 'nav.marketSignals' },
-    nav: { section: 'indicators', labelKey: 'nav.marketSignals', icon: 'CubeTransparentIcon' },
+    redirect: { name: 'MacroBitcoin' },
   },
   {
     path: '/indicators/binance-market',
@@ -48,9 +60,7 @@ export const APP_ROUTE_DEFINITIONS = [
   {
     path: '/indicators/market-data',
     name: 'SignalLab',
-    component: () => import('@/views/indicators/SignalLab.vue'),
-    meta: { titleKey: 'nav.signalLab' },
-    nav: { section: 'indicators', labelKey: 'nav.signalLab', icon: 'CircleStackIcon' },
+    redirect: { name: 'MacroDollarLiquidity' },
   },
   {
     path: '/research',
@@ -145,6 +155,7 @@ const hasKeepAlive = (
 // Keep saved research pages and direct URLs available while their menu is hidden.
 export const APP_NAV_ITEMS = APP_ROUTE_DEFINITIONS.filter(hasNav)
   .filter((route) => route.nav.section !== 'research')
+  .filter((route) => !PUBLIC_SITE || route.name !== 'DataHealth')
 export const APP_KEEP_ALIVE_ROUTE_NAMES = APP_ROUTE_DEFINITIONS
   .filter(hasKeepAlive)
   .map((route: { name: string }) => route.name)

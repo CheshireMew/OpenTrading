@@ -2,7 +2,7 @@
   <div class="app-page">
     <div class="app-page-inner-wide flex flex-col gap-6">
       <header class="app-workspace-header"><h1 class="app-title">{{ $t('settings.title') }}</h1></header>
-      <nav class="settings-section-nav" :aria-label="$t('settings.title')"><a href="#settings-preferences">{{ $t('workspaceViews.preferences') }}</a><a href="#settings-model">{{ $t('workspaceViews.model') }}</a><a href="#settings-runtime">{{ $t('ui.runtime') }}</a></nav>
+      <nav class="settings-section-nav" :aria-label="$t('settings.title')"><a href="#settings-preferences">{{ $t('workspaceViews.preferences') }}</a><a href="#settings-browser-data">{{ $t('chartWorkspace.browserDataTitle') }}</a><a v-if="!PUBLIC_SITE" href="#settings-model">{{ $t('workspaceViews.model') }}</a><a href="#settings-runtime">{{ $t('ui.runtime') }}</a></nav>
 
       <section id="settings-preferences" class="app-settings-section"><div><h2 class="app-section-title">{{ $t('ui.preferences') }}</h2><p class="app-settings-description">{{ $t('ui.preferencesHint') }}</p></div><div>
         <div class="grid gap-4 md:grid-cols-3">
@@ -24,7 +24,9 @@
         </div>
       </div></section>
 
-      <section id="settings-model" class="app-settings-section"><div><h2 class="app-section-title">{{ $t('settings.llmProvider') }}</h2><p class="app-settings-description">{{ $t('ui.modelSettingsHint') }}</p></div><div>
+      <BrowserDataSettings />
+
+      <section v-if="!PUBLIC_SITE" id="settings-model" class="app-settings-section"><div><h2 class="app-section-title">{{ $t('settings.llmProvider') }}</h2><p class="app-settings-description">{{ $t('ui.modelSettingsHint') }}</p></div><div>
         <div v-if="llmLoading" role="status" aria-live="polite" class="py-12 text-center app-muted">{{ $t('settings.loading') }}</div>
         <div v-else-if="llmLoadError" role="alert" class="flex flex-wrap items-center justify-between gap-3 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200"><span>{{ llmLoadError }}</span><button type="button" class="app-button-secondary app-touch-target" @click="loadLlmConfig">{{ $t('common.retry') }}</button></div>
         <template v-else>
@@ -42,7 +44,7 @@
             <span class="label">{{ $t('settings.provider') }}</span>
             <select v-model="form.provider" class="input" @change="handleProviderChange">
               <option v-for="preset in presets" :key="preset.id" :value="preset.id">
-                {{ preset.label }}
+                {{ preset.id === 'custom' ? $t('settings.customProvider') : preset.label }}
               </option>
             </select>
           </label>
@@ -59,7 +61,7 @@
           </label>
 
           <label class="space-y-2">
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Base URL</span>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $t('settings.baseUrl') }}</span>
             <input
               v-model.trim="form.baseUrl"
               class="input"
@@ -69,7 +71,7 @@
           </label>
 
           <label class="space-y-2">
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Model ID</span>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $t('settings.modelId') }}</span>
             <input
               v-model.trim="form.modelId"
               class="input"
@@ -124,6 +126,8 @@
 defineOptions({ name: 'Settings' })
 
 import AppCurrencySelect from '@/components/AppCurrencySelect.vue'
+import { PUBLIC_SITE } from '@/app/publicSite'
+import BrowserDataSettings from '@/components/chartWorkspace/BrowserDataSettings.vue'
 import AppLanguageSelect from '@/components/AppLanguageSelect.vue'
 import AppTimezoneSelect from '@/components/AppTimezoneSelect.vue'
 import { useDateTime } from '@/composables/useDateTime'

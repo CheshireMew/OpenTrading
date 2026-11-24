@@ -1,0 +1,24 @@
+[Unit]
+Description=OpenTrading public market API
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=opentrading
+Group=opentrading
+WorkingDirectory=/srv/opentrading/current
+EnvironmentFile=/srv/opentrading/shared/opentrading.env
+ExecStart=/srv/opentrading/venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 4335 --workers 1 --proxy-headers --forwarded-allow-ips 127.0.0.1 --limit-concurrency 48 --ws-max-size 65536 --no-server-header
+Restart=on-failure
+RestartSec=5
+Slice=opentrading.slice
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/opentrading/shared
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

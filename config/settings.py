@@ -79,6 +79,8 @@ class AppSettings(BaseSettings):
     API_PORT: int = 8000
     FRONTEND_DEV_PORT: int = 4173
     APP_RUNTIME_ROLE: str = "api"
+    PUBLIC_SITE: bool = False
+    PUBLIC_HOST: str = "trade.blacknico.com"
 
     RATE_LIMIT_DEFAULT: str = "60/minute"
     RATE_LIMIT_HEAVY: str = "10/minute"

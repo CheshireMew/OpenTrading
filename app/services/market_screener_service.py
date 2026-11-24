@@ -61,7 +61,12 @@ class MarketScreenerService:
                 await run_database(lambda: self._repository.get_run_as_of(screener_id, as_of))
             )
         screener = await run_database(lambda: self._repository.get_screener(screener_id))
-        filters = screener["filters"]
+        result = await self.preview(screener["filters"])
+        row = await run_database(lambda: self._repository.save_run(screener_id, result))
+        return MarketScreenerRunResponse.model_validate(row)
+
+    async def preview(self, filters: dict[str, Any]) -> dict[str, Any]:
+        """Evaluate filters without saving a visitor's configuration or results."""
         snapshot = await self._binance.snapshot_service.get_market_page_snapshot_data()
         page = await self._binance.page.get_page(
             min_rise_pct=0, limit=100, quote_asset=filters.get("quoteAsset", "USDT")
@@ -86,19 +91,13 @@ class MarketScreenerService:
             if updated_ms
             else evaluated_at
         )
-        row = await run_database(
-            lambda: self._repository.save_run(
-                screener_id,
-                {
-                    "filters_snapshot": filters,
-                    "result_items": items,
-                    "result_count": len(items),
-                    "snapshot_as_of": snapshot_as_of,
-                    "evaluated_at": evaluated_at,
-                },
-            )
-        )
-        return MarketScreenerRunResponse.model_validate(row)
+        return {
+            "filters_snapshot": filters,
+            "result_items": items,
+            "result_count": len(items),
+            "snapshot_as_of": snapshot_as_of,
+            "evaluated_at": evaluated_at,
+        }
 
     async def _apply_rsi_filters(
         self,

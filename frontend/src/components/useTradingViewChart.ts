@@ -1,4 +1,5 @@
 import { onMounted, onUnmounted, ref, watch } from 'vue'
+import i18n from '@/i18n'
 import {
   AreaSeries,
   CandlestickSeries,
@@ -213,6 +214,7 @@ export const useTradingViewChart = (
     const container = chartContainer.value
     if (!container) return
     chart = createChart(container, {
+      localization: { locale: i18n.global.locale.value },
       width: container.clientWidth,
       height: container.clientHeight,
       layout: { background: { color: props.colors.bg }, textColor: props.colors.text },
@@ -289,6 +291,7 @@ export const useTradingViewChart = (
   watch(() => props.volumeData, syncVolumeData)
   watch(() => props.strategyMarkers, syncStrategyMarkers, { deep: true })
   watch(() => props.colors, syncColors, { deep: true })
+  watch(i18n.global.locale, locale => chart?.applyOptions({ localization: { locale } }))
 
   return {
     chartContainer,

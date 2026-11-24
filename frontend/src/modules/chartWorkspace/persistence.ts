@@ -5,6 +5,12 @@ import { checkPine } from './pineCompatibility.mjs'
 import { WorkspaceRenderer } from './chartPresentation'
 
 const sources = new WeakMap<Vela,Map<string,{scriptId?:string;version?:number}>>()
+const VIEWPORT_VERSION = 5
+const renderers = new WeakMap<Vela, WorkspaceRenderer>()
+export function bindWorkspaceRenderer(chart: Vela, host: HTMLElement) {
+  const renderer = WorkspaceRenderer.forHost(host)
+  if (renderer) renderers.set(chart, renderer)
+}
 // Vela's cell snapshot reads its initial bars budget, while setMarket changes the
 // live budget. Preserve the requested depth when a cell is pooled by a layout.
 registerStatePersistence({key:'opentrading.historyDepth',scope:'cell',serialize:ctx=>ctx.chart.market.bars,restore:(payload,ctx)=>{
@@ -12,16 +18,16 @@ registerStatePersistence({key:'opentrading.historyDepth',scope:'cell',serialize:
     queueMicrotask(()=>{void ctx.chart.setMarket({bars:payload})})
 }})
 registerStatePersistence({key:'opentrading.viewport',scope:'cell',serialize:ctx=>{
-  const range=ctx.chart.getVisibleRange(),renderer=ctx.chart.renderer
+  const range=ctx.chart.getVisibleRange(),renderer=renderers.get(ctx.chart)
   // A renderer still alive during hot reload has not received the new default.
   // Do not mark its old wide viewport as migrated when that instance saves.
-  return renderer instanceof WorkspaceRenderer&&renderer.hasReadableViewport?{version:3,range}:range
+  return renderer?.hasReadableViewport?{version:VIEWPORT_VERSION,range}:range
 },restore:(payload,ctx)=>{
   // Replace old, overly wide startup views once. Subsequent user zoom/pan
   // choices use the versioned payload and restore exactly as saved.
   const saved=payload as {version?:number;range?:VisibleRange}|null
-  if(saved?.version!==3){
-    const frame=()=>{if(ctx.chart.renderer instanceof WorkspaceRenderer)ctx.chart.renderer.frameRecentCandles()}
+  if(saved?.version!==VIEWPORT_VERSION){
+    const frame=()=>renderers.get(ctx.chart)?.frameRecentCandles()
     frame()
     const off=ctx.chart.on('load:end',()=>{off();frame()})
     return

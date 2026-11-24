@@ -52,8 +52,8 @@
               v-for="list in activeWatchlists"
               :key="list.id"
               type="button"
-              class="mb-2 w-full border-l-2 px-3 py-3 text-left transition"
-              :class="activeWatchlistId === list.id ? 'border-emerald-700 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100' : 'border-transparent text-stone-700 hover:bg-stone-50 dark:text-slate-200 dark:hover:bg-slate-700/40'"
+              class="mb-2 w-full rounded px-3 py-3 text-left transition"
+              :class="activeWatchlistId === list.id ? 'bg-emerald-50 text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100' : 'text-stone-700 hover:bg-stone-50 dark:text-slate-200 dark:hover:bg-slate-700/40'"
               @click="selectWatchlist(list.id)"
             >
               <span class="block truncate font-semibold">{{ list.name }}</span>
@@ -169,7 +169,7 @@
             </div>
 
             <div class="flex overflow-x-auto border-b px-4 dark:border-slate-700" style="border-color:var(--app-border)">
-              <button v-for="tab in tabs" :key="tab" type="button" class="border-b-2 px-4 py-3 text-sm font-semibold" :class="activeTab === tab ? 'border-emerald-700 text-emerald-800 dark:text-emerald-300' : 'border-transparent app-muted'" @click="activeTab = tab">
+              <button v-for="tab in tabs" :key="tab" type="button" class="rounded px-4 py-3 text-sm font-semibold" :class="activeTab === tab ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300' : 'app-muted'" @click="activeTab = tab">
                 {{ t(`research.tabs.${tab}`) }}
                 <span v-if="tab === 'timeline' && workbench.unacknowledgedEventCount" class="ml-1 bg-rose-600 px-1.5 py-0.5 text-[10px] text-white">{{ workbench.unacknowledgedEventCount }}</span>
               </button>

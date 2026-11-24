@@ -1,6 +1,6 @@
 <template>
   <details ref="surface">
-    <summary>{{ label }}</summary>
+    <summary><slot name="trigger">{{ label }}</slot></summary>
     <slot />
   </details>
 </template>
@@ -9,6 +9,12 @@
 import { onMounted, onBeforeUnmount, ref } from 'vue'
 defineProps<{ label: string }>()
 const surface = ref<HTMLDetailsElement>()
+const close = () => {
+  if (!surface.value?.open) return
+  surface.value.open = false
+  surface.value.querySelector('summary')?.focus()
+}
+defineExpose({ close })
 function pointer(event: PointerEvent) {
   if (surface.value?.open && !surface.value.contains(event.target as Node)) surface.value.open = false
 }

@@ -5,7 +5,6 @@
 .market-quick-list { display:flex; flex-direction:column; max-height:760px; overflow:auto; border:1px solid var(--ui-border); border-radius:6px; background:var(--ui-panel); }
 .market-quick-list > button { display:flex; gap:12px; align-items:center; justify-content:space-between; padding:15px; text-align:left; min-height:66px; border-bottom:1px solid var(--ui-border); }
 .market-quick-list > button:hover,.market-quick-list > button[aria-pressed=true] { background:var(--ui-hover); }
-.market-quick-list > button[aria-pressed=true] { box-shadow:inset 3px 0 var(--ui-accent); }
 .market-quick-list strong { color:var(--ui-title); display:block; font-size:14px; }
 .market-quick-list small { color:var(--ui-muted); display:block; margin-top:4px; font-size:11px; }
 .market-quick-list .market-list-value { text-align:right; font-variant-numeric:tabular-nums; font-size:14px; }

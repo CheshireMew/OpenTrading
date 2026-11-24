@@ -34,7 +34,7 @@
           <div class="app-panel-header"><h2 class="app-section-title">{{ t('signalReview.groupPerformance') }}</h2></div>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
-              <thead class="app-muted"><tr><th class="p-3">{{ t('signalReview.dimension') }}</th><th class="p-3">{{ t('signalReview.total') }}</th><th class="p-3">{{ t('signalReview.resolved') }}</th><th class="p-3">{{ t('signalReview.winRate') }}</th><th class="p-3">Avg MFE</th><th class="p-3">Avg MAE</th></tr></thead>
+              <thead class="app-muted"><tr><th class="p-3">{{ t('signalReview.dimension') }}</th><th class="p-3">{{ t('signalReview.total') }}</th><th class="p-3">{{ t('signalReview.resolved') }}</th><th class="p-3">{{ t('signalReview.winRate') }}</th><th class="p-3">{{ t('signalReview.averageMfe') }}</th><th class="p-3">{{ t('signalReview.averageMae') }}</th></tr></thead>
               <tbody><tr v-for="row in groupedStats" :key="row.id" class="border-t dark:border-slate-700"><td class="p-3 font-semibold">{{ row.label }}</td><td class="p-3">{{ row.total }}</td><td class="p-3">{{ row.resolved }}</td><td class="p-3">{{ percent(row.winRatePct) }}</td><td class="p-3">{{ percent(row.averageMfePct) }}</td><td class="p-3">{{ percent(row.averageMaePct) }}</td></tr></tbody>
             </table>
           </div>
@@ -50,7 +50,7 @@
           </select>
           <select :aria-label="t('signalReview.source')" v-model="filters.source" class="app-control">
             <option value="">{{ t('signalReview.allSources') }}</option>
-            <option value="rules">Rules</option><option value="ai">AI</option>
+            <option value="rules">{{ t('signalReview.sources.rules') }}</option><option value="ai">{{ t('signalReview.sources.ai') }}</option>
           </select>
           <button type="button" class="app-button-secondary" :disabled="loading" @click="load">{{ t('signalReview.filter') }}</button>
         </div>
@@ -70,17 +70,17 @@
               <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-2">
                   <router-link :to="`/research/assets/${encodeURIComponent(signal.symbol)}`" class="font-semibold text-emerald-700 hover:underline dark:text-emerald-300">{{ signal.symbol }}</router-link>
-                  <span class="app-chip">{{ signal.timeframe }}</span><span class="app-chip">{{ signal.source }}</span>
+                  <span class="app-chip">{{ signal.timeframe }}</span><span class="app-chip">{{ sourceLabel(signal.source) }}</span>
                   <span class="app-chip" :class="statusClass(signal.outcomeStatus)">{{ outcomeLabel(signal.outcomeStatus) }}</span>
                   <span v-if="signal.archivedAt" class="app-chip">{{ t('signalReview.archived') }}</span>
                 </div>
                 <p class="mt-3 text-sm leading-6 text-stone-700 dark:text-slate-200">{{ signal.reason }}</p>
                 <dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4 xl:grid-cols-8">
-                  <div><dt class="app-muted">Side</dt><dd>{{ signal.side || '--' }}</dd></div>
-                  <div><dt class="app-muted">Entry</dt><dd>{{ format(signal.entry) }}</dd></div>
-                  <div><dt class="app-muted">Target</dt><dd>{{ format(signal.target) }}</dd></div>
-                  <div><dt class="app-muted">Stop</dt><dd>{{ format(signal.stop) }}</dd></div>
-                  <div><dt class="app-muted">Confidence</dt><dd>{{ signal.confidence ?? '--' }}</dd></div>
+                  <div><dt class="app-muted">{{ t('signalReview.side') }}</dt><dd>{{ sideLabel(signal.side) }}</dd></div>
+                  <div><dt class="app-muted">{{ t('signalReview.entry') }}</dt><dd>{{ format(signal.entry) }}</dd></div>
+                  <div><dt class="app-muted">{{ t('signalReview.target') }}</dt><dd>{{ format(signal.target) }}</dd></div>
+                  <div><dt class="app-muted">{{ t('signalReview.stop') }}</dt><dd>{{ format(signal.stop) }}</dd></div>
+                  <div><dt class="app-muted">{{ t('signalReview.confidence') }}</dt><dd>{{ signal.confidence ?? '--' }}</dd></div>
                   <div><dt class="app-muted">MFE</dt><dd>{{ percent(signal.mfePct) }}</dd></div>
                   <div><dt class="app-muted">MAE</dt><dd>{{ percent(signal.maePct) }}</dd></div>
                   <div><dt class="app-muted">24h</dt><dd>{{ percent(signal.forwardReturns?.['24h']) }}</dd></div>
@@ -120,12 +120,12 @@ const statCards = computed(() => {
     { label: t('signalReview.total'), value: value?.total ?? 0 },
     { label: t('signalReview.resolved'), value: value?.resolved ?? 0 },
     { label: t('signalReview.winRate'), value: value?.winRatePct == null ? '--' : `${value.winRatePct.toFixed(1)}%` },
-    { label: 'Avg MFE', value: percent(value?.averageMfePct) },
-    { label: 'Avg MAE', value: percent(value?.averageMaePct) },
+    { label: t('signalReview.averageMfe'), value: percent(value?.averageMfePct) },
+    { label: t('signalReview.averageMae'), value: percent(value?.averageMaePct) },
   ]
 })
 const groupedStats = computed(() => [
-  ...(stats.value?.bySource || []).map((row) => ({ ...row, id: `source:${row.key}`, label: `${t('signalReview.source')}: ${row.key}` })),
+  ...(stats.value?.bySource || []).map((row) => ({ ...row, id: `source:${row.key}`, label: `${t('signalReview.source')}: ${sourceLabel(row.key)}` })),
   ...(stats.value?.byStrategy || []).map((row) => ({ ...row, id: `strategy:${row.key}`, label: `${t('signalReview.strategy')}: ${row.key}` })),
 ])
 
@@ -146,6 +146,8 @@ const evaluate = async (id?: string) => {
 }
 const toggleArchive = async (signal: TradeSignalResponse) => { try { await researchApi.setSignalArchived(signal.id, signal.version, !signal.archivedAt); await load() } catch (reason) { error.value = reason instanceof Error ? reason.message : String(reason) } }
 const outcomeLabel = (value: string) => t(`signalReview.outcomes.${value}`)
+const sourceLabel = (value: string) => ['rules', 'ai'].includes(value.toLowerCase()) ? t('signalReview.sources.' + value.toLowerCase()) : value
+const sideLabel = (value?: string | null) => value && ['long', 'short', 'buy', 'sell'].includes(value.toLowerCase()) ? t('signalReview.sides.' + value.toLowerCase()) : value || '--'
 const statusClass = (value: string) => value === 'target_hit' ? 'text-emerald-700 dark:text-emerald-300' : value === 'stop_hit' ? 'text-rose-700 dark:text-rose-300' : ''
 const format = (value?: number | null) => value == null ? '--' : new Intl.NumberFormat(undefined, { maximumFractionDigits: 6 }).format(value)
 const percent = (value?: number | null) => value == null ? '--' : `${value.toFixed(2)}%`

@@ -278,6 +278,37 @@ async def test_report_streams_results_without_json_or_engine_snapshots(tmp_path,
         await runs.close()
 
 
+@pytest.mark.asyncio
+async def test_browser_owned_script_runs_without_creating_a_server_script(tmp_path, monkeypatch):
+    payload = worker_input()
+    store = ChartWorkspaceStore(tmp_path)
+
+    class Market:
+        async def resolve(self, _):
+            return ChartSymbol.model_validate(payload["symbol"])
+
+        async def bars(self, *args, **kwargs):
+            return ChartBars(symbol=await self.resolve(""), timeframe="1m", source="fixture", bars=[
+                ChartBar.model_validate(row) for row in payload["bars"] if row["time"] >= kwargs.get("start", 0)])
+
+    monkeypatch.setattr("app.services.chart_workspace_runs.freeze_engine", lambda _: pytest.fail("Report mode must not copy the engine"))
+    request = PineRunRequest.model_validate({**payload["request"], "script_id": "browser-only-script", "script_version": 7,
+        "script_source": payload["source"], "script_name": "Browser strategy"})
+    runs = ChartPineRuns(store, Market())
+    try:
+        created = await runs.create(request, "http://127.0.0.1:1", recording="report")
+        await runs.tasks[created.id]
+        saved = runs.get(created.id)
+        assert saved.status == "completed", saved.error
+        assert saved.request.script_source == payload["source"]
+        assert saved.request.script_version == 7
+        assert runs.records(created.id, "trades", 0, 10)["total"] > 0
+        assert store.list("scripts") == []
+        assert store.get("runs", created.id).name == "Browser strategy"
+    finally:
+        await runs.close()
+
+
 def test_report_sampling_keeps_equity_extremes_and_incomplete_stream_rolls_back(tmp_path):
     from io import BytesIO
     import sqlite3

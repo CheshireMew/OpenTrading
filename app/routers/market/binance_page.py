@@ -14,6 +14,36 @@ router = FrontendContractRouter(frontend_contract_target="market", tags=["Market
 BINANCE_CHART_INTERVALS = {"5m", "15m", "1h", "4h", "1d"}
 
 
+@router.get("/binance/market/observations", response_model=dict[str, dict[str, float | None]])
+async def get_market_observations(symbols: str = Query(max_length=4096), extended: bool = False,
+        service=Depends(get_binance_market_intel_service)):
+    """Shared public observations. Visitors evaluate their own alert rules."""
+    requested = set(symbol.upper().replace("/", "") for symbol in symbols.split(",") if symbol)
+    if len(requested) > 100:
+        from fastapi import HTTPException
+        raise HTTPException(422, "At most 100 symbols are allowed")
+    snapshot = await service.snapshot_service.get_market_page_snapshot_data()
+    groups = {kind: {row["symbol"]: row for row in snapshot.get(kind, {}).get("items", [])}
+              for kind in ("spot_ticker", "usdm_ticker", "usdm_mark")}
+    page = await service.page.get_page(min_rise_pct=0, limit=100, quote_asset="USDT") if extended else None
+    scores = {row.symbol: row for row in page.monitor.items} if page else {}
+    oi = {row.symbol: row.oi_change_1h_pct for board in page.contract_boards.values() for row in board.items} if page else {}
+    result = {}
+    for symbol in requested:
+        ticker = groups["spot_ticker"].get(symbol) or groups["usdm_ticker"].get(symbol) or {}
+        mark = groups["usdm_mark"].get(symbol) or {}
+        score = scores.get(symbol)
+        rate = mark.get("funding_rate_pct")
+        if rate is None and mark.get("last_funding_rate") is not None:
+            rate = mark["last_funding_rate"] * 100
+        result[symbol] = {"price": ticker.get("last_price") or mark.get("mark_price"),
+            "price_change_24h": ticker.get("price_change_pct"), "funding_rate_pct": rate,
+            "breakout_score": max(score.natural_score, score.momentum_score) if score else None,
+            "natural": score.natural_score if score else None, "momentum": score.momentum_score if score else None,
+            "oi_change_1h_pct": oi.get(symbol)}
+    return result
+
+
 @router.get("/binance/market/page", response_model=BinanceMarketPageResponse)
 async def get_binance_market_page(
     min_rise_pct: float = Query(5.0, ge=0.5, le=50.0),

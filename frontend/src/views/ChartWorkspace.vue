@@ -31,7 +31,7 @@
           <div v-if="bottomTab==='logs'" class="cw-log"><p v-if="!logs.length">{{ cw('noLogs') }}</p><p v-for="(item,index) in logs" :key="index">{{ formatDate(item.time,true) }}  {{ messageText(item.message) }}</p></div>
         </div>
       </div>
-      <div v-if="rightOpen && !compactWorkspace" class="cw-vertical-resizer" role="separator" aria-orientation="vertical" tabindex="0" :aria-valuenow="rightWidth" :aria-valuemin="240" :aria-valuemax="520" :aria-label="cw('resizeWatchlist')" @keydown.left.prevent="rightWidth=Math.min(520,rightWidth+20)" @keydown.right.prevent="rightWidth=Math.max(240,rightWidth-20)" @pointerdown="resizeRight" />
+      <div v-if="rightOpen && !compactWorkspace" class="cw-vertical-resizer" role="separator" aria-orientation="vertical" tabindex="0" :aria-valuenow="rightWidth" :aria-valuemin="320" :aria-valuemax="520" :aria-label="cw('resizeWatchlist')" @keydown.left.prevent="rightWidth=Math.min(520,rightWidth+20)" @keydown.right.prevent="rightWidth=Math.max(320,rightWidth-20)" @pointerdown="resizeRight" />
       <WorkspaceWatchlist :controller="listsController" :symbols="symbols" :active-symbol-id="activeSymbolId"
         :visible="watchlistVisible" :compact="compactWorkspace" :width="rightWidth"
         @select="selectSymbol" @add="searchMode='watchlist';searchOpen=true" @close="watchlistDrawerOpen=false">
@@ -159,7 +159,7 @@ onBeforeUnmount(() => {
 .cw-header{flex-wrap:wrap;height:auto;padding-block:5px;row-gap:4px}
 .cw-header>button,.cw-header>select,.cw-periods{flex-shrink:0}
 .cw-header>select{max-width:160px}
-.cw-header button.active{font-weight:700;box-shadow:inset 0 -2px var(--cw-accent)}
+.cw-header button.active{font-weight:700}
 .cw-bottom-tabs>small{font-size:11px}
 .cw-search>header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--cw-border)}
 .cw-bottom-tabs{min-width:0}
@@ -182,6 +182,19 @@ onBeforeUnmount(() => {
 .cw-body{position:relative;overflow-y:auto}
 .cw-chart .vela-widget-bottombar{min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;overscroll-behavior-inline:contain}
 .cw-chart .vela-widget-bottombar>*{flex-shrink:0}
+.cw-chart .vela-ot-row[data-selected]{box-shadow:none}
+.cw-chart .vela-dtb-cell,.cw-chart .vela-dtb-btn:not(.vela-dtb-collapse){height:40px;flex-shrink:0}
+.cw-chart .vela-dtb-icon{width:36px;height:40px}
+.cw-chart .vela-dtb-icon,.cw-chart .vela-dtb-btn{opacity:1!important}
+.cw-chart .vela-dtb-icon .vela-dtb-hit,.cw-chart .vela-dtb-btn:not(.vela-dtb-collapse) .vela-dtb-hit{width:36px;height:36px;border-radius:6px}
+.cw-chart .vela-dtb-icon .vela-dtb-hit>span,.cw-chart .vela-dtb-btn:not(.vela-dtb-collapse) .vela-dtb-hit>span{width:24px!important;height:24px!important}
+.cw-chart .vela-dtb svg[data-cw-drawing-icon],.cw-chart .vela-dtb-flyout svg[data-cw-drawing-icon]{width:100%;height:100%}
+.cw-chart .vela-dtb-arrow{top:auto;right:1px;bottom:1px;transform:none;width:10px;height:12px}
+.cw-chart .vela-dtb-arrow .vela-dtb-hit--arrow{width:10px;height:12px}
+.cw-chart .vela-dtb-arrow .vela-dtb-hit--arrow>span{width:9px!important;height:9px!important}
+.cw-chart .vela-dtb-flyout .vela-dtb-item{min-height:34px;gap:10px!important;padding:6px 12px!important}
+.cw-chart .vela-dtb-flyout .vela-dtb-item>span:first-child:has(svg[data-cw-drawing-icon]){width:24px!important;height:24px!important}
+.cw-chart .vela-widget-style svg[data-cw-drawing-icon]{width:24px;height:24px}
 @media(max-width:950px){
   .cw-chart .vela-panel{position:absolute;right:0;inset-block:0;z-index:12;max-width:calc(100% - 48px);box-shadow:-6px 0 20px #0002}
 }

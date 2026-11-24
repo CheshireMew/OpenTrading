@@ -24,6 +24,19 @@ class StubSnapshot:
         }
 
 
+def test_explicit_memory_cache_health_does_not_report_a_redis_failure():
+    service = DataHealthService(
+        repository=None, database_verifier=None, market_query_service=None,
+        index_data_service=None, binance_market_service=None,
+        research_alert_runtime=None, trade_signal_runtime=None,
+        cache_service=SimpleNamespace(runtime_backend="memory", local_entry_count=2, local_byte_size=128),
+    )
+    result = service._cache_source()
+    assert result.status == "ready"
+    assert result.detail == "本地内存缓存可用"
+    assert result.metadata["backend"] == "memory"
+
+
 @pytest.mark.asyncio
 async def test_data_health_reports_coverage_and_scoped_database_repair(installed_database_runtime):
     verified = []

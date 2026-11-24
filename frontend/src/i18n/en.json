@@ -1317,6 +1317,7 @@
     "keyCleared": "API Key cleared",
     "clearFailed": "Failed to clear API Key",
     "cacheBackends": {
+      "memory": "In-memory cache",
       "redis": "Redis with in-memory cache",
       "memory_fallback": "In-memory fallback (Redis unavailable)",
       "unavailable": "Unavailable"
@@ -2476,6 +2477,7 @@
     "heartbeat": "Heartbeat healthy",
     "sourceCache": "Runtime cache",
     "cacheReady": "Redis and local secondary cache available",
+    "cacheMemory": "Local in-memory cache available",
     "cacheFallback": "Local memory fallback available (Redis disconnected)",
     "sourceSnapshot": "Binance live market snapshot",
     "seriesGaps": "{count} symbol/timeframe series, {gaps} gaps",

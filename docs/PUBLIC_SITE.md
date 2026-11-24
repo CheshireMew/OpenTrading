@@ -1,6 +1,6 @@
 # 公开网站
 
-公开部署设置 `PUBLIC_SITE=true`、`PUBLIC_HOST=trade.blacknico.com`，并使用 `npm run build:public` 构建前端。普通本地开发仍使用 `npm run build:frontend`。两种模式不要混用。
+公开部署设置 `PUBLIC_SITE=true`、`PUBLIC_HOST=trade.blacknico.com`，并使用 `npm run build:public` 构建前端。当前小服务器设置 `REDIS_ENABLED=false`，明确使用有容量上限的内存缓存，不连接或重试 Redis。普通本地开发仍使用 `npm run build:frontend`。两种模式不要混用。
 
 公开网站不提供模型配置、AI 信号、数据修复、服务器个人文档和服务器 Pine 执行接口，接口文档也不公开。行情和无状态的定投、对比、筛选计算可以匿名访问；筛选配置及结果仍由浏览器保存。公开 API 按实际路由选择，不依赖菜单隐藏或客户端传来的身份。
 

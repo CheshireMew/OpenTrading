@@ -20,11 +20,12 @@ from utils.logger import logger
 class RedisConnections:
     def __init__(self, app_settings: Any) -> None:
         self.settings = app_settings
+        self.enabled = bool(getattr(app_settings, "REDIS_ENABLED", True))
         self.client = None
         self.async_client = None
         self._last_connection_attempt = 0.0
         self._last_async_connection_attempt = 0.0
-        self.available = redis is not None
+        self.available = self.enabled and redis is not None
 
     def _connection_kwargs(self) -> dict[str, Any]:
         host = str(self.settings.REDIS_HOST).strip()
@@ -51,7 +52,7 @@ class RedisConnections:
         )
 
     def connect(self, *, force: bool = False) -> None:
-        if redis is None:
+        if not self.enabled or redis is None:
             return
         if self.client is not None or not self._may_retry(self._last_connection_attempt, force=force):
             return
@@ -69,7 +70,7 @@ class RedisConnections:
                 client.connection_pool.disconnect()
 
     async def connect_async(self, *, force: bool = False) -> None:
-        if async_redis is None:
+        if not self.enabled or async_redis is None:
             return
         if self.async_client is not None or not self._may_retry(self._last_async_connection_attempt, force=force):
             return

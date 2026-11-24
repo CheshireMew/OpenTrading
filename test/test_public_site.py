@@ -34,6 +34,19 @@ async def test_public_site_rejects_private_endpoints_even_with_loopback_forwardi
 
 
 @pytest.mark.asyncio
+async def test_public_tools_pages_can_read_their_initial_configuration(public_app):
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=public_app), base_url="https://trade.blacknico.com") as client:
+        response = await client.get("/api/v1/tools/contract")
+        assert response.status_code == 200
+        contract = response.json()
+        assert contract["dca_defaults"]["symbol"] == "BTC/USDT"
+        assert "standard" in contract["dca_strategies"]
+        assert contract["compare_defaults"]["symbol_a"] == "BTC"
+        assert contract["compare_defaults"]["symbol_b"] == "ETH"
+        assert contract["dca_max_days"] > 0
+
+
+@pytest.mark.asyncio
 async def test_public_defaults_are_code_defaults_without_personal_repository_access(public_app):
     public_app.state.runtime_services = SimpleNamespace(require_api=lambda: pytest.fail("Defaults must not read personal storage"))
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=public_app), base_url="https://trade.blacknico.com") as client:

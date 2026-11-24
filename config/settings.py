@@ -33,6 +33,7 @@ class AppSettings(BaseSettings):
     DEEPSEEK_BASE_URL: str = "https://api.deepseek.com"
     AI_MODEL: str = "deepseek-chat"
 
+    REDIS_ENABLED: bool = True
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0

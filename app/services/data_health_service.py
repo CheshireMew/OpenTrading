@@ -262,13 +262,17 @@ class DataHealthService:
 
     def _cache_source(self) -> DataSourceHealthResponse:
         backend = self._cache.runtime_backend
-        fallback = backend == "memory_fallback"
+        detail = {
+            "memory": "本地内存缓存可用",
+            "memory_fallback": "本地内存回退可用（Redis 未连接）",
+            "redis": "Redis 与本地二级缓存可用",
+        }.get(backend, "缓存不可用")
         return DataSourceHealthResponse(
             id="runtime_cache",
             name="运行缓存",
             status="ready",
             recordCount=int(self._cache.local_entry_count),
-            detail="本地内存回退可用（Redis 未连接）" if fallback else "Redis 与本地二级缓存可用",
+            detail=detail,
             metadata={
                 "backend": backend,
                 "localEntryCount": int(self._cache.local_entry_count),

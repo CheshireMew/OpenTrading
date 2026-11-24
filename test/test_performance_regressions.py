@@ -12,6 +12,7 @@ from sqlalchemy.dialects import postgresql
 
 import app.lifecycle as lifecycle_module
 import app.main as main_module
+import app.infra.redis_connections as redis_connections_module
 import app.services.tools.app_service as tools_app_module
 from app.application.errors import InvalidRequestError
 from app.contracts.tools import SimulateDcaCommand
@@ -27,6 +28,37 @@ from app.services.market.history_query_service import MarketHistoryQueryService
 from app.services.market.history_range_coordinator import HistoryRangeCoordinator
 from app.services.tools.app_service import ToolsAppService
 from config.settings import AppSettings
+
+
+@pytest.mark.asyncio
+async def test_explicit_memory_cache_never_contacts_redis_even_when_forced(monkeypatch):
+    sync_redis, async_redis = MagicMock(), MagicMock()
+    monkeypatch.setattr(redis_connections_module, "redis", sync_redis)
+    monkeypatch.setattr(redis_connections_module, "async_redis", async_redis)
+    cache = RedisService(AppSettings(REDIS_ENABLED=False, CACHE_MEMORY_MAX_ENTRIES=2))
+    try:
+        for _ in range(3):
+            cache.connect(force=True)
+            await cache.connect_async(force=True)
+            assert cache.get("missing") is None
+            assert await cache.aget("missing") is None
+        assert cache.runtime_backend == "memory"
+        assert cache.connections.available is False
+        assert cache.set("sync:first", {"value": 1}, ttl=30)
+        assert cache.get("sync:first") == {"value": 1}
+        assert await cache.aset("async:second", {"value": 2}, ttl=30)
+        assert await cache.aget("async:second") == {"value": 2}
+        assert cache.set("sync:third", {"value": 3}, ttl=30)
+        assert cache.local_entry_count == 2
+        assert cache.get("sync:first") is None
+        assert await cache.adelete_prefix("async:") == 1
+        assert cache.delete("sync:third")
+        assert cache.local_entry_count == 0
+        sync_redis.ConnectionPool.assert_not_called()
+        sync_redis.Redis.assert_not_called()
+        async_redis.Redis.assert_not_called()
+    finally:
+        await cache.aclose()
 
 
 @pytest.mark.asyncio

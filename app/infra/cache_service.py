@@ -41,6 +41,8 @@ class RedisService:
 
     @property
     def runtime_backend(self) -> str:
+        if not self.connections.enabled:
+            return "memory"
         return "redis" if (self.connections.client is not None or self.connections.async_client is not None) else "memory_fallback"
 
     def connect(self, *, force: bool = False) -> None:

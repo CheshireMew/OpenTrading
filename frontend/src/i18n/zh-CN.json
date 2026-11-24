@@ -1317,6 +1317,7 @@
     "keyCleared": "API Key 已清除",
     "clearFailed": "清除 API Key 失败",
     "cacheBackends": {
+      "memory": "内存缓存",
       "redis": "Redis + 内存缓存",
       "memory_fallback": "内存备用缓存（Redis 不可用）",
       "unavailable": "不可用"
@@ -2476,6 +2477,7 @@
     "heartbeat": "心跳正常",
     "sourceCache": "运行缓存",
     "cacheReady": "Redis 与本地二级缓存可用",
+    "cacheMemory": "本地内存缓存可用",
     "cacheFallback": "本地内存回退可用（Redis 未连接）",
     "sourceSnapshot": "币安实时市场快照",
     "seriesGaps": "{count} 个标的/周期序列，{gaps} 个缺口",

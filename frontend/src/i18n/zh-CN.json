@@ -249,7 +249,7 @@
   },
   "referrals": {
     "title": "新手福利",
-    "intro": "省下交易手续费，从第一笔比特币开始。",
+    "intro": "省下交易手续费，从第一笔交易开始。",
     "exchanges": "交易所",
     "exchangeBenefit": "省 20% 手续费",
     "wallets": "Web3 钱包",

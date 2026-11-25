@@ -59,22 +59,8 @@
             <div><p class="eyebrow">{{ t('signalLab.pressureKicker') }}</p><h2>{{ t('signalLab.pressureHistory') }}</h2></div>
             <span class="legend"><i></i>{{ t('signalLab.pressure') }}</span>
           </div>
-          <div ref="chartContainer">
-            <svg v-if="chart" class="pressure-chart" :viewBox="`0 0 ${chart.width} ${chart.height}`"
-                 role="img" :aria-label="t('signalLab.pressureHistory')">
-              <g v-for="tick in chart.yTicks" :key="tick.value">
-                <line :class="tick.threshold ? 'chart-threshold' : 'chart-grid'"
-                      :x1="chart.left" :x2="chart.right" :y1="tick.y" :y2="tick.y" />
-                <text :x="chart.left - 8" :y="tick.y + 3" text-anchor="end">{{ tick.value }}</text>
-              </g>
-              <path class="chart-area" :d="chart.area" />
-              <path class="chart-line" :d="chart.path" />
-              <circle class="chart-latest" :cx="chart.latest.x" :cy="chart.latest.y" r="4" />
-              <text v-for="tick in chart.xTicks" :key="tick.index" :x="tick.x" :y="chart.height - 7"
-                    :text-anchor="tick.anchor">{{ tick.date }}</text>
-            </svg>
-            <p v-else class="empty">{{ t('signalLab.noPressure') }}</p>
-          </div>
+          <SignalLabChart v-if="liquidity.history.length" :label="t('signalLab.pressureHistory')" :dates="liquidity.history.map(point=>point.date)" :series="[{name:t('signalLab.pressure'),values:liquidity.history.map(point=>point.score)}]" :min="0" :max="100" :thresholds="[liquidity.thresholds.p20,liquidity.thresholds.p50,liquidity.thresholds.p80]" />
+          <p v-else class="empty">{{ t('signalLab.noPressure') }}</p>
         </article>
 
         <article class="panel wide">
@@ -146,6 +132,7 @@
 </template>
 
 <script setup lang="ts">
+import SignalLabChart from '@/components/market/SignalLabChart.vue'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { apiGet, apiPost } from '@/api/request'
@@ -257,41 +244,6 @@ const indicatorGroups = computed(() => {
   return [...groups.values()]
 })
 
-const chartContainer = ref<HTMLElement>()
-const chartWidth = ref(760)
-watch(chartContainer, (element, _previous, onCleanup) => {
-  if (!element) return
-  const measure = () => { chartWidth.value = Math.max(300, Math.round(element.getBoundingClientRect().width)) }
-  const observer = new ResizeObserver(measure)
-  measure()
-  observer.observe(element)
-  onCleanup(() => observer.disconnect())
-})
-
-const chart = computed(() => {
-  const result = liquidity.value
-  if (!result?.history.length) return null
-  const width = chartWidth.value
-  const height = width < 520 ? 210 : 250
-  const left = width < 520 ? 32 : 36
-  const right = width - 12
-  const bottom = height - 28
-  const last = result.history.length - 1
-  const x = (index: number) => left + (last ? index / last : 0.5) * (right - left)
-  const y = (score: number) => 14 + (100 - score) / 100 * (bottom - 14)
-  const { p20, p50, p80 } = result.thresholds
-  const path = result.history.map((point, index) => `${index ? 'L' : 'M'}${x(index).toFixed(2)},${y(point.score).toFixed(2)}`).join(' ')
-  return {
-    width, height, left, right, path,
-    area: `${path} L${x(last)},${bottom} L${x(0)},${bottom} Z`,
-    latest: { x: x(last), y: y(result.history[last].score) },
-    yTicks: [0, p20, p50, p80, 100].map(value => ({ value, y: y(value), threshold: value === p20 || value === p80 })),
-    xTicks: [...new Set([0, Math.floor(last / 2), last])].map(index => ({
-      index, x: x(index), date: dateText(result.history[index].date),
-      anchor: !last ? 'middle' : index === 0 ? 'start' : index === last ? 'end' : 'middle',
-    })),
-  }
-})
 </script>
 
 <style scoped src="./signalLabLiquidity.css"></style>

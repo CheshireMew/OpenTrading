@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 from uuid import uuid4
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 
 from app.domain.research import ResearchNotFoundError, ResearchRevisionConflictError
 from app.infra.db.database import DatabaseRuntime
@@ -16,6 +16,13 @@ from utils.time import utc_now_naive
 class MarketScreenerRepository:
     def __init__(self, database_runtime: DatabaseRuntime) -> None:
         self._database_runtime = database_runtime
+
+    def delete_screener(self, screener_id: str, expected_version: int) -> None:
+        with write_session(self._database_runtime, ResearchRevisionConflictError) as session:
+            row = self._require(session, screener_id, expected_version)
+            session.execute(delete(MarketScreenerRun).where(MarketScreenerRun.screener_id == screener_id))
+            session.execute(delete(ResearchEvent).where(ResearchEvent.entity_type == "market_screener", ResearchEvent.entity_id == screener_id))
+            session.delete(row)
 
     def list_screeners(self, *, include_archived: bool) -> list[dict[str, Any]]:
         with write_session(self._database_runtime, ResearchRevisionConflictError) as session:

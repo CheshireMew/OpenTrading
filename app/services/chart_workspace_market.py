@@ -33,6 +33,24 @@ class ChartWorkspaceMarket:
         self.catalog_lock = asyncio.Lock()
         self.channels: dict[tuple[str, str], tuple[asyncio.Task, set[asyncio.Queue]]] = {}
         self.channel_status: dict[tuple[str,str],dict] = {}
+        self.replay_requests: dict[tuple, asyncio.Task] = {}
+
+    async def replay_bars(self, key, timeframe, limit, start, end):
+        """Share concurrent public history reads; personal replay stays in the browser."""
+        identity = (key, timeframe, limit, start, end)
+        task = self.replay_requests.get(identity)
+        if task is None:
+            async def load():
+                result = await self.bars(key, timeframe, limit, start, end - 1)
+                return result.model_copy(update={"bars": [bar for bar in result.bars if bar.closed and bar.closeTime <= end]})
+            task = asyncio.create_task(load())
+            self.replay_requests[identity] = task
+            def finished(completed):
+                self.replay_requests.pop(identity, None)
+                if not completed.cancelled():
+                    completed.exception()
+            task.add_done_callback(finished)
+        return await asyncio.shield(task)
 
     async def symbols(self) -> list[ChartSymbol]:
         if self.catalog and time.time() - self.catalog_at < 600:
@@ -309,7 +327,7 @@ class ChartWorkspaceMarket:
                 await asyncio.sleep(5)
 
     async def close(self):
-        tasks = [task for task,_ in self.channels.values()]
+        tasks = [task for task,_ in self.channels.values()] + list(self.replay_requests.values())
         for task in tasks:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)

@@ -2,7 +2,7 @@
   <Teleport to="body">
     <div v-if="open" class="workspace-dialog-backdrop" @click.self="close">
       <section ref="dialogRef" class="workspace-dialog price-alert-dialog" tabindex="-1" role="dialog" aria-modal="true" :aria-label="cw('priceAlerts')">
-        <header><strong>{{ cw(editing ? 'addPriceAlert' : 'priceAlerts') }}</strong><button class="app-icon-button" type="button" :aria-label="cw('close')" @click="close">×</button></header>
+        <header><strong>{{ cw(editing ? form.id ? 'alertEdit' : 'addPriceAlert' : 'priceAlerts') }}</strong><button class="app-icon-button" type="button" :aria-label="cw('close')" @click="close">×</button></header>
         <div v-if="error" class="alert-message" role="alert">{{ error }}</div>
         <form v-if="editing" @submit.prevent="save">
           <p class="alert-symbol">{{ selectedSymbol?.name }} · {{ selectedSymbol ? workspaceMarketLabel(selectedSymbol.id) : '' }}</p>
@@ -20,7 +20,7 @@
           <p v-if="!alerts.length" class="alert-hint">{{ cw('alertEmpty') }}</p>
           <article v-for="alert in alerts" :key="alert.id">
             <div><strong>{{ alert.name }}</strong><p>{{ conditionLabel(alert.operator) }} · {{ formatNumber(alert.threshold,10) }} · {{ cw(alert.enabled ? 'alertActive' : alert.lastTriggeredAt ? 'alertTriggered' : 'alertPaused') }}</p><p v-if="alert.lastTriggeredAt">{{ cw('alertLastTriggered') }} {{ formatDate(new Date(alert.lastTriggeredAt).getTime()) }}</p></div>
-            <div class="alert-actions"><button class="app-button-secondary" :disabled="saving" @click="edit(alert)">{{ cw('alertEdit') }}</button><button class="app-button-secondary" :disabled="saving" @click="change(alert)">{{ cw(alert.enabled ? 'alertPause' : 'alertResume') }}</button><button class="app-button-secondary" :disabled="saving" @click="change(alert,true)">{{ cw('alertArchive') }}</button></div>
+            <div class="alert-actions"><button type="button" class="app-button-secondary" :disabled="saving" @click="edit(alert)">{{ cw('alertEdit') }}</button><button type="button" class="app-button-secondary" :disabled="saving" @click="change(alert)">{{ cw(alert.enabled ? 'alertPause' : 'alertResume') }}</button><button type="button" class="app-button-secondary alert-delete" :disabled="saving" @click="remove(alert)">{{ cw('alertDelete') }}</button></div>
           </article>
           <p class="alert-hint">{{ cw('alertRuntimeHint') }}</p>
         </div>
@@ -34,7 +34,7 @@ import type { createWorkspaceAlerts } from '@/modules/chartWorkspace/workspaceAl
 import { cw, formatNumber, formatDate, workspaceMarketLabel } from '@/modules/chartWorkspace/locale'
 import { alertDeliveryStatus, enableAlertDelivery, playAlertSound } from '@/modules/research/alertDelivery'
 const props = defineProps<{ controller: ReturnType<typeof createWorkspaceAlerts> }>()
-const { open, editing, saving, error, form, selectedSymbol, alerts, startForm, edit, save, change } = props.controller
+const { open, editing, saving, error, form, selectedSymbol, alerts, startForm, edit, save, change, remove } = props.controller
 function close() { if (!saving.value) open.value = false }
 const { dialogRef } = useModalDialog(open, close)
 function conditionLabel(operator: string) { return cw(({crosses:'alertCrosses',crosses_above:'alertCrossesAbove',crosses_below:'alertCrossesBelow',gte:'alertAbove',lte:'alertBelow'} as Record<string,string>)[operator] ?? operator) }
@@ -42,7 +42,9 @@ async function testSound() { if (!await playAlertSound()) alertDeliveryStatus.va
 function enable() { void enableAlertDelivery(true, true) }
 </script>
 <style scoped>
-.price-alert-dialog{width:min(540px,calc(100vw - 24px));max-height:calc(100dvh - 32px);overflow:auto;color:var(--app-text)}
+.price-alert-dialog{display:flex;flex-direction:column;width:min(540px,calc(100vw - 24px));height:min(600px,calc(100dvh - 32px));overflow:hidden;color:var(--app-text)}
+.price-alert-dialog>header,.price-alert-dialog>.alert-message{flex-shrink:0}
+.price-alert-dialog>form,.price-alert-dialog>.alert-list{flex:1;min-height:0;overflow:auto;align-content:start;scrollbar-gutter:stable;overscroll-behavior:contain}
 header{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--app-border)}
 form,.alert-list{padding:18px}form{display:grid;gap:16px}form>label{display:grid;gap:6px;font-size:13px}form .app-control{width:100%;min-height:40px}
 .alert-symbol{font-weight:600;margin:0}fieldset{display:flex;flex-wrap:wrap;gap:14px;align-items:center;border:0;padding:0}legend{font-size:13px;margin-bottom:10px}fieldset label{display:flex;align-items:center;gap:6px;font-size:13px}

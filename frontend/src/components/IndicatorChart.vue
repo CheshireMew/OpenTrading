@@ -1,10 +1,11 @@
 <template>
-  <div class="w-full" :class="height" ref="chartContainer"></div>
+  <div class="w-full"><ChartNavigation :controller="navigation" /><div :class="height" ref="chartContainer"></div></div>
 </template>
 
 <script setup>
 import { DARK_PALETTE } from '@/theme/palette.mjs'
 import { watch } from 'vue'
+import ChartNavigation from '@/components/ChartNavigation.vue'
 import * as echarts from 'echarts/core'
 import { LineChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent } from 'echarts/components'
@@ -36,7 +37,7 @@ const getChartOption = (indicator, isDark) => {
   const areaColor = isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(29, 111, 186, 0.18)'
   const splitLineColor = isDark ? DARK_PALETTE.grid : '#e5e7eb'
 
-  const dataDates = indicator.history.map(item => formatDate(item.date))
+  const dataDates = indicator.history.map(item => item.date)
   const dataValues = indicator.history.map(item => item.value)
 
   return {
@@ -48,13 +49,13 @@ const getChartOption = (indicator, isDark) => {
         color: isDark ? DARK_PALETTE.text : '#111827'
       },
       formatter: function (params) {
-        return `${params[0].axisValue}<br/><b>${formatIndicatorAxisValue(indicator, Number(params[0].data))}</b>`
+        return `${formatDate(params[0].axisValue)}<br/><b>${formatIndicatorAxisValue(indicator, Number(params[0].data))}</b>`
       }
     },
     grid: {
       left: '3%',
       right: '4%',
-      bottom: '3%',
+      bottom: 30,
       top: '10%',
       containLabel: true
     },
@@ -62,7 +63,7 @@ const getChartOption = (indicator, isDark) => {
       type: 'category',
       boundaryGap: false,
       data: dataDates,
-      axisLabel: { color: textColor },
+      axisLabel: { color: textColor, formatter: value=>formatDate(value) },
       axisLine: { lineStyle: { color: splitLineColor } },
       splitLine: { show: false }
     },
@@ -101,7 +102,7 @@ const getChartOption = (indicator, isDark) => {
   }
 }
 
-const { chartContainer, renderChart } = useEcharts(() => (
+const { chartContainer, renderChart, navigation } = useEcharts(() => (
   props.indicator?.history ? getChartOption(props.indicator, theme.value === 'dark') : {}
 ))
 

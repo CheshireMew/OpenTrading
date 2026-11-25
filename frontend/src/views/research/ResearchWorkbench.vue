@@ -66,7 +66,7 @@
             <div class="mt-3 space-y-2">
               <div v-for="list in archivedWatchlists" :key="list.id" class="flex items-center justify-between gap-2 text-sm">
                 <span class="truncate">{{ list.name }}</span>
-                <button type="button" class="text-emerald-700 underline dark:text-emerald-300" :disabled="saving" @click="setWatchlistArchived(list, false)">{{ t('research.restore') }}</button>
+                <button type="button" class="text-rose-600 underline dark:text-rose-300" :disabled="saving" @click="removeList(list)">{{ t('ui.delete') }}</button>
               </div>
             </div>
           </details>
@@ -80,7 +80,7 @@
                   <h2 class="truncate text-xl font-semibold text-stone-950 dark:text-white">{{ activeWatchlist.name }}</h2>
                   <p v-if="activeWatchlist.description" class="mt-1 text-sm app-muted">{{ activeWatchlist.description }}</p>
                 </div>
-                <button type="button" class="shrink-0 text-sm text-rose-600 underline dark:text-rose-300" :disabled="saving" @click="setWatchlistArchived(activeWatchlist, true)">{{ t('research.archive') }}</button>
+                <button type="button" class="shrink-0 text-sm text-rose-600 underline dark:text-rose-300" :disabled="saving" @click="removeList(activeWatchlist)">{{ t('ui.delete') }}</button>
               </div>
               <button type="button" class="app-button-primary mt-4 w-full" @click="showNewItem = !showNewItem">{{ t('research.addAsset') }}</button>
             </div>
@@ -135,7 +135,7 @@
               <div class="mt-3 space-y-2">
                 <div v-for="item in archivedItems" :key="item.id" class="flex items-center justify-between gap-2 text-sm">
                   <span>{{ item.symbol }}</span>
-                  <button type="button" class="text-emerald-700 underline dark:text-emerald-300" :disabled="saving" @click="setItemArchived(item, false)">{{ t('research.restore') }}</button>
+                  <button type="button" class="text-rose-600 underline dark:text-rose-300" :disabled="saving" @click="removeItem(item)">{{ t('ui.delete') }}</button>
                 </div>
               </div>
             </details>
@@ -154,7 +154,7 @@
                   <h2 class="mt-1 text-2xl font-semibold text-stone-950 dark:text-white"><router-link :to="`/research/assets/${encodeURIComponent(activeItem.symbol)}`" class="hover:underline underline-offset-4">{{ activeItem.symbol }}</router-link></h2>
                   <p class="mt-1 text-sm app-muted">{{ activeItem.displayName }}</p>
                 </div>
-                <button type="button" class="text-sm text-rose-600 underline dark:text-rose-300" :disabled="saving" @click="setItemArchived(activeItem, true)">{{ t('research.archiveAsset') }}</button>
+                <button type="button" class="text-sm text-rose-600 underline dark:text-rose-300" :disabled="saving" @click="removeItem(activeItem)">{{ t('ui.delete') }}</button>
               </div>
 
               <form class="mt-5 space-y-3" @submit.prevent="saveActiveItem">
@@ -195,7 +195,7 @@
                     <span class="app-chip">{{ t(`research.noteKinds.${note.kind}`) }}</span>
                     <h3 class="mt-3 font-semibold text-stone-950 dark:text-white">{{ note.title }}</h3>
                   </div>
-                  <button type="button" class="text-xs text-rose-600 underline dark:text-rose-300" @click="setNoteArchived(note, true)">{{ t('research.archive') }}</button>
+                  <button type="button" class="text-xs text-rose-600 underline dark:text-rose-300" @click="removeNote(note)">{{ t('ui.delete') }}</button>
                 </div>
                 <p class="mt-3 whitespace-pre-wrap text-sm leading-6 text-stone-600 dark:text-slate-300">{{ note.content }}</p>
                 <p class="mt-3 text-xs app-muted">{{ formatDateTime(note.occurredAt) }}</p>
@@ -206,7 +206,7 @@
                 <div class="mt-3 space-y-2">
                   <div v-for="note in archivedNotes" :key="note.id" class="flex items-center justify-between border p-3 text-sm dark:border-slate-700">
                     <span>{{ note.title }}</span>
-                    <button type="button" class="text-emerald-700 underline dark:text-emerald-300" @click="setNoteArchived(note, false)">{{ t('research.restore') }}</button>
+                    <button type="button" class="text-rose-600 underline dark:text-rose-300" @click="removeNote(note)">{{ t('ui.delete') }}</button>
                   </div>
                 </div>
               </details>
@@ -243,21 +243,12 @@
                   </div>
                   <div class="flex items-center gap-3">
                     <span class="app-chip">{{ alert.enabled ? t('research.enabled') : t('research.disabled') }}</span>
-                    <button type="button" class="text-xs text-rose-600 underline dark:text-rose-300" @click="setAlertArchived(alert, true)">{{ t('research.archive') }}</button>
+                    <button type="button" class="text-xs text-rose-600 underline dark:text-rose-300" :disabled="saving" @click="deleteAlert(alert)">{{ t('chartWorkspace.alertDelete') }}</button>
                   </div>
                 </div>
                 <p class="mt-3 text-xs app-muted">{{ t('research.lastValue') }} {{ alert.lastValue ?? '--' }} · {{ t('research.lastTriggered') }} {{ formatDateTime(alert.lastTriggeredAt) }}</p>
               </article>
               <p v-if="!itemAlerts.length" class="py-8 text-center text-sm app-muted">{{ t('research.noAlerts') }}</p>
-              <details v-if="archivedAlerts.length">
-                <summary class="cursor-pointer text-sm font-semibold app-muted">{{ t('research.archivedAlerts', { count: archivedAlerts.length }) }}</summary>
-                <div class="mt-3 space-y-2">
-                  <div v-for="alert in archivedAlerts" :key="alert.id" class="flex items-center justify-between border p-3 text-sm dark:border-slate-700">
-                    <span>{{ alert.name }}</span>
-                    <button type="button" class="text-emerald-700 underline dark:text-emerald-300" @click="setAlertArchived(alert, false)">{{ t('research.restore') }}</button>
-                  </div>
-                </div>
-              </details>
             </div>
 
             <div v-else class="space-y-3 p-5">
@@ -280,10 +271,13 @@
         </section>
       </div>
     </div>
+    <AppConfirmDialog ref="confirmation" />
   </div>
 </template>
 
 <script setup lang="ts">
+import AppConfirmDialog from '@/components/AppConfirmDialog.vue'
+import type { ResearchWatchlistResponse, ResearchWatchItemResponse, ResearchNoteResponse } from '@/modules/research/contracts'
 import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
 import { BookmarkSquareIcon } from '@heroicons/vue/24/outline'
 import AppEmptyState from '@/components/AppEmptyState.vue'
@@ -295,13 +289,18 @@ import { useResearchWorkbench } from '@/modules/research'
 import type { MarketSymbolSearchItem } from '@/modules/market/contracts'
 
 const { t } = useI18n()
+const confirmation = ref<InstanceType<typeof AppConfirmDialog>>()
+async function removeList(row:ResearchWatchlistResponse) { if(await confirmation.value?.confirm(row.name,t('ui.deleteResearchListContents'))) await deleteWatchlist(row) }
+async function removeItem(row:ResearchWatchItemResponse) { if(await confirmation.value?.confirm(row.displayName||row.symbol,t('ui.deleteResearchItemContents'))) await deleteItem(row) }
+async function removeNote(row:ResearchNoteResponse) { if(await confirmation.value?.confirm(row.title)) await deleteNote(row) }
+
 const { formatDateTime } = useDateTime()
 const {
   workbench, loading, initialLoading, saving, error, activeWatchlistId, activeItemId,
   activeWatchlists, archivedWatchlists, activeWatchlist, activeItems, archivedItems,
-  activeItem, itemNotes, archivedNotes, itemAlerts, archivedAlerts,
-  load, createWatchlist, setWatchlistArchived, createItem, saveItem, setItemArchived,
-  createNote, setNoteArchived, createAlert, setAlertArchived, acknowledgeEvent,
+  activeItem, itemNotes, archivedNotes, itemAlerts,
+  load, createWatchlist, createItem, saveItem,
+  createNote, createAlert, deleteAlert, deleteWatchlist, deleteItem, deleteNote, acknowledgeEvent,
   requestDesktopPermission,
   evaluateAlerts,
 } = useResearchWorkbench()

@@ -24,7 +24,7 @@ class StubSnapshot:
         }
 
 
-def test_explicit_memory_cache_health_does_not_report_a_redis_failure():
+def test_memory_cache_health_reports_ready():
     service = DataHealthService(
         repository=None, database_verifier=None, market_query_service=None,
         index_data_service=None, binance_market_service=None,
@@ -57,7 +57,7 @@ async def test_data_health_reports_coverage_and_scoped_database_repair(installed
         research_alert_runtime=object(),
         trade_signal_runtime=object(),
         cache_service=SimpleNamespace(
-            runtime_backend="memory_fallback",
+            runtime_backend="memory",
             local_entry_count=3,
             local_byte_size=256,
         ),
@@ -75,6 +75,6 @@ async def test_data_health_reports_coverage_and_scoped_database_repair(installed
     kline_source = next(source for source in health.sources if source.id == "klines")
     assert kline_source.gapCount == 1
     assert kline_source.coverageStart is not None
-    assert next(source for source in health.sources if source.id == "runtime_cache").metadata["backend"] == "memory_fallback"
+    assert next(source for source in health.sources if source.id == "runtime_cache").metadata["backend"] == "memory"
     assert repair.status == "completed"
     assert verified == [True]

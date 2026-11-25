@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { chartApi, type WorkspaceDocument } from './api'
-import { readDraft, writeDraft } from './drafts'
+import { deleteDraft, readDraft, writeDraft } from './drafts'
 import { migrateWorkspaceState } from './legacyState'
 import { mergeLayout, sameLayout } from './layoutMerge'
 import { cw } from './locale'
@@ -17,6 +17,7 @@ export function createWorkspaceLayouts(deps: {
   onError: (error: unknown) => void
 }) {
   const layouts = ref<WorkspaceDocument[]>([]), layoutId = ref('default'), saveStatus = ref('saved')
+  const managing = ref(false)
   let restoring = false, disposed = false, ready = false, selectionEpoch = 0
   let writes = Promise.resolve()
   const pending = new Map<string, LayoutData>(), observed = new Map<string, LayoutData>()
@@ -95,9 +96,13 @@ export function createWorkspaceLayouts(deps: {
     writes = operation
     return operation
   }
-  async function saveNow() {
+  async function saveNow(create=false) {
     if (!ready || restoring || disposed) return
     capture()
+    if(create&&!document(layoutId.value)&&!pending.has(layoutId.value)){
+      const data=deps.snapshot()
+      if(data){pending.set(layoutId.value,copy(data));bases.set(layoutId.value,undefined);saveStatus.value='saving';await draft(layoutId.value,data,true).catch(deps.onError)}
+    }
     await enqueue(layoutId.value)
   }
   async function switchLayout(id: string) {
@@ -160,6 +165,46 @@ export function createWorkspaceLayouts(deps: {
       await enqueue(id)
     }
   }
+  async function renameLayout() {
+    const id=layoutId.value,current=document(id)
+    if(!current||managing.value)return
+    const name=await deps.requestName(cw('layoutName'),current.name)
+    if(!name||disposed)return
+    managing.value=true
+    try{
+      await saveNow()
+      const operation=writes.then(async()=>{
+        const latest=document(id)!
+        const saved=await chartApi.save('layouts',id,{name,data:latest.data,expected_version:latest.version})
+        remember(saved);if(pending.has(id))bases.set(id,saved)
+      })
+      writes=operation.catch(deps.onError);await writes
+    }finally{managing.value=false}
+  }
+  async function deleteLayout() {
+    const id=layoutId.value
+    if(!document(id)||managing.value)return
+    managing.value=true
+    try{
+      await saveNow()
+      const operation=writes.then(async()=>{
+        const current=document(id)!
+        await chartApi.remove('layouts',id,current.version)
+        clearTimeout(timers.get(id));timers.delete(id);pending.delete(id);bases.delete(id);observed.delete(id)
+        await deleteDraft('layout:'+id)
+        layouts.value=layouts.value.filter(item=>item.id!==id)
+        if(layoutId.value!==id)return
+        selectionEpoch++
+        const next=layouts.value[0]
+        layoutId.value=next?.id??crypto.randomUUID()
+        if(next)restore(next.data)
+        else observed.set(layoutId.value,copy(deps.snapshot()??{}))
+        await writeDraft('last-layout',layoutId.value)
+        saveStatus.value=next?'saved':'unsaved'
+      })
+      writes=operation.catch(deps.onError);await writes
+    }finally{managing.value=false}
+  }
   function retryPending() { for (const id of pending.keys()) void enqueue(id) }
   if (typeof window !== 'undefined') {
     window.addEventListener('online', retryPending)
@@ -178,5 +223,5 @@ export function createWorkspaceLayouts(deps: {
     // new revision or overwrite another window's more recent preferences.
     for (const id of pending.keys()) void enqueue(id)
   }
-  return { layouts, layoutId, saveStatus, dirty, saveNow, saveAsLayout, switchLayout, initialize, dispose }
+  return { layouts, layoutId, saveStatus, managing, renameLayout, deleteLayout, dirty, saveNow, saveAsLayout, switchLayout, initialize, dispose }
 }

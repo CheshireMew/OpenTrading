@@ -11,10 +11,63 @@ from app.contracts.research import (
     ResearchWatchItemUpdateCommand,
     ResearchWatchlistCreateCommand,
 )
-from app.domain.research import ResearchDuplicateError, ResearchRevisionConflictError
+from app.domain.research import ResearchDuplicateError, ResearchNotFoundError, ResearchRevisionConflictError
 from app.infra.persistence.research_repository import ResearchRepository
 from app.services.research_service import ResearchService
 from app.services.research_alert_runtime import ResearchAlertRuntime
+
+
+@pytest.mark.parametrize("kind", ["watchlist", "item", "note"])
+def test_delete_research_records_checks_versions_and_removes_linked_content(research_service, installed_database_runtime, kind):
+    from app.infra.db.schema import ResearchAlertRule, ResearchEvent, ResearchNote, ResearchWatchItem, ResearchWatchlist
+    from sqlalchemy import select
+
+    watchlist = research_service.create_watchlist(ResearchWatchlistCreateCommand(name="Delete me"))
+    other = research_service.create_watchlist(ResearchWatchlistCreateCommand(name="Keep me"))
+    item = research_service.create_watch_item(ResearchWatchItemCreateCommand(watchlistId=watchlist.id, symbol="BTC/USDT"))
+    note = research_service.create_note(ResearchNoteCreateCommand(symbol="BTC/USDT", watchItemId=item.id, title="Private note", content="Remove this content"))
+    alert = research_service.create_alert(ResearchAlertCreateCommand(symbol="BTC/USDT", watchItemId=item.id, name="Linked alert", metric="price", operator="gt", threshold=100))
+    target = {"watchlist":watchlist,"item":item,"note":note}[kind]
+    with pytest.raises(ResearchRevisionConflictError):
+        research_service.delete_record(kind, target.id, target.version + 1)
+    research_service.delete_record(kind, target.id, target.version)
+    with installed_database_runtime.session_scope() as session:
+        assert session.get(ResearchWatchlist, other.id) is not None
+        assert session.get(ResearchNote, note.id) is None
+        assert (session.get(ResearchWatchItem, item.id) is None) == (kind != "note")
+        if kind != "note":
+            assert session.get(ResearchAlertRule, alert.id) is None
+        assert not list(session.scalars(select(ResearchEvent).where(ResearchEvent.entity_id == target.id)))
+    with pytest.raises(ResearchNotFoundError, match="不存在"):
+        research_service.delete_record(kind,target.id,target.version)
+
+
+@pytest.mark.parametrize("kind", ["watchlists", "items", "notes", "screeners"])
+def test_record_delete_api_requires_the_current_version(api_harness, installed_database_runtime, kind):
+    from app.dependencies import get_research_service, get_market_screener_service
+    from app.main import app
+    from app.infra.persistence.market_screener_repository import MarketScreenerRepository
+    from app.services.market_screener_service import MarketScreenerService
+    from app.contracts.research import SavedMarketScreenerCreateCommand
+
+    service = ResearchService(ResearchRepository(installed_database_runtime))
+    screener_service = MarketScreenerService(repository=MarketScreenerRepository(installed_database_runtime), binance_market_service=object())
+    app.dependency_overrides[get_research_service] = lambda: service
+    app.dependency_overrides[get_market_screener_service] = lambda: screener_service
+    watchlist = service.create_watchlist(ResearchWatchlistCreateCommand(name="List"))
+    if kind == "items":
+        target = service.create_watch_item(ResearchWatchItemCreateCommand(watchlistId=watchlist.id,symbol="BTC/USDT"))
+    elif kind == "notes":
+        target = service.create_note(ResearchNoteCreateCommand(symbol="BTC/USDT",title="Note"))
+    elif kind == "screeners":
+        target = screener_service.create(SavedMarketScreenerCreateCommand(name="Screen",filters={}))
+    else:
+        target = watchlist
+    url = f"/api/v1/research/{kind}/{target.id}"
+    client = api_harness["client"]
+    assert client.delete(url,params={"expected_version":target.version+1}).status_code == 409
+    assert client.delete(url,params={"expected_version":target.version}).json() == {"deleted":True}
+    assert client.delete(url,params={"expected_version":target.version}).status_code == 404
 
 
 @pytest.fixture

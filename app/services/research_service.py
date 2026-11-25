@@ -29,6 +29,9 @@ class ResearchService:
     def __init__(self, repository: ResearchRepositoryPort) -> None:
         self._repository = repository
 
+    def delete_record(self, kind: str, record_id: str, expected_version: int) -> None:
+        self._repository.delete_record(kind, record_id, expected_version)
+
     def get_workbench(self, *, event_limit: int, note_limit: int) -> ResearchWorkbenchResponse:
         return ResearchWorkbenchResponse.model_validate(
             self._repository.get_workbench(event_limit=event_limit, note_limit=note_limit)
@@ -116,10 +119,8 @@ class ResearchService:
             )
         )
 
-    def archive_alert(self, alert_id: str, command: ResearchArchiveCommand, *, archived: bool) -> ResearchAlertResponse:
-        return ResearchAlertResponse.model_validate(
-            self._repository.set_alert_archived(alert_id, command.expectedVersion, archived)
-        )
+    def delete_alert(self, alert_id: str, expected_version: int) -> None:
+        self._repository.delete_alert(alert_id, expected_version)
 
     def acknowledge_event(self, event_id: str, command: ResearchEventAcknowledgeCommand) -> ResearchEventResponse:
         return ResearchEventResponse.model_validate(self._repository.acknowledge_event(event_id, command.acknowledged))

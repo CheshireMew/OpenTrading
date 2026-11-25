@@ -16,7 +16,7 @@
 html.dark .equities-page .eq-layout-picker button[aria-pressed=true] { color: var(--ui-onAccent); }
 .equities-page :is(.eq-layout-picker, .eq-refresh, .eq-control, .eq-search, .eq-stock-trigger, .eq-list-item) svg { width: 17px; height: 17px; flex: 0 0 auto; }
 .equities-page :is(.eq-refresh, .eq-control) { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 7px 12px; border: 1px solid var(--ui-borderStrong); border-radius: 5px; font-size: 12px; background: var(--ui-toolbar); color: var(--ui-text); }
-.equities-page button:disabled { color: var(--ui-faint); opacity: .65; }
+.equities-page button:disabled { color: var(--ui-faint); opacity: 1; }
 .equities-page :is(.eq-refresh, button.eq-control):hover:not(:disabled) { background: var(--ui-hover); }
 .equities-page .eq-refresh { flex: 0 0 auto; }
 .equities-page .eq-search-row { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }

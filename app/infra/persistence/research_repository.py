@@ -21,6 +21,9 @@ class ResearchRepository:
         self.records = ResearchRecordRepository(database_runtime)
         self.alerts = ResearchAlertRepository(database_runtime)
 
+    def delete_record(self, kind: str, record_id: str, expected_version: int) -> None:
+        self.records.delete_record(kind, record_id, expected_version)
+
     def get_workbench(self, *, event_limit: int, note_limit: int) -> dict[str, Any]:
         return self.workbench.get_workbench(event_limit=event_limit, note_limit=note_limit)
 
@@ -65,15 +68,15 @@ class ResearchRepository:
     def update_alert(self, alert_id: str, expected_version: int, payload: dict[str, Any]) -> dict[str, Any]:
         return self.alerts.update_alert(alert_id, expected_version, payload)
 
-    def set_alert_archived(self, alert_id: str, expected_version: int, archived: bool) -> dict[str, Any]:
-        return self.alerts.set_alert_archived(alert_id, expected_version, archived)
+    def delete_alert(self, alert_id: str, expected_version: int) -> None:
+        self.alerts.delete_alert(alert_id, expected_version)
 
     def list_enabled_alerts(self) -> list[dict[str, Any]]:
         return self.alerts.list_enabled_alerts()
 
     def record_alert_evaluation(
         self, alert_id: str, *, value: float, evaluated_at: datetime, triggered: bool
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any] | None:
         return self.alerts.record_alert_evaluation(
             alert_id, value=value, evaluated_at=evaluated_at, triggered=triggered
         )

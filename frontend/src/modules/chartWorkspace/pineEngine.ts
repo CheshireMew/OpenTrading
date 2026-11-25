@@ -3,6 +3,8 @@ import PineWorker from './pine.worker?worker'
 import { checkPine, pineError, PINE_ENGINE_VERSION } from './pineCompatibility.mjs'
 import type { ChartSymbol } from './api'
 import { cw,messageText } from './locale'
+import { fromVela, velaSymbol } from './provider'
+import { pineReplaySymbol, resolveReplaySymbol, loadReplaySeries } from './replaySeries'
 
 type Prepared = PreparedScript & { token:{source:string;instanceId:string} }
 export function readPineMetadata(source:string):{result:Promise<{kind:string;inputs:any[];props:Record<string,any>}>;cancel:()=>void} {
@@ -24,6 +26,11 @@ class WorkerSession {
   private rejectPrepare:((error:Error)=>void)|undefined
   private contextId=0
   private contexts=new Map<number,(value:any)=>void>()
+  replayPending=0
+  private idleWaiters=new Set<()=>void>()
+  expectReplay(){if(!this.stopped)this.replayPending++}
+  settled(){return !this.stopped&&this.replayPending?new Promise<void>(resolve=>this.idleWaiters.add(resolve)):Promise.resolve()}
+  private releaseReplay(){if(this.replayPending>0)this.replayPending--;if(!this.replayPending){for(const resolve of this.idleWaiters)resolve();this.idleWaiters.clear()}else this.arm()}
   handlers?:ExecutionHandlers
   request?:ExecutionRequest
   constructor(){this.worker.onerror=e=>this.fail(new Error(e.message));this.worker.onmessage=async({data})=>{
@@ -35,7 +42,7 @@ class WorkerSession {
       else this.handlers?.onWarning?.(data.warning)
     }
     else if(data.type==='alert')this.handlers?.onAlert?.(data.alert)
-    else if(data.type==='done'){this.done();this.handlers?.onDone?.()}
+    else if(data.type==='done'){this.done();this.handlers?.onDone?.();this.releaseReplay()}
     else if(data.type==='context'){this.contexts.get(data.id)?.(data.value);this.contexts.delete(data.id)}
     else if(data.type==='fetch'){
       try{if(!this.request?.fetchSeries)throw new Error(cw('noMultiframe'));const [symbol,timeframe,range]=data.args;const bars=await this.request.fetchSeries(symbol,timeframe,range);this.post({type:'fetchResult',id:data.id,bars})}
@@ -51,12 +58,12 @@ class WorkerSession {
     const listener=({data}:MessageEvent)=>{if(data.type!=='prepared')return;this.worker.removeEventListener('message',listener);this.done();this.rejectPrepare=undefined;if(data.version!==PINE_ENGINE_VERSION){reject(new Error(cw('versionMismatch')));this.stop();return}resolve(data.prepared)}
     this.worker.addEventListener('message',listener);this.post({type:'prepare',source,instanceId})
   })}
-  stop(){if(this.stopped)return;this.stopped=true;this.done();this.worker.terminate();for(const done of this.contexts.values())done(null);this.contexts.clear()}
+  stop(){if(this.stopped)return;this.stopped=true;this.done();this.worker.terminate();for(const done of this.contexts.values())done(null);this.contexts.clear();this.replayPending=0;this.releaseReplay()}
   context(select:unknown){return new Promise<any>(resolve=>{if(this.stopped){resolve(null);return}const id=++this.contextId;this.contexts.set(id,resolve);this.post({type:'context',id,select})})}
 }
 
 export class OpenTradingPineEngine implements ScriptingEngine {
-  constructor(private catalog:()=>ChartSymbol[]=()=>[]){}
+  constructor(private catalog:()=>ChartSymbol[]=()=>[], private clock:()=>number|undefined=()=>undefined){}
   readonly language='pine'
   readonly capabilities={streaming:true,visibleRange:true,inputs:true,props:true}
   private sessions=new Set<WorkerSession>()
@@ -67,24 +74,41 @@ export class OpenTradingPineEngine implements ScriptingEngine {
     finally{worker.stop();this.sessions.delete(worker)}
   }
   execute(request:ExecutionRequest,handlers:ExecutionHandlers):ExecutionSession{
+    const replaying = /^replay\d*:/.test(request.market.symbol)
+    const primary = this.catalog().find(info => info.id === fromVela(request.market.symbol))
+    const clock = () => replaying ? this.clock() : undefined
+    const originalFetch = request.fetchSeries
+    request = { ...request, fetchSeries: originalFetch ? async (symbol, timeframe, range) => {
+      const cutoff = clock()
+      if (!primary) return originalFetch(symbol, timeframe, range)
+      const info = resolveReplaySymbol(symbol, this.catalog(), primary)
+      if (!info) throw new Error(cw('symbolUnavailable', {symbol}))
+      if (cutoff === undefined) return originalFetch(velaSymbol(info.id)+(symbol.includes(';')?symbol.slice(symbol.indexOf(';')):''), timeframe, range)
+      return loadReplaySeries(info, timeframe, range, cutoff)
+    } : undefined }
     const worker=new WorkerSession();worker.request=request;worker.handlers=handlers;this.sessions.add(worker)
+    if(replaying)worker.expectReplay()
     const prepared=request.prepared as Prepared
     let ready=false
     const waiting:unknown[]=[]
-    const post=(value:unknown)=>{if(ready)worker.post(value);else waiting.push(value)}
+    const post=(value:unknown)=>{if(replaying)worker.expectReplay();if(ready)worker.post(value);else waiting.push(value)}
     void worker.prepare(prepared.token.source,prepared.token.instanceId).then(p=>{
       if(worker.stopped)return
       const {getBars,fetchSeries,...plain}=request
-      worker.arm();worker.post({type:'execute',catalog:JSON.parse(JSON.stringify(this.catalog())),request:{...plain,prepared:p}});ready=true
+      if (primary) plain.market = { ...plain.market, symbol: pineReplaySymbol(primary),
+        symbolInfo: { ...plain.market.symbolInfo, ticker: primary.symbol, tickerid: pineReplaySymbol(primary) } }
+      if(replaying) { plain.mode='static';plain.historyState='complete' }
+      worker.arm();worker.post({type:'execute',clock:clock(),catalog:JSON.parse(JSON.stringify(this.catalog())),request:{...plain,prepared:p}});ready=true
       for(const item of waiting)worker.post(item)
     }).catch(error=>{handlers.onError?.(error);worker.stop();this.sessions.delete(worker)})
     return {
       stop:()=>{worker.stop();this.sessions.delete(worker)},
       update:(inputs,props)=>{worker.arm();post({type:'update',inputs,props})},
       setVisibleRange:range=>post({type:'range',range}),
-      notifyBars:reason=>{if(reason==='backfill')return;const bars=request.getBars?.()??request.bars;if(!bars.length)return;worker.arm();const full=reason==='complete';post({type:'bars',bars:full?bars:bars.slice(-2),reason,full})},
+      notifyBars:reason=>{if(reason==='backfill')return;const bars=request.getBars?.()??request.bars;if(!bars.length)return;worker.arm();const full=reason==='complete';post({type:'bars',clock:clock(),bars:full?bars:bars.slice(-2),reason,full})},
       getContext:select=>worker.context(select),
     }
   }
+  async settled(){await Promise.all([...this.sessions].map(session=>session.settled()))}
   terminate(){for(const session of this.sessions)session.stop();this.sessions.clear()}
 }

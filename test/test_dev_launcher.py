@@ -93,13 +93,11 @@ def test_old_ready_heartbeat_does_not_skip_new_worker_startup(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_cache_connects_before_starting_concurrent_market_tasks(monkeypatch):
+async def test_runtime_starts_market_tasks_with_memory_cache(monkeypatch):
+    from app.infra.cache import build_cache_service
     from app.runtime import AppRuntimeServices, InfraRuntimeServices, IndicatorRuntimeServices
 
     events = []
-
-    async def cache_start():
-        events.append("cache")
 
     async def market_start():
         events.append("market")
@@ -113,7 +111,7 @@ async def test_cache_connects_before_starting_concurrent_market_tasks(monkeypatc
 
     monkeypatch.setattr("app.services.chart_workspace_runtime.ChartWorkspaceRuntime", workspace_start)
     services = AppRuntimeServices(
-        infra=InfraRuntimeServices(object(), SimpleNamespace(connect_async=cache_start)),
+        infra=InfraRuntimeServices(object(), build_cache_service()),
         indicators=IndicatorRuntimeServices(object(), object()),
     )
     services.api = SimpleNamespace(
@@ -122,7 +120,7 @@ async def test_cache_connects_before_starting_concurrent_market_tasks(monkeypatc
         trade_signal_evaluations=None,
     )
     await services.start()
-    assert events == ["cache", "workspace", "market"]
+    assert events == ["workspace", "market"]
 
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows process lifetime")

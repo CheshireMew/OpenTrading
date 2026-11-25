@@ -3,6 +3,8 @@ import { registerRendererLayer } from '@luxalgo/vela/plugin'
 import { DARK_PALETTE, LIGHT_PALETTE } from '@/theme/palette.mjs'
 import { PRICE_ALERT_LAYER, type PriceAlertLayerSource } from './priceAlertLayer'
 import { localizeCanvasDates } from './canvasLocale'
+import { REPLAY_ORDER_LAYER, type ReplayLayerSource } from './replayOrderLayer'
+import { INDICATOR_SELECTION_LAYER, installIndicatorInteraction, type IndicatorPicking } from './indicatorInteraction'
 
 export const CHART_FONT = 'Arial, "Microsoft YaHei", sans-serif'
 // Native candle bodies occupy 70% of this pitch: 14px gives a roughly 10px
@@ -126,24 +128,49 @@ export class WorkspaceRenderer extends NativeRenderer {
     return [...this.mounted].find(renderer => renderer.chartHost && host.contains(renderer.chartHost))
   }
   readonly priceAlerts: PriceAlertLayerSource = { alerts: [] }
+  readonly replayOrders: ReplayLayerSource = { lines: [] }
+  setReplayOrders(source: Pick<ReplayLayerSource, 'lines' | 'geometry' | 'markers'>) {
+    Object.assign(this.replayOrders, { markers: [], ...source })
+    this.setNativeData(REPLAY_ORDER_LAYER, this.replayOrders)
+  }
   setPriceAlerts(alerts: PriceAlertLayerSource['alerts']) {
     this.priceAlerts.alerts = alerts
     this.setNativeData(PRICE_ALERT_LAYER, this.priceAlerts)
   }
-  priceAtClient(x: number, y: number) { return this.priceAlerts.pointAt?.(x, y) }
+  priceAtClient(x: number, y: number, clamp = false) { return this.priceAlerts.pointAt?.(x, y, clamp) }
   get latestPrice() { return this.priceBars[this.priceBars.length - 1]?.close }
   private chartHost?: HTMLElement
   private priceBars: readonly OHLCV[] = []
   private framed = false
   private disposeLocale?: () => void
+  private disposeIndicatorInteraction?: () => void
+  cursorSurface?: { plot: HTMLElement; canvas: HTMLCanvasElement }
   get hasReadableViewport() { return this.framed }
+
+  bindIndicatorInteraction(deps: { enabled: () => boolean; activate: () => void }) {
+    this.disposeIndicatorInteraction?.()
+    const picking = this.readFeature('opentrading.indicatorPicking') as IndicatorPicking | undefined
+    if (!picking || !this.cursorSurface) return
+    this.setNativeData(INDICATOR_SELECTION_LAYER, picking)
+    this.disposeIndicatorInteraction = installIndicatorInteraction(this.cursorSurface.plot, picking, {
+      ...deps, settings: id => this.openIndicatorSettings(id),
+      repaint: () => this.setNativeData(INDICATOR_SELECTION_LAYER, picking),
+    })
+  }
 
   override mount(container: HTMLElement, theme: VelaTheme) {
     this.chartHost = container
     super.mount(container, theme)
+    // Vela 0.7 paints the crosshair and axis chips on the final plot canvas.
+    // Keep this DOM bridge here beside the renderer integration, rather than
+    // changing the user's saved crosshair colors or width for cursor modes.
+    const canvases = container.querySelectorAll('canvas'), canvas = canvases[canvases.length - 1]
+    if (canvas?.parentElement) this.cursorSurface = { plot: canvas.parentElement, canvas }
     this.disposeLocale = localizeCanvasDates(container, () => this.applyConfig({}))
     WorkspaceRenderer.mounted.add(this)
     this.priceAlerts.host = container
+    this.replayOrders.host = container
+    this.setNativeData(REPLAY_ORDER_LAYER, this.replayOrders)
     this.setNativeData(PRICE_ALERT_LAYER, this.priceAlerts)
     this.setNativeData(GRID_LAYER, () => ({ config: this.getConfig(), visible: this.readFeature('gridlines') !== false }))
   }
@@ -155,6 +182,7 @@ export class WorkspaceRenderer extends NativeRenderer {
   }
 
   override destroy() {
+    this.disposeIndicatorInteraction?.()
     this.disposeLocale?.()
     WorkspaceRenderer.mounted.delete(this)
     super.destroy()

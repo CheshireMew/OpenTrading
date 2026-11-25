@@ -37,6 +37,7 @@ const components: Record<string, Component> = {
 const utilityIcons = ['cursor', 'ruler', 'eraser', 'magnet', 'pen-lock', 'pen-sync', 'style-candles', 'chevron-right', 'chevrons-left', 'chevrons-right']
 const scope = '.vela-dtb, .vela-dtb-flyout, .vela-widget-style'
 const signature = (svg: Element) => `${svg.getAttribute('viewBox')}:${svg.innerHTML}`
+const strokeWidth = 1.25
 
 export function installDrawingToolbarIcons(host: HTMLElement) {
   const document = host.ownerDocument
@@ -49,7 +50,8 @@ export function installDrawingToolbarIcons(host: HTMLElement) {
     template.innerHTML = original
     const svg = template.content.querySelector('svg')
     if (!svg) continue
-    render(h(component, { size: 24, stroke: 1.5, 'aria-hidden': 'true', focusable: 'false', 'data-cw-drawing-icon': name }), iconHost)
+    // Keep the fine stroke from being thickened by the app shell's SVG rule.
+    render(h(component, { size: 24, stroke: strokeWidth, style: { strokeWidth }, 'aria-hidden': 'true', focusable: 'false', 'data-cw-drawing-icon': name }), iconHost)
     icons.set(signature(svg), iconHost.firstElementChild!.cloneNode(true) as Element)
     render(null, iconHost)
   }

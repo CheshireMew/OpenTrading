@@ -83,6 +83,10 @@ export function createBrowserDocuments(legacy: {
   }
   async function get(kind: BrowserDocumentKind, id: string, version?: number): Promise<WorkspaceDocument> {
     await ensure(kind)
+    const removed = await transact<unknown>(['metadata'], 'readonly', (tx, done) => {
+      const query=tx.objectStore('metadata').get(`deleted:${kind}:${id}`);query.onsuccess=()=>done(query.result)
+    })
+    if(removed) throw new ApiRequestError(cw('browserDocumentMissing'),{status:404})
     const document = await transact<WorkspaceDocument | undefined>(['documents', 'revisions'], 'readonly', (tx, done) => {
       const query = version === undefined ? tx.objectStore('documents').get([kind, id]) : tx.objectStore('revisions').get([kind, id, version])
       query.onsuccess = () => done(query.result && !query.result.archived ? query.result.document : undefined)
@@ -100,9 +104,11 @@ export function createBrowserDocuments(legacy: {
   }
   async function save(kind: BrowserDocumentKind, id: string, write: WorkspaceWrite) {
     await ensure(kind)
-    return transact<WorkspaceDocument>(['documents', 'revisions'], 'readwrite', (tx, done, fail) => {
+    return transact<WorkspaceDocument>(['documents', 'revisions', 'metadata'], 'readwrite', (tx, done, fail) => {
       const store = tx.objectStore('documents'), query = store.get([kind, id])
-      query.onsuccess = () => {
+      const removed=tx.objectStore('metadata').get(`deleted:${kind}:${id}`)
+      removed.onsuccess = () => {
+        if(removed.result){fail(new ApiRequestError(cw('browserDocumentMissing'),{status:404}));return}
         const old = query.result as Stored | undefined
         if (old?.document.readonly) { fail(new ApiRequestError(cw('readonlyCopy'), { status: 409 })); return }
         if ((old?.document.version ?? 0) !== (write.expected_version ?? 0)) { fail(conflict()); return }
@@ -113,15 +119,20 @@ export function createBrowserDocuments(legacy: {
       }
     })
   }
-  async function archive(kind: BrowserDocumentKind, id: string) {
+  async function remove(kind: BrowserDocumentKind, id: string, expectedVersion:number) {
     await ensure(kind)
-    return transact<void>(['documents'], 'readwrite', (tx, done, fail) => {
+    return transact<void>(['documents','revisions','metadata'], 'readwrite', (tx, done, fail) => {
       const store = tx.objectStore('documents'), query = store.get([kind, id])
       query.onsuccess = () => {
         const old = query.result as Stored | undefined
         if (!old) { fail(new ApiRequestError(cw('browserDocumentMissing'), { status: 404 })); return }
         if (old.document.readonly) { fail(new ApiRequestError(cw('readonlyCopy'), { status: 409 })); return }
-        store.put({ ...old, archived: true }); done()
+        if(old.document.version!==expectedVersion){fail(conflict());return}
+        store.delete([kind,id])
+        const revisions=tx.objectStore('revisions'), cursor=revisions.openKeyCursor(IDBKeyRange.bound([kind,id,0],[kind,id,Number.MAX_SAFE_INTEGER]))
+        cursor.onsuccess=()=>{if(cursor.result){revisions.delete(cursor.result.primaryKey);cursor.result.continue()}}
+        tx.objectStore('metadata').put(Date.now(),`deleted:${kind}:${id}`)
+        done()
       }
     })
   }
@@ -166,11 +177,12 @@ export function createBrowserDocuments(legacy: {
           const { kind, document } = entry
           documents.put({ kind, id: document.id, document, archived: false } satisfies Stored)
           tx.objectStore('revisions').put({ kind, id: document.id, version: document.version, document })
+          tx.objectStore('metadata').delete(`deleted:${kind}:${document.id}`)
         }
         for (const kind of BROWSER_DOCUMENT_KINDS) tx.objectStore('metadata').put(Date.now(), 'migrated:' + kind)
         done(ids)
       }
     })
   }
-  return { list, get, save, archive, snapshot, restore }
+  return { list, get, save, remove, snapshot, restore }
 }

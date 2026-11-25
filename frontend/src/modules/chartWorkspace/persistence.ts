@@ -3,6 +3,7 @@ import { registerStatePersistence, type ExternalIndicatorEntry } from '@luxalgo/
 import type { VelaWorkspace } from '@luxalgo/vela/workspace'
 import { checkPine } from './pineCompatibility.mjs'
 import { WorkspaceRenderer } from './chartPresentation'
+import { fromVela, velaSymbol } from './provider'
 
 const sources = new WeakMap<Vela,Map<string,{scriptId?:string;version?:number}>>()
 const VIEWPORT_VERSION = 5
@@ -84,17 +85,18 @@ export function installMarketDrawings(workspace:VelaWorkspace,onChange:()=>void)
       chart.on('viewport:changed',onChange)
       if(!owners.has(chart))owners.set(chart,cell.symbol)
       chart.on('load:start',event=>{
-        if(restoring.has(chart)){owners.set(chart,event.symbol);restoring.delete(chart);return}
+        const identity = velaSymbol(fromVela(event.symbol))
+        if(restoring.has(chart)){owners.set(chart,identity);restoring.delete(chart);return}
         const current=owners.get(chart)!
-        if(event.symbol===current)return
+        if(identity===current)return
         const map=maps.get(cell.id)??{}
         map[current]=chart.drawings.toJSON()
         maps.set(cell.id,map)
-        owners.set(chart,event.symbol)
-        chart.drawings.fromJSON(map[event.symbol]??{version:1,drawings:[]})
+        owners.set(chart,identity)
+        chart.drawings.fromJSON(map[identity]??{version:1,drawings:[]})
       })
       chart.on('load:end',event=>{
-        restoring.delete(chart);owners.set(chart,event.symbol)
+        restoring.delete(chart);owners.set(chart,velaSymbol(fromVela(event.symbol)))
         onChange()
       })
       // Vela updates the object panel's market label on this event but does not

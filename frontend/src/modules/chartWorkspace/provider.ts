@@ -5,7 +5,7 @@ import { cw, exchangeLabel } from './locale'
 
 export const timeframes:Record<string,string> = {'1':'1m','5':'5m','15':'15m','30':'30m','60':'1h','240':'4h','D':'1d','1D':'1d','W':'1w','1W':'1w','M':'1M','1M':'1M'}
 export const velaSymbol = (id:string) => 'opentrading:' + id
-export const fromVela = (id:string) => id.replace(/^(?:opentrading|heimdall):/,'')
+export const fromVela = (id:string) => id.replace(/^(?:opentrading|heimdall|replay\d*):/,'')
 
 export class OpenTradingProvider implements DataProvider {
   catalog:ChartSymbol[] = []

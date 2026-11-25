@@ -8,6 +8,9 @@ import { codeOnly, linkPine } from './pineCompatibility.mjs'
 export const PINE_ADAPTER_VERSION='opentrading-3'
 let primaryIdentity='',primaryBars=new Map()
 let symbolCatalog=[]
+let replayTime
+export function setPineReplayTime(time){replayTime=Number.isFinite(time)?time:undefined}
+const observationTime=()=>replayTime??Date.now()
 export function setPineSymbolCatalog(catalog){symbolCatalog=catalog}
 export function setPinePrimaryBars(symbol,timeframe,bars){primaryIdentity=`${symbol}|${timeframe}`;primaryBars=new Map(bars.map(b=>[b.time,b]))}
 function closingTime(bar,timeframe){
@@ -36,6 +39,7 @@ export function installPineRuntimeCompat(){
   // Use the same verified catalog as the primary feed for every Pine context.
   PineTS.prototype._initializeContext=function(...args){
     const context=initialize.apply(this,args)
+    if(replayTime!==undefined)Object.defineProperty(context.pine,'timenow',{get:observationTime,configurable:true})
     const createLine=context.pine.line.new.bind(context.pine.line)
     context.pine.line.new=(...args)=>{
       const first=context.get(args[0],0),second=context.get(args[1],0)
@@ -48,7 +52,7 @@ export function installPineRuntimeCompat(){
       return createLine(...args)
     }
     if(symbolCatalog.length){
-      const ticker=String(context.tickerId).split(';')[0].replace(/^(?:opentrading|heimdall):/i,'')
+      const ticker=String(context.tickerId).split(';')[0].replace(/^(?:opentrading|heimdall|replay\d*):/i,'')
       const parts=ticker.split(':'),code=parts.at(-1).replace(/\.P$/,'')
       const info=symbolCatalog.find(s=>s.id===ticker)||symbolCatalog.find(s=>s.symbol===code&&s.exchange===(parts.length>1?parts[0].toLowerCase():'binance')&&s.market===(ticker.endsWith('.P')?'usdm':'spot'))
       if(!info)throw new Error(`没有 ${ticker} 的真实品种元数据`)
@@ -96,13 +100,13 @@ export function installPineRuntimeCompat(){
           get isfirst(){return context.idx===0},get islast(){return context.idx===context.length-1},
           get isnew(){return state.isnew},get isconfirmed(){return state.confirmed},
           get isrealtime(){return state.live.has(state.time)},get ishistory(){return !state.live.has(state.time)},
-          get islastconfirmedhistory(){const last=context.marketData[context.length-1];const lastClosed=closingTime(last,context.timeframe)<=Date.now();return context.idx===context.length-(lastClosed?1:2)&&!state.live.has(state.time)},
+          get islastconfirmedhistory(){const last=context.marketData[context.length-1];const lastClosed=closingTime(last,context.timeframe)<=observationTime();return context.idx===context.length-(lastClosed?1:2)&&!state.live.has(state.time)},
         }
       }
       const raw=context.marketData[context.idx]
       const bar=primaryIdentity===`${context.tickerId}|${context.timeframe}`?(primaryBars.get(raw?.openTime)??raw):raw
       state.time=bar?.openTime??bar?.time
-      state.confirmed=typeof bar?.closed==='boolean'?bar.closed:closingTime(bar,context.timeframe)<=Date.now()
+      state.confirmed=typeof bar?.closed==='boolean'?bar.closed:closingTime(bar,context.timeframe)<=observationTime()
       state.isnew=!state.seen.has(state.time)
       if(!state.confirmed)state.live.add(state.time)
       state.seen.add(state.time)

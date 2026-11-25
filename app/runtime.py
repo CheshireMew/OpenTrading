@@ -8,7 +8,7 @@ from config import settings
 
 if TYPE_CHECKING:
     from app.services.market_data_runtime import MarketDataRuntime
-    from app.infra.cache import RedisService
+    from app.infra.cache import CacheService
     from app.infra.db.database import DatabaseRuntime
     from app.infra.persistence.market.binance_market_research_store import BinanceMarketResearchStore
     from app.infra.persistence.market.indicator_repository import MarketIndicatorRepository
@@ -68,7 +68,7 @@ def runtime_role_has_target(role: RuntimeRole, target: RuntimeTarget) -> bool:
 @dataclass(slots=True)
 class InfraRuntimeServices:
     database_runtime: "DatabaseRuntime"
-    cache_service: "RedisService"
+    cache_service: "CacheService"
     runtime_status: "RuntimeStatusRepository | None" = None
     market_data: "MarketDataRuntime | None" = None
 
@@ -153,9 +153,6 @@ class AppRuntimeServices:
         return self.background
 
     async def start(self) -> None:
-        connect_cache = getattr(self.infra.cache_service, "connect_async", None)
-        if connect_cache is not None:
-            await connect_cache()
         if self.api is not None:
             from app.infra.executor import run_workspace
             from app.services.chart_workspace_runtime import ChartWorkspaceRuntime
@@ -197,15 +194,10 @@ class AppRuntimeServices:
         if close_actions:
             await asyncio.gather(*close_actions, return_exceptions=True)
 
-        try:
-            close_cache = getattr(self.infra.cache_service, "aclose", None)
-            if close_cache is not None:
-                await close_cache()
-        finally:
-            from app.infra.executor import shutdown_blocking_executors
+        from app.infra.executor import shutdown_blocking_executors
 
-            await asyncio.to_thread(shutdown_blocking_executors)
-            self.infra.database_runtime.dispose()
+        await asyncio.to_thread(shutdown_blocking_executors)
+        self.infra.database_runtime.dispose()
 
     def dispose(self) -> None:
         from app.infra.executor import shutdown_blocking_executors

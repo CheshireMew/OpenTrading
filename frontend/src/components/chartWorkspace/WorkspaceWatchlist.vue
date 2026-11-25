@@ -8,15 +8,16 @@
         <select v-model="watchlistId" :aria-label="cw('watchlists')" :disabled="!watchlists.length">
           <option v-for="item in watchlists" :key="item.id" :value="item.id">{{ item.name }}</option>
         </select>
-        <IconChevronDown :size="14" stroke="1.5" aria-hidden="true" />
+        <IconChevronDown :size="14" stroke="1.25" aria-hidden="true" />
       </div>
       <button v-if="editing" class="watch-icon" type="button" :aria-label="cw('finishWatchlistEditing')" :title="cw('finishWatchlistEditing')" @click="editing = false"><IconCheck /></button>
       <button class="watch-icon" type="button" :aria-label="cw('addWatchSymbol')" :title="cw('addWatchSymbol')" :disabled="!watchlist" @click="emit('add')"><IconPlus /></button>
       <WorkspacePopover ref="optionsMenu" class="watch-options" :label="cw('watchlistActions')">
-        <template #trigger><IconDots :size="20" stroke="1.5" aria-hidden="true" /><span class="sr-only">{{ cw('watchlistActions') }}</span></template>
+        <template #trigger><IconDots :size="20" stroke="1.25" aria-hidden="true" /><span class="sr-only">{{ cw('watchlistActions') }}</span></template>
         <div class="watch-menu">
           <button type="button" @click="listAction(controller.newWatchlist)"><IconPlaylistAdd />{{ cw('createWatchlist') }}</button>
           <button type="button" :disabled="!watchlist" @click="listAction(controller.renameWatchlist)"><IconPencil />{{ cw('renameList') }}</button>
+          <button type="button" :disabled="!watchlist || controller.managing.value" @click="removeList"><IconTrash />{{ cw('deleteWatchlist') }}</button>
           <button type="button" :disabled="!watchlist" @click="listAction(() => { editing = !editing })"><IconListDetails />{{ cw(editing ? 'finishWatchlistEditing' : 'editWatchlist') }}</button>
         </div>
       </WorkspacePopover>
@@ -26,8 +27,8 @@
     </div>
     <div class="watch-rows">
       <table v-if="watchSymbols.length" :class="{ 'watch-editing': editing }">
-        <colgroup><col class="watch-symbol-column" /><col class="watch-price-column" /><col class="watch-change-column" /><col class="watch-percent-column" /><col v-if="editing" class="watch-remove-column" /></colgroup>
-        <thead><tr><th scope="col">{{ cw('symbol') }}</th><th scope="col">{{ cw('lastPrice') }}</th><th scope="col">{{ cw('change') }}</th><th scope="col">{{ cw('changePercent') }}</th><th v-if="editing" scope="col"><span class="sr-only">{{ cw('editWatchlist') }}</span></th></tr></thead>
+        <colgroup><col class="watch-symbol-column" /><col class="watch-price-column" /><col class="watch-change-column" /><col class="watch-percent-column" /><col class="watch-remove-column" /></colgroup>
+        <thead><tr><th scope="col">{{ cw('symbol') }}</th><th scope="col">{{ cw('lastPrice') }}</th><th scope="col">{{ cw('change') }}</th><th scope="col">{{ cw('changePercent') }}</th><th scope="col"><span class="sr-only">{{ cw('editWatchlist') }}</span></th></tr></thead>
         <tbody>
           <tr v-for="(id, index) in watchSymbols" :key="id" :class="{ selected: activeSymbolId === id }" draggable="true"
             @dragstart="startDrag($event, index)" @dragend="dragIndex = -1" @dragover.prevent @drop.prevent="controller.moveWatch(index)" @click="emit('select', id)">
@@ -37,7 +38,7 @@
             <td :class="quoteClass(id)" :title="priceText(quotes[id]?.price)">{{ priceText(quotes[id]?.price) }}</td>
             <td :class="quoteClass(id)" :title="signedText(quotes[id]?.change)">{{ signedText(quotes[id]?.change) }}</td>
             <td :class="quoteClass(id)" :title="messageText(quotes[id]?.error ?? quotes[id]?.basis)">{{ percentText(quotes[id]?.change_pct) }}</td>
-            <td v-if="editing"><button class="watch-remove" type="button" :aria-label="cw('removeSymbol', { symbol: displaySymbol(id) })" @click.stop="controller.removeWatch(id)"><IconX :size="14" stroke="1.5" /></button></td>
+            <td><button class="watch-remove" type="button" :disabled="controller.managing.value" :aria-label="cw('removeSymbol', { symbol: displaySymbol(id) })" :title="cw('removeSymbol', { symbol: displaySymbol(id) })" @click.stop="controller.removeWatch(id)"><IconX :size="14" stroke="1.25" /></button></td>
           </tr>
         </tbody>
       </table>
@@ -58,6 +59,7 @@
       <footer v-if="$slots.actions"><slot name="actions" /></footer>
     </section>
   </aside>
+  <AppConfirmDialog ref="confirmation" />
 </template>
 
 <script setup lang="ts">
@@ -70,6 +72,9 @@ import IconChevronDown from '@tabler/icons-vue/icons/IconChevronDown'
 import IconPlaylistAdd from '@tabler/icons-vue/icons/IconPlaylistAdd'
 import IconPencil from '@tabler/icons-vue/icons/IconPencil'
 import IconListDetails from '@tabler/icons-vue/icons/IconListDetails'
+import IconTrash from '@tabler/icons-vue/icons/IconTrash'
+import AppConfirmDialog from '@/components/AppConfirmDialog.vue'
+import { useI18n } from 'vue-i18n'
 import WorkspacePopover from './WorkspacePopover.vue'
 import WorkspaceSymbolIcon from './WorkspaceSymbolIcon.vue'
 import { useModalDialog } from '@/composables/useModalDialog'
@@ -93,6 +98,8 @@ const activeSymbol = computed(() => symbolsById.value.get(props.activeSymbolId))
 const activeQuote = computed(() => quotes.value[props.activeSymbolId])
 const editing = ref(false)
 const optionsMenu = ref<InstanceType<typeof WorkspacePopover>>()
+const {t}=useI18n(),confirmation=ref<InstanceType<typeof AppConfirmDialog>>()
+async function removeList(){optionsMenu.value?.close();const list=watchlist.value;if(list&&await confirmation.value?.confirm(list.name,t('ui.deleteWatchlistContents')))await props.controller.deleteWatchlist()}
 function listAction(action: () => unknown) { optionsMenu.value?.close(); void action() }
 const displaySymbol = (id: string) => {
   const symbol = symbolsById.value.get(id)
@@ -122,21 +129,21 @@ function startDrag(event: DragEvent, index: number) {
 .watch-list-select > svg { position: absolute; top: 50%; right: 3px; transform: translateY(-50%); pointer-events: none; color: var(--ui-muted); }
 .watch-panel button { border-radius: 4px; color: inherit; white-space: nowrap; }
 .watch-panel button:hover { background: var(--ui-hover); }
-.watch-panel button:disabled { opacity: .45; }
+.watch-panel button:disabled { color: var(--ui-faint); opacity: 1; }
 .watch-icon { display: inline-flex; flex: 0 0 32px; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; }
-.watch-icon svg { width: 20px; height: 20px; stroke-width: 1.5; }
+.watch-icon svg { width: 20px; height: 20px; }
 .watch-options { position: relative; flex: 0 0 32px; }
 .watch-options :deep(summary) { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 4px; list-style: none; cursor: pointer; }
 .watch-options :deep(summary::-webkit-details-marker) { display: none; }
 .watch-options :deep(summary:hover), .watch-options[open] :deep(summary) { background: var(--ui-hover); }
 .watch-menu { position: absolute; z-index: 8; top: calc(100% + 6px); right: 0; width: max-content; min-width: 180px; padding: 5px; border: 1px solid var(--ui-borderStrong); border-radius: 6px; background: var(--ui-panel); box-shadow: 0 8px 24px #0003; }
 .watch-menu button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 34px; padding: 6px 10px; text-align: left; }
-.watch-menu svg { width: 18px; height: 18px; stroke-width: 1.5; }
+.watch-menu svg { width: 18px; height: 18px; }
 .watch-notice { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 6px 10px; background: var(--ui-elevated); font-size: 12px; }
 .watch-rows { flex: 1; min-height: 74px; overflow: auto; overscroll-behavior: contain; }
 .watch-rows table { width: 100%; min-width: 320px; table-layout: fixed; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 .watch-symbol-column { width: 35%; }.watch-price-column { width: 25%; }.watch-change-column { width: 20%; }.watch-percent-column { width: 20%; }
-.watch-remove-column { width: 28px; }.watch-editing { min-width: 348px !important; }
+.watch-remove-column { width: 32px; }
 .watch-rows th { position: sticky; top: 0; z-index: 1; height: 34px; padding: 0 5px; border-bottom: 1px solid var(--ui-borderStrong); background: var(--ui-panel); color: var(--ui-muted); font-size: 12px; font-weight: 500; text-align: right; white-space: nowrap; }
 .watch-rows td { height: 32px; padding: 0 5px; overflow: hidden; border-bottom: 1px solid var(--ui-border); font-size: 13px; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
 .watch-rows :is(td, th):first-child { padding-left: 8px; padding-right: 2px; text-align: left; }
@@ -146,7 +153,7 @@ function startDrag(event: DragEvent, index: number) {
 .watch-rows tbody tr:hover { background: var(--ui-hover); }
 .watch-rows .watch-symbol { display: flex; align-items: center; gap: 7px; width: 100%; min-width: 0; height: 31px; padding: 0; background: transparent; text-align: left; font-size: 13px; font-weight: 500; }
 .watch-symbol > span:last-child { overflow: hidden; text-overflow: ellipsis; }
-.watch-rows .watch-remove { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 24px; padding: 0; color: var(--ui-muted); }
+.watch-rows .watch-remove { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; color: var(--ui-muted); }
 .watch-rows .watch-remove:hover { color: var(--ui-negative); }
 .watch-empty { padding: 12px; color: var(--ui-muted); }
 .watch-up { color: var(--ui-positive) !important; }
@@ -160,7 +167,9 @@ function startDrag(event: DragEvent, index: number) {
 .watch-instrument dt { color: var(--ui-muted); }
 .watch-instrument dd { margin: 0; text-align: right; }
 .watch-instrument footer { display: flex; gap: 4px; margin-top: 6px; }
+.watch-instrument footer button{min-height:32px;padding:4px 6px}
 .watch-quote-error { color: var(--ui-negative); margin-bottom: 6px; }
 .watch-backdrop { position: absolute; inset: 0; z-index: 29; background: #0005 !important; border-radius: 0 !important; }
 .watch-drawer { position: absolute; inset-block: 0; right: 0; z-index: 30; min-width: 0; max-width: calc(100% - 32px); box-shadow: -8px 0 24px #0003; }
+@media(pointer:coarse){.watch-remove-column{width:44px}.watch-rows .watch-remove{width:44px;height:44px}.watch-rows td{height:44px}.watch-icon,.watch-options :deep(summary),.watch-instrument footer button{min-width:44px;min-height:44px}.watch-header{padding-left:8px}.watch-rows table{min-width:320px}}
 </style>

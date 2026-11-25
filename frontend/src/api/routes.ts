@@ -21,7 +21,6 @@ const fillRoute = (template: string, params: RouteParams = {}) => template.repla
 const routeTemplates = {
   acknowledge_research_event: "/research/events/{event_id}/acknowledgement",
   archive_market_screener: "/research/screeners/{screener_id}/archive",
-  archive_research_alert: "/research/alerts/{alert_id}/archive",
   archive_research_note: "/research/notes/{note_id}/archive",
   archive_research_watch_item: "/research/items/{item_id}/archive",
   archive_research_watchlist: "/research/watchlists/{watchlist_id}/archive",
@@ -37,6 +36,7 @@ const routeTemplates = {
   chart_pine_records: "/chart-workspace/pine-runs/{key}/records",
   chart_pine_runs: "/chart-workspace/pine-runs",
   chart_quotes: "/chart-workspace/quotes",
+  chart_replay_bars: "/chart-workspace/replay/bars",
   chart_rerun_pine: "/chart-workspace/pine-runs/{key}/rerun",
   chart_save_document: "/chart-workspace/{kind}/{key}",
   chart_symbols: "/chart-workspace/symbols",
@@ -47,6 +47,11 @@ const routeTemplates = {
   create_research_watch_item: "/research/items",
   create_research_watchlist: "/research/watchlists",
   dca_simulate: "/tools/dca_simulate",
+  delete_market_screener: "/research/screeners/{screener_id}",
+  delete_research_alert: "/research/alerts/{alert_id}",
+  delete_research_note: "/research/notes/{note_id}",
+  delete_research_watch_item: "/research/items/{item_id}",
+  delete_research_watchlist: "/research/watchlists/{watchlist_id}",
   evaluate_browser_screener: "/research/screener-preview",
   evaluate_research_alerts: "/research/alerts/evaluate",
   evaluate_trade_signals: "/research/signals/evaluate",
@@ -90,7 +95,6 @@ const routeTemplates = {
   refresh_signal_lab_liquidity: "/signal-lab/liquidity/refresh",
   repair_data_source: "/data-health/repair",
   restore_market_screener: "/research/screeners/{screener_id}/restore",
-  restore_research_alert: "/research/alerts/{alert_id}/restore",
   restore_research_note: "/research/notes/{note_id}/restore",
   restore_research_watch_item: "/research/items/{item_id}/restore",
   restore_research_watchlist: "/research/watchlists/{watchlist_id}/restore",
@@ -144,7 +148,6 @@ export const serializeEndpointQuery = (name: ApiRouteName, params: ApiQueryShape
 const endpointQueryContracts = {
   acknowledge_research_event: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   archive_market_screener: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
-  archive_research_alert: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   archive_research_note: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   archive_research_watch_item: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   archive_research_watchlist: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
@@ -160,6 +163,7 @@ const endpointQueryContracts = {
   chart_pine_records: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   chart_pine_runs: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   chart_quotes: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
+  chart_replay_bars: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   chart_rerun_pine: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   chart_save_document: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   chart_symbols: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
@@ -170,6 +174,11 @@ const endpointQueryContracts = {
   create_research_watch_item: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   create_research_watchlist: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   dca_simulate: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
+  delete_market_screener: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
+  delete_research_alert: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
+  delete_research_note: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
+  delete_research_watch_item: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
+  delete_research_watchlist: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   evaluate_browser_screener: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   evaluate_research_alerts: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   evaluate_trade_signals: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
@@ -213,7 +222,6 @@ const endpointQueryContracts = {
   refresh_signal_lab_liquidity: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   repair_data_source: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   restore_market_screener: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
-  restore_research_alert: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   restore_research_note: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   restore_research_watch_item: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   restore_research_watchlist: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
@@ -235,7 +243,6 @@ const endpointQueryContracts = {
 export type ApiRouteResponseMap = {
   acknowledge_research_event: ResearchTypes.ResearchEventResponse
   archive_market_screener: ResearchTypes.SavedMarketScreenerResponse
-  archive_research_alert: ResearchTypes.ResearchAlertResponse
   archive_research_note: ResearchTypes.ResearchNoteResponse
   archive_research_watch_item: ResearchTypes.ResearchWatchItemResponse
   archive_research_watchlist: ResearchTypes.ResearchWatchlistResponse
@@ -251,6 +258,7 @@ export type ApiRouteResponseMap = {
   chart_pine_records: ChartWorkspaceTypes.PineRecords
   chart_pine_runs: Array<ChartWorkspaceTypes.PineRun>
   chart_quotes: Array<ChartWorkspaceTypes.ChartQuote>
+  chart_replay_bars: ChartWorkspaceTypes.ChartBars
   chart_rerun_pine: ChartWorkspaceTypes.PineRun
   chart_save_document: ChartWorkspaceTypes.WorkspaceDocument
   chart_symbols: Array<ChartWorkspaceTypes.ChartSymbol>
@@ -261,6 +269,11 @@ export type ApiRouteResponseMap = {
   create_research_watch_item: ResearchTypes.ResearchWatchItemResponse
   create_research_watchlist: ResearchTypes.ResearchWatchlistResponse
   dca_simulate: ToolsTypes.DCAResponse
+  delete_market_screener: Record<string, boolean>
+  delete_research_alert: Record<string, boolean>
+  delete_research_note: Record<string, boolean>
+  delete_research_watch_item: Record<string, boolean>
+  delete_research_watchlist: Record<string, boolean>
   evaluate_browser_screener: ResearchTypes.MarketScreenerRunResponse
   evaluate_research_alerts: ResearchTypes.ResearchAlertEvaluationResponse
   evaluate_trade_signals: ResearchTypes.TradeSignalEvaluationRunResponse
@@ -304,7 +317,6 @@ export type ApiRouteResponseMap = {
   refresh_signal_lab_liquidity: MarketTypes.SignalLabRefreshResponse
   repair_data_source: ConfigTypes.DataRepairResponse
   restore_market_screener: ResearchTypes.SavedMarketScreenerResponse
-  restore_research_alert: ResearchTypes.ResearchAlertResponse
   restore_research_note: ResearchTypes.ResearchNoteResponse
   restore_research_watch_item: ResearchTypes.ResearchWatchItemResponse
   restore_research_watchlist: ResearchTypes.ResearchWatchlistResponse
@@ -326,7 +338,6 @@ export type ApiRouteResponseMap = {
 export type ApiRouteBodyMap = {
   acknowledge_research_event: ResearchTypes.ResearchEventAcknowledgeCommand
   archive_market_screener: ResearchTypes.ResearchArchiveCommand
-  archive_research_alert: ResearchTypes.ResearchArchiveCommand
   archive_research_note: ResearchTypes.ResearchArchiveCommand
   archive_research_watch_item: ResearchTypes.ResearchArchiveCommand
   archive_research_watchlist: ResearchTypes.ResearchArchiveCommand
@@ -342,6 +353,7 @@ export type ApiRouteBodyMap = {
   chart_pine_records: never
   chart_pine_runs: never
   chart_quotes: never
+  chart_replay_bars: never
   chart_rerun_pine: never
   chart_save_document: ChartWorkspaceTypes.WorkspaceWrite
   chart_symbols: never
@@ -352,6 +364,11 @@ export type ApiRouteBodyMap = {
   create_research_watch_item: ResearchTypes.ResearchWatchItemCreateCommand
   create_research_watchlist: ResearchTypes.ResearchWatchlistCreateCommand
   dca_simulate: ToolsTypes.SimulateDcaCommand
+  delete_market_screener: never
+  delete_research_alert: never
+  delete_research_note: never
+  delete_research_watch_item: never
+  delete_research_watchlist: never
   evaluate_browser_screener: ResearchTypes.MarketScreenerFilters
   evaluate_research_alerts: ResearchTypes.ResearchAlertEvaluateCommand
   evaluate_trade_signals: ResearchTypes.TradeSignalEvaluationCommand
@@ -395,7 +412,6 @@ export type ApiRouteBodyMap = {
   refresh_signal_lab_liquidity: MarketTypes.SignalLabRefreshRequest
   repair_data_source: ConfigTypes.DataRepairCommand
   restore_market_screener: ResearchTypes.ResearchArchiveCommand
-  restore_research_alert: ResearchTypes.ResearchArchiveCommand
   restore_research_note: ResearchTypes.ResearchArchiveCommand
   restore_research_watch_item: ResearchTypes.ResearchArchiveCommand
   restore_research_watchlist: ResearchTypes.ResearchArchiveCommand
@@ -417,7 +433,6 @@ export type ApiRouteBodyMap = {
 export type ApiRoutePathMap = {
   acknowledge_research_event: { event_id: string | number }
   archive_market_screener: { screener_id: string | number }
-  archive_research_alert: { alert_id: string | number }
   archive_research_note: { note_id: string | number }
   archive_research_watch_item: { item_id: string | number }
   archive_research_watchlist: { watchlist_id: string | number }
@@ -433,6 +448,7 @@ export type ApiRoutePathMap = {
   chart_pine_records: { key: string | number }
   chart_pine_runs: never
   chart_quotes: never
+  chart_replay_bars: never
   chart_rerun_pine: { key: string | number }
   chart_save_document: { kind: string | number; key: string | number }
   chart_symbols: never
@@ -443,6 +459,11 @@ export type ApiRoutePathMap = {
   create_research_watch_item: never
   create_research_watchlist: never
   dca_simulate: never
+  delete_market_screener: { screener_id: string | number }
+  delete_research_alert: { alert_id: string | number }
+  delete_research_note: { note_id: string | number }
+  delete_research_watch_item: { item_id: string | number }
+  delete_research_watchlist: { watchlist_id: string | number }
   evaluate_browser_screener: never
   evaluate_research_alerts: never
   evaluate_trade_signals: never
@@ -486,7 +507,6 @@ export type ApiRoutePathMap = {
   refresh_signal_lab_liquidity: never
   repair_data_source: never
   restore_market_screener: { screener_id: string | number }
-  restore_research_alert: { alert_id: string | number }
   restore_research_note: { note_id: string | number }
   restore_research_watch_item: { item_id: string | number }
   restore_research_watchlist: { watchlist_id: string | number }
@@ -508,7 +528,6 @@ export type ApiRoutePathMap = {
 export type ApiRouteQueryMap = {
   acknowledge_research_event: never
   archive_market_screener: never
-  archive_research_alert: never
   archive_research_note: never
   archive_research_watch_item: never
   archive_research_watchlist: never
@@ -524,6 +543,7 @@ export type ApiRouteQueryMap = {
   chart_pine_records: ChartWorkspaceTypes.ChartPineRecordsQueryParams
   chart_pine_runs: never
   chart_quotes: ChartWorkspaceTypes.ChartQuotesQueryParams
+  chart_replay_bars: ChartWorkspaceTypes.ChartReplayBarsQueryParams
   chart_rerun_pine: never
   chart_save_document: never
   chart_symbols: never
@@ -534,6 +554,11 @@ export type ApiRouteQueryMap = {
   create_research_watch_item: never
   create_research_watchlist: never
   dca_simulate: never
+  delete_market_screener: ResearchTypes.DeleteMarketScreenerQueryParams
+  delete_research_alert: ResearchTypes.DeleteResearchAlertQueryParams
+  delete_research_note: ResearchTypes.DeleteResearchNoteQueryParams
+  delete_research_watch_item: ResearchTypes.DeleteResearchWatchItemQueryParams
+  delete_research_watchlist: ResearchTypes.DeleteResearchWatchlistQueryParams
   evaluate_browser_screener: never
   evaluate_research_alerts: never
   evaluate_trade_signals: never
@@ -577,7 +602,6 @@ export type ApiRouteQueryMap = {
   refresh_signal_lab_liquidity: never
   repair_data_source: never
   restore_market_screener: never
-  restore_research_alert: never
   restore_research_note: never
   restore_research_watch_item: never
   restore_research_watchlist: never

@@ -45,7 +45,7 @@ def periods_per_year_for_timeframe(timeframe: str) -> int:
         return 365
     return max(1, round(MILLISECONDS_PER_YEAR / interval_ms))
 
-# Redis Key Prefixes
+# Cache key prefixes
 KEY_PREFIX_KLINE = "kline"
 
 # Database field contracts

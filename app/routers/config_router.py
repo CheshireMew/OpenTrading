@@ -68,8 +68,6 @@ async def get_config(
 ):
     """获取系统配置"""
     cache_service = runtime_services.infra.cache_service
-    if cache_service is not None:
-        await cache_service.connect_async()
     return SystemConfigResponse.model_validate({
         'version': APP_VERSION,
         'exchange': settings.EXCHANGE_ID,

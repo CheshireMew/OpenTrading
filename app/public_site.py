@@ -7,7 +7,7 @@ from config import settings
 
 
 PUBLIC_COMPUTATIONS = {"dca_simulate", "compare_pairs", "evaluate_browser_screener"}
-PUBLIC_READS = {"get_config", "get_currencies", "get_tools_contract", "workspace_defaults", "chart_symbols", "chart_bars", "chart_quotes", "chart_capabilities", "chart_stream", "get_asset_research"}
+PUBLIC_READS = {"get_config", "get_currencies", "get_tools_contract", "workspace_defaults", "chart_symbols", "chart_bars", "chart_replay_bars", "chart_quotes", "chart_capabilities", "chart_stream", "get_asset_research"}
 
 
 def public_route(route):

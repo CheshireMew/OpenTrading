@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from app.application.errors import InvalidRequestError
 
-from app.infra.cache import RedisService, optional_cache_aget, optional_cache_aset
+from app.infra.cache import CacheService, optional_cache_aget, optional_cache_aset
 from app.domain.market.index_catalog import get_index_instrument
 from app.services.market.symbol_catalog import get_supported_crypto_symbols, resolve_market_asset
 from app.infra.executor import run_tool
@@ -23,7 +23,7 @@ class ToolsAppService:
         self,
         dca_service: DCAService,
         pair_compare_service: PairCompareService,
-        cache_service: RedisService | None = None,
+        cache_service: CacheService | None = None,
     ) -> None:
         self.dca_service = dca_service
         self.pair_compare_service = pair_compare_service

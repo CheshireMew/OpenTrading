@@ -7,6 +7,8 @@ type State = { watchlists: any[]; items: any[]; notes: any[]; alerts: any[]; eve
 const empty = (): State => ({ watchlists: [], items: [], notes: [], alerts: [], events: [], screeners: [], screenerRuns: [] })
 const now = () => new Date().toISOString()
 const uid = () => crypto.randomUUID()
+// Components pass reactive objects. IndexedDB only accepts plain structured data.
+const plain = <T>(value: T): T => JSON.parse(JSON.stringify(value))
 const read = async () => await browserRecord<State>('research') ?? empty()
 const change = <T>(action: (state: State) => T): Promise<T> => {
   let result: T
@@ -14,6 +16,8 @@ const change = <T>(action: (state: State) => T): Promise<T> => {
 }
 const missing = () => new ApiRequestError('Record does not exist in this browser', { status: 404 })
 const conflict = () => new ApiRequestError('This record changed in another tab. Reload and retry.', { status: 409 })
+const finishedAlert = (row: ResearchAlertResponse) => !!row.archivedAt ||
+  (!row.enabled && !!row.lastTriggeredAt && (row.configuration?.once ?? !!row.configuration?.chartSymbolId))
 function event(state: State, entityType: string, entity: any, kind: string, payload: any = {}) {
   const date = now()
   state.events.unshift({ id: uid(), entityType, entityId: entity.id, symbol: entity.symbol ?? null, kind,
@@ -21,7 +25,7 @@ function event(state: State, entityType: string, entity: any, kind: string, payl
 }
 function create(kind: keyof State, body: any, defaults: (state: State) => any = () => ({})) {
   return change(state => {
-    const date = now(), row = { ...defaults(state), ...body, id: uid(), version: 1, createdAt: date, updatedAt: date, archivedAt: null }
+    const date = now(), row = { ...defaults(state), ...plain(body), id: uid(), version: 1, createdAt: date, updatedAt: date, archivedAt: null }
     if (kind === 'items' && !state.watchlists.some(item => item.id === row.watchlistId && !item.archivedAt)) throw missing()
     if (kind === 'items' && state.items.some(item => !item.archivedAt && item.watchlistId === row.watchlistId && item.symbol === row.symbol)) throw new ApiRequestError('This symbol is already in the watchlist', { status: 409 })
     state[kind].push(row); event(state, kind, row, kind + '_created'); return row
@@ -32,7 +36,7 @@ function update(kind: keyof State, id: string, body: any) {
     const row = state[kind].find(item => item.id === id)
     if (!row) throw missing()
     if (row.version !== body.expectedVersion) throw conflict()
-    const { expectedVersion: _, ...values } = body
+    const { expectedVersion: _, ...values } = plain(body)
     if (kind === 'items' && body.watchlistId && !state.watchlists.some(item => item.id === body.watchlistId && !item.archivedAt)) throw missing()
     Object.assign(row, values, { version: row.version + 1, updatedAt: now() })
     if (kind === 'alerts') row.lastValue = body.configuration?.initialPrice ?? row.lastValue
@@ -40,6 +44,25 @@ function update(kind: keyof State, id: string, body: any) {
   })
 }
 const archive = (kind: keyof State, id: string, expectedVersion: number, archived: boolean) => update(kind, id, { expectedVersion, archivedAt: archived ? now() : null })
+function remove(kind: 'watchlists'|'items'|'notes'|'screeners', id:string, expectedVersion:number) {
+  return change(state => {
+    const row=state[kind].find(row=>row.id===id)
+    if(!row) throw missing()
+    if(row.version!==expectedVersion) throw conflict()
+    const ids=new Set([id])
+    if(kind==='watchlists'||kind==='items') {
+      const items=state.items.filter(row=>kind==='watchlists'?row.watchlistId===id:row.id===id)
+      const itemIds=new Set(items.map(row=>row.id))
+      for(const item of items) ids.add(item.id)
+      for(const child of ['notes','alerts'] as const) state[child]=state[child].filter(row=>{if(itemIds.has(row.watchItemId)){ids.add(row.id);return false}return true})
+      state.items=state.items.filter(row=>!itemIds.has(row.id))
+    }
+    if(kind==='screeners') state.screenerRuns=state.screenerRuns.filter(row=>row.screenerId!==id)
+    state[kind]=state[kind].filter(row=>row.id!==id)
+    state.events=state.events.filter(row=>!ids.has(row.entityId))
+    return {deleted:true}
+  })
+}
 let evaluating: Promise<any> | undefined
 function triggers(rule: ResearchAlertResponse, price: number, time: number) {
   const threshold = rule.threshold, previous = rule.lastValue, second = rule.secondaryThreshold
@@ -52,6 +75,7 @@ function triggers(rule: ResearchAlertResponse, price: number, time: number) {
 }
 async function evaluateAlerts() {
   const state = await read(), rules: ResearchAlertResponse[] = state.alerts.filter(row => row.enabled && !row.archivedAt)
+  const versions = new Map(rules.map(rule => [rule.id, rule.version]))
   const ids = [...new Set(rules.filter(row => row.configuration?.chartSymbolId).map(row => String(row.configuration!.chartSymbolId)))]
   const prices = new Map<string, Record<string, any>>()
   // Public prices are the only values sent across the network; rules and
@@ -71,6 +95,7 @@ async function evaluateAlerts() {
     const time = Date.now(), evaluatedAt = new Date(time).toISOString()
     let evaluatedCount = 0, triggeredCount = 0, unavailableCount = 0
     for (const rule of current.alerts.filter(row => row.enabled && !row.archivedAt) as ResearchAlertResponse[]) {
+      if (rule.version !== versions.get(rule.id)) continue
       const quote = prices.get(String(rule.configuration?.chartSymbolId ?? rule.symbol.toUpperCase().replace(/\//g, '')))
       const metric = rule.metric === 'breakout_score' && ['natural', 'momentum'].includes(String(rule.configuration?.scoreKind)) ? String(rule.configuration!.scoreKind) : rule.metric
       const price = rule.configuration?.chartSymbolId ? quote?.price : quote?.[metric]
@@ -80,10 +105,11 @@ async function evaluateAlerts() {
       rule.lastValue = price; rule.lastEvaluatedAt = evaluatedAt
       if (triggered) {
         triggeredCount++; rule.lastTriggeredAt = evaluatedAt
-        if (rule.configuration?.once === true) rule.enabled = false
+        if (rule.configuration?.once ?? !!rule.configuration?.chartSymbolId) rule.enabled = false
         event(current, 'alert', rule, 'alert_triggered', { value: price, threshold: rule.threshold, notificationChannels: rule.notificationChannels, configuration: rule.configuration })
       }
     }
+    current.alerts = current.alerts.filter(row => !finishedAlert(row))
     return { evaluatedAt, ruleCount: rules.length, evaluatedCount, triggeredCount, unavailableCount }
   })
 }
@@ -91,8 +117,12 @@ export const evaluateBrowserAlerts = () => evaluating ??= evaluateAlerts().final
 
 export function createBrowserResearchApi(server: typeof serverResearchApi): typeof serverResearchApi {
   return {
+    deleteWatchlist:(id,version)=>remove('watchlists',id,version),
+    deleteItem:(id,version)=>remove('items',id,version),
+    deleteNote:(id,version)=>remove('notes',id,version),
+    deleteScreener:(id,version)=>remove('screeners',id,version),
     async getWorkbench(eventLimit = 100, noteLimit = 200) {
-      const state = await read()
+      const state = await change(state => { state.alerts = state.alerts.filter(row => !finishedAlert(row)); return state })
       return { ...state, events: state.events.slice(0, eventLimit), notes: state.notes.slice(-noteLimit), unacknowledgedEventCount: state.events.filter(row => !row.acknowledgedAt).length }
     },
     async listEvents(kind = 'alert_triggered', unacknowledgedOnly = true, limit = 100) {
@@ -111,7 +141,13 @@ export function createBrowserResearchApi(server: typeof serverResearchApi): type
     setNoteArchived: (id, body, archived) => archive('notes', id, body.expectedVersion, archived),
     createAlert: body => create('alerts', body, () => ({ enabled: true, cooldownMinutes: 60, notificationChannels: ['in_app'], configuration: {}, lastValue: body.configuration?.initialPrice ?? null })),
     updateAlert: (id, body) => update('alerts', id, body),
-    setAlertArchived: (id, body, archived) => archive('alerts', id, body.expectedVersion, archived),
+    deleteAlert: (id, expectedVersion) => change(state => {
+      const row = state.alerts.find(row => row.id === id)
+      if (!row) throw missing()
+      if (row.version !== expectedVersion) throw conflict()
+      state.alerts = state.alerts.filter(row => row.id !== id)
+      return { deleted: true }
+    }),
     evaluateAlerts: evaluateBrowserAlerts,
     async getAsset(symbol, timeframe = '1h', historyDays = 365, context = {}) {
       const [market, state] = await Promise.all([server.getAsset(symbol, timeframe, historyDays, context), read()])

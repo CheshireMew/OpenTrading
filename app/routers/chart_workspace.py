@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from typing import Literal
-from fastapi import Depends, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
+from fastapi import Depends, HTTPException, Query, Request, Response, WebSocket, WebSocketDisconnect
 from starlette.requests import HTTPConnection
 from app.contracts.frontend import FrontendContractRouter
 from app.contracts.chart_workspace import (ChartSymbol, ChartBars, ChartQuote, WorkspaceDocument, WorkspaceWrite,
@@ -61,6 +62,22 @@ async def chart_bars(symbol:str,timeframe:str,limit:int=Query(1000,ge=1,le=1000)
 @router.get("/quotes",response_model=list[ChartQuote])
 async def chart_quotes(symbols:str,service=Depends(services)):
     return await service.market.quotes(list(dict.fromkeys(symbols.split(',')))[:100])
+
+
+@router.get("/replay/bars", response_model=ChartBars)
+async def chart_replay_bars(response: Response, symbol: str, timeframe: str,
+                            end: int = Query(..., ge=1), start: int | None = Query(None, ge=0),
+                            limit: int = Query(1000, ge=1, le=1000), service=Depends(services)):
+    upper = min(end, int(time.time() * 1000))
+    if start is not None and start >= upper:
+        raise HTTPException(422, "回放开始时间必须早于结束时间")
+    try:
+        result = await service.market.replay_bars(symbol, timeframe, limit, start, upper)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    response.headers["Cache-Control"] = "public, max-age=" + (
+        "86400" if result.bars and end == upper and upper < int(time.time() * 1000) - 86400000 else "30")
+    return result
 
 
 @router.get("/capabilities",response_model=PineCapabilities)

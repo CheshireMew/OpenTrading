@@ -19,9 +19,9 @@ export function formatNumber(value: unknown, digits = 4): string {
     ? value.toLocaleString(i18n.global.locale.value, { maximumFractionDigits: digits }) : '—'
 }
 
-export function formatDate(value: number, timeOnly = false): string {
+export function formatDate(value: number, timeOnly = false, timeZone?: string): string {
   const date = new Date(value)
-  return timeOnly ? date.toLocaleTimeString(i18n.global.locale.value) : date.toLocaleString(i18n.global.locale.value)
+  return timeOnly ? date.toLocaleTimeString(i18n.global.locale.value, { timeZone }) : date.toLocaleString(i18n.global.locale.value, { timeZone })
 }
 
 export const workspaceMarketLabel = (id: string) => id.includes(':usdm:') ? cw('binancePerpetual')

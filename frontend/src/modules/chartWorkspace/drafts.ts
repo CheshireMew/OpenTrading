@@ -60,3 +60,12 @@ export async function writeDraft(key:string,value:unknown, scope?:'window') {
     transaction.onerror = () => reject(transaction.error)
   })
 }
+
+export async function deleteDraft(key:string) {
+  const db=await database()
+  return new Promise<void>((resolve,reject)=>{
+    const tx=db.transaction('drafts','readwrite'),store=tx.objectStore('drafts'),cursor=store.openKeyCursor()
+    cursor.onsuccess=()=>{const row=cursor.result;if(!row)return;const stored=String(row.key);if(stored===key||stored.startsWith(key+':window:'))store.delete(row.primaryKey);row.continue()}
+    tx.oncomplete=()=>resolve();tx.onabort=()=>reject(tx.error)
+  })
+}

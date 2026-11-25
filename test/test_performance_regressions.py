@@ -12,11 +12,10 @@ from sqlalchemy.dialects import postgresql
 
 import app.lifecycle as lifecycle_module
 import app.main as main_module
-import app.infra.redis_connections as redis_connections_module
 import app.services.tools.app_service as tools_app_module
 from app.application.errors import InvalidRequestError
 from app.contracts.tools import SimulateDcaCommand
-from app.infra.cache import RedisService
+from app.infra.cache import CacheService
 from app.infra.persistence.data_retention import cleanup_old_data
 from app.infra.persistence.market.kline_store import KlineStore
 from app.infra.persistence.market.indicator_repository import MarketIndicatorRepository
@@ -31,81 +30,47 @@ from config.settings import AppSettings
 
 
 @pytest.mark.asyncio
-async def test_explicit_memory_cache_never_contacts_redis_even_when_forced(monkeypatch):
-    sync_redis, async_redis = MagicMock(), MagicMock()
-    monkeypatch.setattr(redis_connections_module, "redis", sync_redis)
-    monkeypatch.setattr(redis_connections_module, "async_redis", async_redis)
-    cache = RedisService(AppSettings(REDIS_ENABLED=False, CACHE_MEMORY_MAX_ENTRIES=2))
-    try:
-        for _ in range(3):
-            cache.connect(force=True)
-            await cache.connect_async(force=True)
-            assert cache.get("missing") is None
-            assert await cache.aget("missing") is None
-        assert cache.runtime_backend == "memory"
-        assert cache.connections.available is False
-        assert cache.set("sync:first", {"value": 1}, ttl=30)
-        assert cache.get("sync:first") == {"value": 1}
-        assert await cache.aset("async:second", {"value": 2}, ttl=30)
-        assert await cache.aget("async:second") == {"value": 2}
-        assert cache.set("sync:third", {"value": 3}, ttl=30)
-        assert cache.local_entry_count == 2
-        assert cache.get("sync:first") is None
-        assert await cache.adelete_prefix("async:") == 1
-        assert cache.delete("sync:third")
-        assert cache.local_entry_count == 0
-        sync_redis.ConnectionPool.assert_not_called()
-        sync_redis.Redis.assert_not_called()
-        async_redis.Redis.assert_not_called()
-    finally:
-        await cache.aclose()
+async def test_memory_cache_never_uses_network_and_is_entry_bounded(monkeypatch):
+    def unexpected_connection(*args, **kwargs):
+        pytest.fail("Memory cache must not open a network connection")
 
-
-@pytest.mark.asyncio
-async def test_async_cache_failure_does_not_block_event_loop_and_l1_is_bounded():
-    cache = RedisService(
-        AppSettings(
-            DATABASE_URL="sqlite:///:memory:",
-            REDIS_HOST="127.0.0.1",
-            REDIS_PORT=1,
-            REDIS_CONNECT_TIMEOUT=0.05,
-            REDIS_SOCKET_TIMEOUT=0.05,
-            REDIS_RETRY_INTERVAL=60,
-            CACHE_MEMORY_MAX_ENTRIES=2,
-        )
-    )
-    timer_fired = asyncio.Event()
-
-    async def timer():
-        await asyncio.sleep(0.02)
-        timer_fired.set()
-
-    timer_task = asyncio.create_task(timer())
-    assert await cache.aget("missing") is None
-    await asyncio.wait_for(timer_fired.wait(), timeout=0.2)
-    await timer_task
-
-    await cache.aset("one", {"value": 1}, ttl=30)
-    await cache.aset("two", {"value": 2}, ttl=30)
-    await cache.aset("three", {"value": 3}, ttl=30)
+    monkeypatch.setattr("socket.socket.connect", unexpected_connection)
+    cache = CacheService(AppSettings(CACHE_MEMORY_MAX_ENTRIES=2))
+    for _ in range(3):
+        assert cache.get("missing") is None
+        assert await cache.aget("missing") is None
+    assert cache.runtime_backend == "memory"
+    assert cache.set("sync:first", {"value": 1}, ttl=30)
+    assert cache.get("sync:first") == {"value": 1}
+    assert await cache.aset("async:second", {"value": 2}, ttl=30)
+    assert await cache.aget("async:second") == {"value": 2}
+    assert cache.set("sync:third", {"value": 3}, ttl=30)
     assert cache.local_entry_count == 2
-    assert await cache.aget("three") == {"value": 3}
-    await cache.aclose()
+    assert cache.get("sync:first") is None
+    assert await cache.adelete_prefix("async:") == 1
+    assert cache.delete("sync:third")
+    assert cache.local_entry_count == 0
+
+
+def test_memory_cache_expires_entries_and_rejects_oversized_values(monkeypatch):
+    cache = CacheService(AppSettings(CACHE_MEMORY_MAX_BYTES=64))
+    clock = [100.0]
+    monkeypatch.setattr("app.infra.cache_memory.time.monotonic", lambda: clock[0])
+    assert cache.set("short", {"value": 1}, ttl=2)
+    clock[0] = 101.0
+    assert cache.get("short") == {"value": 1}
+    clock[0] = 102.0
+    assert cache.get("short") is None
+    assert cache.local_entry_count == 0
+    assert cache.local_byte_size == 0
+    assert not cache.set("oversized", "x" * 100)
+    assert cache.get("oversized") is None
 
 
 @pytest.mark.asyncio
 async def test_local_cache_is_byte_bounded_and_returns_fresh_values():
-    cache = RedisService(
-        AppSettings(
-            DATABASE_URL="sqlite:///:memory:",
-            REDIS_HOST="127.0.0.1",
-            REDIS_PORT=1,
-            REDIS_CONNECT_TIMEOUT=0.05,
-            REDIS_SOCKET_TIMEOUT=0.05,
-            REDIS_RETRY_INTERVAL=60,
-            CACHE_MEMORY_MAX_ENTRIES=100,
-            CACHE_MEMORY_MAX_BYTES=420,
-        )
+    cache = CacheService(
+        AppSettings(CACHE_MEMORY_MAX_ENTRIES=100, CACHE_MEMORY_MAX_BYTES=420)
     )
     original = {"history": ["x" * 150]}
     await cache.aset("first", original, ttl=30)
@@ -118,7 +83,6 @@ async def test_local_cache_is_byte_bounded_and_returns_fresh_values():
     await cache.aset("second", {"history": ["y" * 250]}, ttl=30)
     assert cache.local_byte_size <= 420
     assert cache.local_entry_count == 1
-    await cache.aclose()
 
 
 @pytest.mark.asyncio

@@ -7,10 +7,10 @@ from app.infra.cache_helpers import (
     optional_cache_get,
     optional_cache_set,
 )
-from app.infra.cache_service import RedisService, build_cache_service
+from app.infra.cache_service import CacheService, build_cache_service
 
 __all__ = [
-    "RedisService",
+    "CacheService",
     "build_cache_service",
     "optional_cache_aget",
     "optional_cache_aset",

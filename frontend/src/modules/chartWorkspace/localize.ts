@@ -63,7 +63,9 @@ const vocabulary:Record<string,string>={
   'Body':'实体','Borders':'边框','Wick':'影线','Spacing':'间距','Animation':'动画','Animate zoom':'缩放动画','Pan momentum':'平移惯性','Animate price scale':'价格轴动画','Animate price changes':'价格变化动画',
   'Reveal on load':'加载动画','Time zone':'时区','Watermark':'水印','Symbol watermark':'品种水印','Reset defaults':'恢复默认','(UTC+8) Shanghai':'(UTC+8) 上海',
   'Inputs':'输入参数','Style':'样式','Properties':'属性','Visibility':'可见性','Settings':'设置','Source':'数据源','Length':'周期','Color':'颜色','Width':'宽度','Line style':'线型','Solid':'实线','Dashed':'虚线','Dotted':'点线',
-  'Save':'保存','Cancel':'取消','Apply':'应用','Close':'关闭','Hide':'隐藏','Show':'显示','Lock':'锁定','Unlock':'解锁','Clone':'复制','Duplicate':'复制','Remove':'移除','Remove all':'全部移除','Rename':'重命名',
+  'DI length':'DI 周期','ADX smoothing':'ADX 平滑周期',
+  'Reference lines':'参考线','Show upper level':'显示上方参考线','Upper level':'上方数值','Show lower level':'显示下方参考线','Lower level':'下方数值',
+  'Save':'保存','Cancel':'取消','Apply':'应用','Ok':'确定','Close':'关闭','Hide':'隐藏','Show':'显示','Lock':'锁定','Unlock':'解锁','Clone':'复制','Duplicate':'复制','Remove':'移除','Remove all':'全部移除','Rename':'重命名',
   'Drawings':'绘图','Indicators':'指标','No drawings':'暂无绘图','No objects':'暂无对象','Search':'搜索','Search objects':'搜索对象','Bring to front':'置于顶层','Send to back':'置于底层',
   'Show all drawings':'显示所有绘图','Hide all drawings':'隐藏所有绘图','Lock all drawings':'锁定所有绘图','Unlock all drawings':'解锁所有绘图','Remove drawings':'移除绘图',
   'Coordinates':'坐标','Text color':'文字颜色','Font size':'字号','Background':'背景','Background color':'背景颜色','Grid':'网格','Vertical grid lines':'垂直网格线','Horizontal grid lines':'水平网格线',
@@ -85,7 +87,10 @@ export function localizeChart(host:HTMLElement, symbols: () => ChartSymbol[] = (
   // never change an English label when the user switches back to English.
   const originals = new WeakMap<Node, Map<string, { source: string; rendered: string }>>()
   const translate=(value:string):string=>{
-    const id = value.replace(/^(?:opentrading|heimdall):/, '')
+    const replayLabel=value.replace(/\bREPLAY\d+\b/g,cw('replay'))
+    if(replayLabel!==value)return replayLabel
+    if (/^REPLAY\d*$/.test(value)) return cw('replay')
+    const id = value.replace(/^(?:opentrading|heimdall|replay\d*):/, '')
     const symbol = /^(?:binance|okx|index):/.test(id) ? symbols().find(item => item.id === id) : undefined
     if (symbol) return `${symbol.name} · ${exchangeLabel(symbol.exchange)} · ${cw(symbol.market === 'usdm' ? 'perpetual' : symbol.market === 'index' ? 'index' : 'spot')}`
     const key=keys.get(value)
@@ -106,8 +111,10 @@ export function localizeChart(host:HTMLElement, symbols: () => ChartSymbol[] = (
     const saved = fields.get(field)
     const source = saved?.rendered === value ? saved.source : value
     const trimmed = source.trim()
-    const translated = field === 'text' && trimmed === 'Close' && node.parentElement?.matches('.vela-dw-label')
-      && i18n.global.locale.value !== 'en' ? '收盘' : translate(trimmed)
+    const sourceOption = field === 'text' && node.parentElement?.closest('option,.vela-select-trigger,.vela-select-item')
+      && node.parentElement.closest('.vela-dialog--form,.vela-select-list')
+    const translated = i18n.global.locale.value !== 'en' && trimmed === 'Close' &&
+      (sourceOption || node.parentElement?.matches('.vela-dw-label')) ? sourceOption ? '收盘价' : '收盘' : translate(trimmed)
     const rendered = translated === trimmed ? source : source.replace(trimmed, translated)
     fields.set(field, { source, rendered })
     if (rendered !== value) write(rendered)

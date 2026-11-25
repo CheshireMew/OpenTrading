@@ -1,4 +1,4 @@
-"""One terminal owns the API, background worker, Vite and optional local Redis."""
+"""One terminal owns the API, background worker and Vite."""
 from __future__ import annotations
 
 import argparse
@@ -199,56 +199,6 @@ class Launcher:
             self.stop_requested.wait(1)
         raise RuntimeError(f'{label}在 {self.timeout} 秒内未就绪：{detail}。完整日志：{self.log.path}')
 
-    def ensure_redis(self):
-        from redis import Redis
-        from redis.backoff import NoBackoff
-        from redis.retry import Retry
-        host = self.settings.REDIS_HOST
-        host = '127.0.0.1' if host.lower() == 'localhost' else host
-        def ping():
-            client = Redis(host=host, port=self.settings.REDIS_PORT, password=self.settings.REDIS_PASSWORD or None,
-                           socket_connect_timeout=.5, socket_timeout=1, retry=Retry(NoBackoff(), 0), retry_on_error=[])
-            try:
-                return bool(client.ping())
-            except Exception:
-                return False
-            finally:
-                client.close()
-        if ping():
-            self.log.write('缓存', 'Redis 已连接，使用现有实例。')
-            return
-        if host not in ('127.0.0.1', '::1'):
-            self.log.write('缓存', '远程 Redis 暂不可用，将使用应用的内存缓存。')
-            return
-        executable = os.getenv('OPENTRADING_REDIS_EXE') or shutil.which('redis-server.exe')
-        if not executable and Path('D:/Tools/Redis/redis-server.exe').is_file():
-            executable = 'D:/Tools/Redis/redis-server.exe'
-        if not executable:
-            self.log.write('缓存', '未找到本地 Redis，使用应用的内存缓存。')
-            return
-        if port_open(host, self.settings.REDIS_PORT):
-            raise RuntimeError('Redis 端口已有监听，但连接验证失败，请检查 REDIS_PASSWORD 与端口配置。')
-        folder = self.settings.RUNTIME_ROOT_DIR / 'redis'
-        folder.mkdir(parents=True, exist_ok=True)
-        def quoted(value):
-            return '"' + str(value).replace('\\','\\\\').replace('"','\\"').replace('\n','\\n').replace('\r','\\r') + '"'
-        config = '\n'.join([f'bind {host}', f'port {self.settings.REDIS_PORT}', f'dir {quoted(folder.as_posix())}',
-            'save ""', 'appendonly no', 'logfile ""', 'loglevel warning', 'maxmemory 256mb', 'maxmemory-policy allkeys-lru',
-            *([f'requirepass {quoted(self.settings.REDIS_PASSWORD)}'] if self.settings.REDIS_PASSWORD else [])])
-        path = folder / 'launcher.conf'
-        path.write_text(config + '\n', encoding='utf8')
-        self.log.write('缓存', '以当前用户启动本地 Redis，退出启动器时一并停止。')
-        process = self.start_child('Redis', [executable, str(path)], cwd=folder, critical=False)
-        deadline = time.monotonic() + 10
-        while time.monotonic() < deadline and process.poll() is None:
-            if ping():
-                self.log.write('缓存', '本地 Redis 已就绪。')
-                return
-            if self.stopped():
-                raise KeyboardInterrupt
-            self.stop_requested.wait(.2)
-        raise RuntimeError('本地 Redis 启动失败，请查看上面的 [Redis] 日志。')
-
     def start(self):
         node = shutil.which('node.exe') or shutil.which('node')
         vite = self.root / 'frontend/node_modules/vite/bin/vite.js'
@@ -259,7 +209,7 @@ class Launcher:
                 raise RuntimeError(f'{label}端口 {port} 已被占用。请关闭旧的 OpenTrading 启动窗口后重试；不会终止其他程序。')
         self.run_step('依赖', ['powershell.exe','-NoLogo','-NoProfile','-ExecutionPolicy','Bypass',
                                '-File', str(self.root / 'scripts/start_local_dependencies.ps1')])
-        self.ensure_redis()
+        self.log.write('缓存', '使用有容量上限的进程内存缓存。')
         self.run_step('数据库', [sys.executable, '-m', 'scripts.prepare_db'])
         self.start_api()
         self.wait_ready('API', self.api_url + '/health/live')

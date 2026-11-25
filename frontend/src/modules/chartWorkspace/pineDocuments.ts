@@ -1,6 +1,6 @@
 import { computed, ref, watch } from 'vue'
 import { chartApi, type WorkspaceDocument } from './api'
-import { readDraft, writeDraft } from './drafts'
+import { deleteDraft, readDraft, writeDraft } from './drafts'
 import { cw } from './locale'
 
 type Dependencies = {
@@ -15,6 +15,7 @@ export function createPineDocuments(deps: Dependencies) {
   const scriptId = ref('opentrading-v7-2'), source = ref(''), scriptDirty = ref(false), scriptLoading = ref(false)
   const selectedScript = computed(() => scripts.value.find(script => script.id === scriptId.value))
   const scriptConflict = ref(false)
+  const managing = ref(false)
   let baseVersion = 0, baseSource = ''
   let disposed = false, editorReady = false, epoch = 0
   let timer: ReturnType<typeof setTimeout> | undefined
@@ -55,7 +56,7 @@ export function createPineDocuments(deps: Dependencies) {
     finally { if (request === epoch) scriptLoading.value = false }
   }
   async function saveScript(asNew: boolean): Promise<WorkspaceDocument | undefined> {
-    if (scriptLoading.value || disposed) return
+    if (scriptLoading.value || managing.value || disposed) return
     const old = selectedScript.value, originId = scriptId.value, request = epoch, code = source.value
     const needsName = asNew || !old || old.readonly || scriptConflict.value
     const name = needsName ? await deps.requestName(cw('scriptName'), old ? cw('copyName', { name: old.name }) : cw('myScript')) : old.name
@@ -92,6 +93,36 @@ export function createPineDocuments(deps: Dependencies) {
     source.value = code
     scriptDirty.value = true
     deps.openEditor()
+  }
+  async function renameScript() {
+    const old=selectedScript.value
+    if(!old||old.readonly||managing.value||scriptLoading.value)return
+    const name=await deps.requestName(cw('scriptName'),old.name)
+    if(!name||disposed)return
+    managing.value=true
+    const operation=writes.then(async()=>{
+      const latest=scripts.value.find(item=>item.id===old.id)!
+      const saved=await chartApi.save('scripts',old.id,{name,data:latest.data,expected_version:latest.version})
+      scripts.value=scripts.value.map(item=>item.id===saved.id?saved:item)
+      if(scriptId.value===saved.id){baseVersion=saved.version;await storeDraft(saved.id,captureDraft())}
+      return saved
+    }).catch(error=>{deps.onError(error);return undefined})
+    writes=operation
+    try{await operation}finally{managing.value=false}
+  }
+  async function deleteScript() {
+    const old=selectedScript.value
+    if(!old||old.readonly||managing.value||scriptLoading.value)return
+    managing.value=true
+    try{
+      await writes
+      const latest=scripts.value.find(item=>item.id===old.id)!
+      await chartApi.remove('scripts',old.id,latest.version)
+      if(scriptId.value===old.id){epoch++;editorReady=false;pendingDraft=undefined;clearTimeout(timer)}
+      await draftWrites;await deleteDraft('script:'+old.id)
+      scripts.value=scripts.value.filter(item=>item.id!==old.id)
+      if(scriptId.value===old.id){scriptId.value=scripts.value[0]?.id??'';source.value='';scriptDirty.value=false;scriptConflict.value=false;await openScript()}
+    }catch(error){deps.onError(error)}finally{managing.value=false}
   }
   async function useSavedScript() {
     const id = scriptId.value, request = ++epoch
@@ -145,6 +176,7 @@ export function createPineDocuments(deps: Dependencies) {
       if (draft) { setNewSource(draft.source); return }
     }
     if (last && scripts.value.some(script => script.id === last)) scriptId.value = last
+    if(!scripts.value.some(script=>script.id===scriptId.value))scriptId.value=scripts.value[0]?.id??''
     await openScript()
   }
   const stopSource = watch(source, value => {
@@ -162,7 +194,7 @@ export function createPineDocuments(deps: Dependencies) {
     if (editorReady && scriptDirty.value) pendingDraft = { id: scriptId.value || 'new', draft: captureDraft() }
     void flushDraft().catch(deps.onError)
   }
-  return { scripts, scriptId, source, scriptDirty, scriptLoading, scriptConflict, useSavedScript, selectedScript, openScript, saveScript,
+  return { scripts, scriptId, source, scriptDirty, scriptLoading, scriptConflict, useSavedScript, selectedScript, managing, renameScript, deleteScript, openScript, saveScript,
     newScript, importScript, exportScript, initialize, dispose, selectionEpoch: () => epoch, isDisposed: () => disposed }
 }
 

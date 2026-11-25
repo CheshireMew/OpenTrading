@@ -24,7 +24,7 @@ DATABASE_URL=postgresql://user:password@localhost:5432/opentrading
 
 | 配置 | 作用 |
 | --- | --- |
-| `REDIS_HOST`、`REDIS_PORT` 等 | Redis 缓存；不可用时退回内存缓存，不阻止应用启动 |
+| `CACHE_MEMORY_MAX_ENTRIES`、`CACHE_MEMORY_MAX_BYTES` | 每个进程的内存缓存上限，默认 512 条、64 MiB |
 | `DEEPSEEK_API_KEY` | 可选的模型分析；也可在应用设置页配置提供商 |
 | `RUNTIME_ROOT_DIR` | 日志、临时文件和运行状态的根目录，默认 `.opentrading_runtime/` |
 | `LOG_DIR`、`TEMP_DIR` | 分别覆盖日志与临时目录 |
@@ -47,7 +47,7 @@ DATABASE_URL=postgresql://user:password@localhost:5432/opentrading
 .\dev_start.bat --stop
 ```
 
-已有 Redis 实例会被复用；如果本机安装了 Redis，启动器可通过 PATH 或 `OPENTRADING_REDIS_EXE` 找到它并启动临时实例。未安装时不会自动下载，应用使用内存缓存。
+缓存使用带过期机制和容量上限的进程内存，无需安装或启动额外服务。历史行情仍由数据库和归档文件保存。
 
 连接本机 PostgreSQL 而对应 Windows 服务未启动时，启动器可能请求一次 UAC 确认，仅用于启动该服务。应用进程仍以当前用户运行；也可以事先手动启动 PostgreSQL 服务。
 

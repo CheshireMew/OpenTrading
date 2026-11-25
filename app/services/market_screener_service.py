@@ -19,6 +19,9 @@ from app.infra.executor import run_database
 
 
 class MarketScreenerService:
+    def delete(self, screener_id: str, expected_version: int) -> None:
+        self._repository.delete_screener(screener_id, expected_version)
+
     def __init__(
         self,
         *,

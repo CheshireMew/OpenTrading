@@ -4,6 +4,7 @@
 
     <header class="app-mobile-header flex h-14 flex-shrink-0 items-center justify-between border-b px-4 md:hidden">
       <span class="app-brand text-lg font-semibold tracking-tight">OpenTrading</span>
+      <div ref="mobileControlsHost" class="ml-auto" />
       <button type="button" class="app-icon-button inline-flex" :aria-label="t('app.openMenu')" :aria-expanded="sidebarOpen" @click="sidebarOpen = true">
         <Bars3Icon class="h-6 w-6" />
       </button>
@@ -19,7 +20,7 @@
 
     <aside
       ref="sidebarRef"
-      class="app-sidebar fixed inset-y-0 left-0 z-50 flex w-72 flex-shrink-0 flex-col overflow-hidden transition-transform duration-200 md:static md:z-auto md:w-[184px] md:translate-x-0"
+      class="app-sidebar fixed inset-y-0 left-0 z-50 flex w-64 flex-shrink-0 flex-col overflow-hidden transition-transform duration-200 md:static md:z-auto md:translate-x-0"
       :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
       :inert="!desktopNavigation && !sidebarOpen"
       :aria-hidden="!desktopNavigation && !sidebarOpen ? 'true' : undefined"
@@ -28,18 +29,18 @@
       :aria-label="navigationModalOpen ? t('app.primaryNavigation') : undefined"
       tabindex="-1"
     >
-      <div class="app-sidebar-header flex items-start justify-between p-5">
+      <div class="app-sidebar-header flex items-start justify-between">
         <div>
-          <span class="app-brand text-xl font-semibold tracking-tight">OpenTrading</span>
+          <span class="app-brand">OpenTrading</span>
         </div>
         <button type="button" class="app-icon-button inline-flex md:hidden" :aria-label="t('app.closeMenu')" @click="closeSidebar">
           <XMarkIcon class="h-5 w-5" />
         </button>
       </div>
 
-      <nav class="app-sidebar-navigation min-h-0 flex-1 space-y-1 overflow-y-auto px-3 pb-4 pt-3" :aria-label="t('app.primaryNavigation')">
+      <nav class="app-sidebar-navigation min-h-0 flex-1 overflow-y-auto" :aria-label="t('app.primaryNavigation')">
         <template v-for="section in navSections" :key="section.key">
-          <div v-if="section.titleKey" class="app-nav-section mt-4 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em]">
+          <div v-if="section.titleKey" class="app-nav-section shrink-0 font-semibold">
             {{ $t(section.titleKey) }}
           </div>
 
@@ -47,42 +48,21 @@
             v-for="item in section.items"
             :key="item.path"
             :to="item.path"
-            class="app-nav-link flex items-center px-3 py-2 text-sm transition"
+            class="app-nav-link flex shrink-0 items-center transition"
             active-class="app-nav-link--active"
             :title="t(item.nav.labelKey)"
             @click="closeSidebar"
           >
-            <component :is="iconMap[item.nav.icon]" class="mr-2.5 h-[18px] w-[18px] shrink-0" />
+            <component :is="iconMap[item.nav.icon]" class="mr-2 h-[18px] w-[18px] shrink-0" />
             <span class="truncate">{{ $t(item.nav.labelKey) }}</span>
           </router-link>
         </template>
 
       </nav>
-        <div class="app-sidebar-controls mx-3 mb-3 grid shrink-0 grid-cols-[1fr_auto] gap-2 pt-3">
-          <button
-             type="button"
-             @click="toggleTheme"
-             :aria-label="theme === 'dark' ? t('theme.light') : t('theme.dark')"
-             class="app-sidebar-button flex w-full items-center justify-between px-3 py-2 text-sm transition"
-          >
-             <span class="flex items-center">
-                 <SunIcon v-if="theme === 'dark'" class="mr-2 h-4 w-4" />
-                 <MoonIcon v-else class="mr-2 h-4 w-4" />
-                 {{ theme === 'dark' ? $t('theme.light') : $t('theme.dark') }}
-             </span>
-          </button>
-          <button
-             type="button"
-             @click="toggleLocale"
-             class="app-sidebar-button flex w-full items-center justify-center px-3 py-2 text-sm font-semibold transition"
-          >
-             <LanguageIcon class="mr-1.5 h-4 w-4" />
-             {{ $t('lang.switch') }}
-          </button>
-        </div>
     </aside>
 
     <main ref="mainContentRef" id="main-content" class="app-main min-h-0 min-w-0 flex-1 overflow-auto" :inert="navigationModalOpen" tabindex="-1">
+      <div v-show="desktopNavigation && route.path!=='/'" class="app-global-toolbar"><div ref="globalControlsHost" /></div>
       <div v-if="bootstrapError" role="alert" class="m-4 flex items-center justify-between gap-4 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-950/30 dark:text-rose-200">
         <span>{{ t('app.bootstrapLoadFailed') }}</span>
         <button type="button" class="font-semibold underline disabled:opacity-60" :disabled="bootstrapLoading" @click="loadBootstrapResources">
@@ -96,12 +76,13 @@
         </keep-alive>
       </router-view>
     </main>
+    <Teleport v-if="controlsTarget" :to="controlsTarget"><AppAppearanceControls /></Teleport>
     <PriceAlertNotices />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect, type Component } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch, watchEffect, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import {
@@ -110,10 +91,7 @@ import {
   BanknotesIcon,
   CogIcon,
   ClockIcon,
-  MoonIcon,
-  SunIcon,
   CubeTransparentIcon,
-  LanguageIcon,
   Bars3Icon,
   XMarkIcon,
   BookmarkSquareIcon,
@@ -127,11 +105,11 @@ import {
   APP_NAV_SECTIONS,
   type AppNavIconName,
 } from '@/app/navigation'
-import { useTheme } from '@/composables/useTheme'
+import AppAppearanceControls from '@/components/AppAppearanceControls.vue'
+import { APP_TOOLBAR_HOST } from '@/composables/useAppToolbarHost'
 import ResearchNavigation from '@/components/research/ResearchNavigation.vue'
 import { useMoney } from '@/composables/useMoney'
 import { useSymbolCatalog } from '@/modules/market'
-import { setAppLocale, toggleAppLocale } from '@/i18n/config'
 import { useModalDialog } from '@/composables/useModalDialog'
 import { useDesktopAlertNotifications } from '@/modules/research/useDesktopAlertNotifications'
 import PriceAlertNotices from '@/components/chartWorkspace/PriceAlertNotices.vue'
@@ -144,7 +122,11 @@ const bootstrapError = ref(false)
 const bootstrapLoading = ref(false)
 const desktopNavigation = ref(false)
 const navigationModalOpen = computed(() => sidebarOpen.value && !desktopNavigation.value)
-const { theme, toggleTheme } = useTheme()
+const mobileControlsHost = ref<HTMLElement>(), globalControlsHost = ref<HTMLElement>()
+const pageControlsHost = shallowRef<HTMLElement>()
+provide(APP_TOOLBAR_HOST, pageControlsHost)
+const controlsTarget = computed(() => !desktopNavigation.value ? mobileControlsHost.value
+  : route.path==='/' && pageControlsHost.value ? pageControlsHost.value : globalControlsHost.value)
 const { loadCurrencyRates } = useMoney()
 const { loadSymbols } = useSymbolCatalog()
 useDesktopAlertNotifications()
@@ -173,10 +155,6 @@ let desktopMediaQuery: MediaQueryList | null = null
 const syncDesktopNavigation = (event: MediaQueryList | MediaQueryListEvent) => {
   desktopNavigation.value = event.matches
   if (event.matches) closeSidebar()
-}
-
-const toggleLocale = () => {
-  setAppLocale(locale, toggleAppLocale(locale.value))
 }
 
 const loadBootstrapResources = async () => {
@@ -246,10 +224,6 @@ onBeforeUnmount(() => {
   --app-nav-active-border: var(--ui-accent);
   --app-nav-active-bg: color-mix(in srgb, var(--ui-accent) 10%, var(--ui-toolbar));
   --app-nav-active: var(--ui-accent);
-  --app-button-bg: var(--ui-toolbar);
-  --app-button-border: var(--ui-border);
-  --app-button-hover-bg: var(--ui-elevated);
-  --app-button-hover-border: var(--ui-borderStrong);
   --app-main-bg: var(--ui-canvas);
   background: var(--app-shell-bg);
   color: var(--app-shell-text);
@@ -259,12 +233,14 @@ onBeforeUnmount(() => {
   background: var(--app-sidebar-bg);
 }
 
-.app-sidebar-header { padding: 18px 14px; }
-.app-nav-link { min-height: 40px; border-radius: 3px; padding-inline: 9px; font-size: 14px; font-weight: 500; }
+.app-sidebar-header { padding: 12px 10px; }
+.app-sidebar-navigation { display: flex; flex-direction: column; gap: 2px; padding: 8px 8px 12px; }
+.app-nav-link { min-height: 36px; border-radius: 3px; padding: 6px; font-size: 13px; line-height: 20px; font-weight: 500; }
 .app-nav-link--active { font-weight: 600; }
-.app-nav-section { margin-top: 16px; padding: 6px 9px; font-size: 11px; letter-spacing: 0.02em; }
-.app-sidebar-button { min-height: 36px; border-radius: 4px; padding: 7px 6px; font-size: 12px; font-weight: 600; white-space: nowrap; }
-.app-sidebar-controls { border-top-color: var(--ui-border); }
+.app-nav-section { margin-top: 10px; padding: 4px 6px; font-size: 11px; letter-spacing: 0.02em; }
+@media(min-width:768px){.app-sidebar{width:max-content;max-width:220px}}
+.app-global-toolbar{position:sticky;top:0;z-index:20;display:flex;justify-content:flex-end;align-items:center;height:40px;padding:4px 10px;background:var(--ui-toolbar);border-bottom:1px solid var(--ui-border)}
+@media(pointer:coarse){.app-global-toolbar{height:48px;padding-block:2px}}
 
 .app-mobile-header {
   border-color: var(--app-sidebar-border);
@@ -309,7 +285,8 @@ onBeforeUnmount(() => {
 .app-brand {
   color: var(--app-brand);
   font-family: inherit;
-  font-size: 19px;
+  font-size: 18px;
+  line-height: 24px;
   font-weight: 750;
   letter-spacing: -0.6px;
 }
@@ -333,22 +310,6 @@ onBeforeUnmount(() => {
   font-weight: 700;
 }
 
-.app-sidebar-controls {
-  border-top: 1px solid var(--app-sidebar-border);
-}
-
-.app-sidebar-button {
-  border: 1px solid var(--app-button-border);
-  background: var(--app-button-bg);
-  color: var(--app-nav);
-}
-
-.app-sidebar-button:hover {
-  border-color: var(--app-button-hover-border);
-  background: var(--app-button-hover-bg);
-  color: var(--app-nav-hover);
-}
-
 .app-main {
   overscroll-behavior: contain;
   background: var(--app-main-bg);
@@ -358,6 +319,6 @@ onBeforeUnmount(() => {
 
 .app-main:focus { outline: none; }
 @media (pointer: coarse) {
-  .app-nav-link, .app-sidebar-button { min-height: 44px; }
+  .app-nav-link { min-height: 44px; }
 }
 </style>

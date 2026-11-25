@@ -60,5 +60,5 @@ export async function deliverAlertEvent(event: ResearchEventResponse) {
       notification.onclick = () => { window.focus(); window.dispatchEvent(new Event('opentrading:open-alerts')); notification.close() }
     } catch { alertDeliveryStatus.value = 'alertNotificationsUnsupported' }
   }
-  window.dispatchEvent(new Event('opentrading:alert-triggered'))
+  window.dispatchEvent(new CustomEvent('opentrading:alert-triggered', { detail: event }))
 }

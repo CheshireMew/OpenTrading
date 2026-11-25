@@ -11,7 +11,7 @@ import httpx
 from config import settings
 from utils.logger import logger
 
-from app.infra.cache import RedisService, optional_cache_aget, optional_cache_aset
+from app.infra.cache import CacheService, optional_cache_aget, optional_cache_aset
 
 
 class BinanceApiSupport:
@@ -21,7 +21,7 @@ class BinanceApiSupport:
         base_url: str,
         cache_namespace: str,
         user_agent: str | None = None,
-        cache_service: RedisService | None = None,
+        cache_service: CacheService | None = None,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.cache_namespace = cache_namespace

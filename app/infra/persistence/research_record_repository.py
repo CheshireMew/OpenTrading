@@ -4,7 +4,7 @@ from typing import Any
 
 from uuid import uuid4
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 
 from sqlalchemy.exc import IntegrityError
 
@@ -14,7 +14,7 @@ from app.infra.db.database import DatabaseRuntime
 
 from app.infra.persistence.write_session import write_session
 
-from app.infra.db.schema import ResearchNote, ResearchWatchItem, ResearchWatchlist
+from app.infra.db.schema import ResearchAlertRule, ResearchEvent, ResearchNote, ResearchWatchItem, ResearchWatchlist
 
 from utils.time import utc_now_naive
 
@@ -31,6 +31,23 @@ from app.infra.persistence.research_rows import (
 
 
 class ResearchRecordRepository:
+    def delete_record(self, kind: str, record_id: str, expected_version: int) -> None:
+        model = {"watchlist": ResearchWatchlist, "item": ResearchWatchItem, "note": ResearchNote}[kind]
+        with write_session(self._database_runtime, ResearchRevisionConflictError) as session:
+            row = require_row(session, model, record_id, expected_version)
+            deleted_ids = {record_id}
+            if kind in {"watchlist", "item"}:
+                item_ids = list(session.scalars(select(ResearchWatchItem.id).where(
+                    ResearchWatchItem.watchlist_id == record_id if kind == "watchlist" else ResearchWatchItem.id == record_id)))
+                deleted_ids.update(item_ids)
+                for child in (ResearchNote, ResearchAlertRule):
+                    deleted_ids.update(session.scalars(select(child.id).where(child.watch_item_id.in_(item_ids))))
+                    session.execute(delete(child).where(child.watch_item_id.in_(item_ids)))
+                if kind == "watchlist":
+                    session.execute(delete(ResearchWatchItem).where(ResearchWatchItem.id.in_(item_ids)))
+            session.execute(delete(ResearchEvent).where(ResearchEvent.entity_id.in_(deleted_ids)))
+            session.delete(row)
+
     def __init__(self, database_runtime: DatabaseRuntime) -> None:
         self._database_runtime = database_runtime
 

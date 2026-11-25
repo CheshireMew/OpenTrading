@@ -37,6 +37,25 @@ test('default candle bodies remain about 10px wide across chart widths and histo
   assert.equal(readableCandleRange(bars, 0), null)
 })
 
+test('indicator picking follows strokes, gaps, steps and column bounds in the correct pane', () => {
+  const { pickIndicator } = load('indicatorInteraction.ts', { '@luxalgo/vela/plugin': { registerRendererLayer() {} } })
+  const point = (x, y) => ({ x, y, color: '#2962ff' })
+  const line = { id: 'ema', kind: 'line', points: [point(20, 40), point(40, 60), null, point(70, 90), point(90, 100)],
+    width: 2, top: 0, bottom: 120, right: 140, base: 120, halfWidth: 4 }
+  assert.equal(pickIndicator([line], 30, 52), 'ema')
+  assert.equal(pickIndicator([line], 55, 75), null, 'a gap is never a selectable connecting line')
+  assert.equal(pickIndicator([line], 30, 85), null)
+  assert.equal(pickIndicator([{ ...line, top: 80 }], 30, 50), null)
+  const step = { ...line, kind: 'step', points: [point(20, 40), point(40, 80)] }
+  assert.equal(pickIndicator([step], 30, 40), 'ema')
+  assert.equal(pickIndicator([step], 40, 65), 'ema')
+  assert.equal(pickIndicator([step], 30, 60), null, 'step plots do not contain a diagonal segment')
+  const volume = { ...line, id: 'volume', kind: 'columns', points: [point(30, 35)], base: 120 }
+  assert.equal(pickIndicator([volume], 31, 100), 'volume')
+  assert.equal(pickIndicator([volume], 50, 100), null)
+  assert.equal(pickIndicator([line, { ...line, id: 'front' }], 30, 50), 'front')
+})
+
 test('viewport migration binds the native renderer through the cell host, then preserves saved zoom', () => {
   const handlers = new Map(), host = {}, moves = [], events = new Map()
   let frames = 0

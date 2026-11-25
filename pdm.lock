@@ -5,7 +5,7 @@
 groups = ["default", "test"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:1f8f0df9ff8ce11f99d21a62446824119a00110e0480df3131b5b1d45f7f37da"
+content_hash = "sha256:d133ecf7e81cc26772298bfc84f86dd7e649913ea2ddf7e8da41130791d092db"
 
 [[metadata.targets]]
 requires_python = "==3.12.*"
@@ -1268,20 +1268,6 @@ groups = ["default"]
 files = [
     {file = "pytz-2026.3.post1-py2.py3-none-any.whl", hash = "sha256:dd95840dd199baea12d9cc096a1d452caa6596a1c1e4b5f3dbd1541855d5e815"},
     {file = "pytz-2026.3.post1.tar.gz", hash = "sha256:2211d3fcf9a797d3405cac96ac7f61d80e6a644f72a3309607282fe8a2010c5d"},
-]
-
-[[package]]
-name = "redis"
-version = "8.1.0"
-requires_python = ">=3.10"
-summary = "Python client for Redis database and key-value store"
-groups = ["default"]
-dependencies = [
-    "async-timeout>=4.0.3; python_full_version < \"3.11.3\"",
-]
-files = [
-    {file = "redis-8.1.0-py3-none-any.whl", hash = "sha256:a4fe1aac3d3b3cc791d4b3d5931c5a956045dc951ee74d1c913ee3ac4d2ee9fb"},
-    {file = "redis-8.1.0.tar.gz", hash = "sha256:6e1a19beef9225c83efd689c7e6b7da2d5215b1f42cd13b7fc3714d0a09c7b25"},
 ]
 
 [[package]]

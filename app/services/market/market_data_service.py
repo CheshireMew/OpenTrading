@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 from typing import Callable
 
-from app.infra.cache import RedisService
+from app.infra.cache import CacheService
 from app.domain.market.constants import KEY_PREFIX_KLINE
 from app.domain.market.candles import RecentCandles, candle_end_ms, closed_candles, current_candle_open_ms
 from app.application.persistence_ports import KlineStorePort
@@ -27,7 +27,7 @@ class MarketDataService:
         self,
         exchange_gateway: ExchangeGateway | None = None,
         kline_store: KlineStorePort | None = None,
-        cache_service: RedisService | None = None,
+        cache_service: CacheService | None = None,
     ) -> None:
         if exchange_gateway is None or kline_store is None:
             raise ValueError("MarketDataService 需要显式注入 exchange_gateway 和 kline_store")
@@ -59,10 +59,10 @@ class MarketDataService:
 
             data, attempts = gateway.fetch_ohlcv(fetch_symbol, timeframe, limit=limit)
             if data and self.cache_service is not None:
-                self.cache_service.set(cache_key, data, ttl=settings.REDIS_KLINE_TTL)
+                self.cache_service.set(cache_key, data, ttl=settings.KLINE_CACHE_TTL)
             return data
         except Exception as e:
-            logger.error(f"K线数据获取错误 (Redis/Exchange): {e}")
+            logger.error(f"K线数据获取错误 (Cache/Exchange): {e}")
             fetch_symbol = self.symbol_routing.fetch_symbol(symbol)
             gateway = self.symbol_routing.gateway_for_symbol(symbol)
             data, attempts = gateway.fetch_ohlcv(fetch_symbol, timeframe, limit=limit)
@@ -91,7 +91,7 @@ class MarketDataService:
             cache_key = f"{KEY_PREFIX_KLINE}:{storage_symbol}:{timeframe}:{limit}"
             data, attempts = gateway.fetch_ohlcv(fetch_symbol, timeframe, limit=limit, max_retries=max_retries)
             if data and self.cache_service is not None:
-                self.cache_service.set(cache_key, data, ttl=settings.REDIS_KLINE_TTL)
+                self.cache_service.set(cache_key, data, ttl=settings.KLINE_CACHE_TTL)
             return data
         except Exception as e:
             logger.error(f"实时K线获取错误 (Exchange): {e}")

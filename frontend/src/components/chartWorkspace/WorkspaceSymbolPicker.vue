@@ -43,10 +43,11 @@ function pick(id: string) {
 
 <style scoped>
 .symbol-picker { width: min(560px, 92vw); height: min(560px, 85dvh); display: flex; flex-direction: column; }
+.symbol-picker > header, .symbol-picker > input, .symbol-filters { flex-shrink: 0; }
 .symbol-picker header { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--ui-border); }
 .symbol-picker > input { min-height: 36px; margin: 10px 12px; }
 .symbol-filters { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 12px 6px; }
-.symbol-results { overflow: auto; padding: 0 12px; font-size: 13px; }
+.symbol-results { flex: 1; min-height: 0; overflow: auto; scrollbar-gutter: stable; overscroll-behavior: contain; padding: 0 12px; font-size: 13px; }
 .symbol-results > button { display: flex; align-items: center; width: 100%; text-align: left; padding: 10px 6px; border-bottom: 1px solid var(--ui-border); gap: 9px; }
 .symbol-results button:hover { background: var(--ui-hover); }
 .symbol-results strong { flex: 1; }

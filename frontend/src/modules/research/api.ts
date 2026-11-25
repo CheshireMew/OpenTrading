@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiPut } from '@/api/request'
+import { apiDelete, apiGet, apiPost, apiPut } from '@/api/request'
 import { PUBLIC_SITE } from '@/app/publicSite'
 import { createBrowserResearchApi } from './browserResearch'
 import type {
@@ -35,6 +35,10 @@ import type {
 } from './contracts'
 
 export const serverResearchApi = {
+  deleteWatchlist: (id:string, expectedVersion:number) => apiDelete('delete_research_watchlist', {path:{watchlist_id:id},query:{expected_version:expectedVersion}}),
+  deleteItem: (id:string, expectedVersion:number) => apiDelete('delete_research_watch_item', {path:{item_id:id},query:{expected_version:expectedVersion}}),
+  deleteNote: (id:string, expectedVersion:number) => apiDelete('delete_research_note', {path:{note_id:id},query:{expected_version:expectedVersion}}),
+  deleteScreener: (id:string, expectedVersion:number) => apiDelete('delete_market_screener', {path:{screener_id:id},query:{expected_version:expectedVersion}}),
   listEvents(kind = 'alert_triggered', unacknowledgedOnly = true, limit = 100): Promise<ResearchEventPageResponse> {
     return apiGet('list_research_events', {
       query: { kind, unacknowledged_only: unacknowledgedOnly, limit },
@@ -126,8 +130,8 @@ export const serverResearchApi = {
   updateAlert(id: string, body: ResearchAlertUpdateCommand): Promise<ResearchAlertResponse> {
     return apiPut('update_research_alert', body, { path: { alert_id: id } })
   },
-  setAlertArchived(id: string, body: ResearchArchiveCommand, archived: boolean): Promise<ResearchAlertResponse> {
-    return apiPost(archived ? 'archive_research_alert' : 'restore_research_alert', body, { path: { alert_id: id } })
+  deleteAlert(id: string, expectedVersion: number): Promise<Record<string, boolean>> {
+    return apiDelete('delete_research_alert', { path: { alert_id: id }, query: { expected_version: expectedVersion } })
   },
   acknowledgeEvent(id: string, body: ResearchEventAcknowledgeCommand): Promise<ResearchEventResponse> {
     return apiPut('acknowledge_research_event', body, { path: { event_id: id } })

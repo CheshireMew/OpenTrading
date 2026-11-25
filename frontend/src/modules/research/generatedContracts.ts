@@ -399,6 +399,26 @@ export interface TradeSignalStatGroupResponse {
   averageMaePct?: number | null
 }
 
+export interface DeleteMarketScreenerQueryParams {
+  expected_version: number
+}
+
+export interface DeleteResearchAlertQueryParams {
+  expected_version: number
+}
+
+export interface DeleteResearchNoteQueryParams {
+  expected_version: number
+}
+
+export interface DeleteResearchWatchItemQueryParams {
+  expected_version: number
+}
+
+export interface DeleteResearchWatchlistQueryParams {
+  expected_version: number
+}
+
 export interface GetAssetResearchQueryParams {
   timeframe?: string
   history_days?: number

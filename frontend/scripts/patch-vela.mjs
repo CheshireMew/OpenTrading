@@ -126,6 +126,63 @@ const glReplacement = `${glSignature}
     flush();
   }`
 
+// Keep the version-specific scene projection here. App code receives only pixel
+// geometry and the existing legend actions, never a private renderer instance.
+const pickingMarker = '      case "opentrading.indicatorPicking":'
+const pickingBridge = `${pickingMarker}
+        return {
+          selected: () => this.inputsUI.selectedId,
+          select: (id) => id ? this.inputsUI.selectRow(id) : this.inputsUI.clearSelection(),
+          menu: (id, x, y) => this.inputsUI.openRowMenu(id, x, y),
+          blocked: (x, y) => Boolean(this.userDrawings?.cursorAt(x, y)),
+          geometry: (onlyId) => {
+            const out = [], r = this.coords.visibleLogicalRange();
+            const models = [...this.scene.indicators.values()].sort((a, b) => this.scene.zOf(a.id) - this.scene.zOf(b.id));
+            for (const model of models) {
+              if (model.legend === false || onlyId && model.id !== onlyId) continue;
+              const home = this.scene.panes.get(model.paneId ?? PRICE_PANE_ID);
+              if (!home || home.collapsed || home.bounds.height <= 0) continue;
+              const offset = this.scene.offsetOf(model.id);
+              for (const series of model.series) {
+                if (!("points" in series) || !seriesShownOn(series, "pane")) continue;
+                const pane = series.overlay ? this.scene.panes.get(PRICE_PANE_ID) : home;
+                if (!pane || pane.collapsed || pane.bounds.height <= 0) continue;
+                const scale = series.overlay ? pane.scale : this.scene.scaleFor(model, pane);
+                const i0 = Math.max(0, Math.floor(r.from) - offset - 1);
+                const i1 = Math.min(series.points.length - 1, Math.ceil(r.to) - offset + 1);
+                const points = [];
+                for (let i = i0; i <= i1; i++) {
+                  const p = series.points[i];
+                  const y = p && p.value != null ? this.coords.priceToY(p.value, scale, pane.bounds) : NaN;
+                  points.push(Number.isFinite(y) ? { x: this.coords.logicalToX(i + offset), y, color: p.color ?? series.style.color } : null);
+                }
+                out.push({ id: model.id, kind: series.kind, points, width: series.style.width,
+                  top: pane.bounds.top, bottom: pane.bounds.top + pane.bounds.height, right: this.coords.width,
+                  halfWidth: columnHalfWidth(this.coords.bodySpacing()),
+                  base: this.coords.priceToY(series.style.base ?? 0, scale, pane.bounds) });
+              }
+              if (model.native?.type === "volume" && this.volumeActive && !this.volumeHidden && this.scene.volumeLayer) {
+                const i0 = Math.max(0, Math.floor(r.from)), i1 = Math.min(this.bars.length - 1, Math.ceil(r.to));
+                let max = 0;
+                for (let i = i0; i <= i1; i++) max = Math.max(max, this.bars[i].volume ?? 0);
+                if (max <= 0) continue;
+                const data = this.scene.volumeLayer, bottom = home.bounds.top + home.bounds.height;
+                const height = home.bounds.height * (home.kind === "price" ? data.heightFrac : VOLUME_PANE_FILL_FRAC);
+                const points = [];
+                for (let i = i0; i <= i1; i++) {
+                  const b = this.bars[i];
+                  points.push({ x: this.coords.logicalToX(i), y: bottom - (b.volume ?? 0) / max * height,
+                    color: b.close >= b.open ? data.upColor : data.downColor });
+                }
+                out.push({ id: model.id, kind: "columns", points, width: 1, top: home.bounds.top,
+                  bottom, right: this.coords.width, base: bottom, halfWidth: columnHalfWidth(this.coords.bodySpacing()) });
+              }
+            }
+            return out;
+          }
+        };
+`
+
 // All application entry points must use the same correction. Validate every
 // target before writing so unexpected upstream bytes fail without partial edits.
 const files = ['chunk-JSVCWYBF.js', 'index.cjs', 'widget.cjs', 'workspace.cjs']
@@ -134,6 +191,46 @@ for (const name of files) {
   const file = new URL('dist/' + name, root)
   const original = fs.readFileSync(file, 'utf8')
   let source = original
+  if (source.includes(pickingMarker)) {
+    const start = source.indexOf(pickingMarker), end = source.indexOf('      case "logScale":', start)
+    if (end < 0) throw new Error(`Unexpected Vela indicator bridge boundary: ${name}`)
+    source = source.slice(0, start) + pickingBridge + source.slice(end)
+  } else {
+    const marker = '  readFeature(key) {\n    switch (key) {\n'
+    if (!source.includes(marker)) throw new Error(`Unexpected Vela renderer feature bridge: ${name}`)
+    source = source.replace(marker, marker + pickingBridge)
+  }
+  // Migrate the first help hook, which ran after the dialog had captured stale inputs.
+  source = source.replace(
+    '    const tabDefs = tabInputs(row.inputs);\n    const help = { id: row.id, tabs: [] };\n    host.dispatchEvent(new CustomEvent("opentrading:indicator-settings", { bubbles: true, detail: help }));\n    tabDefs.push(...help.tabs);',
+    '    const tabDefs = tabInputs(row.inputs);\n    tabDefs.push(...help.tabs);',
+  )
+  for (const [before, after] of [
+    ['    this.openId = row.id;\n    this.snapshot = { ...row.values };', '    this.openId = row.id;\n    const help = { id: row.id, tabs: [], values: row.values, propValues: row.propValues };\n    this.host.container.dispatchEvent(new CustomEvent("opentrading:indicator-settings", { bubbles: true, detail: help }));\n    row.values = { ...help.values };\n    row.propValues = { ...help.propValues };\n    this.snapshot = { ...row.values };'],
+    ['    const tabDefs = tabInputs(row.inputs);', '    const tabDefs = tabInputs(row.inputs);\n    tabDefs.push(...help.tabs);'],
+    ['      bodies.push(this.buildTabBody(def.inputs, row, gates));', '      bodies.push(def.body ?? this.buildTabBody(def.inputs, row, gates));'],
+    ['      if (def.inputs.every((d) => d.when)) {', '      if (def.inputs.length > 0 && def.inputs.every((d) => d.when)) {'],
+    ['    this.rowMenuId = id;\n    const items = [{', '    this.rowMenuId = id;\n    const items = [{ id: "settings", label: "Settings\u2026" }, {'],
+    ['          if (itemId !== "values" || !this.rowMenuId) return;', '          if (itemId === "settings" && this.rowMenuId) { this.openDialog(this.rowMenuId); return; }\n          if (itemId !== "values" || !this.rowMenuId) return;'],
+  ]) {
+    if (source.includes(after)) continue
+    if (!source.includes(before)) throw new Error(`Unexpected Vela indicator menu: ${name}`)
+    source = source.replace(before, after)
+  }
+  // Keep the menu chevron at the outer edge instead of reserving a second
+  // full button column. Migrate the earlier wide gutter as well as upstream.
+  source = source.replace(
+    'var TOOLBAR_WIDTH = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches ? 88 : 68;',
+    'var TOOLBAR_WIDTH = 44;',
+  )
+  for (const [before, after] of [
+    ['var TOOLBAR_WIDTH = 44;', 'var TOOLBAR_WIDTH = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches ? 56 : 44;'],
+    ['var TOOLBAR_COLLAPSED_WIDTH = 16;', 'var TOOLBAR_COLLAPSED_WIDTH = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches ? 44 : 32;'],
+  ]) {
+    if(source.includes(after))continue
+    if(!source.includes(before))throw new Error(`Unexpected Vela toolbar sizing: ${name}`)
+    source=source.replace(before,after)
+  }
   for (const [startMarker, endMarker, hash, corrected] of [
     [signature, '\n  drawArea(', expected, replacement],
     [glSignature, '\n  emitArea(', glExpected, glReplacement],

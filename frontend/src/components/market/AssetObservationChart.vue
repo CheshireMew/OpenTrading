@@ -1,9 +1,10 @@
 <template>
-  <div ref="chartContainer" class="observation-chart" :style="chartHeight ? { height: chartHeight + 'px' } : undefined" role="img" :aria-label="t('observation.chartDescription')" />
+  <div class="observation-chart-group"><ChartNavigation :controller="navigation" /><div ref="chartContainer" class="observation-chart" :style="chartHeight ? { height: chartHeight + 'px' } : undefined" role="img" :aria-label="t('observation.chartDescription')" /></div>
 </template>
 
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import ChartNavigation from '@/components/ChartNavigation.vue'
 import { useI18n } from 'vue-i18n'
 import * as echarts from 'echarts/core'
 import { LineChart } from 'echarts/charts'
@@ -20,7 +21,7 @@ const props = defineProps<{ bars: OhlcvPointResponse[]; drawdowns: { timestamp: 
 const { t, locale } = useI18n()
 const { theme } = useTheme()
 const chartHeight = ref<number>()
-const { chartContainer, renderChart } = useEcharts(() => {
+const { chartContainer, renderChart, navigation } = useEcharts(() => {
   const colors = theme.value === 'dark' ? DARK_PALETTE : LIGHT_PALETTE
   const start = observationRangeStart(props.bars[props.bars.length - 1]?.timestamp || 0, props.range)
   const rows = props.bars.filter(row => row.timestamp >= start)

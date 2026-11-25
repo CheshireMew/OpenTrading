@@ -31,6 +31,25 @@ def _command(name="Momentum"):
     )
 
 
+def test_delete_screener_removes_runs_and_timeline_but_keeps_other_screeners(installed_database_runtime):
+    from sqlalchemy import select
+    from app.domain.research import ResearchRevisionConflictError
+    from app.infra.db.schema import MarketScreenerRun, ResearchEvent, SavedMarketScreener
+
+    repository=MarketScreenerRepository(installed_database_runtime)
+    created=repository.create_screener({"name":"Delete", "description":"", "filters":{}})
+    other=repository.create_screener({"name":"Keep", "description":"", "filters":{}})
+    run=repository.save_run(created["id"],{"filters_snapshot":{},"result_items":[],"result_count":0,"snapshot_as_of":datetime(2026,1,1),"evaluated_at":datetime(2026,1,1)})
+    with pytest.raises(ResearchRevisionConflictError):
+        repository.delete_screener(created["id"],2)
+    repository.delete_screener(created["id"],1)
+    with installed_database_runtime.session_scope() as session:
+        assert session.get(SavedMarketScreener,created["id"]) is None
+        assert session.get(MarketScreenerRun,run["id"]) is None
+        assert session.get(SavedMarketScreener,other["id"]) is not None
+        assert not list(session.scalars(select(ResearchEvent).where(ResearchEvent.entity_id==created["id"])))
+
+
 def test_saved_screener_is_versioned_archivable_and_replays_as_of(installed_database_runtime):
     repository = MarketScreenerRepository(installed_database_runtime)
     service = MarketScreenerService(repository=repository, binance_market_service=object())

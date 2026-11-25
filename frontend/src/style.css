@@ -105,7 +105,9 @@ button, input, select, textarea { font: inherit; }
 button, select, summary { -webkit-tap-highlight-color: transparent; }
 button:not(:disabled), summary { cursor: pointer; }
 button:disabled { cursor: not-allowed; }
-.app-shell svg[stroke="currentColor"] { stroke-width: 1.8; }
+/* UI icons use a light stroke. Keep 16px Vela glyphs at their native 1.2;
+   the 24px icon sets share 1.25, including menus rendered outside the shell. */
+svg[stroke="currentColor"][viewBox="0 0 24 24"]:not(.symbol-avatar svg) { stroke-width: 1.25; }
 /* Native chart menus and drawing tools share the application theme as well. */
 :is(.vela-ui, .vela-ui-layer) {
   --vela-font: Arial, "Microsoft YaHei", sans-serif !important;
@@ -130,7 +132,26 @@ button:disabled { cursor: not-allowed; }
   --vela-selected-fg: var(--ui-onAccent) !important;
   --vela-accent: var(--ui-accent) !important;
   --vela-accent-bright: var(--ui-accent) !important;
+  --vela-highlight: var(--ui-favorite) !important;
 }
+/* Vela's in-plot controls have their own token scope and a fixed dark pill.
+   Pair their surface and ink explicitly so both follow the application theme. */
+div:has(> .vela-pc-btn), div:has(> .vela-cc-btn) {
+  background: var(--ui-panel) !important;
+  box-shadow: 0 0 0 1px var(--ui-borderStrong);
+}
+button:is(.vela-pc-btn, .vela-cc-btn) { color: var(--ui-muted); }
+button:is(.vela-pc-btn, .vela-cc-btn):not(:disabled):hover { background: var(--ui-hover); color: var(--ui-title); }
+button:is(.vela-pc-on, .vela-cc-on),
+button:is(.vela-pc-on, .vela-cc-on):not(:disabled):hover { background: var(--ui-accent); color: var(--ui-onAccent); }
+:is(.vela-pc-btn, .vela-cc-btn, .vela-widget-tool):disabled {
+  color: var(--ui-faint) !important;
+  opacity: 1 !important;
+}
+.vela-sl-market[data-status='open'] { color: var(--ui-positiveInk) !important; }
+.vela-sl-market[data-status='pre'] { color: var(--ui-favorite) !important; }
+.vela-sl-market:is([data-status='post'], [data-status='extended']) { color: var(--ui-blue) !important; }
+.vela-sl-market:is([data-status='closed'], [data-status='holiday']) { color: var(--ui-muted) !important; }
 .cw-chart :is(.vela-topbar button, .vela-bottombar button) { font-weight: 600; }
 :focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 3px; }
 ::selection { background: color-mix(in srgb, var(--ui-accent) 26%, transparent); color: var(--ui-title); }
@@ -233,3 +254,26 @@ html { scrollbar-color: var(--ui-borderStrong) transparent; scrollbar-width: thi
 
 .workspace-dialog-backdrop { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; background: #0008; }
 .workspace-dialog { border: 1px solid var(--ui-border); border-radius: 8px; background: var(--ui-panel); color: var(--ui-text); box-shadow: 0 16px 48px #0004; }
+
+/* Drawing tool and flyout controls have separate, non-overlapping hit areas. */
+.cw-chart .vela-dtb{--cw-tool-hit:32px;--cw-tool-arrow:10px;--cw-tool-row:40px;--cw-tool-pad:2px;border-right:0!important;box-shadow:inset -1px 0 0 var(--ui-border);overflow-y:auto;overscroll-behavior:contain}
+.cw-chart .vela-dtb-cell{height:var(--cw-tool-row)!important;flex-shrink:0;justify-content:space-between!important;padding:0 0 0 var(--cw-tool-pad)}
+.cw-chart .vela-dtb-icon{width:var(--cw-tool-hit)!important;height:var(--cw-tool-row)!important;flex:0 0 var(--cw-tool-hit);opacity:1!important}
+.cw-chart .vela-dtb-arrow{position:static!important;transform:none!important;width:var(--cw-tool-arrow)!important;height:var(--cw-tool-row)!important;opacity:0!important;pointer-events:auto!important;flex:0 0 var(--cw-tool-arrow)}
+.cw-chart .vela-dtb-cell:is(:hover,:focus-within,.vela-open) .vela-dtb-arrow{opacity:1!important}
+.cw-chart .vela-dtb-btn{display:grid;grid-template-columns:var(--cw-tool-hit) 1fr;justify-items:center;padding:0 0 0 var(--cw-tool-pad);height:var(--cw-tool-row)!important;min-height:var(--cw-tool-row)!important;flex-shrink:0;opacity:1!important}
+.cw-chart .vela-dtb-hit{width:var(--cw-tool-hit);height:var(--cw-tool-hit);border-radius:6px}
+.cw-chart .vela-dtb-arrow .vela-dtb-hit{width:var(--cw-tool-arrow);height:var(--cw-tool-hit);border-radius:3px}
+.cw-chart .vela-dtb-icon .vela-dtb-hit>span,.cw-chart .vela-dtb-btn:not(.vela-dtb-collapse) .vela-dtb-hit>span{width:24px!important;height:24px!important}
+.cw-chart .vela-dtb-arrow .vela-dtb-hit>span{width:9px!important;height:9px!important}
+.cw-chart .vela-dtb[data-collapsed='1'] .vela-dtb-collapse{display:flex;justify-content:center;padding:0;min-width:0!important}
+.cw-chart .vela-dtb-star{min-width:32px;min-height:32px}
+.vela-dtb-flyout .vela-dtb-item{min-height:32px}
+.cw-chart :is(.vela-pc-btn,.vela-cc-btn,.vela-widget-tool){min-width:32px;min-height:32px}
+.cw-document-actions{display:grid;gap:4px;min-width:160px;padding:6px}.cw-document-actions button{text-align:left;min-height:32px}
+@media(pointer:coarse){
+  .cw-chart .vela-dtb{--cw-tool-hit:44px;--cw-tool-arrow:12px;--cw-tool-row:44px;--cw-tool-pad:0px}
+  .cw-chart .vela-dtb-arrow{opacity:1!important}
+  .cw-chart :is(.vela-pc-btn,.vela-cc-btn,.vela-widget-tool,.vela-dtb-star){min-width:44px;min-height:44px}
+  .vela-dtb-flyout .vela-dtb-item{min-height:44px}
+}

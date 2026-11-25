@@ -68,7 +68,7 @@ DATABASE_URL=sqlite:///./.opentrading_runtime/opentrading.db
 
 启动器会准备数据库，并启动 API、后台任务与前端。显示服务就绪后，打开 **[http://127.0.0.1:4173](http://127.0.0.1:4173)**，首页即为图表工作台。按 `Q` 或 `Ctrl+C` 停止服务。
 
-Redis 和模型 API Key 均为可选项。PostgreSQL、手动启动、日志位置及排障见[启动指南](docs/GETTING_STARTED.md)。
+缓存直接使用有容量上限的进程内存，模型 API Key 为可选项。PostgreSQL、手动启动、日志位置及排障见[启动指南](docs/GETTING_STARTED.md)。
 
 ## 常用入口
 

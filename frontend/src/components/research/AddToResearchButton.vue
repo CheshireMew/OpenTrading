@@ -6,42 +6,44 @@
 
   <Teleport to="body">
     <div v-if="open" class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/55 p-3 backdrop-blur-sm" @click.self="closeDialog">
-      <section ref="dialogRef" role="dialog" aria-modal="true" aria-labelledby="add-research-title" tabindex="-1" class="w-full max-w-xl border border-[var(--ui-borderStrong)] bg-[var(--ui-panel)] p-5 shadow-2xl outline-none dark:border-slate-700 dark:bg-slate-800 sm:p-6">
-        <div class="flex items-start justify-between gap-4">
+      <section ref="dialogRef" role="dialog" aria-modal="true" aria-labelledby="add-research-title" tabindex="-1" class="research-add-dialog w-full max-w-xl border border-[var(--ui-borderStrong)] bg-[var(--ui-panel)] p-5 shadow-2xl outline-none dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+        <div class="flex shrink-0 items-start justify-between gap-4">
           <div>
             <h2 id="add-research-title" class="text-xl font-semibold text-stone-950 dark:text-white">{{ t('research.addSymbolTitle', { symbol: displayName || symbol }) }}</h2>
           </div>
           <button type="button" class="p-2 app-muted" :aria-label="t('common.close')" @click="closeDialog"><XMarkIcon class="h-5 w-5" /></button>
         </div>
 
-        <div v-if="loading" class="mt-6 text-sm app-muted">{{ t('research.loading') }}</div>
-        <form v-else class="mt-6 space-y-4" @submit.prevent="submit">
-          <template v-if="activeLists.length">
+        <div class="research-add-body">
+          <div v-if="loading" class="text-sm app-muted">{{ t('research.loading') }}</div>
+          <form v-else class="space-y-4" @submit.prevent="submit">
+            <template v-if="activeLists.length">
+              <label class="block space-y-1">
+                <span class="label">{{ t('research.watchlists') }}</span>
+                <select v-model="watchlistId" class="app-control w-full">
+                  <option v-for="list in activeLists" :key="list.id" :value="list.id">{{ list.name }}</option>
+                </select>
+              </label>
+            </template>
+            <template v-else>
+              <p class="text-sm app-muted">{{ t('research.createListBeforeAdding') }}</p>
+              <input v-model.trim="newListName" class="app-control w-full" :placeholder="t('research.watchlistName')" maxlength="160" />
+            </template>
             <label class="block space-y-1">
-              <span class="label">{{ t('research.watchlists') }}</span>
-              <select v-model="watchlistId" class="app-control w-full">
-                <option v-for="list in activeLists" :key="list.id" :value="list.id">{{ list.name }}</option>
-              </select>
+              <span class="label">{{ t('research.initialThesis') }}</span>
+              <textarea v-model.trim="thesis" class="app-control min-h-28 w-full" maxlength="20000" />
             </label>
-          </template>
-          <template v-else>
-            <p class="text-sm app-muted">{{ t('research.createListBeforeAdding') }}</p>
-            <input v-model.trim="newListName" class="app-control w-full" :placeholder="t('research.watchlistName')" maxlength="160" />
-          </template>
-          <label class="block space-y-1">
-            <span class="label">{{ t('research.initialThesis') }}</span>
-            <textarea v-model.trim="thesis" class="app-control min-h-28 w-full" maxlength="20000" />
-          </label>
-          <label class="block space-y-1">
-            <span class="label">{{ t('research.tags') }}</span>
-            <input v-model.trim="tags" class="app-control w-full" :placeholder="t('research.tagsPlaceholder')" />
-          </label>
-          <div v-if="error" role="alert" class="border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200">{{ error }}</div>
-          <div class="flex justify-end gap-2">
-            <button type="button" class="app-button-secondary" @click="closeDialog">{{ t('research.cancel') }}</button>
-            <button type="submit" class="app-button-primary" :disabled="saving || (!watchlistId && !newListName)">{{ saving ? t('research.saving') : t('research.add') }}</button>
-          </div>
-        </form>
+            <label class="block space-y-1">
+              <span class="label">{{ t('research.tags') }}</span>
+              <input v-model.trim="tags" class="app-control w-full" :placeholder="t('research.tagsPlaceholder')" />
+            </label>
+            <div v-if="error" role="alert" class="border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200">{{ error }}</div>
+            <div class="flex justify-end gap-2">
+              <button type="button" class="app-button-secondary" @click="closeDialog">{{ t('research.cancel') }}</button>
+              <button type="submit" class="app-button-primary" :disabled="saving || (!watchlistId && !newListName)">{{ saving ? t('research.saving') : t('research.add') }}</button>
+            </div>
+          </form>
+        </div>
       </section>
     </div>
   </Teleport>
@@ -127,3 +129,8 @@ const submit = async () => {
   }
 }
 </script>
+
+<style scoped>
+.research-add-dialog { display: flex; flex-direction: column; height: min(560px, calc(100dvh - 24px)); overflow: hidden; }
+.research-add-body { flex: 1; min-height: 0; margin-top: 24px; overflow: auto; scrollbar-gutter: stable; overscroll-behavior: contain; }
+</style>

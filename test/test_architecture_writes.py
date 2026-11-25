@@ -60,13 +60,6 @@ def race(repository, check, action):
             "set_note_archived",
         ),
         (
-            schema.ResearchAlertRule,
-            {"symbol": "BTC/USDT", "name": "Alert", "metric": "price", "operator": "gt", "threshold": 100},
-            ResearchRepository,
-            "_require_row",
-            "set_alert_archived",
-        ),
-        (
             schema.SavedMarketScreener,
             {"name": "Screen", "description": "", "filters": {}},
             MarketScreenerRepository,

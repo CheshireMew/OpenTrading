@@ -119,6 +119,7 @@ export const useModalDialog = (
     }
     if (active) return
     active = true
+    window.dispatchEvent(new Event('opentrading:modal-open'))
     previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null
     if (!modalStack.length) unlockedBodyOverflow = document.body.style.overflow
     modalStack.push(modalId)

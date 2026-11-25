@@ -1,6 +1,6 @@
 import { computed, ref, watch, type Ref } from 'vue'
 import { chartApi, type ChartQuote, type WorkspaceDocument } from './api'
-import { readDraft, writeDraft } from './drafts'
+import { deleteDraft, readDraft, writeDraft } from './drafts'
 import { cw } from './locale'
 
 const createWatchlistState = () => ({
@@ -24,6 +24,7 @@ export function createWorkspaceWatchlists(deps: {
     set: (id: string) => { selectedId.value = id },
   })
   const dragIndex = ref(-1)
+  const managing = ref(false)
   const watchlist = computed(() => watchlists.value.find(list => list.id === watchlistId.value))
   const watchSymbols = computed(() => (watchlist.value?.data.symbols as string[] | undefined) ?? [])
   let disposed = false, paused = false, quoteEpoch = 0
@@ -43,7 +44,7 @@ export function createWorkspaceWatchlists(deps: {
   }
   async function persistWatch(items: string[]) {
     const list = watchlist.value
-    if (!list || disposed) return
+    if (!list || disposed || managing.value) return
     list.data = { ...list.data, symbols: [...items] }
     pendingWatch.value = [...new Set([...pendingWatch.value, list.id])]
     const data = { ...list.data }
@@ -94,6 +95,21 @@ export function createWorkspaceWatchlists(deps: {
     state.saveQueue = operation.catch(deps.onError)
     await state.saveQueue
   }
+  async function deleteWatchlist() {
+    const list=watchlist.value
+    if(!list||managing.value)return
+    managing.value=true
+    const operation=state.saveQueue.then(async()=>{
+      await chartApi.remove('watchlists',list.id,list.version)
+      await deleteDraft('watch:'+list.id)
+      watchlists.value=watchlists.value.filter(item=>item.id!==list.id)
+      pendingWatch.value=pendingWatch.value.filter(id=>id!==list.id)
+      if(selectedId.value===list.id||!watchlists.value.some(item=>item.id===watchlistId.value))selectedId.value=watchlists.value[0]?.id??null
+      void refreshQuotes()
+    })
+    state.saveQueue=operation.catch(deps.onError)
+    try{await state.saveQueue}finally{managing.value=false}
+  }
   async function initialize(lists: WorkspaceDocument[], queue = state.saveQueue) {
     if (disposed) return false
     const pending: string[] = []
@@ -129,7 +145,7 @@ export function createWorkspaceWatchlists(deps: {
   function pause() { paused = true; quoteEpoch++; clearTimeout(timer) }
   function resume() { if (!disposed && paused) { paused = false; void refreshQuotes() } }
   function dispose() { disposed = true; quoteEpoch++; clearTimeout(timer); stopWatch() }
-  return { watchlists, watchlistId, watchlist, watchSymbols, pendingWatch, quotes, dragIndex,
+  return { watchlists, watchlistId, watchlist, watchSymbols, pendingWatch, quotes, dragIndex, managing, deleteWatchlist,
     persistWatch, removeWatch, moveWatch, newWatchlist, renameWatchlist, refreshQuotes, initialize, loadWatchlists, restoreSelection, pause, resume, dispose }
 }
 

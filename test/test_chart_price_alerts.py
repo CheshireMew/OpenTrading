@@ -6,6 +6,7 @@ import pytest
 from app.contracts.research import ResearchAlertCreateCommand, ResearchAlertUpdateCommand
 from app.domain.research_alerts import should_trigger
 from app.infra.persistence.research_repository import ResearchRepository
+from app.infra.db.schema import ResearchAlertRule
 from app.services.research_service import ResearchService
 from app.services.chart_price_alert_runtime import ChartPriceAlertRuntime
 from utils.time import utc_now_naive
@@ -20,7 +21,7 @@ def create_alert(service, symbol="binance:usdm:BTCUSDT", **overrides):
 
 
 @pytest.mark.asyncio
-async def test_chart_alert_uses_venue_and_persists_one_shot(installed_database_runtime):
+async def test_chart_alert_uses_venue_and_deletes_one_shot_after_notification(installed_database_runtime):
     repository = ResearchRepository(installed_database_runtime)
     service = ResearchService(repository)
     alert = create_alert(service)
@@ -37,8 +38,51 @@ async def test_chart_alert_uses_venue_and_persists_one_shot(installed_database_r
     assert len(events) == 1
     assert events[0].payload["chartSymbolId"] == "binance:usdm:BTCUSDT"
     assert events[0].payload["notificationChannels"] == ["in_app", "windows", "sound"]
-    assert result.alerts[0].enabled is False
-    assert result.alerts[0].version > alert.version
+    assert result.alerts == []
+    with installed_database_runtime.session_scope() as session:
+        assert session.get(ResearchAlertRule, alert.id) is None
+    assert repository.record_alert_evaluation(alert.id, value=120, evaluated_at=utc_now_naive(), triggered=True) is None
+
+
+def test_alert_delete_endpoint_checks_revision_and_keeps_other_rules(api_harness, installed_database_runtime):
+    from app.dependencies import get_research_service
+    from app.main import app
+
+    service = ResearchService(ResearchRepository(installed_database_runtime))
+    app.dependency_overrides[get_research_service] = lambda: service
+    first, second = create_alert(service), create_alert(service)
+    client = api_harness["client"]
+    url = f"/api/v1/research/alerts/{first.id}"
+    assert client.delete(url, params={"expected_version": first.version + 1}).status_code == 409
+    assert client.delete(url, params={"expected_version": first.version}).json() == {"deleted": True}
+    assert client.delete(url, params={"expected_version": first.version}).status_code == 404
+    with installed_database_runtime.session_scope() as session:
+        assert session.get(ResearchAlertRule, first.id) is None
+        assert session.get(ResearchAlertRule, second.id) is not None
+
+
+def test_old_completed_price_rules_are_removed_without_removing_paused_or_repeating_rules(installed_database_runtime):
+    service = ResearchService(ResearchRepository(installed_database_runtime))
+    completed, paused, repeating = create_alert(service), create_alert(service), create_alert(service)
+    with installed_database_runtime.session_scope() as session:
+        for alert in (completed, paused, repeating):
+            row = session.get(ResearchAlertRule, alert.id)
+            row.enabled = 0
+            if alert.id != paused.id:
+                row.last_triggered_at = utc_now_naive()
+            if alert.id == repeating.id:
+                row.configuration = {**row.configuration, "once": False}
+    rows = service.get_workbench(event_limit=1, note_limit=1).alerts
+    assert {row.id for row in rows} == {paused.id, repeating.id}
+
+
+def test_repeating_price_alert_stays_active_after_trigger(installed_database_runtime):
+    repository = ResearchRepository(installed_database_runtime)
+    service = ResearchService(repository)
+    alert = create_alert(service, configuration={"chartSymbolId": "binance:usdm:BTCUSDT", "initialPrice": 90, "once": False})
+    saved = repository.record_alert_evaluation(alert.id, value=105, evaluated_at=utc_now_naive(), triggered=True)
+    assert saved["enabled"] is True
+    assert len(service.get_workbench(event_limit=10, note_limit=1).alerts) == 1
 
 
 def test_chart_alert_rechecks_an_edited_or_paused_rule(installed_database_runtime):

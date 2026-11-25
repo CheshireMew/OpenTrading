@@ -84,7 +84,7 @@ class ChartPriceAlertRuntime:
                 rule["id"], value=price, evaluated_at=now, triggered=triggered))
             # Never overwrite a newer refresh snapshot after awaiting the database.
             if self.rules.get(rule["id"]) is rule:
-                if not saved["enabled"] or saved["archivedAt"]:
+                if saved is None or not saved["enabled"] or saved["archivedAt"]:
                     self.rules.pop(rule["id"], None)
                 else:
                     rule["last_value"] = saved["lastValue"]

@@ -67,7 +67,7 @@ Start the application:
 
 The launcher prepares the database and starts the API, background tasks, and frontend. Once it reports that services are ready, open **[http://127.0.0.1:4173](http://127.0.0.1:4173)** to reach the chart workspace. Press `Q` or `Ctrl+C` to stop services.
 
-Redis and model API keys are optional. See the [startup guide](docs/GETTING_STARTED.md) for PostgreSQL, manual startup, logs, and troubleshooting. Detailed documentation is currently in Chinese.
+Caching uses bounded process-local memory. Model API keys are optional. See the [startup guide](docs/GETTING_STARTED.md) for PostgreSQL, manual startup, logs, and troubleshooting. Detailed documentation is currently in Chinese.
 
 ## Useful entry points
 

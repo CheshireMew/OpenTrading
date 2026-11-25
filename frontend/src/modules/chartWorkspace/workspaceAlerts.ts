@@ -1,4 +1,4 @@
-import { computed, reactive, ref, watch, type Ref } from 'vue'
+import { computed, reactive, ref, shallowRef, watch, type Ref } from 'vue'
 import { registerWidgetAction } from '@luxalgo/vela/plugin'
 import type { VelaWorkspace } from '@luxalgo/vela/workspace'
 import { researchApi } from '@/modules/research/api'
@@ -8,16 +8,22 @@ import { WorkspaceRenderer } from './chartPresentation'
 import { chartApi, type ChartSymbol } from './api'
 import { fromVela } from './provider'
 import { cw, formatNumber } from './locale'
+import type { PriceAlertGeometry } from './priceAlertLayer'
 
 export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | undefined>; symbols: Ref<ChartSymbol[]> }) {
   const alerts = ref<ResearchAlertResponse[]>([]), open = ref(false), editing = ref(false), saving = ref(false)
-  const error = ref('')
+  const error = ref(''), selectedId = ref(''), draggingId = ref('')
+  const overlays = shallowRef<({ cellId: string; host: HTMLElement } & PriceAlertGeometry)[]>([])
   function fail(cause: unknown) { error.value = cause instanceof Error ? cause.message : String(cause) }
   const form = reactive({ id: '', version: 0, symbolId: '', price: '', operator: 'crosses' as ResearchAlertCreateCommand['operator'], once: true, sound: true, windows: true })
   const selectedSymbol = computed(() => deps.symbols.value.find(symbol => symbol.id === form.symbolId))
-  const visibleAlerts = computed(() => alerts.value.filter(alert => !alert.archivedAt && alert.configuration?.chartSymbolId))
+  const finished = (alert: ResearchAlertResponse) => !alert.enabled && !!alert.lastTriggeredAt && alert.configuration?.once !== false
+  const visibleAlerts = computed(() => alerts.value.filter(alert => !alert.archivedAt && !finished(alert) && alert.configuration?.chartSymbolId))
   let pending: { symbolId: string; price: number } | undefined
+  let pendingAlert: string | undefined
+  let drag: { alert: ResearchAlertResponse; renderer: WorkspaceRenderer; cellId: string; symbolId: string; pointerId: number; startY: number; anchorY: number; price: number; moved: boolean } | undefined
   let writeEpoch = 0
+  let suppressClickUntil = 0
   let disposed = false, paused = false, loading = false, timer: ReturnType<typeof setInterval> | undefined
   let offMenu: (() => void)[] = [], host: HTMLElement | undefined
   const offs: (() => void)[] = []
@@ -27,16 +33,28 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
   }
 
   function project() {
-    for (const cell of deps.workspace.value?.cells() ?? []) {
+    const cells = deps.workspace.value?.cells() ?? []
+    overlays.value = overlays.value.filter(overlay => cells.some(cell => cell.id === overlay.cellId))
+    for (const cell of cells) {
       const renderer = WorkspaceRenderer.forHost(cell.host)
-      if (renderer) {
-        renderer.setPriceAlerts(visibleAlerts.value.filter(alert => alert.enabled && alert.configuration?.chartSymbolId === fromVela(cell.symbol))
-          .map(alert => ({ id: alert.id, price: alert.threshold, label: cw('priceAlertLine', { price: formatNumber(alert.threshold, 10) }) })))
+      if (!renderer) continue
+      renderer.priceAlerts.selectedId = selectedId.value
+      renderer.priceAlerts.geometry = geometry => {
+        const host = renderer.priceAlerts.host
+        if (disposed || !host) return
+        const old = overlays.value.find(overlay => overlay.cellId === cell.id)
+        if (old && old.host === host && JSON.stringify({ ...old, host: null, cellId: null }) === JSON.stringify({ ...geometry, host: null, cellId: null })) return
+        overlays.value = [...overlays.value.filter(overlay => overlay.cellId !== cell.id), { ...geometry, host, cellId: cell.id }]
       }
+      renderer.setPriceAlerts(visibleAlerts.value.filter(alert => alert.enabled && alert.configuration?.chartSymbolId === fromVela(cell.symbol))
+        .map(alert => {
+          const price = drag?.alert.id === alert.id ? drag.price : alert.threshold
+          return { id: alert.id, price, label: cw('priceAlertLine', { price: formatNumber(price, 10) }) }
+        }))
     }
   }
   async function refresh() {
-    if (disposed || paused || loading) return
+    if (disposed || paused || loading || saving.value || drag) return
     loading = true
     const epoch = writeEpoch
     try {
@@ -59,7 +77,7 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
     error.value = ''
     Object.assign(form, { id: alert.id, version: alert.version, symbolId: String(alert.configuration?.chartSymbolId), price: String(alert.threshold), operator: alert.operator,
       once: alert.configuration?.once !== false, sound: alert.notificationChannels?.includes('sound') ?? false, windows: alert.notificationChannels?.includes('windows') ?? false })
-    editing.value = true; void prepareAlertAudio()
+    editing.value = true; open.value = true; void prepareAlertAudio()
   }
   function body(alert: ResearchAlertResponse): ResearchAlertCreateCommand {
     return { symbol: alert.symbol, name: alert.name, metric: alert.metric, operator: alert.operator, threshold: alert.threshold,
@@ -67,7 +85,7 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
       notificationChannels: alert.notificationChannels, configuration: alert.configuration, watchItemId: alert.watchItemId }
   }
   async function save() {
-    const price = Number(form.price), symbol = selectedSymbol.value
+    const symbol = selectedSymbol.value, price = roundedPrice(Number(form.price), form.symbolId)
     if (saving.value || !symbol || !Number.isFinite(price) || price <= 0) return
     saving.value = true
     writeEpoch++
@@ -85,29 +103,143 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
       if (disposed) return
       alerts.value = [saved, ...alerts.value.filter(alert => alert.id !== saved.id)]
       editing.value = false; project()
-    } catch (error) { fail(error) }
-    finally { saving.value = false }
+    } catch (cause) {
+      if (missing(cause) && form.id) { removeLocal(form.id); editing.value = false }
+      else fail(cause)
+    } finally { saving.value = false }
   }
-  async function change(alert: ResearchAlertResponse, archive = false) {
+  function removeLocal(id: string) {
+    alerts.value = alerts.value.filter(alert => alert.id !== id)
+    if (selectedId.value === id) selectedId.value = ''
+    if (drag?.alert.id === id) cancelDrag()
+    project()
+  }
+  const missing = (cause: unknown) => (cause as { status?: number })?.status === 404
+  async function change(alert: ResearchAlertResponse) {
     if (saving.value) return
-    saving.value = true
-    writeEpoch++
+    saving.value = true; writeEpoch++; error.value = ''
+    let failed = false
     try {
       const payload = body(alert)
-      if (!archive && !alert.enabled) {
+      if (!alert.enabled) {
         await enableAlertDelivery(alert.notificationChannels?.includes('sound') ?? false, alert.notificationChannels?.includes('windows') ?? false)
         const quote = (await chartApi.quotes([String(alert.configuration?.chartSymbolId)]))[0]
         if (!quote?.price || quote.error) throw new Error(quote?.error || cw('alertQuoteUnavailable'))
         payload.configuration = { ...alert.configuration, initialPrice: quote.price }
       }
-      const saved = archive ? await researchApi.setAlertArchived(alert.id, { expectedVersion: alert.version }, true)
-        : await researchApi.updateAlert(alert.id, { ...payload, enabled: !alert.enabled, expectedVersion: alert.version })
+      const saved = await researchApi.updateAlert(alert.id, { ...payload, enabled: !alert.enabled, expectedVersion: alert.version })
       if (!disposed) { alerts.value = alerts.value.map(item => item.id === saved.id ? saved : item); project() }
-    } catch (error) { fail(error); void refresh() }
-    finally { saving.value = false }
+    } catch (cause) {
+      if (missing(cause)) removeLocal(alert.id)
+      else { fail(cause); failed = true }
+    } finally { saving.value = false; if (failed) void refresh() }
+  }
+  async function remove(alert: ResearchAlertResponse) {
+    if (saving.value) return
+    saving.value = true; writeEpoch++; error.value = ''
+    let failed = false
+    try {
+      await researchApi.deleteAlert(alert.id, alert.version)
+      if (!disposed) removeLocal(alert.id)
+    } catch (cause) {
+      if (missing(cause)) removeLocal(alert.id)
+      else { fail(cause); failed = true }
+    } finally { saving.value = false; if (failed) void refresh() }
+  }
+  function editId(id: string) { const alert = visibleAlerts.value.find(alert => alert.id === id); if (alert && !saving.value) edit(alert) }
+  function removeId(id: string) { const alert = visibleAlerts.value.find(alert => alert.id === id); if (alert) void remove(alert) }
+  async function movePrice(alert: ResearchAlertResponse, price: number) {
+    if (saving.value || price === alert.threshold) { project(); return }
+    saving.value = true; writeEpoch++; error.value = ''
+    // Keep the preview visible until the persisted rule replaces it.
+    const previous = alert.threshold
+    alerts.value = alerts.value.map(item => item.id === alert.id ? { ...item, threshold: price } : item)
+    project()
+    let failed = false
+    try {
+      const id = String(alert.configuration?.chartSymbolId), symbol = deps.symbols.value.find(symbol => symbol.id === id)
+      const quote = (await chartApi.quotes([id]))[0]
+      if (!quote?.price || quote.error) throw new Error(quote?.error || cw('alertQuoteUnavailable'))
+      const name = symbol ? `${symbol.name} · ${cw(symbol.market === 'usdm' ? 'perpetual' : symbol.market === 'index' ? 'index' : 'spot')} · ${formatNumber(price, 10)}` : alert.name
+      const saved = await researchApi.updateAlert(alert.id, { ...body(alert), name, threshold: price,
+        configuration: { ...alert.configuration, initialPrice: quote.price }, expectedVersion: alert.version })
+      if (!disposed) alerts.value = alerts.value.map(item => item.id === saved.id ? saved : item)
+    } catch (cause) {
+      if (missing(cause)) removeLocal(alert.id)
+      else {
+        alerts.value = alerts.value.map(item => item.id === alert.id ? { ...item, threshold: previous } : item)
+        fail(cause); failed = true
+      }
+    } finally { saving.value = false; project(); if (failed) void refresh() }
+  }
+  function hit(event: MouseEvent) {
+    const target = event.target as Element | null
+    const elementId = target?.closest?.('[data-price-alert-id]')?.getAttribute('data-price-alert-id')
+    for (const cell of deps.workspace.value?.cells() ?? []) {
+      if (target && !cell.host.contains(target)) continue
+      const renderer = WorkspaceRenderer.forHost(cell.host)
+      const id = elementId ?? renderer?.priceAlerts.hitAt?.(event.clientX, event.clientY)
+      const alert = visibleAlerts.value.find(alert => alert.id === id && alert.enabled && alert.configuration?.chartSymbolId === fromVela(cell.symbol))
+      if (alert && renderer) return { cell, renderer, alert }
+    }
+  }
+  function pointerDown(event: PointerEvent) {
+    suppressClickUntil = 0
+    if (paused || disposed || saving.value || event.button !== 0 || !event.isPrimary) return
+    const action = (event.target as Element)?.closest?.('[data-price-alert-action]')?.getAttribute('data-price-alert-action')
+    if (action && action !== 'move') return
+    const found = hit(event)
+    if (!found) { selectedId.value = ''; project(); return }
+    event.preventDefault(); event.stopImmediatePropagation()
+    const { cell, renderer, alert } = found
+    const line = overlays.value.find(overlay => overlay.cellId === cell.id)?.lines.find(line => line.id === alert.id)
+    selectedId.value = alert.id; draggingId.value = alert.id; writeEpoch++
+    drag = { alert, renderer, cellId: cell.id, symbolId: fromVela(cell.symbol), pointerId: event.pointerId, startY: event.clientY,
+      anchorY: line && renderer.priceAlerts.host ? renderer.priceAlerts.host.getBoundingClientRect().top + line.y : event.clientY, price: alert.threshold, moved: false }
+    deps.workspace.value?.setActiveCell(cell.id)
+    host?.setPointerCapture?.(event.pointerId)
+    project()
+  }
+  function pointerMove(event: PointerEvent) {
+    if (!drag || event.pointerId !== drag.pointerId) return
+    event.preventDefault(); event.stopImmediatePropagation()
+    const cell = deps.workspace.value?.cells().find(cell => cell.id === drag!.cellId)
+    if (!cell || fromVela(cell.symbol) !== drag.symbolId) { cancelDrag(); return }
+    if (Math.abs(event.clientY - drag.startY) < 3 && !drag.moved) return
+    const price = drag.renderer.priceAtClient(event.clientX, drag.anchorY + event.clientY - drag.startY, true)
+    if (price != null) { drag.price = roundedPrice(price, drag.symbolId); drag.moved = true; project() }
+  }
+  function releaseDrag() {
+    const previous = drag
+    drag = undefined; draggingId.value = ''
+    if (previous && host?.hasPointerCapture?.(previous.pointerId)) host.releasePointerCapture(previous.pointerId)
+    return previous
+  }
+  function cancelDrag() { releaseDrag(); project() }
+  function pointerUp(event: PointerEvent) {
+    if (!drag || event.pointerId !== drag.pointerId) return
+    event.preventDefault(); event.stopImmediatePropagation()
+    const finished = releaseDrag()!
+    suppressClickUntil = Date.now() + 400
+    if (finished.moved) void movePrice(finished.alert, finished.price)
+    else { project(); edit(finished.alert) }
+  }
+  function click(event: MouseEvent) {
+    if (Date.now() > suppressClickUntil || event.detail === 0) return
+    suppressClickUntil = 0
+    event.preventDefault(); event.stopImmediatePropagation()
+  }
+  function pointerCancel(event: PointerEvent) { if (drag?.pointerId === event.pointerId) cancelDrag() }
+  function keydown(event: KeyboardEvent) {
+    const target = event.target as HTMLElement
+    if (paused || disposed || target.closest?.('input,textarea,select,[contenteditable="true"]')) return
+    if (event.key === 'Escape' && drag) { event.preventDefault(); event.stopImmediatePropagation(); cancelDrag(); return }
+    if (!selectedId.value || !host?.contains(target)) return
+    if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); event.stopImmediatePropagation(); removeId(selectedId.value) }
+    else if (event.key === 'Enter' && target.tagName !== 'BUTTON') { event.preventDefault(); editId(selectedId.value) }
   }
   function capture(event: MouseEvent) {
-    pending = undefined
+    pending = undefined; pendingAlert = hit(event)?.alert.id
     for (const cell of deps.workspace.value?.cells() ?? []) {
       const renderer = WorkspaceRenderer.forHost(cell.host)
       const price = renderer?.priceAtClient(event.clientX, event.clientY)
@@ -119,31 +251,53 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
     if (!workspace || host) return
     host = workspace.context().host
     host.addEventListener('contextmenu', capture, true)
+    host.addEventListener('pointerdown', pointerDown, true)
+    host.addEventListener('click', click, true)
+    window.addEventListener('pointermove', pointerMove, true)
+    window.addEventListener('pointerup', pointerUp, true)
+    window.addEventListener('pointercancel', pointerCancel, true)
+    window.addEventListener('keydown', keydown, true)
     offMenu = ['context:body', 'context:price-axis'].map((target, index) => registerWidgetAction({
       id: 'opentrading-price-alert-' + index, target: target as 'context:body' | 'context:price-axis',
       get label() { return pending ? cw('addPriceAlertAt', { price: formatNumber(pending.price, 10) }) : cw('addPriceAlert') },
-      when: () => !!pending,
+      when: () => !!pending && !pendingAlert,
       run: () => startForm(pending),
     }))
+    for (const target of ['context:body', 'context:price-axis'] as const) for (const action of ['edit', 'delete'] as const) {
+      offMenu.push(registerWidgetAction({ id: `opentrading-alert-${target}-${action}`, target,
+        get label() { return cw(action === 'edit' ? 'alertEdit' : 'alertDelete') }, when: () => !!pendingAlert,
+        run: () => { if (pendingAlert) action === 'edit' ? editId(pendingAlert) : removeId(pendingAlert) },
+      }))
+    }
     offs.push(workspace.on('state:changed', project), workspace.on('cell:created', project))
     if (!paused) { void refresh(); timer = setInterval(() => void refresh(), 10_000) }
     window.addEventListener('opentrading:alert-triggered', onTriggered)
     window.addEventListener('opentrading:open-alerts', show)
   }
-  function onTriggered() { void refresh() }
+  function onTriggered(event: Event) {
+    const id = (event as CustomEvent<{ entityId?: string }>).detail?.entityId
+    if (id && alerts.value.some(alert => alert.id === id && alert.configuration?.once !== false)) { writeEpoch++; removeLocal(id) }
+    void refresh()
+  }
   const stop = watch(deps.workspace, attach, { flush: 'sync' })
   function show() { if (!paused && !disposed) { error.value = ''; open.value = true; editing.value = false; void refresh() } }
-  function pause() { paused = true; clearInterval(timer) }
+  function pause() { paused = true; clearInterval(timer); cancelDrag() }
   function resume() {
     if (disposed || !paused) return
     paused = false
     if (host) { void refresh(); timer = setInterval(() => void refresh(), 10_000) }
   }
   function dispose() {
-    disposed = true; stop(); clearInterval(timer)
+    disposed = true; stop(); clearInterval(timer); releaseDrag(); overlays.value = []
+    host?.removeEventListener('pointerdown', pointerDown, true)
+    host?.removeEventListener('click', click, true)
+    window.removeEventListener('pointermove', pointerMove, true)
+    window.removeEventListener('pointerup', pointerUp, true)
+    window.removeEventListener('pointercancel', pointerCancel, true)
+    window.removeEventListener('keydown', keydown, true)
     host?.removeEventListener('contextmenu', capture, true); offMenu.forEach(off => off()); offs.forEach(off => off())
     window.removeEventListener('opentrading:alert-triggered', onTriggered)
     window.removeEventListener('opentrading:open-alerts', show)
   }
-  return { alerts: visibleAlerts, open, editing, saving, error, form, selectedSymbol, refresh, startForm, edit, save, change, show, pause, resume, dispose }
+  return { alerts: visibleAlerts, overlays, selectedId, draggingId, remove, editId, removeId, open, editing, saving, error, form, selectedSymbol, refresh, startForm, edit, save, change, show, pause, resume, dispose }
 }

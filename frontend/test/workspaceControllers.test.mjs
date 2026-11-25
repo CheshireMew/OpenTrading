@@ -66,13 +66,142 @@ function documents({ api = {}, drafts = {} } = {}) {
   const errors = [], writes = []
   const { createPineDocuments } = load('pineDocuments', {
     './api': { chartApi: api },
-    './drafts': { readDraft: async () => undefined, writeDraft: async (key, value) => writes.push({ key, ...value }), ...drafts },
+    './drafts': { deleteDraft:async()=>{}, readDraft: async () => undefined, writeDraft: async (key, value) => writes.push({ key, ...value }), ...drafts },
   })
   const controller = createPineDocuments({ requestName: async () => 'copy', openEditor() {}, onError: error => errors.push(error) })
   return { controller, errors, writes }
 }
 const A = () => ({ id: 'A', name: 'A', version: 1, data: { source: 'A' } })
 const B = () => ({ id: 'B', name: 'B', version: 1, data: { source: 'B' } })
+
+function indicatorWorkspace() {
+  const emitter = () => {
+    const listeners = new Map()
+    return {
+      on(event, callback) {
+        if (!listeners.has(event)) listeners.set(event, new Set())
+        listeners.get(event).add(callback)
+        return () => listeners.get(event).delete(callback)
+      },
+      emit(event) { for (const callback of listeners.get(event) ?? []) callback() },
+      listenerCount: () => [...listeners.values()].reduce((total, rows) => total + rows.size, 0),
+    }
+  }
+  const cell = id => {
+    const events = emitter(), handles = []
+    const chart = { ...events, indicators: () => handles }
+    return { id, chart, add(type, visible = true) {
+      const handle = { id: id + '-' + type + '-' + handles.length, nativeType: type, visible, inputs: { length: 55 },
+        inputValues() { return { ...this.inputs } },
+        setInputs(values) { Object.assign(this.inputs, values) },
+        remove() { handles.splice(handles.indexOf(this), 1); events.emit('indicator:removed') },
+        setVisible(value) { this.visible = value; events.emit('indicator:visibility') } }
+      handles.push(handle); events.emit('indicator:added')
+      return handle
+    } }
+  }
+  const c1 = cell('c1'), c2 = cell('c2'), cells = [c1, c2], added = [], errors = []
+  const workspace = { ...emitter(), active: c1, cells: () => cells,
+    context: () => ({ addNativeIndicator(type) { added.push(type); workspace.active.add(type) }, stateChanged() { workspace.emit('state:changed') } }) }
+  const current = vue.shallowRef(workspace)
+  const handlers = new Map()
+  const { createWorkspaceIndicators } = load('workspaceIndicators', {
+    '@luxalgo/vela/plugin': { registerStatePersistence: handler => handlers.set(handler.key, handler) },
+  })
+  const controller = createWorkspaceIndicators({ workspace: current, onError: error => errors.push(error) })
+  return { controller, workspace, current, c1, c2, cells, added, errors, persistence: handlers.get('opentrading.indicatorShortcuts') }
+}
+
+test('indicator shortcuts remove disabled studies and restore all instances and their saved periods', () => {
+  const { controller, workspace, c1, added, errors, persistence } = indicatorWorkspace()
+  try {
+    assert.equal(controller.selected.value.size, 0)
+    controller.toggle('average-directional-index')
+    assert.equal(controller.selected.value.has('average-directional-index'), true)
+    assert.deepEqual(added, ['average-directional-index'])
+    controller.toggle('average-directional-index')
+    assert.equal(controller.selected.value.has('average-directional-index'), false)
+    assert.equal(c1.chart.indicators().length, 0)
+    controller.toggle('average-directional-index')
+    assert.equal(c1.chart.indicators().length, 1)
+    const fast = c1.add('sma'), slow = c1.add('sma', false)
+    slow.inputs.length = 200
+    controller.toggle('sma')
+    assert.equal(c1.chart.indicators().some(handle => handle.nativeType === 'sma'), false)
+    const snapshot = persistence.serialize({ chart: c1.chart })
+    assert.deepEqual(snapshot.sma, [{ length: 55 }, { length: 200 }])
+    persistence.restore({}, { chart: c1.chart })
+    persistence.restore(snapshot, { chart: c1.chart })
+    controller.toggle('sma')
+    const restored = c1.chart.indicators().filter(handle => handle.nativeType === 'sma')
+    assert.equal(restored.every(handle => handle.visible), true)
+    assert.deepEqual(restored.map(handle => handle.inputs.length), [55, 200])
+    controller.toggle('unknown')
+    assert.deepEqual(added, ['average-directional-index', 'average-directional-index', 'sma', 'sma'])
+    assert.deepEqual(errors, [])
+  } finally { controller.dispose() }
+  assert.equal(workspace.listenerCount(), 0)
+  assert.equal(c1.chart.listenerCount(), 0)
+})
+
+test('indicator shortcuts follow external visibility, removal, active cells and restored charts', () => {
+  const { controller, workspace, current, c1, c2, cells } = indicatorWorkspace()
+  try {
+    const volume = c1.add('volume')
+    assert.equal(controller.selected.value.has('volume'), true)
+    volume.setVisible(false)
+    assert.equal(controller.selected.value.has('volume'), false)
+    c2.add('rsi')
+    workspace.active = c2; workspace.emit('cell:active')
+    assert.deepEqual([...controller.selected.value], ['rsi'])
+    c2.chart.indicators().splice(0); c2.chart.emit('indicator:removed')
+    assert.equal(controller.selected.value.size, 0)
+    cells.splice(0, 1); workspace.emit('layout:changed')
+    assert.equal(c1.chart.listenerCount(), 0)
+    c1.chart.indicators().splice(0); c1.add('ema')
+    cells.push(c1); workspace.active = c1; workspace.emit('state:changed')
+    assert.deepEqual([...controller.selected.value], ['ema'])
+    current.value = undefined
+    assert.equal(controller.selected.value.size, 0)
+    assert.equal(workspace.listenerCount(), 0)
+    assert.equal(c1.chart.listenerCount(), 0)
+    assert.equal(c2.chart.listenerCount(), 0)
+  } finally { controller.dispose() }
+})
+
+test('ADX reference lines are opt-in, adjustable, dashed and retained during bar updates', () => {
+  const output = [], originalLines = [{ id: 'original', price: 25 }]
+  let emitter, registrations = 0
+  let descriptor = {
+    type: 'average-directional-index', title: 'ADX',
+    inputsSchema: () => [{ key: 'diLength', type: 'int', defval: 14 }],
+    defaultInputs: () => ({ diLength: 14 }),
+    create: () => ({
+      start(ctx) { emitter = () => ctx.emit({ series: [], priceLines: originalLines }); emitter() },
+      setInputs() { emitter() }, onBars() { emitter() }, onViewport() {}, suspend() {}, resume() { emitter() }, stop() {},
+    }),
+  }
+  const { registerWorkspaceIndicatorDefinitions } = load('workspaceIndicatorDefinitions', {
+    '@luxalgo/vela/plugin': { getNativeIndicator: () => descriptor, registerNativeIndicator(value) { descriptor = value; registrations++ } },
+  })
+  registerWorkspaceIndicatorDefinitions(); registerWorkspaceIndicatorDefinitions()
+  assert.equal(registrations, 1)
+  const defaults = descriptor.defaultInputs()
+  assert.equal(defaults.showUpperLevel, false)
+  assert.equal(defaults.showLowerLevel, false)
+  assert.equal(defaults.upperLevel, 30)
+  assert.equal(defaults.lowerLevel, 10)
+  const instance = descriptor.create()
+  instance.start({ id: 'adx1', emit: result => output.push(result) }, defaults)
+  assert.deepEqual(output.at(-1).priceLines, [])
+  instance.setInputs({ showUpperLevel: true })
+  assert.deepEqual(output.at(-1).priceLines.map(line => [line.price, line.lineStyle]), [[30, 'dashed']])
+  instance.setInputs({ showLowerLevel: true, upperLevel: 35, lowerLevel: 12 })
+  instance.onBars()
+  assert.deepEqual(output.at(-1).priceLines.map(line => [line.price, line.lineStyle]), [[35, 'dashed'], [12, 'dashed']])
+  instance.setInputs({ showUpperLevel: false })
+  assert.deepEqual(output.at(-1).priceLines.map(line => line.price), [12])
+})
 
 test('a clean draft from an older version never replaces newer server source', async () => {
   const { controller: docs } = documents({ drafts: { readDraft: async () => ({ source: 'old', base: 'old', version: 1, pending: false }) } })
@@ -179,7 +308,7 @@ test('a late Pine import cannot replace a newly selected document', async () => 
 
 function watchlists(api) {
   const { createWorkspaceWatchlists } = load('workspaceWatchlists', {
-    './api': { chartApi: api }, './drafts': { readDraft: async () => undefined, writeDraft: async () => {} },
+    './api': { chartApi: api }, './drafts': { deleteDraft:async()=>{}, readDraft: async () => undefined, writeDraft: async () => {} },
   })
   return createWorkspaceWatchlists({ activeSymbolId: vue.ref('BTC'), requestName: async () => 'renamed', onError: error => { throw error } })
 }
@@ -248,7 +377,7 @@ test('the other workspace keeps the selected watchlist and waits for edits to sa
         return server[1]
       },
     } },
-    './drafts': { readDraft: async () => undefined, writeDraft: async () => {} },
+    './drafts': { deleteDraft:async()=>{}, readDraft: async () => undefined, writeDraft: async () => {} },
   })
   const deps = { activeSymbolId: vue.ref('BTC'), requestName: async () => null, onError: assert.fail }
   const chart = createSharedWorkspaceWatchlists(deps)
@@ -278,7 +407,7 @@ test('the other workspace keeps the selected watchlist and waits for edits to sa
 function layouts(api, snapshot = () => ({ state: { layout: '1' } })) {
   const applied = [], drafts = []
   const { createWorkspaceLayouts } = load('workspaceLayouts', {
-    './api': { chartApi: api }, './drafts': { readDraft: async () => undefined, writeDraft: async (key, value) => drafts.push({ key, value }) },
+    './api': { chartApi: api }, './drafts': { deleteDraft:async()=>{}, readDraft: async () => undefined, writeDraft: async (key, value) => drafts.push({ key, value }) },
     './legacyState': { migrateWorkspaceState: value => value },
     './layoutMerge': load('layoutMerge', {}),
   })
@@ -483,4 +612,47 @@ test('Pine execution cancellation removes pending handles and prevents a late re
   assert.equal(execution.executing.value, false)
   assert.equal(removed.length, 1)
   assert.deepEqual(logs, [])
+})
+
+
+test('renaming a Pine document preserves unsaved source and deleting it selects a surviving script',async()=>{
+  const removed=[],draftRemovals=[]
+  const {controller:docs}=documents({api:{save:async(_kind,id,body)=>({id,...body,version:2}),remove:async(kind,id,version)=>removed.push({kind,id,version})},drafts:{deleteDraft:async key=>draftRemovals.push(key)}})
+  try{
+    docs.scripts.value=[A(),B()];docs.scriptId.value='A';await docs.openScript();docs.source.value='unsaved source'
+    await docs.renameScript()
+    assert.equal(docs.selectedScript.value.name,'copy');assert.equal(docs.source.value,'unsaved source');assert.equal(docs.scriptDirty.value,true)
+    await docs.deleteScript()
+    assert.deepEqual(removed,[{kind:'scripts',id:'A',version:2}]);assert.deepEqual(draftRemovals,['script:A'])
+    assert.equal(docs.scriptId.value,'B');assert.equal(docs.source.value,'B')
+  }finally{docs.dispose()}
+})
+
+test('deleting a watchlist waits for queued writes and switches to a remaining list',async()=>{
+  const pending=deferred(),calls=[]
+  const lists=watchlists({quotes:async()=>[],save:async(_kind,id,body)=>{await pending.promise;return{id,...body,version:2}},remove:async(kind,id,version)=>calls.push({kind,id,version})})
+  try{
+    await lists.initialize([{id:'A',version:1,name:'A',data:{symbols:[]}},{id:'B',version:1,name:'B',data:{symbols:[]}}]);lists.watchlistId.value='A'
+    const save=lists.persistWatch(['BTC']),remove=lists.deleteWatchlist();await tick();assert.deepEqual(calls,[])
+    pending.resolve();await save;await remove
+    assert.deepEqual(calls,[{kind:'watchlists',id:'A',version:2}]);assert.equal(lists.watchlistId.value,'B')
+  }finally{lists.dispose()}
+})
+
+test('layout rename and deletion use the current revision and do not recreate an empty library on disposal',async()=>{
+  const saved=[],removed=[]
+  const {controller:state}=layouts({save:async(_kind,id,body)=>{saved.push(body);return{id,...body,version:body.expected_version+1}},remove:async(kind,id,version)=>removed.push({kind,id,version})},()=>({state:{layout:'1'}}))
+  await state.initialize([{id:'A',version:1,name:'A',data:{state:{layout:'1'}}}])
+  await state.renameLayout();assert.equal(state.layouts.value[0].name,'copy')
+  await state.deleteLayout();assert.deepEqual(removed,[{kind:'layouts',id:'A',version:2}]);assert.equal(state.layouts.value.length,0);assert.notEqual(state.layoutId.value,'A');assert.equal(state.saveStatus.value,'unsaved')
+  state.dispose();await tick();assert.equal(saved.length,1)
+})
+
+test('the unsaved view after deleting the last layout can be saved as a new document',async()=>{
+  const saved=[]
+  const {controller:state}=layouts({save:async(_kind,id,body)=>{saved.push(id);return{id,...body,version:body.expected_version+1}},remove:async()=>{}},()=>({state:{layout:'1'}}))
+  await state.initialize([{id:'A',version:1,name:'A',data:{state:{layout:'1'}}}])
+  await state.deleteLayout();await state.saveNow();assert.equal(saved.length,0);await state.saveNow(true)
+  assert.equal(saved.length,1);assert.notEqual(saved[0],'A');assert.equal(state.saveStatus.value,'saved')
+  state.dispose()
 })

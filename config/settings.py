@@ -33,17 +33,8 @@ class AppSettings(BaseSettings):
     DEEPSEEK_BASE_URL: str = "https://api.deepseek.com"
     AI_MODEL: str = "deepseek-chat"
 
-    REDIS_ENABLED: bool = True
-    REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 6379
-    REDIS_DB: int = 0
-    REDIS_PASSWORD: str = ""
-    REDIS_CONNECT_TIMEOUT: float = 0.5
-    REDIS_SOCKET_TIMEOUT: float = 1.0
-    REDIS_RETRY_INTERVAL: float = 30.0
     CACHE_MEMORY_MAX_ENTRIES: int = 512
     CACHE_MEMORY_MAX_BYTES: int = 64 * 1024 * 1024
-    CACHE_MEMORY_DEFAULT_TTL: int = 120
 
     DATABASE_URL: str = ""
     DATABASE_CONNECT_TIMEOUT: int = 3
@@ -95,7 +86,7 @@ class AppSettings(BaseSettings):
     EXCHANGE_FETCH_LIMIT: int = 1000
     KLINE_UPSERT_BATCH_SIZE: int = 1000
 
-    REDIS_KLINE_TTL: int = 300
+    KLINE_CACHE_TTL: int = 300
     WS_UPDATE_INTERVAL: int = 5
 
     API_MAX_LIMIT: int = 2000

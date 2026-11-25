@@ -70,6 +70,16 @@ class ResearchWorkbenchRepository:
                     )
                 )
             )
+            # Retire rules left behind by older versions. Notifications are separate
+            # events; an expired one-shot rule has no remaining job to perform.
+            remaining = []
+            for row in alerts:
+                once = row.configuration.get("once", bool(row.configuration.get("chartSymbolId")))
+                if row.archived_at or (once and not row.enabled and row.last_triggered_at):
+                    session.delete(row)
+                else:
+                    remaining.append(row)
+            alerts = remaining
             events = list(
                 session.scalars(
                     select(ResearchEvent)

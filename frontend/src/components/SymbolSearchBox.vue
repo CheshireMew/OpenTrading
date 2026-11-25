@@ -8,13 +8,13 @@
       :aria-controls="open ? dialogId : undefined"
       :aria-label="ariaLabel || placeholderText"
       :disabled="disabled"
-      :class="[triggerClass, disabled ? 'cursor-not-allowed opacity-60' : '']"
+      :class="[triggerClass, disabled ? 'cursor-not-allowed' : '']"
       @click="openSearch"
     >
       <span class="truncate" :class="displayText ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'">
         {{ displayText || placeholderText }}
       </span>
-      <MagnifyingGlassIcon class="h-4 w-4 shrink-0 text-gray-400" />
+      <MagnifyingGlassIcon class="h-4 w-4 shrink-0 text-[var(--ui-muted)]" />
     </button>
 
     <Teleport to="body">
@@ -37,7 +37,7 @@
 
           <div class="border-b border-[var(--ui-border)] p-4 dark:border-gray-700">
             <div class="symbol-search-field flex items-center border px-3">
-              <MagnifyingGlassIcon class="h-5 w-5 shrink-0 text-stone-400" />
+              <MagnifyingGlassIcon class="h-5 w-5 shrink-0 text-[var(--ui-muted)]" />
               <input
                 ref="searchInput"
                 v-model.trim="query"
@@ -265,12 +265,16 @@ onMounted(() => {
   background: var(--ui-toolbar);
   border-color: var(--ui-borderStrong);
 }
+.symbol-trigger:disabled :is(span, svg) { color: var(--ui-faint); }
 
 .symbol-trigger:hover:not(:disabled),
 .symbol-trigger:focus-visible {
   border-color: var(--ui-accent);
 }
-.symbol-dialog { max-height: min(88dvh, 720px); border-radius: 10px; border-color: var(--ui-borderStrong); background: var(--ui-panel); }
+.symbol-dialog { height: min(720px, calc(100dvh - 48px)); border-radius: 10px; border-color: var(--ui-borderStrong); background: var(--ui-panel); }
+.symbol-dialog > div:not(:last-child) { flex-shrink: 0; }
+.symbol-dialog > div:last-child { scrollbar-gutter: stable; overscroll-behavior: contain; }
+@media (max-width: 639px) { .symbol-dialog { height: min(720px, calc(100dvh - 24px)); } }
 .symbol-dialog > div { border-color: var(--ui-border); }
 .symbol-search-field { border-radius: 6px; border-color: var(--ui-borderStrong); background: var(--ui-toolbar); }
 .symbol-search-field:focus-within { border-color: var(--ui-accent); outline: 2px solid var(--ui-accent); outline-offset: 2px; }

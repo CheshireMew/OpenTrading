@@ -3,15 +3,15 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from app.infra.cache_service import RedisService
+from app.infra.cache_service import CacheService
 
 
-def optional_cache_get(cache_service: RedisService | None, key: str) -> Any | None:
+def optional_cache_get(cache_service: CacheService | None, key: str) -> Any | None:
     return None if cache_service is None else cache_service.get(key)
 
 
 def optional_cache_set(
-    cache_service: RedisService | None,
+    cache_service: CacheService | None,
     key: str,
     value: Any,
     *,
@@ -22,7 +22,7 @@ def optional_cache_set(
         cache_service.set(key, value, ttl=ttl or default_ttl)
 
 
-async def optional_cache_aget(cache_service: RedisService | None, key: str) -> Any | None:
+async def optional_cache_aget(cache_service: CacheService | None, key: str) -> Any | None:
     if cache_service is None:
         return None
     async_get = getattr(cache_service, "aget", None)
@@ -32,7 +32,7 @@ async def optional_cache_aget(cache_service: RedisService | None, key: str) -> A
 
 
 async def optional_cache_aset(
-    cache_service: RedisService | None,
+    cache_service: CacheService | None,
     key: str,
     value: Any,
     *,

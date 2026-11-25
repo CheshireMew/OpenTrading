@@ -120,3 +120,11 @@ export interface ChartPineRecordsQueryParams {
 export interface ChartQuotesQueryParams {
   symbols: string
 }
+
+export interface ChartReplayBarsQueryParams {
+  symbol: string
+  timeframe: string
+  end: number
+  start?: number | null
+  limit?: number
+}

@@ -15,7 +15,9 @@ export const LIGHT_PALETTE = Object.freeze({
   accent: '#181818',
   accentHover: '#333333',
   onAccent: '#ffffff',
+  favorite: '#9a6700',
   positive: '#089981',
+  positiveInk: '#087f6b',
   negative: '#f23645',
   blue: '#2962ff',
 })
@@ -36,7 +38,9 @@ export const DARK_PALETTE = Object.freeze({
   accent: '#eeeeee',
   accentHover: '#ffffff',
   onAccent: '#151515',
+  favorite: '#e8b34d',
   positive: '#089981',
+  positiveInk: '#29bda3',
   negative: '#f23645',
   blue: '#5086f5',
 })

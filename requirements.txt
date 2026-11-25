@@ -23,7 +23,6 @@ websockets>=15.0.0       # Binance WebSocket 行情快照
 sqlalchemy>=2.0.0        # ORM
 alembic>=1.13.0          # 数据库迁移
 psycopg2-binary>=2.9.0   # PostgreSQL驱动
-redis>=4.0.0             # 缓存
 apscheduler>=3.10.0      # 定时任务调度（用于市场指标数据抓取）
 
 # 数据处理

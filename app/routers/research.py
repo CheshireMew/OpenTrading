@@ -14,6 +14,30 @@ from app.contracts.research import MarketScreenerFilters
 router = FrontendContractRouter(frontend_contract_target="research")
 
 
+@router.delete("/research/watchlists/{watchlist_id}", response_model=dict[str, bool])
+async def delete_research_watchlist(watchlist_id: str, expected_version: int = Query(..., ge=1), service=Depends(get_research_service)):
+    await run_database(lambda: service.delete_record("watchlist", watchlist_id, expected_version))
+    return {"deleted": True}
+
+
+@router.delete("/research/items/{item_id}", response_model=dict[str, bool])
+async def delete_research_watch_item(item_id: str, expected_version: int = Query(..., ge=1), service=Depends(get_research_service)):
+    await run_database(lambda: service.delete_record("item", item_id, expected_version))
+    return {"deleted": True}
+
+
+@router.delete("/research/notes/{note_id}", response_model=dict[str, bool])
+async def delete_research_note(note_id: str, expected_version: int = Query(..., ge=1), service=Depends(get_research_service)):
+    await run_database(lambda: service.delete_record("note", note_id, expected_version))
+    return {"deleted": True}
+
+
+@router.delete("/research/screeners/{screener_id}", response_model=dict[str, bool])
+async def delete_market_screener(screener_id: str, expected_version: int = Query(..., ge=1), service=Depends(get_market_screener_service)):
+    await run_database(lambda: service.delete(screener_id, expected_version))
+    return {"deleted": True}
+
+
 @router.post("/research/screener-preview", response_model=MarketScreenerRunResponse)
 async def evaluate_browser_screener(body: MarketScreenerFilters, service=Depends(get_market_screener_service)):
     result = await service.preview(body.model_dump())
@@ -303,22 +327,14 @@ async def update_research_alert(
     return await run_database(lambda: service.update_alert(alert_id, body))
 
 
-@router.post("/research/alerts/{alert_id}/archive", response_model=ResearchAlertResponse)
-async def archive_research_alert(
+@router.delete("/research/alerts/{alert_id}", response_model=dict[str, bool])
+async def delete_research_alert(
     alert_id: str,
-    body: ResearchArchiveCommand,
+    expected_version: int = Query(..., ge=1),
     service=Depends(get_research_service),
 ):
-    return await run_database(lambda: service.archive_alert(alert_id, body, archived=True))
-
-
-@router.post("/research/alerts/{alert_id}/restore", response_model=ResearchAlertResponse)
-async def restore_research_alert(
-    alert_id: str,
-    body: ResearchArchiveCommand,
-    service=Depends(get_research_service),
-):
-    return await run_database(lambda: service.archive_alert(alert_id, body, archived=False))
+    await run_database(lambda: service.delete_alert(alert_id, expected_version))
+    return {"deleted": True}
 
 
 @router.put("/research/events/{event_id}/acknowledgement", response_model=ResearchEventResponse)

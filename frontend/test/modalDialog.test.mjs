@@ -23,11 +23,13 @@ class Element {
 }
 
 const listeners = new Set()
+const modalEvents = []
 globalThis.HTMLElement = Element
 globalThis.document = { body: { style: { overflow: '' } }, activeElement: null }
 globalThis.window = {
   addEventListener(_name, fn) { listeners.add(fn) },
   removeEventListener(_name, fn) { listeners.delete(fn) },
+  dispatchEvent(event) { modalEvents.push(event.type); return true },
 }
 globalThis.getComputedStyle = () => ({ visibility: 'visible' })
 
@@ -66,6 +68,7 @@ test('Tab ignores hidden and disabled controls and recovers focus from outside t
   modal.element.children = [hidden, disabled, first, last]
   modal.open.value = true
   await settle()
+  assert.equal(modalEvents.at(-1), 'opentrading:modal-open')
   assert.equal(document.activeElement, first)
   assert.equal(key('Tab', true).prevented, true)
   assert.equal(document.activeElement, last)

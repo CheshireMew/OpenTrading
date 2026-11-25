@@ -51,9 +51,6 @@ export const useResearchWorkbench = () => {
   const itemAlerts = computed(() => (workbench.value.alerts || []).filter((alert) => (
     (!alert.archivedAt && activeItem.value && (alert.watchItemId === activeItem.value.id || alert.symbol === activeItem.value.symbol))
   )))
-  const archivedAlerts = computed(() => (workbench.value.alerts || []).filter((alert) => (
-    Boolean(alert.archivedAt) && activeItem.value && (alert.watchItemId === activeItem.value.id || alert.symbol === activeItem.value.symbol)
-  )))
 
   const load = async () => {
     if (loading.value) return
@@ -183,14 +180,13 @@ export const useResearchWorkbench = () => {
     return result
   }
 
-  const setAlertArchived = async (row: ResearchAlertResponse, archived: boolean) => {
-    const result = await runMutation(() => researchApi.setAlertArchived(
-      row.id,
-      { expectedVersion: row.version },
-      archived,
-    ))
-    if (result) workbench.value.alerts = replaceById(workbench.value.alerts || [], result)
-    await refreshTimeline()
+  const deleteWatchlist = async (row:ResearchWatchlistResponse) => {const result=await runMutation(()=>researchApi.deleteWatchlist(row.id,row.version));if(result)await load();return result}
+  const deleteItem = async (row:ResearchWatchItemResponse) => {const result=await runMutation(()=>researchApi.deleteItem(row.id,row.version));if(result)await load();return result}
+  const deleteNote = async (row:ResearchNoteResponse) => {const result=await runMutation(()=>researchApi.deleteNote(row.id,row.version));if(result)await load();return result}
+
+  const deleteAlert = async (row: ResearchAlertResponse) => {
+    const result = await runMutation(() => researchApi.deleteAlert(row.id, row.version))
+    if (result) workbench.value.alerts = (workbench.value.alerts ?? []).filter(alert => alert.id !== row.id)
     return result
   }
 
@@ -241,7 +237,6 @@ export const useResearchWorkbench = () => {
     itemNotes,
     archivedNotes,
     itemAlerts,
-    archivedAlerts,
     load,
     createWatchlist,
     saveWatchlist,
@@ -252,7 +247,7 @@ export const useResearchWorkbench = () => {
     createNote,
     setNoteArchived,
     createAlert,
-    setAlertArchived,
+    deleteAlert, deleteWatchlist, deleteItem, deleteNote,
     acknowledgeEvent,
     requestDesktopPermission,
     evaluateAlerts,

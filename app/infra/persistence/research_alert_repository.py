@@ -20,7 +20,6 @@ from app.infra.db.schema import ResearchAlertRule
 from utils.time import utc_now_naive
 
 from app.infra.persistence.research_rows import (
-    set_archived,
     require_row,
     validate_watch_item_link,
     touch,
@@ -75,17 +74,10 @@ class ResearchAlertRepository:
             session.flush()
             return alert_payload(row)
 
-    def set_alert_archived(self, alert_id: str, expected_version: int, archived: bool) -> dict[str, Any]:
-        return set_archived(
-            self._database_runtime,
-            ResearchAlertRule,
-            alert_id,
-            expected_version,
-            archived,
-            entity_type="alert",
-            title=lambda row: f"{('归档' if archived else '恢复')}提醒：{row.name}",
-            symbol=lambda row: row.symbol,
-        )
+    def delete_alert(self, alert_id: str, expected_version: int) -> None:
+        with write_session(self._database_runtime, ResearchRevisionConflictError) as session:
+            row = require_row(session, ResearchAlertRule, alert_id, expected_version)
+            session.delete(row)
 
     def list_enabled_alerts(self) -> list[dict[str, Any]]:
         with write_session(self._database_runtime, ResearchRevisionConflictError) as session:
@@ -100,10 +92,13 @@ class ResearchAlertRepository:
 
     def record_alert_evaluation(
         self, alert_id: str, *, value: float, evaluated_at: datetime, triggered: bool
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any] | None:
         with write_session(self._database_runtime, ResearchRevisionConflictError) as session:
             row = session.scalar(select(ResearchAlertRule).where(ResearchAlertRule.id == alert_id).with_for_update())
-            if row is None or row.archived_at is not None:
+            if row is None:
+                # A subscription can have an in-flight tick when its rule is deleted.
+                return None
+            if row.archived_at is not None:
                 raise ResearchNotFoundError("提醒规则不存在或已归档")
             if not row.enabled:
                 return alert_payload(row)
@@ -134,8 +129,12 @@ class ResearchAlertRepository:
                     },
                     occurred_at=evaluated_at,
                 )
-                if row.configuration.get("once"):
+                if row.configuration.get("once", bool(row.configuration.get("chartSymbolId"))):
                     row.enabled = 0
                     touch(row)
+                    result = alert_payload(row)
+                    session.delete(row)
+                    session.flush()
+                    return result
             session.flush()
             return alert_payload(row)

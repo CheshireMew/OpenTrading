@@ -5,24 +5,24 @@ from typing import Annotated
 
 import typer
 
-from config.market_data import MarketDataConfig
-from app.infra.persistence.market.history.database import MarketHistoryDatabase
 from app.infra.persistence.market.history.projections import DatabaseProjection
 from app.infra.structured_data import dumps_json
+from scripts.market_data.support import market_runtime
 from scripts.market_data.registry import app, database_app, jobs_app, storage_app
 
 
 @app.command("migrate")
 def migrate(
+    ctx: typer.Context,
     source: Annotated[Path, typer.Option(exists=True, file_okay=False, help="Legacy .data directory.")],
     apply: Annotated[bool, typer.Option("--apply", help="Copy files and commit records.")] = False,
 ) -> None:
     """Inspect or import legacy market and liquidity data into OpenTrading."""
     from app.infra.persistence.market.history.import_legacy import import_legacy_data
 
-    config = MarketDataConfig.load()
+    runtime = market_runtime(ctx)
     try:
-        result = import_legacy_data(source, config.data_dir, apply=apply)
+        result = import_legacy_data(source, runtime.database, apply=apply)
     except (OSError, ValueError) as exc:
         typer.echo(dumps_json({"status": "error", "message": str(exc)}))
         raise typer.Exit(1) from exc
@@ -31,6 +31,7 @@ def migrate(
 
 @jobs_app.command("add")
 def jobs_add(
+    ctx: typer.Context,
     job_id: Annotated[str, typer.Option("--id")],
     task: Annotated[str, typer.Option(help="liquidity_refresh")],
     every_minutes: Annotated[int, typer.Option(min=1)] = 1440,
@@ -38,10 +39,9 @@ def jobs_add(
 ) -> None:
     """Add a persistent interval job."""
 
-    from app.services.market.history_jobs import JobScheduler
 
-    settings = MarketDataConfig.load()
-    scheduler = JobScheduler(settings, settings.resolve_data_dir(root))
+    runtime = market_runtime(ctx, root)
+    scheduler = runtime.scheduler
     try:
         job = scheduler.add(job_id, task, every_minutes)
     except (ValueError, RuntimeError) as exc:
@@ -51,16 +51,16 @@ def jobs_add(
 
 @jobs_app.command("enable")
 def jobs_enable(
+    ctx: typer.Context,
     job_id: Annotated[str, typer.Option("--id")],
     enabled: Annotated[bool, typer.Option("--enabled/--disabled")] = True,
     root: Annotated[Path | None, typer.Option()] = None,
 ) -> None:
     """Enable or disable an existing job without deleting its history."""
 
-    from app.services.market.history_jobs import JobScheduler
 
-    settings = MarketDataConfig.load()
-    scheduler = JobScheduler(settings, settings.resolve_data_dir(root))
+    runtime = market_runtime(ctx, root)
+    scheduler = runtime.scheduler
     try:
         job = scheduler.set_enabled(job_id, enabled)
     except ValueError as exc:
@@ -70,15 +70,15 @@ def jobs_enable(
 
 @jobs_app.command("run")
 def jobs_run(
+    ctx: typer.Context,
     job_id: Annotated[str, typer.Option("--id")],
     root: Annotated[Path | None, typer.Option()] = None,
 ) -> None:
     """Run one job now and persist its result."""
 
-    from app.services.market.history_jobs import JobScheduler
 
-    settings = MarketDataConfig.load()
-    scheduler = JobScheduler(settings, settings.resolve_data_dir(root))
+    runtime = market_runtime(ctx, root)
+    scheduler = runtime.scheduler
     try:
         result = scheduler.run(job_id)
     except (ValueError, RuntimeError) as exc:
@@ -90,14 +90,14 @@ def jobs_run(
 
 @jobs_app.command("run-due")
 def jobs_run_due(
+    ctx: typer.Context,
     root: Annotated[Path | None, typer.Option()] = None,
 ) -> None:
     """Run every enabled job whose interval has elapsed."""
 
-    from app.services.market.history_jobs import JobScheduler
 
-    settings = MarketDataConfig.load()
-    scheduler = JobScheduler(settings, settings.resolve_data_dir(root))
+    runtime = market_runtime(ctx, root)
+    scheduler = runtime.scheduler
     results = scheduler.run_due()
     if not results:
         typer.echo("no jobs due")
@@ -110,16 +110,16 @@ def jobs_run_due(
 
 @jobs_app.command("watch")
 def jobs_watch(
+    ctx: typer.Context,
     poll_seconds: Annotated[int, typer.Option(min=1, max=60)] = 30,
     root: Annotated[Path | None, typer.Option()] = None,
 ) -> None:
     """Keep running due jobs until interrupted."""
 
     from time import sleep
-    from app.services.market.history_jobs import JobScheduler
 
-    settings = MarketDataConfig.load()
-    scheduler = JobScheduler(settings, settings.resolve_data_dir(root))
+    runtime = market_runtime(ctx, root)
+    scheduler = runtime.scheduler
     typer.echo(f"watching {len(scheduler.jobs())} jobs; poll={poll_seconds}s")
     try:
         while True:
@@ -132,14 +132,14 @@ def jobs_watch(
 
 @jobs_app.command("status")
 def jobs_status(
+    ctx: typer.Context,
     root: Annotated[Path | None, typer.Option()] = None,
 ) -> None:
     """Show configured jobs and their last persisted result."""
 
-    from app.services.market.history_jobs import JobScheduler
 
-    settings = MarketDataConfig.load()
-    scheduler = JobScheduler(settings, settings.resolve_data_dir(root))
+    runtime = market_runtime(ctx, root)
+    scheduler = runtime.scheduler
     jobs = scheduler.jobs()
     if not jobs:
         typer.echo("no jobs configured")
@@ -155,6 +155,7 @@ def jobs_status(
 
 @jobs_app.command("events")
 def jobs_events(
+    ctx: typer.Context,
     correlation_id: Annotated[str, typer.Option("--correlation-id")],
     limit: Annotated[int, typer.Option(min=1, max=1000)] = 200,
     root: Annotated[Path | None, typer.Option()] = None,
@@ -163,8 +164,8 @@ def jobs_events(
 
     from app.infra.persistence.market.history.operations import OperationRepository
 
-    base = MarketDataConfig.load().resolve_data_dir(root)
-    events = OperationRepository(MarketHistoryDatabase(base)).events(
+    runtime = market_runtime(ctx, root)
+    events = OperationRepository(runtime.database).events(
         correlation_id=correlation_id,
         limit=limit,
     )
@@ -180,10 +181,11 @@ def jobs_events(
 
 @database_app.command("status")
 def database_status(
+    ctx: typer.Context,
     root: Annotated[Path | None, typer.Option()] = None,
 ) -> None:
-    base = MarketDataConfig.load().resolve_data_dir(root)
-    summary = DatabaseProjection(MarketHistoryDatabase(base)).summary()
+    runtime = market_runtime(ctx, root)
+    summary = DatabaseProjection(runtime.database).summary()
     typer.echo(f"database={summary['path']} schema={summary['schema_version']} bytes={summary['size_bytes']}")
     for key, value in summary["counts"].items():
         typer.echo(f"{key}={value}")
@@ -191,11 +193,13 @@ def database_status(
 
 @storage_app.command("status")
 def storage_status(
+    ctx: typer.Context,
     root: Annotated[Path | None, typer.Option()] = None,
 ) -> None:
     from app.infra.persistence.market.history.capacity import ManagedStorage
 
-    settings = MarketDataConfig.load()
+    runtime = market_runtime(ctx, root)
+    settings = runtime.config
     base = settings.resolve_data_dir(root)
     payload = ManagedStorage(
         base,

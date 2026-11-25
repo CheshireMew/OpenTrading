@@ -34,12 +34,11 @@ _SOURCE_FILTERS = {
 }
 
 
-def import_legacy_data(source_root: Path, target_root: Path, *, apply: bool) -> dict:
+def import_legacy_data(source_root: Path, target: MarketHistoryDatabase, *, apply: bool) -> dict:
     source_root = source_root.resolve()
     database_file = source_root / "signal_lab.sqlite3"
     if not database_file.is_file():
         raise ValueError("源目录中找不到 signal_lab.sqlite3")
-    target = MarketHistoryDatabase(target_root)
     if target.root.is_relative_to(source_root) or source_root.is_relative_to(target.root):
         raise ValueError("源数据目录和目标产物目录必须独立")
 

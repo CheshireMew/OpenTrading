@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 from uuid import uuid4
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, text
 
 from app.domain.research import ResearchNotFoundError, ResearchRevisionConflictError
 from app.infra.db.database import DatabaseRuntime
@@ -76,9 +76,15 @@ class MarketScreenerRepository:
         with write_session(self._database_runtime, ResearchRevisionConflictError) as session:
             return self._screener_payload(self._require(session, screener_id))
 
-    def save_run(self, screener_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+    def save_run(self, screener_id: str, payload: dict[str, Any], *, expected_version: int) -> dict[str, Any]:
         with write_session(self._database_runtime, ResearchRevisionConflictError) as session:
-            screener = self._require(session, screener_id)
+            if session.bind.dialect.name == "sqlite":
+                session.execute(text("BEGIN IMMEDIATE"))
+            screener = session.scalar(select(SavedMarketScreener).where(SavedMarketScreener.id == screener_id).with_for_update())
+            if screener is None:
+                raise ResearchNotFoundError("市场筛选器不存在")
+            if screener.version != expected_version or screener.archived_at is not None:
+                raise ResearchRevisionConflictError("市场筛选器已更改或归档，本次结果未保存，请重新运行")
             now = utc_now_naive()
             row = MarketScreenerRun(id=uuid4().hex, screener_id=screener_id, created_at=now, **payload)
             session.add(row)

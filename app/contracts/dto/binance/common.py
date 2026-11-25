@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 class BinanceTickerStatsItemResponse(BaseModel):
     symbol: str | None = None
     price_change: float | None = None
-    price_change_pct: float | None = None
+    price_change_pct: float | None = Field(default=None, description="24-hour change in percentage points (1.25 means 1.25%)")
     weighted_avg_price: float | None = None
     last_price: float | None = None
     last_qty: float | None = None

@@ -60,8 +60,8 @@ class ChartPriceAlertRuntime:
                             message = latest
                 bar = message["bar"]
                 # Initial/reconnect history is replayed by the shared market feed.
-                # Only a forming candle is a current crypto price observation.
-                if not symbol.startswith("index:") and bar.get("closed") and not message.get("live"):
+                # Only an explicitly live feed message is a crypto price observation.
+                if not symbol.startswith("index:") and not message.get("live"):
                     continue
                 try:
                     await self.evaluate_price(symbol, float(bar["close"]))
@@ -81,7 +81,7 @@ class ChartPriceAlertRuntime:
             if rule.get("last_value") == price and not triggered:
                 continue
             saved = await run_database(lambda rule=rule: self.repository.record_alert_evaluation(
-                rule["id"], value=price, evaluated_at=now, triggered=triggered))
+                rule["id"], value=price, evaluated_at=now, expected_version=rule["version"]))
             # Never overwrite a newer refresh snapshot after awaiting the database.
             if self.rules.get(rule["id"]) is rule:
                 if saved is None or not saved["enabled"] or saved["archivedAt"]:

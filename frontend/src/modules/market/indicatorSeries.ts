@@ -1,5 +1,6 @@
 import type { MarketIndicatorResponse } from './contracts'
 import { percentChange } from '@/utils/number'
+import { parseUtcDate } from '@/utils/utcDate'
 
 
 export const indicatorHistoryValues = (indicator: MarketIndicatorResponse | null | undefined): number[] => (
@@ -20,16 +21,20 @@ export const indicatorChangePercent = (
   indicator: MarketIndicatorResponse | null | undefined,
   lookback: number,
 ): number | null => {
-  const values = indicatorHistoryValues(indicator)
-  if (values.length < 2) return null
-  const current = values[values.length - 1]
-  const previous = values[Math.max(0, values.length - lookback - 1)]
-  if (previous === 0) return null
-  return percentChange(current, previous, true)
+  if (!Number.isFinite(lookback) || lookback <= 0) return null
+  const points = (indicator?.history ?? []).map(point => ({ time: parseUtcDate(point.date)?.getTime(), value: point.value }))
+    .filter((point): point is { time: number; value: number } => point.time !== undefined && Number.isFinite(point.value))
+    .sort((a, b) => a.time - b.time)
+  const latest = points[points.length - 1]
+  if (!latest) return null
+  const cutoff = latest.time - lookback * 86_400_000
+  let previous: { time: number; value: number } | undefined
+  for (const point of points) { if (point.time > cutoff) break; previous = point }
+  if (!previous || previous.value === 0) return null
+  return percentChange(latest.value, previous.value, true)
 }
 
 export const parseIndicatorTimestamp = (value: string | null | undefined): number | null => {
   if (!value) return null
-  const timestamp = new Date(value).getTime()
-  return Number.isFinite(timestamp) ? timestamp : null
+  return parseUtcDate(value)?.getTime() ?? null
 }

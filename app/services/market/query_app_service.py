@@ -59,8 +59,9 @@ class MarketQueryAppService:
         symbol: str,
         timeframe: str | None,
         limit: int | None,
+        use_ai: bool = True,
     ) -> RealtimeResponse:
-        return await self.realtime.get_realtime(symbol=symbol, timeframe=timeframe, limit=limit)
+        return await self.realtime.get_realtime(symbol=symbol, timeframe=timeframe, limit=limit, use_ai=use_ai)
 
     async def get_realtime_ws_payload(
         self,

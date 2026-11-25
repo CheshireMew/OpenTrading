@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from contextvars import ContextVar
-from dataclasses import dataclass
 from pathlib import Path
 
 from sqlalchemy.engine import Engine
@@ -11,35 +9,12 @@ from app.infra.persistence.market.history.catalog_schema import SCHEMA_VERSION a
 from app.infra.persistence.market.history.sql import CatalogConnection
 
 
-@dataclass(frozen=True)
-class DatabaseBinding:
-    engine: Engine
-    root: Path
-
-
-_binding: ContextVar[DatabaseBinding | None] = ContextVar("signal_lab_database", default=None)
-
-
-@contextmanager
-def bind_database(engine: Engine, root: Path):
-    token = _binding.set(DatabaseBinding(engine, root.resolve()))
-    try:
-        yield
-    finally:
-        _binding.reset(token)
-
-
 class MarketHistoryDatabase:
     """Structured records share the OpenTrading database; the root owns files only."""
 
-    def __init__(self, root: Path) -> None:
-        binding = _binding.get()
-        if binding is None:
-            raise RuntimeError("Market history requires an OpenTrading database binding")
+    def __init__(self, root: Path, *, engine: Engine) -> None:
         self.root = root.expanduser().resolve()
-        if self.root != binding.root:
-            raise ValueError("data root must match the OpenTrading market-data artifact directory")
-        self._engine = binding.engine
+        self._engine = engine
         self.location = (
             str(Path(self._engine.url.database).resolve())
             if self._engine.dialect.name == "sqlite" and self._engine.url.database not in (None, ":memory:")

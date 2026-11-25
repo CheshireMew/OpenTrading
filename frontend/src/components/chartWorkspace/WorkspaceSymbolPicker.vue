@@ -24,6 +24,7 @@ import { XMarkIcon } from '@heroicons/vue/24/outline'
 import { useModalDialog } from '@/composables/useModalDialog'
 import type { ChartSymbol } from '@/modules/chartWorkspace/api'
 import { cw, workspaceMarketLabel } from '@/modules/chartWorkspace/locale'
+import { matchesChartSymbol } from '@/modules/chartWorkspace/symbolSearch'
 
 const props = defineProps<{ symbols: ChartSymbol[]; title: 'addWatch' | 'switchSymbol' }>()
 const open = defineModel<boolean>({ required: true })
@@ -31,9 +32,9 @@ const emit = defineEmits<{ select: [id: string] }>()
 const query = ref('')
 const market = ref('all')
 const searchInput = ref<HTMLInputElement>()
-const filters = [{ value: 'all', label: 'all' }, { value: 'spot', label: 'spot' }, { value: 'usdm', label: 'perpetual' }, { value: 'index', label: 'index' }]
+const filters = [{ value: 'all', label: 'all' }, { value: 'spot', label: 'spot' }, { value: 'usdm', label: 'perpetual' }, { value: 'index', label: 'index' }, { value: 'fx', label: 'fx' }, { value: 'commodity', label: 'commodity' }]
 const results = computed(() => props.symbols.filter(item => (market.value === 'all' || item.market === market.value)
-  && `${item.id} ${item.name} ${workspaceMarketLabel(item.id)}`.toLowerCase().includes(query.value.trim().toLowerCase())).slice(0, 100))
+  && (matchesChartSymbol(item, query.value) || workspaceMarketLabel(item.id).toLowerCase().includes(query.value.trim().toLowerCase()))).slice(0, 100))
 const { dialogRef } = useModalDialog(open, () => { open.value = false }, searchInput)
 function pick(id: string) {
   emit('select', id)

@@ -21,6 +21,7 @@ INDEX_PROVIDER_SYMBOLS = {
     "NDX.INDEX": "^NDX",
     "RUT.INDEX": "^RUT",
     "VIX.INDEX": "^VIX",
+    "DXY.INDEX": "DX-Y.NYB",
     "HSI.INDEX": "^HSI",
 }
 

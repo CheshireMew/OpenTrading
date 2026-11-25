@@ -11,6 +11,7 @@ from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from app.infra.db.database import DatabaseRuntime
 from app.infra.db.schema import MarketIndicatorData, MarketIndicatorMeta
 from app.domain.market.indicator_catalog import MARKET_INDICATOR_META
+from utils.time import as_utc
 
 
 class MarketIndicatorRepository:
@@ -60,7 +61,7 @@ class MarketIndicatorRepository:
             for row in rows:
                 grouped[row.indicator_id].append(
                     {
-                        "date": row.timestamp.isoformat(),
+                        "date": as_utc(row.timestamp).isoformat(),
                         "timestamp": row.timestamp,
                         "value": row.value,
                     }
@@ -91,9 +92,9 @@ class MarketIndicatorRepository:
             return
 
         deduplicated = {
-            (str(point["indicator_id"]), point["timestamp"]): {
+            (str(point["indicator_id"]), as_utc(point["timestamp"]).replace(tzinfo=None)): {
                 "indicator_id": str(point["indicator_id"]),
-                "timestamp": point["timestamp"],
+                "timestamp": as_utc(point["timestamp"]).replace(tzinfo=None),
                 "value": float(point["value"]),
             }
             for point in data_points

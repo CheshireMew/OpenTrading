@@ -15,13 +15,14 @@ export interface ChartSymbol {
   symbol: string
   name: string
   exchange: string
-  market: "spot" | "usdm" | "index"
+  market: "spot" | "usdm" | "index" | "fx" | "commodity"
   currency: string
   timeframes: Array<string>
   close_only?: boolean
   timezone?: string
   session?: string
   metadata?: { [key: string]: unknown }
+  aliases?: Array<string>
 }
 
 export interface ChartBars {
@@ -53,7 +54,7 @@ export interface PineCapabilities {
 export interface PineRun {
   id: string
   status: "queued" | "loading" | "running" | "completed" | "failed" | "cancelled" | "interrupted"
-  progress?: number
+  progress?: PineProgress | null
   created_at: number
   request: PineRunRequest
   recording?: "report" | "research"
@@ -98,6 +99,14 @@ export interface ChartBar {
   closed: boolean
 }
 
+export interface PineProgress {
+  phase: "loading" | "computing" | "saving"
+  mode: "indeterminate" | "measured"
+  completed?: number | null
+  total?: number | null
+  unit?: "candles" | null
+}
+
 export interface ChartBarsQueryParams {
   symbol: string
   timeframe: string
@@ -127,4 +136,8 @@ export interface ChartReplayBarsQueryParams {
   end: number
   start?: number | null
   limit?: number
+}
+
+export interface ChartSymbolsQueryParams {
+  symbol?: string | null
 }

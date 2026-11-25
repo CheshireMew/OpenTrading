@@ -18,10 +18,10 @@ CLASSIFICATION_SCHEMA_VERSION = "signal-lab.classification.v1"
 class ClassificationService:
     """Point-in-time classification import and query boundary."""
 
-    def __init__(self, root: Path, config: MarketDataConfig) -> None:
-        self.root = root.expanduser().resolve()
+    def __init__(self, database: MarketHistoryDatabase, config: MarketDataConfig) -> None:
+        self.root = database.root
         self.config = config
-        database = MarketHistoryDatabase(self.root)
+        self._database = database
         self._catalog = CatalogRepository(database)
         self._repository = ClassificationRepository(database)
 
@@ -45,7 +45,7 @@ class ClassificationService:
             **scheme,
             "retrieved_at": retrieved_at.astimezone(timezone.utc).isoformat(),
         }
-        source = RawSnapshotStore(self.root, self.config).save(
+        source = RawSnapshotStore(self._database, self.config).save(
             scheme["provider"],
             f"classifications-{scheme['scheme_id']}-{scheme['version']}",
             payload,

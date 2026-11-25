@@ -124,6 +124,7 @@ export function useWeb3MarketRankPage() {
     web3Audit: heatRank.web3Audit,
     web3DetailLoading: heatRank.web3DetailLoading,
     web3DetailError: heatRank.web3DetailError,
+    retryWeb3TokenDetail: heatRank.retryWeb3TokenDetail,
     web3KlineInterval: heatRank.web3KlineInterval,
     web3KlineIntervals: WEB3_KLINE_INTERVALS,
     web3ChartData: heatRank.web3ChartData,

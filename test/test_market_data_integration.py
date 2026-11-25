@@ -97,13 +97,12 @@ def test_legacy_import_keeps_data_and_liquidity_jobs(tmp_path: Path, monkeypatch
         prepare_db(database)
         verify_database_schema(database)
         runtime = MarketDataRuntime(database, settings)
-        with runtime.bind():
-            assert import_legacy_data(source, output, apply=False)["status"] == "ready"
-            assert not output.exists()
-            imported = import_legacy_data(source, output, apply=True)
-            assert imported["status"] == "imported"
-            assert imported["rows"]["jobs"] == 1
-            assert import_legacy_data(source, output, apply=True)["status"] == "already_imported"
+        assert import_legacy_data(source, runtime.database, apply=False)["status"] == "ready"
+        assert not output.exists()
+        imported = import_legacy_data(source, runtime.database, apply=True)
+        assert imported["status"] == "imported"
+        assert imported["rows"]["jobs"] == 1
+        assert import_legacy_data(source, runtime.database, apply=True)["status"] == "already_imported"
 
         assert (output / "raw" / "evidence.json").read_text(encoding="utf-8") == "market evidence"
         assert (source / "runs" / "report.html").is_file()
@@ -120,8 +119,8 @@ def test_legacy_import_keeps_data_and_liquidity_jobs(tmp_path: Path, monkeypatch
         assert response.json()["counts"]["instruments"] == 1
         assert client.get("/api/v1/signal-lab/runs").status_code == 404
 
-        def refresh(root, config):
-            assert root == config.data_dir == output
+        def refresh(database, config):
+            assert database.root == config.data_dir == output
             return {"series_count": 13, "row_count": 2, "retrieved_at": "2026-01-04"}
 
         monkeypatch.setattr(scheduler, "sync_liquidity_data", refresh)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -50,8 +50,22 @@ class DataRepairCommand(BaseModel):
 
 class DataRepairResponse(BaseModel):
     action: str
-    status: Literal["completed", "failed"]
+    status: Literal["completed", "partial", "failed"]
     startedAt: datetime
     completedAt: datetime
     detail: str
     result: JsonObject = Field(default_factory=dict)
+    coverage: "DataRepairCoverageResponse | None" = None
+
+
+class DataRepairGapResponse(BaseModel):
+    start: datetime
+    end: datetime
+
+
+class DataRepairCoverageResponse(BaseModel):
+    complete: bool
+    startDate: date
+    endDate: date
+    missingRanges: list[DataRepairGapResponse] = Field(default_factory=list)
+    missingSessions: list[date] = Field(default_factory=list)

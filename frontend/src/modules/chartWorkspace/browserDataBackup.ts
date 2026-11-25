@@ -1,9 +1,14 @@
 import { browserWorkspaceDocuments, waitForWorkspaceWrites } from './api'
-import { BROWSER_DOCUMENT_KINDS, type BrowserDocumentEntry } from './browserDocuments'
-import { readDraft, writeDraft } from './drafts'
+import { BROWSER_DOCUMENT_KINDS, restoreBrowserDocuments, type BrowserDocumentEntry } from './browserDocuments'
+import { readDraft, draftStorageKey } from './drafts'
 import { cw } from './locale'
 import { getLocalStorage } from '@/utils/storage'
-import { browserRecords, restoreBrowserRecords } from '@/modules/personal/browserStore'
+import { browserRecords, restoreBrowserRecordsInTransaction } from '@/modules/personal/browserStore'
+import { personalTransaction } from '@/modules/personal/browserDatabase'
+import { RESEARCH_STORES } from '@/modules/personal/browserResearchStore'
+import { validateResearchBackup } from '@/modules/personal/researchSchema'
+import { PINE_STORES } from '@/modules/personal/browserPineStore'
+import { isBackupPreference, applyImportedPreferences, IMPORTED_PREFERENCES_KEY } from '@/modules/personal/browserPreferences'
 
 type Backup = {
   format: 'opentrading-personal-data'
@@ -14,7 +19,7 @@ type Backup = {
   selection: { layout?: string; script?: string }
   records?: Record<string, unknown>
 }
-const preferenceKey = (key: string) => ['locale', 'theme', 'opentrading_user_preferences', 'opentrading:macro-signals:section', 'opentrading:asset-observation-symbol'].includes(key) || key.startsWith('opentrading:layout:')
+const preferenceKey = isBackupPreference
 
 export async function exportBrowserData(): Promise<Backup> {
   await waitForWorkspaceWrites()
@@ -52,19 +57,27 @@ export async function importBrowserData(text: string) {
     if (typeof backup.records !== 'object' || Array.isArray(backup.records)) throw new Error(cw('browserBackupInvalid'))
     for (const [key, record] of Object.entries(backup.records) as [string, any][]) {
       if (key === 'research') {
-        if (!record || typeof record !== 'object') throw new Error(cw('browserBackupInvalid'))
-        for (const kind of ['watchlists', 'items', 'notes', 'alerts', 'events', 'screeners', 'screenerRuns']) {
-          if (!Array.isArray(record[kind]) || record[kind].some((row: any) => !row || typeof row.id !== 'string' || !row.id)) throw new Error(cw('browserBackupInvalid'))
-        }
-      } else if (!key.startsWith('pine-run:') || !record?.run || key !== 'pine-run:' + record.run.id || !record.run.request || typeof record.run.status !== 'string') throw new Error(cw('browserBackupInvalid'))
+        validateResearchBackup(record)
+      } else {
+        const run = record?.run, request = run?.request
+        if (!key.startsWith('pine-run:') || key !== 'pine-run:' + run?.id || !request || !Number.isFinite(run.created_at)
+          || !['queued', 'loading', 'running', 'completed', 'failed', 'cancelled', 'interrupted'].includes(run.status)
+          || typeof request.script_id !== 'string' || !Number.isInteger(request.script_version) || request.script_version < 1
+          || typeof request.symbol !== 'string' || typeof request.timeframe !== 'string' || !Number.isFinite(request.start) || !Number.isFinite(request.end) || request.start >= request.end
+          || !run.summary || !run.provenance || run.status === 'completed' && !record.result) throw new Error(cw('browserBackupInvalid'))
+      }
     }
   }
   await waitForWorkspaceWrites()
-  const ids = await browserWorkspaceDocuments.restore(backup.documents)
-  if (backup.records) await restoreBrowserRecords(backup.records)
-  const storage = getLocalStorage()
-  for (const [key, value] of Object.entries(backup.preferences ?? {})) if (storage && preferenceKey(key) && typeof value === 'string') storage.setItem(key, value)
-  if (typeof backup.selection?.layout === 'string') await writeDraft('last-layout', ids['layouts:' + backup.selection.layout] ?? backup.selection.layout)
-  if (typeof backup.selection?.script === 'string') await writeDraft('last-script', ids['scripts:' + backup.selection.script] ?? backup.selection.script, 'window')
+  await personalTransaction(['documents', 'revisions', 'metadata', 'drafts', ...RESEARCH_STORES, ...PINE_STORES], 'readwrite', async tx => {
+    const ids = await restoreBrowserDocuments(tx, backup.documents)
+    if (backup.records) await restoreBrowserRecordsInTransaction(tx, backup.records)
+    const preferences = Object.fromEntries(Object.entries(backup.preferences ?? {}).filter(([key, value]) => preferenceKey(key) && typeof value === 'string'))
+    tx.objectStore('metadata').put({ id: crypto.randomUUID(), preferences }, IMPORTED_PREFERENCES_KEY)
+    if (typeof backup.selection?.layout === 'string') tx.objectStore('drafts').put(ids['layouts:' + backup.selection.layout] ?? backup.selection.layout, draftStorageKey('last-layout'))
+    if (typeof backup.selection?.script === 'string') tx.objectStore('drafts').put(ids['scripts:' + backup.selection.script] ?? backup.selection.script, draftStorageKey('last-script', 'window'))
+  })
+  // Preferences cannot turn a committed data import into a reported failure.
+  await applyImportedPreferences().catch(() => {})
   return backup.documents.length
 }

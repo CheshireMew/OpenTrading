@@ -93,15 +93,21 @@
             </div>
           </article>
         </div>
+        <nav v-if="total > pageSize" class="flex flex-wrap items-center justify-between gap-3 border-t p-4" :aria-label="t('signalReview.pagination')">
+          <button type="button" class="app-button-secondary" :disabled="loading || offset === 0" @click="changePage(-1)">{{ t('signalReview.previousPage') }}</button>
+          <span class="text-sm app-muted" aria-live="polite">{{ t('signalReview.pageRange', { from: total ? offset + 1 : 0, to: Math.min(offset + signals.length, total), total }) }}</span>
+          <button type="button" class="app-button-secondary" :disabled="loading || offset + signals.length >= total" @click="changePage(1)">{{ t('signalReview.nextPage') }}</button>
+        </nav>
       </section>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { researchApi, type TradeSignalResponse, type TradeSignalStatsResponse } from '@/modules/research'
+import { apiErrorMessage, isRequestCanceled } from '@/api/request'
 
 const { t } = useI18n()
 const signals = ref<TradeSignalResponse[]>([])
@@ -112,6 +118,25 @@ const evaluating = ref(false)
 const error = ref('')
 const feedback = ref('')
 const filters = reactive({ symbol: '', outcome: '', source: '', archived: false })
+const pageSize = 200
+const offset = ref(0)
+let requestVersion = 0, disposed = false
+let renderedOffset = 0
+let requestController: AbortController | undefined
+function invalidate() {
+  requestVersion++
+  requestController?.abort()
+  requestController = undefined
+  loading.value = false
+}
+watch(filters, () => {
+  invalidate()
+  offset.value = 0
+  renderedOffset = 0
+  signals.value = []
+  total.value = 0
+  error.value = ''
+}, { deep: true, flush: 'sync' })
 const outcomes = ['pending', 'target_hit', 'stop_hit', 'ambiguous', 'expired', 'unavailable'] as const
 
 const statCards = computed(() => {
@@ -129,22 +154,46 @@ const groupedStats = computed(() => [
   ...(stats.value?.byStrategy || []).map((row) => ({ ...row, id: `strategy:${row.key}`, label: `${t('signalReview.strategy')}: ${row.key}` })),
 ])
 
-const load = async () => {
+const fetchPage = async () => {
+  if (disposed) return
+  invalidate()
+  const version = requestVersion
+  const controller = requestController = new AbortController()
+  const query = { symbol: filters.symbol || null, outcome_status: filters.outcome || null, source: filters.source || null, include_archived: filters.archived, offset: offset.value, limit: pageSize }
+  const current = () => !disposed && version === requestVersion && !controller.signal.aborted
   loading.value = true; error.value = ''
   try {
     const [page, summary] = await Promise.all([
-      researchApi.listSignals({ symbol: filters.symbol || null, outcome_status: filters.outcome || null, source: filters.source || null, include_archived: filters.archived, offset: 0, limit: 200 }),
-      researchApi.getSignalStats(),
+      researchApi.listSignals(query, controller.signal),
+      researchApi.getSignalStats(controller.signal),
     ])
+    if (!current()) return
+    if (query.offset > 0 && query.offset >= page.total) {
+      offset.value = page.total ? Math.floor((page.total - 1) / pageSize) * pageSize : 0
+      await fetchPage()
+      return
+    }
     signals.value = page.items || []; total.value = page.total; stats.value = summary
-  } catch (reason) { error.value = reason instanceof Error ? reason.message : String(reason) } finally { loading.value = false }
+    renderedOffset = query.offset
+  } catch (reason) {
+    if (current() && !isRequestCanceled(reason)) {
+      offset.value = renderedOffset
+      error.value = apiErrorMessage(reason, t('signalReview.loadFailed'))
+    }
+  } finally { if (current()) { loading.value = false; requestController = undefined } }
+}
+const load = () => { offset.value = 0; return fetchPage() }
+const changePage = (direction: number) => {
+  if (loading.value) return
+  offset.value = Math.max(0, offset.value + direction * pageSize)
+  return fetchPage()
 }
 const evaluate = async (id?: string) => {
   evaluating.value = true; error.value = ''; feedback.value = ''
-  try { const result = await researchApi.evaluateSignals(id); feedback.value = t('signalReview.evaluatedResult', { count: result.evaluatedCount, resolved: result.resolvedCount }); await load() }
-  catch (reason) { error.value = reason instanceof Error ? reason.message : String(reason) } finally { evaluating.value = false }
+  try { const result = await researchApi.evaluateSignals(id); if (disposed) return; feedback.value = t('signalReview.evaluatedResult', { count: result.evaluatedCount, resolved: result.resolvedCount }); await fetchPage() }
+  catch (reason) { if (!disposed) error.value = apiErrorMessage(reason, t('signalReview.loadFailed')) } finally { if (!disposed) evaluating.value = false }
 }
-const toggleArchive = async (signal: TradeSignalResponse) => { try { await researchApi.setSignalArchived(signal.id, signal.version, !signal.archivedAt); await load() } catch (reason) { error.value = reason instanceof Error ? reason.message : String(reason) } }
+const toggleArchive = async (signal: TradeSignalResponse) => { try { await researchApi.setSignalArchived(signal.id, signal.version, !signal.archivedAt); if (!disposed) await fetchPage() } catch (reason) { if (!disposed) error.value = apiErrorMessage(reason, t('signalReview.loadFailed')) } }
 const outcomeLabel = (value: string) => t(`signalReview.outcomes.${value}`)
 const sourceLabel = (value: string) => ['rules', 'ai'].includes(value.toLowerCase()) ? t('signalReview.sources.' + value.toLowerCase()) : value
 const sideLabel = (value?: string | null) => value && ['long', 'short', 'buy', 'sell'].includes(value.toLowerCase()) ? t('signalReview.sides.' + value.toLowerCase()) : value || '--'
@@ -154,4 +203,5 @@ const percent = (value?: number | null) => value == null ? '--' : `${value.toFix
 const signedPercent = (value?: number | null) => value == null ? '--' : `${value > 0 ? '+' : ''}${value.toFixed(2)}%`
 const gapClass = (value?: number | null) => value == null ? '' : Math.abs(value) <= 10 ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'
 onMounted(load)
+onBeforeUnmount(() => { disposed = true; invalidate() })
 </script>

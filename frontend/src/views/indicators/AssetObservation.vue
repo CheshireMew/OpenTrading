@@ -112,12 +112,13 @@ import { useAssetObservation } from '@/modules/market/useAssetObservation'
 import { percentageChange, type ObservationRange } from '@/modules/market/assetObservation'
 
 const { t, locale } = useI18n()
-const { symbols, activeSymbolId, basis, data, stats, instrument, isIndex, stale, loading, error, selectSymbol, load } = useAssetObservation()
+const { symbols, activeSymbolId, basis, data, stats, instrument, isIndex, stale, loading, error, selectSymbol, load, refreshSymbols } = useAssetObservation()
 const searchOpen = ref(false)
 const searchTitle = ref<'switchSymbol' | 'addWatch'>('switchSymbol')
 const namePrompt = ref<InstanceType<typeof WorkspaceNamePrompt>>()
 const { error: watchlistError, setError: setWatchlistError, clearError: clearWatchlistError } = useRequestError(t)
 const reportWatchlistError = (cause: unknown) => setWatchlistError(cause, 'chartWorkspace.loadFailed')
+watch(searchOpen, open => { if (open) void refreshSymbols().catch(reportWatchlistError) })
 const listsController = createSharedWorkspaceWatchlists({
   activeSymbolId,
   requestName: (title, value) => namePrompt.value?.requestName(title, value) ?? Promise.resolve(null),

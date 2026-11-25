@@ -1,5 +1,5 @@
 import { computed, reactive, ref, type Ref } from 'vue'
-import type { OHLCV } from '@luxalgo/vela'
+import type { LiveQuote } from './provider'
 import type { VelaWorkspace } from '@luxalgo/vela/workspace'
 import { chartApi, type ChartSymbol } from './api'
 import { ReplayAccount, type Side, type OrderKind } from './replayModel'
@@ -10,13 +10,14 @@ import { cw } from './locale'
 export function createWorkspacePaper(deps: {
   workspace: Ref<VelaWorkspace | undefined>; symbols: Ref<ChartSymbol[]>
   symbolId: Ref<string>; timeframe: Readonly<Ref<string>>
-  subscribe: (id: string, timeframe: string, onBar: (bar: OHLCV) => void) => () => void
+  subscribe: (id: string, timeframe: string, onQuote: (quote: LiveQuote) => void) => () => void
 }) {
   const accounts = reactive(new Map<string, ReplayAccount>()), idle = reactive(new ReplayAccount())
   const symbol = computed(() => deps.symbols.value.find(info => info.id === deps.symbolId.value))
   const active = computed(() => accounts.has(deps.symbolId.value))
   const amount = ref(100), loading = ref(false), error = ref('')
   const subscriptions = new Map<string, () => void>()
+  const observed = new Map<string, number>()
   const account = () => accounts.get(deps.symbolId.value) ?? idle
   const hasOrder = computed(() => !!account().order)
   let disposed = false
@@ -38,10 +39,15 @@ export function createWorkspacePaper(deps: {
       if (!(quantity > 0)) { error.value = cw('replayInvalidOrder'); return false }
       if (!accounts.has(info.id)) accounts.set(info.id, new ReplayAccount())
       const target = accounts.get(info.id)!
-      target.quote(quote.price, Date.now())
-      if (!target.place(side, kind, entryPrice, quantity, Date.now())) return false
-      if (!subscriptions.has(info.id)) subscriptions.set(info.id, deps.subscribe(info.id, info.timeframes.includes('1m') ? '1m' : '1d', bar => {
-        if (!disposed) target.quote(bar.close, Date.now())
+      const createdAt = Date.now()
+      observed.set(info.id, createdAt)
+      target.quote(quote.price, createdAt)
+      if (!target.place(side, kind, entryPrice, quantity, createdAt)) return false
+      if (!subscriptions.has(info.id)) subscriptions.set(info.id, deps.subscribe(info.id, info.timeframes.includes('1m') ? '1m' : '1d', update => {
+        if (!disposed && Number.isFinite(update.observedAt) && update.observedAt >= (observed.get(info.id) ?? Infinity)) {
+          observed.set(info.id, update.observedAt)
+          target.quote(update.price, update.observedAt)
+        }
       }))
       return true
     } catch (cause) { if (!disposed) error.value = cause instanceof Error ? cause.message : String(cause); return false }

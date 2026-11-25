@@ -30,16 +30,23 @@ function setup(api = {}, options = {}) {
     './replayPriceAlerts': replayMatcher,
     './provider': { fromVela: () => 'binance:spot:BTCUSDT' }, './locale': { cw: key => key, formatNumber: String },
   }
-  const code = ts.transpileModule(fs.readFileSync(new URL('../src/modules/chartWorkspace/workspaceAlerts.ts', import.meta.url), 'utf8'),
-    { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
-  const exports = {}
-  new Function('require', 'exports', code)(id => modules[id] ?? (() => { throw Error(id) })(), exports)
+  const cache = new Map()
+  function load(name) {
+    if (cache.has(name)) return cache.get(name)
+    const exports = {}; cache.set(name, exports)
+    const code = ts.transpileModule(fs.readFileSync(new URL('../src/modules/chartWorkspace/' + name + '.ts', import.meta.url), 'utf8'),
+      { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
+    new Function('require', 'exports', code)(id => modules[id] ?? (id.startsWith('./') ? load(id.slice(2)) : (() => { throw Error(id) })()), exports)
+    return exports
+  }
+  const exports = load('workspaceAlerts')
   const workspace = vue.shallowRef(), symbols = vue.ref([{ id: 'binance:spot:BTCUSDT', name: 'BTC/USDT', market: 'spot', metadata: { mintick: .01 } }])
   const callbacks = new Set(), start = Date.UTC(2026, 10, 20)
   const replay = options.replay ? { active: vue.ref(true), sessionId: vue.ref('session-1'), cellId: vue.ref('cell'),
     symbol: vue.ref({ id: 'binance:spot:BTCUSDT' }), now: vue.ref(start), account: { price: 90 },
     subscribeSourceBars(callback) { callbacks.add(callback); return () => callbacks.delete(callback) } } : undefined
   const controller = exports.createWorkspaceAlerts({ workspace, symbols, replay })
+  if (options.paused) controller.pause()
   const cell = { id: 'cell', host, symbol: 'BTC' }
   workspace.value = { active: cell, cells: () => [cell], context: () => ({ host }), on: () => () => {}, setActiveCell() {} }
   function pointer(target, type, y) {
@@ -54,6 +61,21 @@ function setup(api = {}, options = {}) {
   }
   return { controller, renderer, host, writes, pointer, delivered, replay, minute, quoteCalls: () => quoteCalls }
 }
+
+test('a paused workspace does not restart alert polling when its chart finishes initializing', async t => {
+  let reads = 0, timers = 0
+  t.mock.method(globalThis, 'setInterval', () => { timers++; return 1 })
+  const { controller } = setup({ getWorkbench: async () => { reads++; return { alerts: [] } } }, { paused: true })
+  try {
+    await flush()
+    assert.equal(reads, 0)
+    assert.equal(timers, 0)
+    controller.resume()
+    await flush()
+    assert.equal(reads, 1)
+    assert.equal(timers, 1)
+  } finally { controller.dispose() }
+})
 
 test('dragging previews the price, Escape cancels, and releasing saves only the final price', async () => {
   const { controller: c, renderer, host, writes, pointer } = setup()

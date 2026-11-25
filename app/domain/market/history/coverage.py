@@ -168,6 +168,8 @@ def expected_dates(
 
 
 def _calendar_name(instrument: Instrument) -> str | None:
+    if instrument.exchange == "ICEUS":
+        return "ICEUS"
     if instrument.asset_class == "commodity" and instrument.exchange in {
         "COMEX", "NYMEX", "CBOT", "CME",
     }:

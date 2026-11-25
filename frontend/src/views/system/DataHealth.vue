@@ -2,7 +2,13 @@
   <div class="app-page"><div class="app-page-inner-wide">
     <header class="app-workspace-header"><div><h1 class="app-title">{{ t('dataHealth.title') }}</h1><p v-if="health" class="app-muted">{{ dateTime(health.checkedAt) }}</p></div><div class="flex flex-wrap gap-2"><button type="button" class="app-button-secondary" :disabled="loading || repairing" @click="load">{{ loading ? t('dataHealth.loading') : t('dataHealth.refresh') }}</button><button type="button" class="app-button-secondary" :disabled="repairing" @click="repair('verify_database')">{{ t('dataHealth.verifyDb') }}</button></div></header>
     <div v-if="error" role="alert" class="app-inline-note text-rose-700 dark:text-rose-300">{{ error }}<button type="button" class="ml-3 underline" :disabled="loading" @click="load">{{ t('common.retry') }}</button></div>
-    <div v-if="feedback" role="status" class="app-inline-note">{{ backendText(feedback) }}</div>
+    <div v-if="feedback" role="status" class="app-inline-note">{{ feedback }}</div>
+    <section v-if="lastRepair?.coverage && !lastRepair.coverage.complete" class="app-inline-note" aria-live="polite">
+      <h2 class="font-semibold">{{ t('dataHealth.remainingGaps') }}</h2>
+      <ul v-if="repairGaps.length" class="mt-2 space-y-1"><li v-for="gap in repairGaps.slice(0, visibleGaps)" :key="gap">{{ gap }}</li></ul>
+      <p v-else class="mt-2">{{ t('dataHealth.unverifiedCoverage') }}</p>
+      <button v-if="visibleGaps < repairGaps.length" type="button" class="mt-3 underline" @click="visibleGaps += 20">{{ t('dataHealth.moreGaps', { count: repairGaps.length - visibleGaps }) }}</button>
+    </section>
     <AppLoadingState v-if="loading && !health" :label="t('dataHealth.loading')" />
     <template v-if="health">
       <dl class="app-metric-strip"><div><dt>{{ t('dataHealth.overall') }}</dt><dd :class="statusTone(health.status)">{{ statusLabel(health.status) }}</dd></div><div><dt>{{ t('ui.needsAttention') }}</dt><dd><a href="#health-attention" class="health-summary-link">{{ affectedSources.length }}</a></dd></div><div><dt>{{ t('dataHealth.sources') }}</dt><dd>{{ health.sources?.length || 0 }}</dd></div><div><dt>{{ t('dataHealth.revision') }}</dt><dd>{{ health.databaseRevision || '—' }}</dd></div></dl>
@@ -27,11 +33,24 @@ import AppLoadingState from '@/components/AppLoadingState.vue'
 import { apiErrorMessage } from '@/api/request'
 import { useDateTime } from '@/composables/useDateTime'
 import { systemApi } from '@/modules/system/api'
-import type { DataHealthResponse, DataRepairCommand, DataSourceHealthResponse } from '@/modules/system/generatedContracts'
+import type { DataHealthResponse, DataRepairCommand, DataRepairResponse, DataSourceHealthResponse } from '@/modules/system/generatedContracts'
 const { t } = useI18n()
 const { formatDateTime } = useDateTime()
 const health = ref<DataHealthResponse | null>(null)
-const loading = ref(false), repairing = ref(false), error = ref(''), feedback = ref('')
+const loading = ref(false), repairing = ref(false), error = ref('')
+const lastRepair = ref<DataRepairResponse | null>(null), visibleGaps = ref(10)
+const feedback = computed(() => {
+  const result = lastRepair.value
+  if (!result) return ''
+  if (result.action === 'hydrate_symbol_history') return t(result.coverage?.complete === false ? 'dataHealth.historyPartial' : 'dataHealth.historyCompleted', {
+    symbol: String(result.result?.symbol ?? ''), count: Number(result.result?.pointCount ?? 0),
+  })
+  return backendText(result.detail)
+})
+const repairGaps = computed(() => [
+  ...(lastRepair.value?.coverage?.missingRanges ?? []).map(gap => `${dateTime(gap.start)} – ${dateTime(gap.end)}`),
+  ...(lastRepair.value?.coverage?.missingSessions ?? []).map(day => t('dataHealth.missingSession', { date: day })),
+])
 const symbol = ref('BTC/USDT'), timeframe = ref('1h'), days = ref(365), pendingAction = ref('')
 const historyPanel = ref<HTMLElement | null>(null), symbolField = ref<HTMLInputElement | null>(null)
 const affectedSources = computed(() => (health.value?.sources || []).filter(source => source.status !== 'ready'))
@@ -48,10 +67,10 @@ async function repair(action: DataRepairCommand['action']) {
   if (repairing.value) return
   repairing.value = true
   pendingAction.value = action
-  error.value = ''; feedback.value = ''
+  error.value = ''; lastRepair.value = null; visibleGaps.value = 10
   try {
     const result = await systemApi.repairData({ action, symbol: symbol.value || null, timeframe: timeframe.value, days: days.value })
-    feedback.value = result.detail
+    lastRepair.value = result
     await load()
   } catch (cause) { error.value = apiErrorMessage(cause, t('ui.repairFailed')) }
   finally { repairing.value = false; pendingAction.value = '' }

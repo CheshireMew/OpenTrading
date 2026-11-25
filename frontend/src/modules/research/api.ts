@@ -12,6 +12,7 @@ import type {
   ResearchEventPageResponse,
   ResearchNoteCreateCommand,
   ResearchNoteResponse,
+  ResearchNotePageResponse,
   ResearchNoteUpdateCommand,
   ResearchWatchItemCreateCommand,
   ResearchWatchItemResponse,
@@ -39,9 +40,10 @@ export const serverResearchApi = {
   deleteItem: (id:string, expectedVersion:number) => apiDelete('delete_research_watch_item', {path:{item_id:id},query:{expected_version:expectedVersion}}),
   deleteNote: (id:string, expectedVersion:number) => apiDelete('delete_research_note', {path:{note_id:id},query:{expected_version:expectedVersion}}),
   deleteScreener: (id:string, expectedVersion:number) => apiDelete('delete_market_screener', {path:{screener_id:id},query:{expected_version:expectedVersion}}),
-  listEvents(kind = 'alert_triggered', unacknowledgedOnly = true, limit = 100): Promise<ResearchEventPageResponse> {
+  listEvents(kind = 'alert_triggered', unacknowledgedOnly = true, limit = 100, cursor?: string, signal?: AbortSignal): Promise<ResearchEventPageResponse> {
     return apiGet('list_research_events', {
-      query: { kind, unacknowledged_only: unacknowledgedOnly, limit },
+      query: { kind, unacknowledged_only: unacknowledgedOnly, limit, cursor },
+      signal,
     })
   },
   listScreeners(includeArchived = false): Promise<SavedMarketScreenerListResponse> {
@@ -57,7 +59,7 @@ export const serverResearchApi = {
     return apiPost(archived ? 'archive_market_screener' : 'restore_market_screener', { expectedVersion }, { path: { screener_id: id } })
   },
   runScreener(id: string, asOf?: string): Promise<MarketScreenerRunResponse> {
-    return apiPost('run_market_screener', { asOf: asOf || null }, { path: { screener_id: id } })
+    return apiPost('run_market_screener', { asOf: asOf || null }, { path: { screener_id: id }, timeout: 120000 })
   },
   listScreenerRuns(id: string, offset = 0, limit = 50): Promise<MarketScreenerRunPageResponse> {
     return apiGet('list_market_screener_runs', { path: { screener_id: id }, query: { offset, limit } })
@@ -69,6 +71,7 @@ export const serverResearchApi = {
     context: { assetClass?: string; chainId?: string; platform?: string } = {},
   ): Promise<AssetResearchResponse> {
     return apiGet('get_asset_research', {
+      timeout: 120000,
       path: { symbol },
       query: {
         timeframe,
@@ -79,11 +82,11 @@ export const serverResearchApi = {
       },
     })
   },
-  listSignals(query: ListTradeSignalsQueryParams = {}): Promise<TradeSignalPageResponse> {
-    return apiGet('list_trade_signals', { query })
+  listSignals(query: ListTradeSignalsQueryParams = {}, signal?: AbortSignal): Promise<TradeSignalPageResponse> {
+    return apiGet('list_trade_signals', { query, signal })
   },
-  getSignalStats(): Promise<TradeSignalStatsResponse> {
-    return apiGet('get_trade_signal_stats')
+  getSignalStats(signal?: AbortSignal): Promise<TradeSignalStatsResponse> {
+    return apiGet('get_trade_signal_stats', { signal })
   },
   evaluateSignals(signalId?: string): Promise<TradeSignalEvaluationRunResponse> {
     return apiPost('evaluate_trade_signals', { signalId: signalId || null, force: true })
@@ -117,6 +120,9 @@ export const serverResearchApi = {
   },
   createNote(body: ResearchNoteCreateCommand): Promise<ResearchNoteResponse> {
     return apiPost('create_research_note', body)
+  },
+  listNotes(symbol: string, offset = 0, limit = 200): Promise<ResearchNotePageResponse> {
+    return apiGet('list_research_notes', { query: { symbol, offset, limit } })
   },
   updateNote(id: string, body: ResearchNoteUpdateCommand): Promise<ResearchNoteResponse> {
     return apiPut('update_research_note', body, { path: { note_id: id } })

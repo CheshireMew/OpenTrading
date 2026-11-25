@@ -11,7 +11,7 @@ from app.product import api_path
 from config.market_data import MarketDataConfig
 from app.services.market.history.catalog import instrument_payload, resolve_instrument
 from app.services.market.history.classifications import ClassificationService
-from app.domain.market.history.indicators import indicator_definitions_payload, indicator_registry_hash
+from app.domain.market.history.indicators import INDICATOR_SCHEMA_VERSION, indicator_definitions_payload, indicator_registry_hash
 from app.contracts.market_data import history_envelope
 from app.infra.persistence.market.history import MarketHistoryDatabase
 from app.infra.persistence.market.history.price_repository import PriceRepository
@@ -32,7 +32,7 @@ class PriceReadView:
     def __init__(self, config: MarketDataConfig, root: Path, database: MarketHistoryDatabase) -> None:
         self._database = database
         self._prices = PriceRepository(database)
-        self._classifications = ClassificationService(root, config)
+        self._classifications = ClassificationService(database, config)
         self._projection_cache = ProjectionCache()
 
     def history(
@@ -75,7 +75,7 @@ class PriceReadView:
             "materialized": False,
             "snapshot_hash": snapshot_hash,
             "basis": basis,
-            "indicator_schema_version": "price-indicators.v2",
+            "indicator_schema_version": INDICATOR_SCHEMA_VERSION,
             "indicator_registry_hash": indicator_registry_hash(),
             "definitions": indicator_definitions_payload(),
         }

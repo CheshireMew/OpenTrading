@@ -2,14 +2,11 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import './style.css'
 import './styles/workspace-layouts.css'
-import App from './App.vue'
-import router from './router'
-import i18n from './i18n'
+import { applyImportedPreferences } from './modules/personal/browserPreferences'
 
-const app = createApp(App)
-
-app.use(createPinia())
-app.use(router)
-app.use(i18n)
-
-app.mount('#app')
+async function start() {
+  await applyImportedPreferences().catch(() => {})
+  const [{ default: App }, { default: router }, { default: i18n }] = await Promise.all([import('./App.vue'), import('./router'), import('./i18n')])
+  createApp(App).use(createPinia()).use(router).use(i18n).mount('#app')
+}
+void start()

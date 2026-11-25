@@ -185,6 +185,7 @@
     "notFound": "Page not found"
   },
   "signalLab": {
+    "readFailed": "Check the market service connection and retry.",
     "pageKicker": "Macro monitoring",
     "intro": "Policy, dollar funding, credit intermediation and risk prices together measure the dollar environment. Higher scores indicate tighter liquidity.",
     "reload": "Reload",
@@ -422,6 +423,11 @@
     }
   },
   "signalReview": {
+    "pagination": "Signal record pages",
+    "previousPage": "Previous",
+    "nextPage": "Next",
+    "pageRange": "{from}–{to} / {total}",
+    "loadFailed": "Signal records are temporarily unavailable. Please retry.",
     "outcomeFilter": "Filter by outcome",
     "title": "Trade Signal Review",
     "subtitle": "Persist rule and AI setups, evaluate target and stop order independently, and measure hit rate, MFE, MAE, and forward returns.",
@@ -620,6 +626,12 @@
     }
   },
   "dataHealth": {
+    "historyCompleted": "History checked for {symbol}: {count} records available.",
+    "historyPartial": "{count} records are available for {symbol}; some history is still missing.",
+    "remainingGaps": "History still missing",
+    "unverifiedCoverage": "The data source could not confirm complete coverage. Please check again later.",
+    "missingSession": "Missing trading session: {date}",
+    "moreGaps": "Show the remaining {count} gaps",
     "symbol": "Symbol",
     "timeframe": "Timeframe",
     "days": "Lookback days",
@@ -840,6 +852,12 @@
     }
   },
   "web3Rank": {
+    "tokenDetailPartialFailed": "{sources} could not be loaded. Other available data is still shown.",
+    "detailSources": {
+      "market": "Market data",
+      "audit": "Audit information",
+      "chart": "Candles"
+    },
     "eyebrow": "Binance Web3",
     "title": "Web3 Ranks",
     "subtitle": "The heat rank combines search, trend, social, trading, smart-money, and Meme signals. Address PnL stays wallet-focused.",
@@ -1384,6 +1402,9 @@
     "resetHint": "Restore the full view, or double-click the chart"
   },
   "chartWorkspace": {
+    "retryRequest": "Retry",
+    "runRequestFailed": "Backtest status is temporarily unavailable. Please retry.",
+    "runRecordsFailed": "Backtest results are temporarily unavailable. Please retry.",
     "cursorMenu": "Cursor mode",
     "cursorCross": "Crosshair",
     "cursorDot": "Dot",
@@ -1513,6 +1534,8 @@
     "useSavedScript": "Use server version",
     "openMenu": "Open application menu",
     "selectSymbol": "Select symbol",
+    "fx": "Forex",
+    "commodity": "Commodity futures",
     "perpetual": "Perpetual",
     "spot": "Spot",
     "index": "Index",
@@ -1727,6 +1750,9 @@
     "invalidReport": "Report data is incomplete. Please export again.",
     "queued": "Queued",
     "loadingMarket": "Loading market data",
+    "savingReport": "Saving report",
+    "computingStrategy": "Computing strategy",
+    "processedCandles": "{count} candles processed",
     "running": "Running",
     "completed": "Completed",
     "failed": "Failed",
@@ -1874,6 +1900,7 @@
     "browserBackupInvalid": "This is not a valid OpenTrading personal data backup."
   },
   "ui": {
+    "loadMoreNotes": "Load more notes",
     "delete": "Delete",
     "deleteNamed": "Delete “{name}”?",
     "deletePermanent": "This cannot be undone.",

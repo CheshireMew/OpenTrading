@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from math import sqrt
 
+from app.domain.market.candles import current_candle_open_ms
 from app.domain.market.constants import timeframe_to_milliseconds
 from app.services.market.symbol_catalog import resolve_market_asset
 from app.services.market.market_data_service import MarketDataService
 from app.services.market.index_data_service import IndexDataService
-from config import settings
 from utils.logger import logger
 
 
@@ -29,16 +29,14 @@ class PairCompareService:
             resolved_timeframe = "1d" if resolved_a["asset_class"] == "index" or resolved_b["asset_class"] == "index" else timeframe
             logger.info(f"开始对比: {resolved_a['symbol']} vs {resolved_b['symbol']}, {days}天, 显示周期{resolved_timeframe}")
 
-            base_timeframe = settings.PAIR_COMPARE_BASE_TIMEFRAME
+            # Both charts and statistics use this period. Loading five-minute
+            # candles first adds no information to a daily/weekly comparison.
+            base_timeframe = resolved_timeframe
             start_date, end_date = self._closed_history_window(days, base_timeframe)
             klines_a = self._fetch_history(resolved_a, start_date, end_date, base_timeframe)
             klines_b = self._fetch_history(resolved_b, start_date, end_date, base_timeframe)
             if not klines_a or not klines_b:
                 return {"error": "获取数据失败"}
-
-            if resolved_timeframe != base_timeframe:
-                klines_a = self._aggregate_klines(klines_a, resolved_timeframe)
-                klines_b = self._aggregate_klines(klines_b, resolved_timeframe)
 
             aligned = self._align_timestamps(klines_a, klines_b)
             if not aligned["timestamps"]:
@@ -76,11 +74,12 @@ class PairCompareService:
         interval_ms = timeframe_to_milliseconds(base_timeframe)
         if interval_ms <= 0:
             raise ValueError("对比基础周期配置无效")
-        current = now or datetime.now()
+        current = now or datetime.now(timezone.utc)
         current_ms = int(current.timestamp() * 1000)
-        end_ms = (current_ms // interval_ms) * interval_ms
-        end_date = datetime.fromtimestamp(end_ms / 1000)
-        return end_date - timedelta(days=days), end_date
+        end_ms = current_candle_open_ms(current_ms, base_timeframe)
+        end_date = datetime.fromtimestamp(end_ms / 1000, timezone.utc)
+        start_ms = current_candle_open_ms(int((end_date - timedelta(days=days)).timestamp() * 1000), base_timeframe)
+        return datetime.fromtimestamp(start_ms / 1000, timezone.utc), end_date
 
     def _resolve_symbol(self, symbol: str) -> dict[str, str]:
         resolved = resolve_market_asset(symbol)
@@ -102,7 +101,7 @@ class PairCompareService:
                 symbol=resolved["symbol"],
                 timeframe="1d",
                 start_date=start_date.strftime("%Y-%m-%d"),
-                end_date=end_date.strftime("%Y-%m-%d"),
+                end_date=(end_date - timedelta(milliseconds=1)).strftime("%Y-%m-%d"),
             )
             if not result.coverage.complete:
                 raise ValueError("指数交易日历史行情不完整")
@@ -124,7 +123,7 @@ class PairCompareService:
         aggregated: list[list[float]] = []
         current_bucket: list[float] | None = None
         for ts, open_price, high, low, close, volume in klines:
-            bucket_start = (ts // interval_ms) * interval_ms
+            bucket_start = current_candle_open_ms(int(ts), target_timeframe)
             if current_bucket is None or current_bucket[0] != bucket_start:
                 if current_bucket:
                     aggregated.append(current_bucket)

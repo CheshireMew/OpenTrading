@@ -67,6 +67,10 @@ export function useAssetObservation() {
   const instrument = computed(() => data.value?.instrument ?? symbols.value.find(item => item.id === activeSymbolId.value))
   const isIndex = computed(() => instrument.value?.market === 'index')
   const stale = computed(() => !!stats.value && Date.now() - stats.value.latest.timestamp > (isIndex.value ? 5 : 2) * DAY_MS)
+  async function refreshSymbols() {
+    const loaded = await chartApi.symbols()
+    if (!disposed) symbols.value = loaded.filter(item => item.timeframes.includes('1d'))
+  }
 
   async function readHistory(instrument: ChartSymbol, signal: AbortSignal): Promise<AssetHistory> {
     if (instrument.market === 'index') {
@@ -141,5 +145,5 @@ export function useAssetObservation() {
     void load()
   })
   onBeforeUnmount(() => { disposed = true; sequence++; controller?.abort() })
-  return { symbols, activeSymbolId, basis, data, stats, instrument, isIndex, stale, loading, error, selectSymbol, load }
+  return { symbols, activeSymbolId, basis, data, stats, instrument, isIndex, stale, loading, error, selectSymbol, load, refreshSymbols }
 }

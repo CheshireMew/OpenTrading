@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from hashlib import sha256
+from itertools import groupby
 import json
 import os
 from pathlib import Path
@@ -11,9 +12,11 @@ import struct
 
 import pyarrow as pa
 import pyarrow.parquet as pq
-from sqlalchemy import select
+from sqlalchemy import BigInteger, Boolean, Column, MetaData, Table, delete, func, select
+from sqlalchemy.dialects.postgresql import insert as postgres_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
-from app.infra.db.schema import KlineArchiveSegment
+from app.infra.db.schema import Kline, KlineArchiveSegment
 
 FIELDS = ("timestamp", "open", "high", "low", "close", "volume", "finalized")
 ARCHIVE_LOCK_KEY = 485374620219
@@ -113,13 +116,122 @@ class KlineArchive:
         columns = [table[name].to_pylist() for name in FIELDS]
         return list(zip(*columns))
 
-    def read_segment(self, segment, *, start=None, end=None, finalized_only=False):
+    def _segment_path(self, segment):
         path = self._path(segment.relative_path)
         info = path.stat()  # Missing files fail visibly; do not silently hide history.
         if info.st_size != segment.size_bytes:
             raise RuntimeError(f"K-line archive size mismatch: {path}")
+        return path
+
+    def read_segment(self, segment, *, start=None, end=None, finalized_only=False):
+        path = self._segment_path(segment)
+        info = path.stat()
         _verified_file(str(path), info.st_size, info.st_mtime_ns, segment.file_sha256)
         return self.read_path(path, start=start, end=end, finalized_only=finalized_only)
+
+    def _coverage_flags(self, segment):
+        """Stream only identity/visibility columns for overlapping corrections."""
+        file = pq.ParquetFile(self._segment_path(segment))
+        try:
+            if file.schema_arrow.remove_metadata() != SCHEMA:
+                raise RuntimeError(f"Unsupported K-line archive schema: {segment.relative_path}")
+            for batch in file.iter_batches(batch_size=4096, columns=["timestamp", "finalized"]):
+                for timestamp, finalized in zip(batch.column(0).to_pylist(), batch.column(1).to_pylist()):
+                    yield int(timestamp), bool(finalized)
+        finally:
+            file.close()
+
+    def _cold_coverage(self, session, segments, hot_bounds):
+        first = min(segment.first_timestamp for segment in segments)
+        last = max(segment.last_timestamp for segment in segments)
+        hot_query = select(Kline.timestamp).where(
+            Kline.symbol == segments[0].symbol, Kline.timeframe == segments[0].timeframe,
+            Kline.finalized.is_(True), Kline.timestamp >= first, Kline.timestamp <= last,
+        )
+        if len(segments) == 1 and segments[0].row_count == segments[0].finalized_count:
+            hot_overlap = bool(hot_bounds and hot_bounds[0] <= last and hot_bounds[1] >= first)
+            if not hot_overlap or session.scalar(hot_query.limit(1)) is None:
+                # Immutable manifests were committed only after full round-trip
+                # verification. Coverage queries do not repeat payload integrity scans.
+                self._segment_path(segments[0])
+                return segments[0].finalized_count, first, last
+
+        # Corrections can overlap arbitrarily many segments. Stage only the two
+        # visibility columns in connection-local temporary storage: opening one
+        # Parquet file at a time avoids fan-in multiplying buffers and handles.
+        # Nothing is committed to the application's durable schema or cache.
+        coverage = Table("kline_health_coverage", MetaData(),
+                         Column("timestamp", BigInteger, primary_key=True), Column("finalized", Boolean, nullable=False),
+                         prefixes=["TEMPORARY"])
+        connection = session.connection()
+        coverage.create(connection)
+        try:
+            insert = sqlite_insert if connection.dialect.name == "sqlite" else postgres_insert
+            statement = insert(coverage)
+            statement = statement.on_conflict_do_update(index_elements=[coverage.c.timestamp], set_={"finalized": statement.excluded.finalized})
+            for segment in sorted(segments, key=lambda item: (item.archived_at, item.id)):
+                stream, batch = self._coverage_flags(segment), []
+                try:
+                    for timestamp, finalized in stream:
+                        batch.append({"timestamp": timestamp, "finalized": finalized})
+                        if len(batch) == 4096:
+                            session.execute(statement, batch)
+                            batch = []
+                    if batch:
+                        session.execute(statement, batch)
+                finally:
+                    stream.close()
+            # Finalized hot rows are already counted by the SQL aggregate.
+            if hot_bounds:
+                session.execute(delete(coverage).where(coverage.c.timestamp.in_(hot_query)))
+            row = session.execute(select(func.count(), func.min(coverage.c.timestamp), func.max(coverage.c.timestamp))
+                                  .where(coverage.c.finalized.is_(True))).one()
+            return int(row[0]), row[1], row[2]
+        finally:
+            coverage.drop(connection)
+
+    def coverage_summary(self, session) -> list[dict]:
+        """Exact hot/cold counts without materializing historical OHLCV rows.
+
+        The caller owns a consistent DB read snapshot. Disjoint, fully confirmed
+        segments use manifests; only overlapping/mixed segments stream flags.
+        """
+        summaries = {
+            (row[0], row[1]): dict(symbol=row[0], timeframe=row[1], count=int(row[2]), first=row[3], last=row[4])
+            for row in session.execute(select(
+                Kline.symbol, Kline.timeframe, func.count(), func.min(Kline.timestamp), func.max(Kline.timestamp),
+            ).where(Kline.finalized.is_(True)).group_by(Kline.symbol, Kline.timeframe))
+        }
+        hot_bounds = {scope: (item["first"], item["last"]) for scope, item in summaries.items()}
+
+        def add_component(scope, component):
+            if not any(segment.finalized_count for segment in component):
+                return
+            count, first, last = self._cold_coverage(session, component, hot_bounds.get(scope))
+            if not count:
+                return
+            item = summaries.setdefault(scope, dict(symbol=scope[0], timeframe=scope[1], count=0, first=first, last=last))
+            item["count"] += count
+            item["first"], item["last"] = min(item["first"], first), max(item["last"], last)
+
+        query = select(KlineArchiveSegment).order_by(
+            KlineArchiveSegment.symbol, KlineArchiveSegment.timeframe, KlineArchiveSegment.first_timestamp,
+        ).execution_options(yield_per=128)
+        segments = session.scalars(query)
+        try:
+            for scope, group in groupby(segments, key=lambda row: (row.symbol, row.timeframe)):
+                component, right = [], None
+                for segment in group:
+                    if right is not None and segment.first_timestamp > right:
+                        add_component(scope, component)
+                        component = []
+                    component.append(segment)
+                    right = segment.last_timestamp if len(component) == 1 else max(right, segment.last_timestamp)
+                if component:
+                    add_component(scope, component)
+        finally:
+            segments.close()
+        return list(summaries.values())
 
     def read(self, session, symbol: str, timeframe: str, start: int | None, end: int,
              *, finalized_only: bool = True, limit: int | None = None) -> list[tuple]:

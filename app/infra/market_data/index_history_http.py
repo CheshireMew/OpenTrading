@@ -216,7 +216,11 @@ class YFinanceIndexHistoryProvider(IndexHistoryParsing):
         for row_date, row in history.iterrows():
             if row[["Open", "High", "Low", "Close"]].isna().any():
                 continue
-            ts = self.date_to_ms(row_date.to_pydatetime())
+            # Daily bars identify the exchange's session date. Converting local
+            # midnight to UTC produces 04:00/05:00 and fails the shared daily
+            # session/cache identity; preserve the date at UTC midnight instead.
+            session_day = datetime.combine(row_date.date(), datetime.min.time(), tzinfo=timezone.utc)
+            ts = self.to_ms(session_day)
             data.append([
                 ts,
                 float(row["Open"]),

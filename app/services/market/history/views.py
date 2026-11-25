@@ -27,9 +27,8 @@ class MarketDataViews:
     _prices: Any = field(default=None, init=False, repr=False)
 
     @classmethod
-    def create(cls, config: MarketDataConfig, root: Path) -> MarketDataViews:
-        resolved_root = root.resolve()
-        return cls(config, resolved_root, MarketHistoryDatabase(resolved_root))
+    def create(cls, config: MarketDataConfig, database: MarketHistoryDatabase) -> MarketDataViews:
+        return cls(config, database.root, database)
 
     @property
     def workbench(self) -> WorkbenchView:

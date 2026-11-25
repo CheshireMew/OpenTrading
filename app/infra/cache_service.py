@@ -4,6 +4,7 @@ import json
 from typing import Any
 
 from app.infra.cache_memory import LocalTTLCache
+from app.infra.executor import run_compute
 from config import settings
 
 
@@ -54,10 +55,17 @@ class CacheService:
         return self.memory.delete_prefix(prefix)
 
     async def aget(self, key: str) -> Any | None:
-        return self.get(key)
+        value = self.memory.get(key)
+        if value is None:
+            return None
+        # Small values are cheap; historical arrays must not monopolize the
+        # API event loop. The stored string stays immutable across eviction.
+        if len(value) < 16_384:
+            return _deserialize(value)
+        return await run_compute(lambda: _deserialize(value))
 
     async def aset(self, key: str, value: Any, ttl: int = 300) -> bool:
-        return self.set(key, value, ttl)
+        return await run_compute(lambda: self.set(key, value, ttl))
 
     async def adelete(self, key: str) -> bool:
         return self.delete(key)

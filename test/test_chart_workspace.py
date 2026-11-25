@@ -121,7 +121,7 @@ async def test_usdm_stream_waits_for_data_and_heals_after_silence(monkeypatch):
             self.calls += 1
             if self.calls == 2:
                 raise TimeoutError('No native kline received')
-            return json.dumps({'k': {'t': 60000, 'T': 119999, 'o': '100', 'h': '102',
+            return json.dumps({'E': 90000, 'k': {'t': 60000, 'T': 119999, 'o': '100', 'h': '102',
                                      'l': '99', 'c': '101', 'v': '5', 'x': False}})
 
     def connect(url, **kwargs):
@@ -152,6 +152,7 @@ async def test_usdm_stream_waits_for_data_and_heals_after_silence(monkeypatch):
         assert [m['status'] for m in messages if m['type'] == 'status'] == ['connecting', 'live', 'polling', 'connecting']
         assert [m['sequence'] for m in messages] == list(range(1, len(messages) + 1))
         assert next(m['bar'] for m in messages if m['type'] == 'bar')['closed'] is False
+        assert next(m for m in messages if m['type'] == 'bar')['observed_at'] == 90000
     finally:
         await market.close()
 

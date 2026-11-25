@@ -73,7 +73,8 @@ def test_pages_retain_all_records_without_reopening_large_snapshots(tmp_path, mo
 def test_all_generator_outputs_have_a_drift_gate(tmp_path):
     from scripts.generate_frontend_contracts import render_outputs, stale_outputs
     generated = render_outputs()
-    assert len(generated) == 8
+    assert len(generated) == 9
+    assert any(path.name == "generatedValidation.ts" for path in generated)
     outputs = {tmp_path / str(index): content for index, content in enumerate(generated.values())}
     for path, content in outputs.items():
         path.write_text(content, encoding="utf-8")

@@ -185,6 +185,7 @@
     "notFound": "页面未找到"
   },
   "signalLab": {
+    "readFailed": "请检查行情服务连接后重试。",
     "pageKicker": "宏观监控",
     "intro": "用政策水位、美元融资、信用中介和风险价格共同衡量美元环境。分数越高，代表收紧压力越强。",
     "reload": "重新读取",
@@ -422,6 +423,11 @@
     }
   },
   "signalReview": {
+    "pagination": "信号记录分页",
+    "previousPage": "上一页",
+    "nextPage": "下一页",
+    "pageRange": "{from}–{to} / {total}",
+    "loadFailed": "信号记录暂时无法读取，请重试。",
     "outcomeFilter": "筛选结果",
     "title": "交易信号复盘",
     "subtitle": "自动保存规则与 AI 判断，独立检查目标价和止损的先后，并统计真实命中率、MFE、MAE 与前瞻收益。",
@@ -620,6 +626,12 @@
     }
   },
   "dataHealth": {
+    "historyCompleted": "{symbol} 的历史检查已完成，共取得 {count} 条记录。",
+    "historyPartial": "{symbol} 已取得 {count} 条记录，仍有历史数据未补齐。",
+    "remainingGaps": "未补齐的历史数据",
+    "unverifiedCoverage": "数据源暂时无法确认完整覆盖，请稍后重新检查。",
+    "missingSession": "缺失交易日：{date}",
+    "moreGaps": "继续显示其余 {count} 个缺口",
     "symbol": "标的",
     "timeframe": "数据周期",
     "days": "回溯天数",
@@ -840,6 +852,12 @@
     }
   },
   "web3Rank": {
+    "tokenDetailPartialFailed": "{sources}暂时无法读取，其他已取得的数据仍可查看。",
+    "detailSources": {
+      "market": "行情",
+      "audit": "审计信息",
+      "chart": "K 线"
+    },
     "eyebrow": "币安 Web3",
     "title": "Web3 榜单",
     "subtitle": "热度榜统一吸收搜索、趋势、社交、交易、聪明钱和 Meme 信号；地址收益榜独立展示钱包维度。",
@@ -1384,6 +1402,9 @@
     "resetHint": "恢复完整视图，也可以双击图表"
   },
   "chartWorkspace": {
+    "retryRequest": "重试",
+    "runRequestFailed": "回测状态暂时无法读取，请重试。",
+    "runRecordsFailed": "回测结果暂时无法读取，请重试。",
     "cursorMenu": "光标模式",
     "cursorCross": "十字线",
     "cursorDot": "圆点",
@@ -1513,6 +1534,8 @@
     "useSavedScript": "使用服务器版本",
     "openMenu": "打开应用菜单",
     "selectSymbol": "选择品种",
+    "fx": "外汇",
+    "commodity": "商品期货",
     "perpetual": "永续",
     "spot": "现货",
     "index": "指数",
@@ -1727,6 +1750,9 @@
     "invalidReport": "报告数据不完整，请重新导出",
     "queued": "排队中",
     "loadingMarket": "加载行情",
+    "savingReport": "保存报告",
+    "computingStrategy": "计算策略",
+    "processedCandles": "已处理 {count} 根 K 线",
     "running": "计算中",
     "completed": "完成",
     "failed": "失败",
@@ -1874,6 +1900,7 @@
     "browserBackupInvalid": "这不是有效的 OpenTrading 个人数据备份。"
   },
   "ui": {
+    "loadMoreNotes": "加载更多笔记",
     "delete": "删除",
     "deleteNamed": "删除“{name}”？",
     "deletePermanent": "删除后无法恢复。",

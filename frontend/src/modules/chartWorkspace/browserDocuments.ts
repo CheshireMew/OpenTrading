@@ -1,6 +1,7 @@
 import type { WorkspaceDocument, WorkspaceWrite } from './generatedContracts'
 import { ApiRequestError } from '@/api/request'
 import { cw } from './locale'
+import { personalDatabase, idbValue } from '@/modules/personal/browserDatabase'
 
 export type BrowserDocumentKind = 'layouts' | 'watchlists' | 'scripts'
 export const BROWSER_DOCUMENT_KINDS: BrowserDocumentKind[] = ['layouts', 'watchlists', 'scripts']
@@ -13,26 +14,8 @@ export function createBrowserDocuments(legacy: {
   list: (kind: BrowserDocumentKind) => Promise<WorkspaceDocument[]>
   version: (kind: BrowserDocumentKind, id: string, version: number) => Promise<WorkspaceDocument>
 }) {
-  let pending: Promise<IDBDatabase> | undefined
   const migrations = new Map<BrowserDocumentKind, Promise<void>>()
-  function database() {
-    if (pending) return pending
-    pending = new Promise<IDBDatabase>((resolve, reject) => {
-      const open = indexedDB.open('opentrading-personal-data', 1)
-      open.onupgradeneeded = () => {
-        open.result.createObjectStore('documents', { keyPath: ['kind', 'id'] }).createIndex('kind', 'kind')
-        open.result.createObjectStore('revisions', { keyPath: ['kind', 'id', 'version'] })
-        open.result.createObjectStore('metadata')
-      }
-      open.onsuccess = () => {
-        open.result.onversionchange = () => { open.result.close(); pending = undefined }
-        resolve(open.result)
-      }
-      open.onerror = () => { pending = undefined; reject(new Error(cw('browserStorageUnavailable'))) }
-      open.onblocked = () => { pending = undefined; reject(new Error(cw('browserStorageBlocked'))) }
-    })
-    return pending
-  }
+  const database = personalDatabase
   async function transact<T>(stores: string[], mode: IDBTransactionMode, task: (tx: IDBTransaction, done: (value: T) => void, fail: (error: Error) => void) => void): Promise<T> {
     const db = await database()
     return new Promise<T>((resolve, reject) => {
@@ -144,45 +127,46 @@ export function createBrowserDocuments(legacy: {
     })
   }
   async function restore(entries: BrowserDocumentEntry[]) {
-    // A backup must also restore in a new browser/site without the legacy API.
-    return transact<Record<string, string>>(['documents', 'revisions', 'metadata'], 'readwrite', (tx, done) => {
-      const documents = tx.objectStore('documents'), request = documents.getAll()
-      request.onsuccess = () => {
-        const existing = new Map((request.result as Stored[]).map(row => [row.kind + ':' + row.id, row]))
-        const ids: Record<string, string> = {}, planned: BrowserDocumentEntry[] = []
-        const remapLayout = (data: WorkspaceDocument['data']) => {
-          if (typeof data.watchlistId === 'string') data.watchlistId = ids['watchlists:' + data.watchlistId] ?? data.watchlistId
-          if (Array.isArray(data.favoriteIndicators)) data.favoriteIndicators = data.favoriteIndicators.map(value =>
-            typeof value === 'string' && value.startsWith('script:') ? 'script:' + (ids['scripts:' + value.slice(7)] ?? value.slice(7)) : value)
-          const charts = (data.state as { charts?: { ext?: Record<string, unknown> }[] } | undefined)?.charts
-          for (const chart of charts ?? []) {
-            const scripts = chart.ext?.['opentrading.pine']
-            if (Array.isArray(scripts)) for (const script of scripts) if (typeof script.scriptId === 'string') {
-              const next = ids['scripts:' + script.scriptId]
-              if (next && next !== script.scriptId) { script.scriptId = next; script.version = 1 }
-            }
-          }
-        }
-        // Resolve referenced watchlists and scripts before comparing layouts.
-        for (const entry of [...entries.filter(row => row.kind !== 'layouts'), ...entries.filter(row => row.kind === 'layouts')]) {
-          const incoming = copy(entry.document), key = entry.kind + ':' + incoming.id, old = existing.get(key)
-          if (entry.kind === 'layouts') remapLayout(incoming.data)
-          if (old && (old.document.readonly || JSON.stringify([old.document.name, old.document.data]) === JSON.stringify([incoming.name, incoming.data]))) { ids[key] = old.id; continue }
-          if (old) { incoming.id = crypto.randomUUID(); incoming.name = cw('browserImportedCopy', { name: incoming.name }); incoming.version = 1 }
-          incoming.updated_at = Date.now()
-          ids[key] = incoming.id
-          planned.push({ kind: entry.kind, document: incoming })
-        }
-        for (const entry of planned) {
-          const { kind, document } = entry
-          documents.put({ kind, id: document.id, document, archived: false } satisfies Stored)
-          tx.objectStore('revisions').put({ kind, id: document.id, version: document.version, document })
-          tx.objectStore('metadata').delete(`deleted:${kind}:${document.id}`)
-        }
-        for (const kind of BROWSER_DOCUMENT_KINDS) tx.objectStore('metadata').put(Date.now(), 'migrated:' + kind)
-        done(ids)
-      }
+    return transact<Record<string, string>>(['documents', 'revisions', 'metadata'], 'readwrite', (tx, done, fail) => {
+      restoreBrowserDocuments(tx, entries).then(done, fail)
     })
   }
   return { list, get, save, remove, snapshot, restore }
+}
+
+export async function restoreBrowserDocuments(tx: IDBTransaction, entries: BrowserDocumentEntry[]) {
+  const documents = tx.objectStore('documents')
+  const existing = new Map((await idbValue(documents.getAll()) as Stored[]).map(row => [row.kind + ':' + row.id, row]))
+  const ids: Record<string, string> = {}, planned: BrowserDocumentEntry[] = []
+  const remapLayout = (data: WorkspaceDocument['data']) => {
+    if (typeof data.watchlistId === 'string') data.watchlistId = ids['watchlists:' + data.watchlistId] ?? data.watchlistId
+    if (Array.isArray(data.favoriteIndicators)) data.favoriteIndicators = data.favoriteIndicators.map(value =>
+      typeof value === 'string' && value.startsWith('script:') ? 'script:' + (ids['scripts:' + value.slice(7)] ?? value.slice(7)) : value)
+    const charts = (data.state as { charts?: { ext?: Record<string, unknown> }[] } | undefined)?.charts
+    for (const chart of charts ?? []) {
+      const scripts = chart.ext?.['opentrading.pine']
+      if (Array.isArray(scripts)) for (const script of scripts) if (typeof script.scriptId === 'string') {
+        const next = ids['scripts:' + script.scriptId]
+        if (next && next !== script.scriptId) { script.scriptId = next; script.version = 1 }
+      }
+    }
+  }
+  // Resolve referenced watchlists and scripts before comparing layouts.
+  for (const entry of [...entries.filter(row => row.kind !== 'layouts'), ...entries.filter(row => row.kind === 'layouts')]) {
+    const incoming = copy(entry.document), key = entry.kind + ':' + incoming.id, old = existing.get(key)
+    if (entry.kind === 'layouts') remapLayout(incoming.data)
+    if (old && (old.document.readonly || JSON.stringify([old.document.name, old.document.data]) === JSON.stringify([incoming.name, incoming.data]))) { ids[key] = old.id; continue }
+    if (old) { incoming.id = crypto.randomUUID(); incoming.name = cw('browserImportedCopy', { name: incoming.name }); incoming.version = 1 }
+    incoming.updated_at = Date.now()
+    ids[key] = incoming.id
+    planned.push({ kind: entry.kind, document: incoming })
+  }
+  for (const entry of planned) {
+    const { kind, document } = entry
+    documents.put({ kind, id: document.id, document, archived: false } satisfies Stored)
+    tx.objectStore('revisions').put({ kind, id: document.id, version: document.version, document })
+    tx.objectStore('metadata').delete(`deleted:${kind}:${document.id}`)
+  }
+  for (const kind of BROWSER_DOCUMENT_KINDS) tx.objectStore('metadata').put(Date.now(), 'migrated:' + kind)
+  return ids
 }

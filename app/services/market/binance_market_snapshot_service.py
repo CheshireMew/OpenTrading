@@ -103,12 +103,15 @@ class BinanceMarketSnapshotService:
         usdm_mark_loader: MarkPriceLoader | None = None,
         force: bool = False,
     ) -> None:
+        spot_ticker_loader = spot_ticker_loader or self._spot_ticker_loader
+        usdm_ticker_loader = usdm_ticker_loader or self._usdm_ticker_loader
+        usdm_mark_loader = usdm_mark_loader or self._usdm_mark_loader
         async with self._seed_lock:
             self._seed_completed = False
             self._seed_success_count = 0
             self._seed_error = None
             try:
-                if not force and await self._store.has_market_page_snapshot():
+                if not force and all(self._store.freshness().values()):
                     self._seed_success_count = 1
                     return
                 loaders = (
@@ -146,6 +149,15 @@ class BinanceMarketSnapshotService:
 
     async def get_market_page_snapshot_data(self) -> dict[str, Any]:
         return await self._store.market_page_snapshot_data()
+
+    async def get_ready_snapshot(self, sources=("spot_ticker", "usdm_ticker", "usdm_mark")) -> dict[str, Any]:
+        """Business computations require observed data, unlike a pending UI page."""
+        if not all(self._store.source_fresh(source) for source in sources):
+            await self.seed()
+        if not all(self._store.source_fresh(source) for source in sources):
+            from app.exceptions import ServiceUnavailableError
+            raise ServiceUnavailableError("筛选所需的行情尚未就绪，请稍后重试")
+        return await self.get_market_page_snapshot_data()
 
     async def has_snapshot(self) -> bool:
         return await self._store.has_snapshot()

@@ -12,6 +12,7 @@ from config import settings
 from utils.logger import logger
 from app.services.periodic_task import PeriodicTask
 from app.domain.research_alerts import should_trigger
+from app.services.market.binance_market_observations import BinanceMarketObservations
 
 
 class ResearchAlertRuntime:
@@ -69,6 +70,7 @@ class ResearchAlertRuntime:
                 else None
             )
 
+            observations = BinanceMarketObservations(snapshot, market_page)
             evaluated_count = 0
             triggered_count = 0
             unavailable_count = 0
@@ -78,23 +80,26 @@ class ResearchAlertRuntime:
                         rule,
                         snapshot=snapshot,
                         market_page=market_page,
+                        observations=observations,
                     )
                     if value is None or not math.isfinite(value):
                         unavailable_count += 1
                         continue
-                    triggered = self._should_trigger(rule, value, evaluated_at)
-                    await run_database(
-                        lambda rule=rule, value=value, triggered=triggered: (
+                    saved = await run_database(
+                        lambda rule=rule, value=value: (
                             self._research_repository.record_alert_evaluation(
                                 rule["id"],
                                 value=value,
                                 evaluated_at=evaluated_at,
-                                triggered=triggered,
+                                expected_version=rule["version"],
                             )
                         )
                     )
+                    if saved is None:
+                        unavailable_count += 1
+                        continue
                     evaluated_count += 1
-                    if triggered:
+                    if saved["lastTriggeredAt"] == evaluated_at:
                         triggered_count += 1
                 except Exception as exc:
                     unavailable_count += 1
@@ -108,58 +113,22 @@ class ResearchAlertRuntime:
                 unavailableCount=unavailable_count,
             )
 
-    async def _resolve_value(self, rule: dict[str, Any], *, snapshot, market_page) -> float | None:
+    async def _resolve_value(self, rule: dict[str, Any], *, snapshot, market_page, observations=None) -> float | None:
+        projection = observations or BinanceMarketObservations(snapshot, market_page)
+        metrics = projection.metrics(rule["symbol"])
         metric = rule["metric"]
-        symbol = self._ticker_symbol(rule["symbol"])
-        spot_tickers = self._rows_by_symbol(snapshot.get("spot_ticker", {}).get("items", []))
-        usdm_tickers = self._rows_by_symbol(snapshot.get("usdm_ticker", {}).get("items", []))
-        marks = self._rows_by_symbol(snapshot.get("usdm_mark", {}).get("items", []))
-
-        if metric == "price":
-            row = spot_tickers.get(symbol) or marks.get(symbol) or usdm_tickers.get(symbol)
-            value = self._float((row or {}).get("last_price") or (row or {}).get("mark_price"))
-            if value is not None:
-                return value
+        if metric == "breakout_score":
+            kind = str((rule.get("configuration") or {}).get("scoreKind") or "max")
+            metric = kind if kind in {"natural", "momentum"} else metric
+        value = metrics.get(metric)
+        if value is None and metric == "price":
             response = await self._market_query.get_current_price(symbol=rule["symbol"], timeframe="1h")
             return self._float(response.current_price)
-        if metric == "price_change_24h":
-            row = spot_tickers.get(symbol) or usdm_tickers.get(symbol)
-            return self._float((row or {}).get("price_change_pct"))
-        if metric == "funding_rate_pct":
-            value = self._float((marks.get(symbol) or {}).get("funding_rate_pct"))
-            if value is not None:
-                return value
-            return self._float((marks.get(symbol) or {}).get("last_funding_rate"))
-        if metric == "breakout_score" and market_page is not None:
-            item = next((row for row in market_page.monitor.items if self._ticker_symbol(row.symbol) == symbol), None)
-            if item is None:
-                return None
-            score_kind = str((rule.get("configuration") or {}).get("scoreKind") or "max")
-            if score_kind == "natural":
-                return float(item.natural_score)
-            if score_kind == "momentum":
-                return float(item.momentum_score)
-            return float(max(item.natural_score, item.momentum_score))
-        if metric == "oi_change_1h_pct" and market_page is not None:
-            for board in market_page.contract_boards.values():
-                item = next((row for row in board.items if self._ticker_symbol(row.symbol or "") == symbol), None)
-                if item is not None:
-                    return self._float(item.oi_change_1h_pct)
-            return None
-        return None
-
+        return value
 
     @staticmethod
     def _should_trigger(rule: dict[str, Any], value: float, evaluated_at: datetime) -> bool:
         return should_trigger(rule, value, evaluated_at)
-
-    @staticmethod
-    def _rows_by_symbol(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
-        return {str(row.get("symbol") or "").upper(): row for row in rows if row.get("symbol")}
-
-    @staticmethod
-    def _ticker_symbol(symbol: str) -> str:
-        return str(symbol or "").strip().upper().replace("/", "")
 
     @staticmethod
     def _float(value: Any) -> float | None:

@@ -96,6 +96,20 @@ class ChartWorkspaceStore:
             doc.data.update(values)
             return self._put(db, 'runs', key, WorkspaceWrite(name=doc.name, data=doc.data, expected_version=doc.version))
 
+    def migrate_run_progress(self):
+        # Old percentages have no trustworthy phase/work denominator. Preserve
+        # every report, but retire that scalar once at the storage boundary.
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            if db.execute("PRAGMA user_version").fetchone()[0] >= 1:
+                return
+            for row in db.execute("SELECT id,data FROM documents WHERE kind='runs'").fetchall():
+                data = json.loads(row["data"])
+                if "progress" not in data or isinstance(data["progress"], (int, float)):
+                    data["progress"] = None
+                    db.execute("UPDATE documents SET data=? WHERE kind='runs' AND id=?", (json.dumps(data, ensure_ascii=False), row["id"]))
+            db.execute("PRAGMA user_version=1")
+
     def archive(self, kind: str, key: str):
         with self.connect() as db:
             row = db.execute("SELECT readonly FROM documents WHERE kind=? AND id=?", (kind,key)).fetchone()

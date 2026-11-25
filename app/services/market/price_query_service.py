@@ -12,6 +12,7 @@ from app.domain.market.quotes import MarketQuote
 from app.services.market.app_service_support import validate_market_request
 from app.services.market.market_data_service import MarketDataService
 from config import settings
+from app.services.market.symbol_catalog import get_market_symbol_source
 
 
 class MarketPriceQueryService:
@@ -77,7 +78,9 @@ class MarketPriceQueryService:
 
     async def _quote_payload(self, symbol, timeframe):
         now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
-        quote = await self.binance_snapshot_service.get_current_quote(symbol) if self.binance_snapshot_service is not None else MarketQuote()
+        source = get_market_symbol_source(symbol)
+        snapshot_symbol = source.storage_symbol if source and source.exchange_id == "binanceusdm" else symbol
+        quote = await self.binance_snapshot_service.get_current_quote(snapshot_symbol) if self.binance_snapshot_service is not None and (source is None or source.exchange_id in {"binance", "binanceusdm"}) else MarketQuote()
         if not quote.fresh(now_ms, settings.MARKET_QUOTE_MAX_AGE_SECONDS):
             # A long-period bar says nothing about when its current close was
             # observed. Only completed minute bars can bound a cached quote age.

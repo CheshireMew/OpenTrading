@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 from hashlib import sha256
 import logging
-from pathlib import Path
 from typing import Any, Callable, Literal
 
 import pandas as pd
@@ -28,14 +27,14 @@ LOGGER = logging.getLogger("app.domain.market.history")
 class PriceService:
     def __init__(
         self,
-        root: Path,
+        database: MarketHistoryDatabase,
         config: MarketDataConfig,
         *,
         provider_builder: Callable[..., PriceProvider] = make_provider,
         transport: HttpTransport | None = None,
     ) -> None:
-        self.root = root.expanduser().resolve()
-        self._database = MarketHistoryDatabase(self.root)
+        self.root = database.root
+        self._database = database
         self._prices = PriceRepository(self._database)
         http_transport = transport or UrllibJsonTransport()
         self.artifacts = PriceArtifactStore(self.root, config)
@@ -47,6 +46,24 @@ class PriceService:
             provider_builder,
             http_transport,
         )
+
+    def daily_snapshot(self, instrument_query: str, *, start: date, end: date) -> PriceSnapshot:
+        """Reuse daily acquisition and cached evidence without building exports or analytics."""
+        if start > end:
+            raise ValueError("start must not be after end")
+        matches = resolve_instrument(self._database, instrument_query)
+        if len(matches) != 1:
+            raise ValueError(f"daily instrument could not be resolved: {instrument_query}")
+        instrument = matches[0]
+        snapshot, _, _, warnings = self._obtain_snapshot(
+            instrument, start, end, refresh=False, cache_only=False,
+            # FRED FX observations have no intraday OHLC. Keep those available
+            # to macro research, rather than presenting them as chart candles.
+            explicit_provider="yfinance" if instrument.asset_class == "fx" else None,
+        )
+        if snapshot is None:
+            raise ValueError("; ".join(warnings) or f"daily history is unavailable: {instrument_query}")
+        return snapshot
 
     def history(
         self,
@@ -351,7 +368,7 @@ class PriceService:
             artifact = candidate.get("artifact")
             if candidate["status"] not in {"ok", "partial"} or not artifact or artifact.get("rows", 0) == 0:
                 continue
-            frame = pd.read_parquet(artifact["path"]).sort_values("date")
+            frame = self.artifacts.read_frame(artifact["path"]).sort_values("date")
             frame["date"] = pd.to_datetime(frame["date"]).dt.date
             exact = frame.loc[frame["date"] == observation_date]
             eligible = frame.loc[frame["date"] <= observation_date]
@@ -424,7 +441,7 @@ class PriceService:
         series = {}
         for item in histories:
             code = item["instrument"]["canonical_code"]
-            frame = pd.read_parquet(item["artifact"]["path"])
+            frame = self.artifacts.read_frame(item["artifact"]["path"])
             instrument_payload_item = item["instrument"]
             adjusted = instrument_payload_item["asset_class"] in {"stock", "etf"}
             values = {

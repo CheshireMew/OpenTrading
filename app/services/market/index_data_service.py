@@ -146,7 +146,7 @@ class IndexDataService:
         end_ts_exclusive = int(datetime.combine(closed_end + timedelta(days=1), datetime.min.time(), tzinfo=timezone.utc).timestamp() * 1000)
         calendar, expected, holidays, calendar_error = None, [], [], None
         try:
-            calendar, expected, holidays = session_dates(instrument.market, start_dt.date(), closed_end)
+            calendar, expected, holidays = session_dates(instrument.calendar or instrument.market, start_dt.date(), closed_end)
         except (ValueError, KeyError) as exc:
             calendar_error = str(exc)
         expected_timestamps = {int(datetime.fromisoformat(day).replace(tzinfo=timezone.utc).timestamp() * 1000) for day in expected}

@@ -104,8 +104,9 @@ async def test_runtime_starts_market_tasks_with_memory_cache(monkeypatch):
 
     shared_store = object()
 
-    def workspace_start(*args, kline_store):
+    def workspace_start(*args, kline_store, market_data):
         assert kline_store is shared_store
+        assert market_data is services.infra.market_data
         events.append("workspace")
         return SimpleNamespace()
 

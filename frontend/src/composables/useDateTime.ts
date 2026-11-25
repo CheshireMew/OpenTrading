@@ -1,18 +1,13 @@
 import { useUserPreferences } from './useUserPreferences'
 import i18n from '@/i18n'
+import { parseUtcDate } from '@/utils/utcDate'
 
 type DateInput = string | number | Date | null | undefined
 
 const isDateOnly = (value: DateInput) => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
 
 const parseDateInput = (value: DateInput) => {
-  if (value === null || value === undefined || value === '') return null
-  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value
-  // Older API records use UTC without an offset. Never interpret them as browser-local time.
-  const input = typeof value === 'string' && /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(value)
-    && !/(Z|[+-]\d{2}:?\d{2})$/i.test(value) ? value.replace(' ', 'T') + 'Z' : value
-  const date = new Date(input)
-  return Number.isNaN(date.getTime()) ? null : date
+  return parseUtcDate(value)
 }
 
 export function useDateTime() {

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from typing import Any, Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.domain.chart_workspace import (
     WorkspaceDocument as WorkspaceDocument,
@@ -15,13 +15,14 @@ class ChartSymbol(BaseModel):
     symbol: str
     name: str
     exchange: str
-    market: Literal["spot", "usdm", "index"]
+    market: Literal["spot", "usdm", "index", "fx", "commodity"]
     currency: str
     timeframes: list[str]
     close_only: bool = False
     timezone: str = "Etc/UTC"
     session: str = "24x7"
     metadata: dict[str, Any] = Field(default_factory=dict)
+    aliases: list[str] = Field(default_factory=list)
 
 
 class ChartBar(BaseModel):
@@ -69,10 +70,29 @@ class PineRunRequest(BaseModel):
     props: dict[str, Any] = Field(default_factory=dict)
 
 
+class PineProgress(BaseModel):
+    """Work in the current phase; percentages are derived only for measured work."""
+    phase: Literal["loading", "computing", "saving"]
+    mode: Literal["indeterminate", "measured"]
+    completed: int | None = Field(default=None, ge=0)
+    total: int | None = Field(default=None, gt=0)
+    unit: Literal["candles"] | None = None
+
+    @model_validator(mode="after")
+    def validate_measurement(self):
+        if self.mode == "measured" and (
+            self.completed is None or self.total is None or self.unit is None or self.completed > self.total
+        ):
+            raise ValueError("Measured Pine progress requires valid candle counts")
+        if self.mode == "indeterminate" and self.total is not None:
+            raise ValueError("Indeterminate Pine progress has no total")
+        return self
+
+
 class PineRun(BaseModel):
     id: str
     status: Literal["queued", "loading", "running", "completed", "failed", "cancelled", "interrupted"]
-    progress: float = 0
+    progress: PineProgress | None = None
     created_at: int
     request: PineRunRequest
     recording: Literal["report", "research"] = "research"

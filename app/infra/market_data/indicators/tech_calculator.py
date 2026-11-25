@@ -68,7 +68,7 @@ class TechCalculatorProvider(BaseIndicatorProvider):
                     data = res.json()
                     diff = None
                     hr = None
-                    dt = datetime.now()
+                    dt = datetime.now(timezone.utc)
 
                     # New API format: returns object with currentHashrate/currentDifficulty
                     if isinstance(data, dict):

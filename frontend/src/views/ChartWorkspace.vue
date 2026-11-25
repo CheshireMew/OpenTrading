@@ -1,7 +1,7 @@
 <template>
   <section @keydown.esc="indicatorsOpen = false" class="chart-workspace" :class="{ 'cw-dark':theme==='dark' }">
     <header class="cw-header">
-      <button class="cw-symbol" aria-haspopup="dialog" :aria-expanded="searchOpen && searchMode==='chart'" @click="searchOpen=true;searchMode='chart'">{{ activeSymbol?.name??cw('selectSymbol') }} <small>{{ cw(activeSymbol?.market==='usdm'?'perpetual':activeSymbol?.market==='index'?'index':'spot') }}</small><MagnifyingGlassIcon class="cw-icon" aria-hidden="true" /></button>
+      <button class="cw-symbol" aria-haspopup="dialog" :aria-expanded="searchOpen && searchMode==='chart'" @click="searchOpen=true;searchMode='chart'">{{ activeSymbol?.name??cw('selectSymbol') }} <small>{{ cw(marketLabelKey(activeSymbol?.market)) }}</small><MagnifyingGlassIcon class="cw-icon" aria-hidden="true" /></button>
       <div class="cw-periods"><button v-for="tf in availablePeriods" :key="tf.value" :class="{active:activeTimeframe===tf.value}" :aria-pressed="activeTimeframe===tf.value" @click="setPeriod(tf.value)">{{ tf.label }}</button></div>
       <button ref="indicatorTrigger" :aria-expanded="indicatorsOpen" @click="indicatorsOpen=!indicatorsOpen"><AdjustmentsHorizontalIcon class="cw-icon" aria-hidden="true" /> {{ cw('indicators') }}</button>
       <button type="button" :aria-expanded="alertsController.open.value" @click="alertsController.show()"><BellIcon class="cw-icon" aria-hidden="true" /> {{ cw('priceAlerts') }}</button>
@@ -75,6 +75,7 @@ import WorkspaceSymbolPicker from '@/components/chartWorkspace/WorkspaceSymbolPi
 import StrategyTester from '@/components/chartWorkspace/StrategyTester.vue'
 import { chartApi, type PineCapabilities } from '@/modules/chartWorkspace/api'
 import { timeframes } from '@/modules/chartWorkspace/provider'
+import { marketLabelKey } from '@/modules/chartWorkspace/symbolSearch'
 import { cw, messageText, formatDate } from '@/modules/chartWorkspace/locale'
 import { createWorkspaceChart } from '@/modules/chartWorkspace/workspaceChart'
 import { createWorkspaceLayouts } from '@/modules/chartWorkspace/workspaceLayouts'
@@ -128,6 +129,7 @@ watch(watchlistId, () => { layoutsController.dirty(); void nextTick(() => worksp
 const capabilities = ref<PineCapabilities>(), capabilitiesOpen = ref(false)
 async function showCapabilities() { try { capabilities.value = await chartApi.capabilities(); capabilitiesOpen.value = true } catch (cause) { fail(cause) } }
 const searchOpen = ref(false), searchMode = ref<'chart' | 'watchlist'>('chart')
+watch(searchOpen, open => { if (open) void chart.refreshCatalog().catch(fail) })
 function pickSearch(id: string) {
   if (searchMode.value === 'watchlist' && !watchSymbols.value.includes(id)) void persistWatch([...watchSymbols.value, id])
   else if (searchMode.value === 'chart') selectSymbol(id)
@@ -142,7 +144,14 @@ watch(indicatorsOpen, async (open) => { if (!open) { await nextTick(); indicator
 async function editIndicatorScript(id: string) { scriptId.value = id; await openScript(); bottomTab.value = 'editor' }
 function toggleFavorite(type: string) { favoriteIndicators.value = favoriteIndicators.value.includes(type) ? favoriteIndicators.value.filter(value => value !== type) : [...favoriteIndicators.value, type]; layoutsController.dirty() }
 function addNative(type: string) { try { workspace.value?.context().addNativeIndicator(type); indicatorsOpen.value = false } catch (cause) { fail(cause) } }
-let disposed = false, initializing = false
+let disposed = false, initializing = false, routeActive = true
+function syncActivity() {
+  if (routeActive && document.visibilityState !== 'hidden') {
+    chart.resume(); listsController.resume(); alertsController.resume()
+  } else {
+    chart.pause(); chart.replay.pause(); listsController.pause(); alertsController.pause()
+  }
+}
 async function initialize() {
   if (initializing || disposed) return
   initializing = true; loading.value = true; clearError()
@@ -159,20 +168,22 @@ async function initialize() {
   } catch (cause) { if (!disposed) { chart.initializationFailed(); fail(cause) } }
   finally { initializing = false; if (!disposed) loading.value = false }
 }
-onMounted(initialize)
+onMounted(() => { document.addEventListener('visibilitychange', syncActivity); syncActivity(); void initialize() })
 onActivated(async () => {
   await nextTick()
   if (disposed) return
+  routeActive = true
   workspace.value?.resize()
-  listsController.resume(); alertsController.resume()
+  syncActivity()
 })
 onDeactivated(() => {
-  chart.replay.pause()
-  listsController.pause(); alertsController.pause()
+  routeActive = false
+  syncActivity()
   void layoutsController.saveNow()
 })
 onBeforeUnmount(() => {
   disposed = true
+  document.removeEventListener('visibilitychange', syncActivity)
   alertsController.dispose(); execution.dispose(); documents.dispose(); listsController.dispose()
   layoutsController.dispose(); chart.dispose()
 })

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 
 from app.application.errors import InvalidRequestError
@@ -28,6 +30,24 @@ class ToolsAppService:
         self.dca_service = dca_service
         self.pair_compare_service = pair_compare_service
         self.cache_service = cache_service
+        self._requests: dict[str, asyncio.Task] = {}
+
+    async def _shared_request(self, key: str, action: Callable[[], Awaitable[dict]]) -> dict:
+        task = self._requests.get(key)
+        if task is None:
+            task = asyncio.create_task(action())
+            self._requests[key] = task
+
+            def finished(completed):
+                if self._requests.get(key) is completed:
+                    self._requests.pop(key, None)
+                if not completed.cancelled():
+                    completed.exception()
+
+            task.add_done_callback(finished)
+        # A disconnected client must not discard a calculation shared by a
+        # retry or another tab. Its existing exchange deadline still applies.
+        return await asyncio.shield(task)
 
     @staticmethod
     def _dca_cache_key(command: SimulateDcaCommand, start_date_str: str) -> str:
@@ -35,7 +55,7 @@ class ToolsAppService:
             f"{command.symbol}:{start_date_str}:{command.amount}:{command.investment_time}:"
             f"{command.timezone}:{command.strategy}:{json.dumps(command.strategy_params or {}, sort_keys=True)}"
         )
-        return f"dca:{hashlib.md5(raw.encode()).hexdigest()}"
+        return f"dca:v3:{hashlib.md5(raw.encode()).hexdigest()}"
 
     def _validate_dca(self, command: SimulateDcaCommand) -> None:
         resolved_asset = resolve_market_asset(command.symbol)
@@ -45,6 +65,8 @@ class ToolsAppService:
             raise InvalidRequestError(f"无效策略。可选: {list(DCA_STRATEGY_KEYS)}")
 
     def _validate_compare(self, command: ComparePairsCommand) -> tuple[str, str]:
+        if command.timeframe not in {"5m", "15m", "1h", "4h", "1d", "1w", "1M"}:
+            raise InvalidRequestError("对比周期不受支持")
         symbol_a = command.symbol_a.upper()
         symbol_b = command.symbol_b.upper()
         valid_symbols = set(get_supported_crypto_symbols())
@@ -74,6 +96,9 @@ class ToolsAppService:
         if cached:
             return cached
 
+        return await self._shared_request(cache_key, lambda: self._calculate_dca(command, start_date_str, cache_key))
+
+    async def _calculate_dca(self, command: SimulateDcaCommand, start_date_str: str, cache_key: str) -> dict:
         result = await run_tool(
             lambda: self.dca_service.calculate_dca(
                 symbol=command.symbol,
@@ -99,6 +124,10 @@ class ToolsAppService:
 
     async def compare_pairs(self, command: ComparePairsCommand) -> dict:
         symbol_a, symbol_b = self._validate_compare(command)
+        key = json.dumps(["compare", symbol_a, symbol_b, command.days, command.timeframe])
+        return await self._shared_request(key, lambda: self._compare_pairs(command, symbol_a, symbol_b))
+
+    async def _compare_pairs(self, command: ComparePairsCommand, symbol_a: str, symbol_b: str) -> dict:
         logger.info(f"标的对比请求: {symbol_a} vs {symbol_b}, {command.days}天, {command.timeframe}")
         result = await run_tool(
             lambda: self.pair_compare_service.compare_pairs(symbol_a, symbol_b, command.days, command.timeframe),

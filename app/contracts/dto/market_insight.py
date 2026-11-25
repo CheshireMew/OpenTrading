@@ -1,21 +1,22 @@
 from __future__ import annotations
 
 
-from pydantic import BaseModel
+from datetime import datetime
+from app.contracts.timestamps import UtcResponseModel
 
 
-class IndicatorHistoryPoint(BaseModel):
-    date: str
+class IndicatorHistoryPoint(UtcResponseModel):
+    date: datetime
     value: float
 
 
-class MarketIndicatorResponse(BaseModel):
+class MarketIndicatorResponse(UtcResponseModel):
     indicator_id: str
     name: str
     category: str
     unit: str | None
     current_value: float | None
-    last_updated: str | None
+    last_updated: datetime | None
     data_lag_days: int | None = None
     short_label: str | None = None
     group: str | None = None

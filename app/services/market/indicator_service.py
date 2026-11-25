@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from app.contracts.dto.market_insight import MarketIndicatorResponse
 from app.application.persistence_ports import IndicatorRepositoryPort
+from utils.time import utc_now_naive
 
 
 INDICATOR_DISPLAY_FACTORS = {
@@ -27,7 +28,7 @@ class IndicatorService:
         category: str | None,
         days: int,
     ) -> list[MarketIndicatorResponse]:
-        cutoff_date = datetime.now() - timedelta(days=days)
+        cutoff_date = utc_now_naive() - timedelta(days=days)
         metas = self.repository.list_active_meta(category)
         history_map = self.repository.get_history_points([meta["id"] for meta in metas], start_date=cutoff_date)
 

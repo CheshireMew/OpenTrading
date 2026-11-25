@@ -7,6 +7,7 @@ from app.domain.market.symbol_catalog import (
     get_usd_equivalent_symbols,
     is_usd_equivalent_symbol,
     normalize_market_symbol,
+    parse_market_symbol,
 )
 from config import settings
 
@@ -37,7 +38,7 @@ def get_market_symbol_source(symbol: str) -> MarketSymbolSource | None:
     normalized_symbol = normalize_market_symbol(symbol)
     if not normalized_symbol:
         return None
-    return MARKET_SYMBOL_CATALOG.get(normalized_symbol)
+    return MARKET_SYMBOL_CATALOG.get(normalized_symbol) or parse_market_symbol(symbol, default_exchange_id=settings.EXCHANGE_ID)
 
 
 def list_market_search_items() -> list[dict[str, object]]:
@@ -102,7 +103,7 @@ def resolve_market_asset(symbol: str) -> dict[str, str] | None:
 
     source = get_market_symbol_source(value)
     if source:
-        return {"symbol": source.symbol, "asset_class": "crypto"}
+        return {"symbol": source.request_symbol or source.symbol, "asset_class": "crypto"}
     return None
 
 

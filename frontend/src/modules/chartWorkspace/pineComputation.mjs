@@ -133,7 +133,7 @@ export async function runPineComputation(input, { write = () => {}, hash, runtim
   let context
   for await (const page of pine.run(indicator,undefined,2000)) {
     context = page.fullContext ?? page
-    write('progress.json',{progress:Math.min(99,(page.idx+1)/input.bars.length*100)})
+    write('progress.json',{runId:input.runId,progress:{phase:'computing',mode:'measured',completed:page.idx+1,total:input.bars.length,unit:'candles'}})
   }
   const state = context.strategy
   if (!state) throw new Error('脚本没有生成策略状态')
@@ -161,5 +161,6 @@ export async function runPineComputation(input, { write = () => {}, hash, runtim
       quote_currency:input.symbol.currency,account_currency:state.account_currency,bars:input.bars.length,
       first_bar:input.bars[0].time,last_bar:input.bars.at(-1).time}}
 
+  write('progress.json',{runId:input.runId,progress:{phase:'saving',mode:'indeterminate',completed:null,total:null,unit:null}})
   return result
 }

@@ -6,9 +6,9 @@ from typing import Any
 
 from uuid import uuid4
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 
-from app.domain.research import ResearchNotFoundError, ResearchRevisionConflictError
+from app.domain.research import ResearchRevisionConflictError
 from app.domain.research_alerts import should_trigger
 
 from app.infra.db.database import DatabaseRuntime
@@ -91,21 +91,19 @@ class ResearchAlertRepository:
             return [alert_runtime_payload(row) for row in rows]
 
     def record_alert_evaluation(
-        self, alert_id: str, *, value: float, evaluated_at: datetime, triggered: bool
+        self, alert_id: str, *, value: float, evaluated_at: datetime, expected_version: int
     ) -> dict[str, Any] | None:
         with write_session(self._database_runtime, ResearchRevisionConflictError) as session:
+            if session.bind.dialect.name == "sqlite":
+                session.execute(text("BEGIN IMMEDIATE"))
             row = session.scalar(select(ResearchAlertRule).where(ResearchAlertRule.id == alert_id).with_for_update())
-            if row is None:
-                # A subscription can have an in-flight tick when its rule is deleted.
+            # The price belongs to the exact rule (including its symbol/metric)
+            # that was read before external I/O, never a later edit of that rule.
+            if row is None or row.version != expected_version or row.archived_at is not None or not row.enabled:
                 return None
-            if row.archived_at is not None:
-                raise ResearchNotFoundError("提醒规则不存在或已归档")
-            if not row.enabled:
-                return alert_payload(row)
-            if row.configuration.get("chartSymbolId"):
-                # Recheck the persisted rule inside the write transaction. An edit,
-                # pause, or another evaluator must not deliver an obsolete trigger.
-                triggered = should_trigger(alert_runtime_payload(row), value, evaluated_at)
+            if row.last_evaluated_at is not None and evaluated_at <= row.last_evaluated_at:
+                return None
+            triggered = should_trigger(alert_runtime_payload(row), value, evaluated_at)
             row.last_value = value
             row.last_evaluated_at = evaluated_at
             if triggered:

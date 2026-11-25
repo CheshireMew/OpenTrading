@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from contextvars import copy_context
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import os
-from pathlib import Path
 import re
 import socket
 import logging
@@ -81,13 +79,12 @@ class JobRun:
 
 
 class JobScheduler:
-    def __init__(self, config: MarketDataConfig, root: Path) -> None:
+    def __init__(self, config: MarketDataConfig, database: MarketHistoryDatabase) -> None:
         self.config = config
-        self.root = root.resolve()
-        self._database = MarketHistoryDatabase(self.root)
+        self.root = database.root
+        self._database = database
         self._operations = OperationRepository(self._database)
         self.worker_id = f"{socket.gethostname()}:{os.getpid()}:{uuid4().hex}"
-        self._operations.recover_expired(now=datetime.now(timezone.utc))
 
     def add(self, job_id: str, task: str, interval_minutes: int) -> JobDefinition:
         _validate_job_id(job_id)
@@ -144,6 +141,11 @@ class JobScheduler:
         stop_event: Event | None = None,
     ) -> tuple[JobRun, ...]:
         current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+        if stop_event is not None and stop_event.is_set():
+            return ()
+        # Recovery is an execution-side mutation, including when every job has
+        # been disabled. Constructing a scheduler or reading status stays read-only.
+        self._operations.recover_expired(now=current)
         completed: list[JobRun] = []
         for job in self.due(current):
             if stop_event is not None and stop_event.is_set():
@@ -217,7 +219,7 @@ class JobScheduler:
     def _execute(self, job: JobDefinition) -> tuple[JobStatus, str, dict[str, object]]:
         if job.task != "liquidity_refresh":
             raise ValueError(f"unsupported job: {job.task}")
-        refreshed = sync_liquidity_data(self.root, self.config)
+        refreshed = sync_liquidity_data(self._database, self.config)
         return (
             "success",
             f"refreshed {refreshed['series_count']} dollar-liquidity series and "
@@ -252,8 +254,7 @@ class JobWatcher:
         if self._thread is not None and self._thread.is_alive():
             return
         self._stop.clear()
-        context = copy_context()
-        self._thread = Thread(target=context.run, args=(self._watch,), name="signal-lab-job-watcher", daemon=True)
+        self._thread = Thread(target=self._watch, name="signal-lab-job-watcher", daemon=True)
         self._thread.start()
 
     def stop(self, timeout: float | None = 5.0) -> bool:

@@ -19,6 +19,9 @@ class _Research:
     def get_workbench(self, **_kwargs):
         return {"items": [], "notes": [], "alerts": [], "events": []}
 
+    def get_asset_records(self, _symbol):
+        return self.get_workbench()
+
 
 class _Signals:
     def list_signals(self, **_kwargs):

@@ -19,7 +19,7 @@ export function symbolIconUrl(symbol?: ChartSymbol, fallback = ''): string | und
   const base = symbolAssetCode(symbol, fallback)
   // One automatic, same-origin image endpoint for every asset. The server
   // discovers current official URLs and caches images; no per-coin file list.
-  if (symbol?.market !== 'index' && /^[A-Z0-9._-]{1,40}$/.test(base)) return `${BASE}/symbol-icons/${encodeURIComponent(base)}`
+  if ((!symbol || symbol.market === 'spot' || symbol.market === 'usdm') && /^[A-Z0-9._-]{1,40}$/.test(base)) return `${BASE}/symbol-icons/${encodeURIComponent(base)}`
   const supplied = symbol?.metadata?.icon_url ?? symbol?.metadata?.logo_url
   if (typeof supplied === 'string' && /^(?:https?:\/\/|\/)/.test(supplied)) return supplied
   return undefined

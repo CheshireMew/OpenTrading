@@ -18,6 +18,7 @@ const requestBundle = buildSync({ entryPoints: [new URL('../src/api/request.ts',
 const requestModule = { exports: {} }
 new Function('require', 'module', 'exports', requestBundle)(require, requestModule, requestModule.exports)
 const requestErrors = load('composables/useRequestError.ts', { '@/api/request': requestModule.exports })
+const utcDates = load('utils/utcDate.ts')
 const { render } = vue.createRenderer({ createElement: () => ({}), createText: () => ({}), createComment: () => ({}), insert() {}, remove() {}, patchProp() {}, setText() {}, setElementText() {}, parentNode: () => null, nextSibling: () => null })
 const settle = async () => { for (let i = 0; i < 12; i++) await vue.nextTick() }
 const mount = factory => {
@@ -26,6 +27,7 @@ const mount = factory => {
   render(vue.h({ setup() { state = factory(); return () => null } }), host)
   return { get state() { return state }, unmount: () => render(null, host) }
 }
+const deferred = () => { let resolve, reject; const promise = new Promise((ok, fail) => { resolve = ok; reject = fail }); return { promise, resolve, reject } }
 
 test('a stored transport error follows language changes and is cleared after recovery', () => {
   const locale = vue.ref('zh')
@@ -36,6 +38,71 @@ test('a stored transport error follows language changes and is cleared after rec
   assert.equal(errors.error.value, 'en:retry')
   errors.clearError()
   assert.equal(errors.error.value, '')
+})
+
+test('Web3 details publish successful sources before a slow audit fails and recover on retry', async () => {
+  const audit = deferred()
+  const api = { getBinanceWeb3TokenDynamic: async () => ({ price: 12 }),
+    getBinanceWeb3TokenAudit: () => audit.promise,
+    getBinanceWeb3TokenKline: async () => ({ items: [{ open_time: 60_000, open: 1, high: 2, low: 1, close: 2, volume: 3 }] }) }
+  const { useWeb3HeatRankPanel } = load('modules/market/useWeb3HeatRankPanel.ts', {
+    'vue-i18n': { useI18n: () => ({ t: (key, values) => key + (values?.sources ? ':' + values.sources : '') }) },
+    './api': { binanceWeb3Api: api }, './web3MarketShared': {},
+    './web3MarketWarmSnapshot': { web3HeatRankWarmSnapshot: { read() {}, write() {} } },
+  })
+  const mounted = mount(() => useWeb3HeatRankPanel(vue.ref('56'))), state = mounted.state
+  state.openWeb3Token({ chain_id: '56', contract_address: '0xA', platform: 'bsc' })
+  await settle()
+  assert.equal(state.web3Dynamic.value.price, 12)
+  assert.equal(state.web3ChartData.value.length, 1)
+  assert.equal(state.web3DetailLoading.value, true)
+  audit.reject(new Error('audit only unavailable'))
+  await settle()
+  assert.equal(state.web3DetailLoading.value, false)
+  assert.match(state.web3DetailError.value, /tokenDetailPartialFailed.*detailSources.audit/)
+  assert.equal(state.web3ChartData.value.length, 1)
+  api.getBinanceWeb3TokenAudit = async () => ({ status: 'verified' })
+  await state.retryWeb3TokenDetail()
+  assert.equal(state.web3Audit.value.status, 'verified')
+  assert.equal(state.web3DetailError.value, '')
+  mounted.unmount()
+})
+
+test('Web3 old token responses and disposed detail requests cannot replace the selected token', async () => {
+  const old = deferred(), late = deferred()
+  const { useWeb3HeatRankPanel } = load('modules/market/useWeb3HeatRankPanel.ts', {
+    'vue-i18n': { useI18n: () => ({ t: key => key }) },
+    './api': { binanceWeb3Api: {
+      getBinanceWeb3TokenDynamic: args => args.contract_address === 'A' ? old.promise : args.contract_address === 'C' ? late.promise : Promise.resolve({ token: 'B' }),
+      getBinanceWeb3TokenAudit: async () => ({}), getBinanceWeb3TokenKline: async () => ({ items: [] }),
+    } }, './web3MarketShared': {}, './web3MarketWarmSnapshot': { web3HeatRankWarmSnapshot: { read() {}, write() {} } },
+  })
+  const mounted = mount(() => useWeb3HeatRankPanel(vue.ref('56'))), state = mounted.state
+  const token = address => ({ chain_id: '56', contract_address: address, platform: 'bsc' })
+  state.openWeb3Token(token('A')); state.openWeb3Token(token('B'))
+  await settle(); old.resolve({ token: 'A' }); await settle()
+  assert.equal(state.web3Dynamic.value.token, 'B')
+  state.openWeb3Token(token('C')); await settle(); mounted.unmount()
+  late.resolve({ token: 'C' }); await settle()
+  assert.equal(state.web3Dynamic.value, null)
+})
+
+test('liquidity failures give localized recovery and retain the last successful data', async () => {
+  const locale = vue.ref('zh')
+  const { useSignalResource } = load('modules/market/signalLab.ts', {
+    '@/api/request': requestModule.exports, '@/composables/useRequestError': requestErrors,
+    '@/i18n': { default: { global: { t: key => locale.value + ':' + key } } },
+  })
+  const mounted = mount(useSignalResource), state = mounted.state
+  await state.load(async () => ({ value: 1 }))
+  await state.load(async () => { throw new requestModule.exports.ApiRequestError('Request failed with status code 503', { status: 503 }) })
+  assert.deepEqual(state.data.value, { value: 1 })
+  assert.equal(state.error.value, 'zh:signalLab.readFailed')
+  locale.value = 'en'
+  assert.equal(state.error.value, 'en:signalLab.readFailed')
+  await state.load(async () => ({ value: 2 }))
+  assert.equal(state.error.value, '')
+  mounted.unmount()
 })
 
 test('local input guidance keeps its translation key until it is displayed', () => {
@@ -98,6 +165,7 @@ for (const page of ['Compare', 'Dca']) {
 
 test('legacy UTC timestamps display the same instant as explicit UTC in Shanghai', () => {
   const { useDateTime } = load('composables/useDateTime.ts', {
+    '@/utils/utcDate': utcDates,
     './useUserPreferences': { useUserPreferences: () => ({ timezone: vue.ref('Asia/Shanghai') }) },
     '@/i18n': { default: { global: { locale: vue.ref('zh-CN') } } },
   })
@@ -109,6 +177,7 @@ test('legacy UTC timestamps display the same instant as explicit UTC in Shanghai
 test('dates follow the app language independently of the browser language', () => {
   const locale = vue.ref('zh-CN')
   const { useDateTime } = load('composables/useDateTime.ts', {
+    '@/utils/utcDate': utcDates,
     './useUserPreferences': { useUserPreferences: () => ({ timezone: vue.ref('Asia/Shanghai') }) },
     '@/i18n': { default: { global: { locale } } },
   })

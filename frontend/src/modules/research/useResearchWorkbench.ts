@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { computed, ref, watch, onScopeDispose } from 'vue'
 import { apiErrorMessage } from '@/api/request'
 import { researchApi } from './api'
 import type {
@@ -33,6 +33,8 @@ export const useResearchWorkbench = () => {
   const error = ref('')
   const activeWatchlistId = ref('')
   const activeItemId = ref('')
+  const notesLoading = ref(false), notesTotal = ref(0), notesOffset = ref(0)
+  let notesGeneration = 0
 
   const watchlists = computed(() => workbench.value.watchlists || [])
   const activeWatchlists = computed(() => watchlists.value.filter((item) => !item.archivedAt))
@@ -52,6 +54,25 @@ export const useResearchWorkbench = () => {
     (!alert.archivedAt && activeItem.value && (alert.watchItemId === activeItem.value.id || alert.symbol === activeItem.value.symbol))
   )))
 
+  const loadNotes = async (reset = false) => {
+    const symbol = activeItem.value?.symbol
+    const generation = ++notesGeneration
+    if (!symbol) { workbench.value.notes = []; notesTotal.value = notesOffset.value = 0; notesLoading.value = false; return }
+    const offset = reset ? 0 : notesOffset.value
+    notesLoading.value = true
+    try {
+      const page = await researchApi.listNotes(symbol, offset, 200)
+      if (generation !== notesGeneration || activeItem.value?.symbol !== symbol) return
+      const existing = workbench.value.notes || []
+      workbench.value.notes = reset ? page.items : [...existing, ...page.items.filter(note => !existing.some(old => old.id === note.id))]
+      notesTotal.value = page.total; notesOffset.value = page.offset + page.items.length
+    } catch (cause) {
+      if (generation === notesGeneration) error.value = apiErrorMessage(cause, '研究笔记加载失败')
+    } finally { if (generation === notesGeneration) notesLoading.value = false }
+  }
+  watch(() => activeItem.value?.symbol, () => { void loadNotes(true) })
+  onScopeDispose(() => { notesGeneration++ })
+
   const load = async () => {
     if (loading.value) return
     loading.value = true
@@ -64,6 +85,7 @@ export const useResearchWorkbench = () => {
       if (!activeItemId.value || !activeItems.value.some((row) => row.id === activeItemId.value)) {
         activeItemId.value = activeItems.value[0]?.id || ''
       }
+      await loadNotes(true)
     } catch (cause) {
       error.value = apiErrorMessage(cause, '研究数据加载失败')
     } finally {
@@ -157,6 +179,7 @@ export const useResearchWorkbench = () => {
     const result = await runMutation(() => researchApi.createNote(command))
     if (!result) return null
     workbench.value.notes = replaceById(workbench.value.notes || [], result)
+    await loadNotes(true)
     await refreshTimeline()
     return result
   }
@@ -168,6 +191,7 @@ export const useResearchWorkbench = () => {
       archived,
     ))
     if (result) workbench.value.notes = replaceById(workbench.value.notes || [], result)
+    if (result) await loadNotes(true)
     await refreshTimeline()
     return result
   }
@@ -237,6 +261,9 @@ export const useResearchWorkbench = () => {
     itemNotes,
     archivedNotes,
     itemAlerts,
+    notesLoading,
+    hasMoreNotes: computed(() => notesOffset.value < notesTotal.value),
+    loadMoreNotes: () => loadNotes(),
     load,
     createWatchlist,
     saveWatchlist,

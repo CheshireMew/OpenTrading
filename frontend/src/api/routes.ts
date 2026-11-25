@@ -92,6 +92,7 @@ const routeTemplates = {
   list_market_screeners: "/research/screeners",
   list_market_symbols: "/symbols",
   list_research_events: "/research/events",
+  list_research_notes: "/research/notes",
   list_trade_signals: "/research/signals",
   refresh_signal_lab_liquidity: "/signal-lab/liquidity/refresh",
   repair_data_source: "/data-health/repair",
@@ -220,6 +221,7 @@ const endpointQueryContracts = {
   list_market_screeners: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   list_market_symbols: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   list_research_events: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
+  list_research_notes: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   list_trade_signals: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   refresh_signal_lab_liquidity: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   repair_data_source: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
@@ -316,6 +318,7 @@ export type ApiRouteResponseMap = {
   list_market_screeners: ResearchTypes.SavedMarketScreenerListResponse
   list_market_symbols: Array<MarketTypes.MarketSymbolSearchResponse>
   list_research_events: ResearchTypes.ResearchEventPageResponse
+  list_research_notes: ResearchTypes.ResearchNotePageResponse
   list_trade_signals: ResearchTypes.TradeSignalPageResponse
   refresh_signal_lab_liquidity: MarketTypes.SignalLabRefreshResponse
   repair_data_source: ConfigTypes.DataRepairResponse
@@ -412,6 +415,7 @@ export type ApiRouteBodyMap = {
   list_market_screeners: never
   list_market_symbols: never
   list_research_events: never
+  list_research_notes: never
   list_trade_signals: never
   refresh_signal_lab_liquidity: MarketTypes.SignalLabRefreshRequest
   repair_data_source: ConfigTypes.DataRepairCommand
@@ -508,6 +512,7 @@ export type ApiRoutePathMap = {
   list_market_screeners: never
   list_market_symbols: never
   list_research_events: never
+  list_research_notes: never
   list_trade_signals: never
   refresh_signal_lab_liquidity: never
   repair_data_source: never
@@ -552,7 +557,7 @@ export type ApiRouteQueryMap = {
   chart_rerun_pine: never
   chart_save_document: never
   chart_symbol_icon: never
-  chart_symbols: never
+  chart_symbols: ChartWorkspaceTypes.ChartSymbolsQueryParams
   compare_pairs: never
   create_market_screener: never
   create_research_alert: never
@@ -604,6 +609,7 @@ export type ApiRouteQueryMap = {
   list_market_screeners: ResearchTypes.ListMarketScreenersQueryParams
   list_market_symbols: never
   list_research_events: ResearchTypes.ListResearchEventsQueryParams
+  list_research_notes: ResearchTypes.ListResearchNotesQueryParams
   list_trade_signals: ResearchTypes.ListTradeSignalsQueryParams
   refresh_signal_lab_liquidity: never
   repair_data_source: never

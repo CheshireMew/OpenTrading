@@ -34,11 +34,11 @@ class RawSnapshot:
 
 
 class RawSnapshotStore:
-    def __init__(self, root: Path, config: MarketDataConfig) -> None:
-        self.base = root.expanduser().resolve()
+    def __init__(self, database: MarketHistoryDatabase, config: MarketDataConfig) -> None:
+        self.base = database.root
         self.config = config
         self.root = self.base / "raw"
-        self._repository = RawSnapshotRepository(MarketHistoryDatabase(self.base))
+        self._repository = RawSnapshotRepository(database)
 
     def save(self, provider: str, resource: str, payload: Any, retrieved_at: datetime) -> RawSnapshot:
         if retrieved_at.tzinfo is None:

@@ -1,6 +1,13 @@
 // This file is generated from backend FastAPI route contracts.
 // Do not edit manually.
 
+export interface ResearchNotePageResponse {
+  items: Array<ResearchNoteResponse>
+  total: number
+  offset: number
+  limit: number
+}
+
 export interface MarketScreenerRunResponse {
   id: string
   screenerId: string
@@ -79,9 +86,10 @@ export interface AssetResearchResponse {
   updatedAt: string
   indicators?: IndicatorSummaryResponse | null
   history?: Array<OhlcvPointResponse>
-  marketContext?: { [key: string]: unknown }
+  marketContext?: AssetMarketContext
   watchItems?: Array<ResearchWatchItemResponse>
   notes?: Array<ResearchNoteResponse>
+  notesTotal?: number
   alerts?: Array<ResearchAlertResponse>
   events?: Array<ResearchEventResponse>
   signals?: Array<TradeSignalResponse>
@@ -175,6 +183,7 @@ export interface ResearchWorkbenchResponse {
 export interface ResearchEventPageResponse {
   items?: Array<ResearchEventResponse>
   total: number
+  nextCursor?: string | null
 }
 
 export interface ResearchWatchlistResponse {
@@ -347,6 +356,42 @@ export interface ResearchEventAcknowledgeCommand {
   acknowledged?: boolean
 }
 
+export interface AssetMarketContext {
+  spot_ticker?: BinanceTickerStatsItemResponse
+  usdm_ticker?: BinanceTickerStatsItemResponse
+  usdm_mark?: BinanceMarkPriceItemResponse
+  [key: string]: unknown
+}
+
+export interface BinanceMarkPriceItemResponse {
+  symbol?: string | null
+  pair?: string | null
+  mark_price?: number | null
+  index_price?: number | null
+  estimated_settle_price?: number | null
+  last_funding_rate?: number | null
+  next_funding_time?: number | null
+  interest_rate?: number | null
+  time?: number | null
+}
+
+export interface BinanceTickerStatsItemResponse {
+  symbol?: string | null
+  price_change?: number | null
+  price_change_pct?: number | null
+  weighted_avg_price?: number | null
+  last_price?: number | null
+  last_qty?: number | null
+  open_price?: number | null
+  high_price?: number | null
+  low_price?: number | null
+  volume?: number | null
+  quote_volume?: number | null
+  open_time?: number | null
+  close_time?: number | null
+  count?: number | null
+}
+
 export interface IndicatorSummaryResponse {
   ema: number | null
   rsi: number | null
@@ -445,6 +490,13 @@ export interface ListResearchEventsQueryParams {
   kind?: string | null
   unacknowledged_only?: boolean
   since?: string | null
+  limit?: number
+  cursor?: string | null
+}
+
+export interface ListResearchNotesQueryParams {
+  symbol: string
+  offset?: number
   limit?: number
 }
 

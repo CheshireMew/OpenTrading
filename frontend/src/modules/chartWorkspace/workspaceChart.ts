@@ -44,6 +44,11 @@ export function createWorkspaceChart(deps: {
   const feedStatus = ref('connecting'), feedError = ref('')
   const sync = ref<Record<string, boolean>>({ viewport: true, crosshair: true, symbol: false, timeframe: false })
   const activeSymbol = computed(() => symbols.value.find(symbol => symbol.id === activeSymbolId.value))
+  watch(() => activeSymbol.value?.close_only, (closeOnly, previous) => {
+    if (closeOnly !== undefined && previous !== undefined && closeOnly !== previous) {
+      workspace.value?.context().setPriceStyle(closeOnly ? 'line' : 'candles')
+    }
+  })
   const backendPeriod = computed(() => timeframes[activeTimeframe.value] ?? activeTimeframe.value)
   const historyText = computed(() => {
     const history = historyByCell.value[activeCell.value]
@@ -55,10 +60,21 @@ export function createWorkspaceChart(deps: {
   const engines = new Set<OpenTradingPineEngine>(), configuredCharts = new WeakSet<Vela>()
   let provider: OpenTradingProvider | undefined, snapshotChart: Vela | undefined
   const paper = createWorkspacePaper({ workspace, symbols, symbolId: activeSymbolId, timeframe: backendPeriod,
-    subscribe: (id, tf, onBar) => provider!.subscribe(id, tf, onBar) })
+    subscribe: (id, tf, onQuote) => provider!.subscribeQuotes(id, tf, onQuote) })
   let disposeDrawings: (() => void) | undefined, disposeLocale: (() => void) | undefined, disposeToolbarIcons: (() => void) | undefined
   let disposeIndicatorHelp: (() => void) | undefined
-  let disposed = false, marketEpoch = 0
+  let disposed = false, paused = false, marketEpoch = 0
+  let catalogRequest: Promise<void> | undefined
+  function pause() { paused = true; provider?.setPaused(true) }
+  function resume() { paused = false; provider?.setPaused(false) }
+  function refreshCatalog() {
+    if (disposed) return Promise.resolve()
+    return catalogRequest ??= chartApi.symbols().then(catalog => {
+      if (disposed) return
+      symbols.value = catalog
+      if (provider) provider.catalog = catalog
+    }).finally(() => { catalogRequest = undefined })
+  }
   function initializationFailed() { feedStatus.value = 'error' }
   function returnLive() {
     if (snapshotChart) void snapshotChart.setMarket({ data: undefined })
@@ -206,8 +222,13 @@ export function createWorkspaceChart(deps: {
       if (!disposed && symbol === activeSymbolId.value) { feedStatus.value = status; feedError.value = message ?? '' }
     })
     provider.catalog = symbols.value
+    provider.setPaused(paused)
+    const initial = catalog.find(info => info.id === activeSymbolId.value)
+      ?? catalog.find(info => info.market === 'spot') ?? catalog[0]
+    if (!initial) throw new Error(cw('loadFailed'))
+    const initialTimeframe = initial.timeframes.includes('1h') ? '60' : Object.keys(timeframes).find(key => initial.timeframes.includes(timeframes[key]!)) ?? 'D'
     const chart = new VelaWorkspace(deps.host.value, {
-      layout: '1', symbol: velaSymbol('binance:spot:BTCUSDT'), timeframe: '60', bars: 1000,
+      layout: '1', symbol: velaSymbol(initial.id), timeframe: initialTimeframe, bars: 1000,
       live: true, theme: chartTheme(deps.theme.value), renderer: WorkspaceRenderer,
       volume: false, timezone: 'Asia/Shanghai', watermark: false,
       animations: { ...DIRECT_CHART_MOTION, scroll: false },
@@ -221,6 +242,7 @@ export function createWorkspaceChart(deps: {
     registerWorkspaceIndicatorDefinitions()
     registerWorkspaceDrawingDefaults()
     workspace.value = chart
+    if (initial.close_only) chart.context().setPriceStyle('line')
     configureCells()
     applyChartTheme()
     chart.on('cell:created', configureCells)
@@ -259,5 +281,5 @@ export function createWorkspaceChart(deps: {
   }
   return { workspace, symbols, activeCell, activeSymbolId, activeTimeframe, activeSymbol, backendPeriod,
     layout, historyDepth, historyText, feedText, feedError, sync, snapshotRun,
-    replay, paper, cursor, initializationFailed, selectSymbol, setPeriod, setLayout, setSync, setHistoryDepth, returnLive, locateTrade, snapshot, restore, initialize, dispose }
+    replay, paper, cursor, initializationFailed, selectSymbol, setPeriod, setLayout, setSync, setHistoryDepth, returnLive, locateTrade, snapshot, restore, initialize, pause, resume, refreshCatalog, dispose }
 }

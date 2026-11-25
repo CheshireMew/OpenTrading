@@ -32,6 +32,8 @@ npm --prefix frontend test
 npm --prefix frontend run typecheck
 ```
 
+`npm --prefix frontend test` 包含真实浏览器检查，并先通过隔离的 Python API 测试生成契约样本（包括数据健康与 Pine）。它使用本机已安装的 Edge 或 Chromium，不下载浏览器；必要时设置 `OPENTRADING_TEST_BROWSER`。个人浏览器窗口不参与测试，测试与缓存放在 `.runtime/`。仅检查纯前端逻辑时可以显式使用 `npm --prefix frontend test -- --unit`；CI 始终执行完整检查，任何跳过都会使其失败。
+
 修改 FastAPI 路由、Pydantic 模型或前端契约消费者后，生成契约并构建前端：
 
 ```powershell
@@ -47,6 +49,7 @@ npm run build:frontend
 - `frontend/src/modules/system/generatedContracts.ts`
 - `frontend/src/modules/tools/generatedContracts.ts`
 - `frontend/src/modules/research/generatedContracts.ts`
+- `frontend/src/modules/research/generatedValidation.ts`
 - `frontend/src/modules/chartWorkspace/generatedContracts.ts`
 - `frontend/src/modules/market/generatedWeb3Chains.ts`
 

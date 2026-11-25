@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from app.application.persistence_ports import ResearchRepositoryPort
+from app.domain.research_event_cursor import event_cursor, parse_event_cursor
 from app.contracts.research import (
     ResearchAlertCreateCommand,
     ResearchAlertResponse,
@@ -14,6 +15,7 @@ from app.contracts.research import (
     ResearchEventResponse,
     ResearchNoteCreateCommand,
     ResearchNoteResponse,
+    ResearchNotePageResponse,
     ResearchNoteUpdateCommand,
     ResearchWatchItemCreateCommand,
     ResearchWatchItemResponse,
@@ -37,6 +39,10 @@ class ResearchService:
             self._repository.get_workbench(event_limit=event_limit, note_limit=note_limit)
         )
 
+    def list_notes(self, symbol: str, *, offset: int, limit: int) -> ResearchNotePageResponse:
+        rows, total = self._repository.list_notes(symbol.strip(), offset=offset, limit=limit)
+        return ResearchNotePageResponse(items=rows, total=total, offset=offset, limit=limit)
+
     def list_events(
         self,
         *,
@@ -44,14 +50,18 @@ class ResearchService:
         unacknowledged_only: bool,
         since: datetime | None,
         limit: int,
+        cursor: str | None = None,
     ) -> ResearchEventPageResponse:
         rows, total = self._repository.list_events(
             kind=kind,
             unacknowledged_only=unacknowledged_only,
             since=since,
-            limit=limit,
+            limit=limit + 1,
+            before=parse_event_cursor(cursor),
         )
-        return ResearchEventPageResponse(items=rows, total=total)
+        items = rows[:limit]
+        next_cursor = event_cursor(items[-1]["occurredAt"], items[-1]["createdAt"], items[-1]["id"]) if len(rows) > limit else None
+        return ResearchEventPageResponse(items=items, total=total, nextCursor=next_cursor)
 
     def create_watchlist(self, command: ResearchWatchlistCreateCommand) -> ResearchWatchlistResponse:
         return ResearchWatchlistResponse.model_validate(self._repository.create_watchlist(command.model_dump()))

@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import WebSocket
 
 from config import settings
+from app.services.market.symbol_catalog import get_market_symbol_source
 
 
 class MarketWebSocketService:
@@ -12,7 +13,7 @@ class MarketWebSocketService:
         symbol = websocket.query_params.get("symbol")
         if not symbol:
             raise ValueError("symbol is required")
-        if symbol not in valid_symbols:
+        if symbol not in valid_symbols and get_market_symbol_source(symbol) is None:
             raise ValueError(f"Invalid symbol. Allowed: {valid_symbols}")
 
         timeframe = websocket.query_params.get("timeframe") or settings.TIMEFRAME

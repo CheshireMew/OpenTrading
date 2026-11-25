@@ -6,7 +6,7 @@ import subprocess
 import time
 import uuid
 
-from app.contracts.chart_workspace import PineRun, PineRunRequest, WorkspaceWrite, WorkspaceDocument
+from app.contracts.chart_workspace import PineProgress, PineRun, PineRunRequest, WorkspaceWrite, WorkspaceDocument
 from app.infra.worker_process import start_worker
 from app.infra.node_runtime import resolve_node
 from app.infra.executor import run_workspace
@@ -24,6 +24,7 @@ class PineCapacityError(ValueError):
 class ChartPineRuns:
     def __init__(self, store, market, *, concurrency=None, queue_limit=None, timeout=None, queue_timeout=None):
         self.store, self.market = store, market
+        self.store.migrate_run_progress()
         self.tasks = {}
         self.processes = {}
         self.closed = False
@@ -57,7 +58,15 @@ class ChartPineRuns:
         data = self.store.get("runs",key).data
         progress = self.folder(key) / "progress.json"
         if data["status"] == "running" and progress.exists():
-            data["progress"] = json.loads(progress.read_text())["progress"]
+            try:
+                frame = json.loads(progress.read_text())
+                # Frozen historical engines may lack this progress protocol. Their
+                # results remain usable; unowned telemetry is never a measurement.
+                if frame.get("runId") == key:
+                    data["progress"] = PineProgress.model_validate(frame["progress"]).model_dump()
+            except (OSError, ValueError, KeyError, TypeError, AttributeError):
+                # Telemetry cannot invalidate the durable lifecycle/result.
+                data["progress"] = {"phase":"computing","mode":"indeterminate"}
         return PineRun.model_validate(data)
 
     async def create(self,request: PineRunRequest,api: str, *, frozen_from=None, recording="research"):
@@ -122,7 +131,7 @@ class ChartPineRuns:
         try:
             run = await run_workspace(lambda: self.get(key))
             request, report_only = run.request, run.recording == "report"
-            await self._update(key,status="loading")
+            await self._update(key,status="loading",progress={"phase":"loading","mode":"indeterminate"})
             if frozen_from:
                 original = await run_workspace(lambda: self.folder(frozen_from))
                 if not (original/"input.json").exists():
@@ -135,7 +144,7 @@ class ChartPineRuns:
                 payload.update(frozen=True,api=api)
             else:
                 info = await self.market.resolve(request.symbol)
-                if request.timeframe not in info.timeframes or info.market == "index":
+                if request.timeframe not in info.timeframes or info.market not in {"spot", "usdm"}:
                     raise ValueError("该品种暂不提供经过成交模拟验证的 OHLC 数据")
                 bars, cursor = [], request.start
                 while cursor <= request.end:
@@ -154,7 +163,7 @@ class ChartPineRuns:
                         raise ValueError("运行区间有行情缺口，请补齐数据后重试")
                     bars.extend(batch)
                     cursor = batch[-1].closeTime
-                    await self._update(key,progress=min(99,(cursor-request.start)/(request.end-request.start)*100))
+                    await self._update(key,progress={"phase":"loading","mode":"indeterminate","completed":len(bars),"unit":"candles"})
                 if len(bars)<2:
                     raise ValueError("运行区间不足两根已收盘 K 线")
                 if bars[0].time > close_boundary(request.start,request.timeframe):
@@ -165,12 +174,13 @@ class ChartPineRuns:
                     "bars":[b.model_dump() for b in bars],"api":api}
                 if not report_only:
                     payload["engine_snapshot"] = await asyncio.to_thread(freeze_engine,self.store.root)
+            payload["runId"] = key
             if report_only:
                 worker = ROOT / "frontend/scripts/pine-workspace-worker.mjs"
             else:
                 worker = await asyncio.to_thread(engine_worker,self.store.root,payload["engine_snapshot"])
                 await asyncio.to_thread(lambda: (folder/"input.json").write_text(json.dumps(payload,ensure_ascii=False),encoding="utf-8"))
-            await self._update(key,status="running",progress=0)
+            await self._update(key,status="running",progress={"phase":"computing","mode":"indeterminate"})
             node = resolve_node()
             def spawn():
                 with (folder/"worker.log").open("wb") as log:
@@ -202,7 +212,7 @@ class ChartPineRuns:
                 PineRecordStore(folder).page("equity", 0, 1)
                 return result["summary"], result["provenance"]
             summary, provenance = await asyncio.shield(report_task) if report_only else await asyncio.to_thread(finalize)
-            await self._update(key,status="completed",progress=100,summary=summary,provenance=provenance)
+            await self._update(key,status="completed",progress=None,summary=summary,provenance=provenance)
         except asyncio.CancelledError:
             raise
         except Exception as exc:

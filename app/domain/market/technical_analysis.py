@@ -30,38 +30,35 @@ class TechnicalAnalysis:
 
     @staticmethod
     def calculate_macd(prices, fast_period=12, slow_period=26, signal_period=9):
-        """
-        计算 MACD
-        Returns: (dif, dea, macd_hist)
-        """
-        if len(prices) < slow_period:
-            return None, None, None
+        dif, signal, histogram = TechnicalAnalysis.calculate_macd_series(
+            prices, fast_period, slow_period, signal_period
+        )
+        return (dif[-1] if dif else None, signal[-1] if signal else None,
+                histogram[-1] if histogram else None)
 
+    @staticmethod
+    def calculate_macd_series(prices, fast_period=12, slow_period=26, signal_period=9):
+        """SMA-seeded MACD; each result starts at its first available sample."""
         fast_emas = TechnicalAnalysis.calculate_ema_series(prices, fast_period)
         slow_emas = TechnicalAnalysis.calculate_ema_series(prices, slow_period)
         if not fast_emas or not slow_emas:
-            return None, None, None
-
-        overlap = len(slow_emas)
-        fast_aligned = fast_emas[-overlap:]
-        dif_series = [fast - slow for fast, slow in zip(fast_aligned, slow_emas)]
-        current_dif = dif_series[-1]
-
-        if len(dif_series) < signal_period:
-            return current_dif, None, None
-
-        dea_series = TechnicalAnalysis.calculate_ema_series(dif_series, signal_period)
-        current_dea = dea_series[-1] if dea_series else None
-        macd_hist = current_dif - current_dea if current_dea is not None else None
-        return current_dif, current_dea, macd_hist
+            return [], [], []
+        overlap = min(len(fast_emas), len(slow_emas))
+        dif = [fast - slow for fast, slow in zip(fast_emas[-overlap:], slow_emas[-overlap:])]
+        signal = TechnicalAnalysis.calculate_ema_series(dif, signal_period)
+        histogram = [value - average for value, average in zip(dif[-len(signal):], signal)] if signal else []
+        return dif, signal, histogram
 
     @staticmethod
     def calculate_rsi(prices, period=14):
-        """
-        计算 RSI (Wilder's Smoothing)
-        """
+        series = TechnicalAnalysis.calculate_rsi_series(prices, period)
+        return series[-1] if series else None
+
+    @staticmethod
+    def calculate_rsi_series(prices, period=14):
+        """Wilder smoothing seeded by the first period of changes; flat is neutral."""
         if period <= 0 or len(prices) <= period:
-            return None
+            return []
 
         gains = 0.0
         losses = 0.0
@@ -75,6 +72,12 @@ class TechnicalAnalysis:
 
         avg_gain = gains / period
         avg_loss = losses / period
+        def value():
+            if avg_loss == 0:
+                return 100.0 if avg_gain > 0 else 50.0
+            return 100.0 - (100.0 / (1.0 + avg_gain / avg_loss))
+
+        values = [value()]
 
         for index in range(period + 1, len(prices)):
             change = prices[index] - prices[index - 1]
@@ -84,12 +87,8 @@ class TechnicalAnalysis:
             else:
                 avg_gain = (avg_gain * (period - 1)) / period
                 avg_loss = (avg_loss * (period - 1) + abs(change)) / period
-
-        if avg_loss == 0:
-            return 100.0
-
-        rs = avg_gain / avg_loss
-        return 100.0 - (100.0 / (1.0 + rs))
+            values.append(value())
+        return values
 
     @staticmethod
     def calculate_atr(highs, lows, closes, period=DEFAULT_ATR_PERIOD):

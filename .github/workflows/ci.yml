@@ -90,3 +90,5 @@ jobs:
       - name: Run frontend tests
         run: npm test
         working-directory: frontend
+        env:
+          OPENTRADING_PYTHON: python

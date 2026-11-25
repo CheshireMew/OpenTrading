@@ -4,7 +4,6 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict
 from datetime import date, datetime, timedelta, timezone
 import math
-from pathlib import Path
 from threading import Condition, Lock
 from typing import Any, Callable, Protocol
 
@@ -122,7 +121,7 @@ def liquidity_definitions() -> list[dict[str, Any]]:
 
 
 def sync_liquidity_data(
-    root: Path,
+    database: MarketHistoryDatabase,
     config: MarketDataConfig,
     client: LiquidityDataClient | None = None,
     *,
@@ -134,14 +133,14 @@ def sync_liquidity_data(
         raise RuntimeError("liquidity refresh is already in progress")
     try:
         return _sync_liquidity_data(
-            root, config, client, start=start, end=end, retrieved_at=retrieved_at,
+            database, config, client, start=start, end=end, retrieved_at=retrieved_at,
         )
     finally:
         _SYNC_LOCK.release()
 
 
 def _sync_liquidity_data(
-    root: Path,
+    database: MarketHistoryDatabase,
     config: MarketDataConfig,
     client: LiquidityDataClient | None = None,
     *,
@@ -153,10 +152,9 @@ def _sync_liquidity_data(
     end = end or date.today()
     start = start or date(end.year - 10, end.month, min(end.day, 28))
     retrieved_at = (retrieved_at or datetime.now(timezone.utc)).astimezone(timezone.utc)
-    database = MarketHistoryDatabase(root)
     indicators = IndicatorRepository(database)
     indicators.upsert_indicator_series(liquidity_definitions())
-    snapshots = RawSnapshotStore(root, config)
+    snapshots = RawSnapshotStore(database, config)
     def fetch(definition: LiquidityIndicatorDefinition) -> tuple[Any, ...] | None:
         if definition.provider == "treasury":
             rows = client.fetch_tga(start, end)
@@ -212,8 +210,8 @@ def _sync_liquidity_data(
 
 
 class LiquidityService:
-    def __init__(self, root: Path) -> None:
-        self._database = MarketHistoryDatabase(root)
+    def __init__(self, database: MarketHistoryDatabase) -> None:
+        self._database = database
         self._indicators = IndicatorRepository(self._database)
         self._projection = DatabaseProjection(self._database)
         self.series_builder = LiquiditySeriesBuilder()

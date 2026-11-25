@@ -51,6 +51,7 @@ INDEX_SOURCE_CATALOG: dict[str, IndexSourceBinding] = {
         cboe_csv_url="https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv",
         yfinance_symbol="^VIX",
     ),
+    "US_DXY": IndexSourceBinding(yfinance_symbol="DX-Y.NYB"),
     "CN_CSI300": IndexSourceBinding(
         pricing_provider="sina_cn_etf",
         eastmoney_secid="1.000300",

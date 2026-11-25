@@ -1,6 +1,6 @@
 import { migrateWorkspaceState } from './legacyState'
+import { personalDatabase } from '@/modules/personal/browserDatabase'
 
-let pending:Promise<IDBDatabase>|undefined
 let legacyPending:Promise<IDBDatabase|undefined>|undefined
 const windowId = crypto.randomUUID()
 const previousWindowId = (() => {
@@ -10,14 +10,8 @@ const previousWindowId = (() => {
     return previous
   } catch { return null }
 })()
-function database() {
-  return pending ??= new Promise<IDBDatabase>((resolve,reject)=>{
-    const open = indexedDB.open('opentrading-chart-workspace',1)
-    open.onupgradeneeded = () => open.result.createObjectStore('drafts')
-    open.onsuccess = () => resolve(open.result)
-    open.onerror = () => reject(open.error)
-  })
-}
+const database = personalDatabase
+export const draftStorageKey = (key: string, scope?: 'window') => scope ? `${key}:window:${windowId}` : key
 function legacyDatabase() {
   return legacyPending ??= new Promise<IDBDatabase|undefined>((resolve) => {
     const open = indexedDB.open('heimdall-chart-workspace')

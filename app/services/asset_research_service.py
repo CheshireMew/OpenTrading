@@ -9,6 +9,7 @@ from app.application.persistence_ports import ResearchWorkbenchReadPort, TradeSi
 from app.contracts.research import AssetResearchResponse
 from app.domain.market.constants import timeframe_to_milliseconds
 from app.infra.executor import run_database, run_tool
+from app.services.market.binance_market_observations import BinanceMarketObservations
 from app.services.market.symbol_catalog import resolve_market_asset
 from config import settings
 
@@ -45,8 +46,9 @@ class AssetResearchService:
         chain_id: str | None = None,
         platform: str | None = None,
     ) -> AssetResearchResponse:
+        resolved = resolve_market_asset(symbol) if asset_class != "web3" else None
         workbench = ({"items": [], "notes": [], "alerts": [], "events": []} if settings.PUBLIC_SITE else
-                     await run_database(lambda: self._research.get_workbench(event_limit=500, note_limit=1_000)))
+                     await run_database(lambda: self._research.get_asset_records(resolved["symbol"] if resolved else symbol)))
         web3_item = next(
             (
                 item
@@ -89,12 +91,12 @@ class AssetResearchService:
         )
         signal_result, market_result = await asyncio.gather(signals_task, market_task)
         signal_rows, _ = signal_result
-        items = [item for item in workbench["items"] if item["symbol"] == normalized]
+        items = [item for item in workbench["items"] if item["symbol"].casefold() == normalized.casefold()]
         item_ids = {item["id"] for item in items}
-        notes = [item for item in workbench["notes"] if item["symbol"] == normalized]
-        alerts = [item for item in workbench["alerts"] if item["symbol"] == normalized]
+        notes = [item for item in workbench["notes"] if item["symbol"].casefold() == normalized.casefold()]
+        alerts = [item for item in workbench["alerts"] if item["symbol"].casefold() == normalized.casefold()]
         events = [
-            item for item in workbench["events"] if item.get("symbol") == normalized or item.get("entityId") in item_ids
+            item for item in workbench["events"] if str(item.get("symbol") or "").casefold() == normalized.casefold() or item.get("entityId") in item_ids
         ]
         return AssetResearchResponse(
             symbol=normalized,
@@ -107,6 +109,7 @@ class AssetResearchService:
             marketContext=market_result["marketContext"],
             watchItems=items,
             notes=notes,
+            notesTotal=workbench.get("notesTotal", len(notes)),
             alerts=alerts,
             events=events,
             signals=signal_rows,
@@ -163,7 +166,7 @@ class AssetResearchService:
                 }
         benchmark = "ETH/USDT" if symbol == "BTC/USDT" else "BTC/USDT"
         realtime_result, context_result, page_result, compare_result = await asyncio.gather(
-            self._market_query.get_realtime(symbol=symbol, timeframe=timeframe, limit=500),
+            self._market_query.get_realtime(symbol=symbol, timeframe=timeframe, limit=500, use_ai=False),
             self._binance.snapshot_service.get_market_page_snapshot_data(),
             self._binance.page.get_page(min_rise_pct=0, limit=100, quote_asset="USDT"),
             run_tool(lambda: self._pair_compare.compare_pairs(symbol, benchmark, 90, timeframe)),
@@ -176,40 +179,14 @@ class AssetResearchService:
             current_price = realtime_result.current_price
             indicators = realtime_result.indicators
             history = realtime_result.kline_data
-        context: dict[str, Any] = {}
         if isinstance(context_result, Exception):
             issues.append(f"币安市场快照不可用：{context_result}")
-        else:
-            ticker_symbol = symbol.replace("/", "")
-            for key in ("spot_ticker", "usdm_ticker", "usdm_mark"):
-                row = next(
-                    (
-                        item
-                        for item in context_result.get(key, {}).get("items", [])
-                        if str(item.get("symbol") or "").upper() == ticker_symbol
-                    ),
-                    None,
-                )
-                if row:
-                    context[key] = row
         if isinstance(page_result, Exception):
             issues.append(f"币安突破与排行数据不可用：{page_result}")
-        else:
-            page = page_result.model_dump(mode="json")
-            ticker_symbol = symbol.replace("/", "")
-            breakout = next(
-                (row for row in page.get("monitor", {}).get("items", []) if row.get("symbol") == ticker_symbol),
-                None,
-            )
-            if breakout:
-                context["breakoutMonitor"] = breakout
-            board_memberships = []
-            for group_name in ("spot_boards", "contract_boards"):
-                for board_name, board in page.get(group_name, {}).items():
-                    row = next((item for item in board.get("items", []) if item.get("symbol") == ticker_symbol), None)
-                    if row:
-                        board_memberships.append({"group": group_name, "board": board_name, "data": row})
-            context["marketBoardMemberships"] = board_memberships
+        context = BinanceMarketObservations(
+            {} if isinstance(context_result, Exception) else context_result,
+            None if isinstance(page_result, Exception) else page_result,
+        ).context(symbol)
         if isinstance(compare_result, Exception) or compare_result.get("error"):
             detail = compare_result if isinstance(compare_result, Exception) else compare_result.get("error")
             issues.append(f"基准对比不可用：{detail}")

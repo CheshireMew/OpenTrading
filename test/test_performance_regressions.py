@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import threading
 from datetime import date, datetime, timedelta, timezone
 from types import SimpleNamespace
 from unittest.mock import MagicMock
@@ -26,7 +27,182 @@ from app.services.market.binance_market_page_state import BinanceMarketPageState
 from app.services.market.history_query_service import MarketHistoryQueryService
 from app.services.market.history_range_coordinator import HistoryRangeCoordinator
 from app.services.tools.app_service import ToolsAppService
+from app.services.tools.dca_service import DCAService
+from app.services.tools.pair_compare_service import PairCompareService
+from app.services.market.history_range_coordinator import OhlcvRangeResult
+from app.services.chart_workspace_market import ChartWorkspaceMarket
 from config.settings import AppSettings
+
+
+def test_daily_compare_reads_native_closed_candles_without_five_minute_fanout():
+    calls = []
+    def history(symbol, timeframe, start, end):
+        calls.append((symbol, timeframe, start, end))
+        assert timeframe == "1d"
+        rows = [[int((start + timedelta(days=index)).timestamp() * 1000), 100, 102, 99, 101, 10]
+                for index in range((end - start).days)]
+        return OhlcvRangeResult(rows, [])
+    service = PairCompareService(SimpleNamespace(load_ohlcv_range=history), object())
+    result = service.compare_pairs("BTC", "ETH", days=90, timeframe="1d")
+    assert "error" not in result
+    assert len(calls) == 2
+    assert len(result["data_a"]) == len(result["data_b"]) == 90
+    assert result["statistics"]["aligned_points"] == 90
+    assert int(calls[0][3].timestamp() * 1000) % 86_400_000 == 0
+
+
+@pytest.mark.parametrize("timeframe,expected", [("1w", ("2024-01-29", "2024-02-05")),
+                                              ("1M", ("2024-01-01", "2024-02-01"))])
+def test_compare_native_calendar_windows_are_aligned(timeframe, expected):
+    start, end = PairCompareService._closed_history_window(3, timeframe, now=datetime(2024, 2, 7, tzinfo=timezone.utc))
+    assert tuple(datetime.fromtimestamp(value.timestamp(), timezone.utc).date().isoformat() for value in (start, end)) == expected
+
+
+@pytest.mark.parametrize("strategy,warmup", [("standard", 0), ("value_averaging", 0), ("fear_greed", 0),
+                                            ("rsi_dynamic", 16), ("ema_deviation", 201), ("ahr999", 201)])
+def test_dca_fetches_only_its_strategy_warmup_and_requested_days(strategy, warmup):
+    calls = []
+    def history(symbol, timeframe, start, end):
+        calls.append((timeframe, start, end))
+        size = int((end - start).total_seconds() // 3600) + 1
+        rows = [[int((start + timedelta(hours=index)).timestamp() * 1000), 100, 101, 99, 100, 10]
+                for index in range(size)]
+        return OhlcvRangeResult(rows, [])
+    sentiments = SimpleNamespace(get_sentiment_history=lambda *args: {})
+    service = DCAService(SimpleNamespace(load_ohlcv_range=history), sentiments, object())
+    result = service.calculate_dca(symbol="BTC/USDT", start_date_str="2026-01-01", end_date_str="2026-01-03",
+                                   daily_investment=100, timezone="UTC", strategy=strategy)
+    assert "error" not in result
+    assert result["total_days"] == 3
+    assert calls[0][0] == "1h"
+    assert calls[0][1] == datetime(2026, 1, 1, tzinfo=timezone.utc) - timedelta(days=warmup)
+    assert calls[0][2] == datetime(2026, 1, 4, tzinfo=timezone.utc) - timedelta(milliseconds=1)
+
+
+def test_complete_history_tail_does_not_read_or_compose_smaller_periods(installed_database_runtime, monkeypatch):
+    store = KlineStore(database_runtime=installed_database_runtime)
+    start = int(datetime(2024, 1, 1, tzinfo=timezone.utc).timestamp() * 1000)
+    rows = [[start + index * 86_400_000, 100, 101, 99, 100, 10] for index in range(8)]
+    store.save("ETH/USDT", "1d", rows)
+    original = store._exact
+    reads = []
+    def exact(session, symbol, timeframe, *args, **kwargs):
+        reads.append(timeframe)
+        assert timeframe == "1d", "complete daily history caused a smaller-period read"
+        return original(session, symbol, timeframe, *args, **kwargs)
+    monkeypatch.setattr(store, "_exact", exact)
+    assert store.get_before("ETH/USDT", "1d", start + 8 * 86_400_000, 5) == rows[-5:]
+    assert reads == ["1d"]
+    # A real hole is filled from the lower period instead of returning early
+    # merely because the direct-row count happens to satisfy the limit.
+    monkeypatch.setattr(store, "_exact", original)
+    store.save("ETH/USDT", "1d", [[start + 9 * 86_400_000, 100, 101, 99, 100, 10]])
+    hourly = [[start + 8 * 86_400_000 + hour * 3_600_000, 100, 101, 99, 100, 10] for hour in range(24)]
+    store.save("ETH/USDT", "1h", hourly)
+    filled = store.get_before("ETH/USDT", "1d", start + 10 * 86_400_000, 5)
+    assert [row[0] for row in filled] == [start + day * 86_400_000 for day in range(5, 10)]
+
+
+@pytest.mark.asyncio
+async def test_large_cache_codec_runs_outside_the_api_event_loop(monkeypatch):
+    import app.infra.cache_service as module
+    cache = CacheService(AppSettings(_env_file=None))
+    owner = threading.get_ident()
+    original_encode, original_decode = module._serialize, module._deserialize
+    def encode(value):
+        assert threading.get_ident() != owner
+        return original_encode(value)
+    def decode(value):
+        assert threading.get_ident() != owner
+        return original_decode(value)
+    monkeypatch.setattr(module, "_serialize", encode)
+    monkeypatch.setattr(module, "_deserialize", decode)
+    payload = {"history": ["x" * 20_000]}
+    assert await cache.aset("large", payload)
+    tick = asyncio.get_running_loop().create_future()
+    asyncio.get_running_loop().call_soon(tick.set_result, True)
+    result = await cache.aget("large")
+    assert tick.done() and result == payload
+    result["history"].append("local-edit")
+    assert await cache.aget("large") == payload
+
+
+@pytest.mark.asyncio
+async def test_tool_retries_share_running_work_without_cancelling_other_clients():
+    entered, release = threading.Event(), threading.Event()
+    calls = []
+    def calculate(**kwargs):
+        calls.append(kwargs)
+        entered.set()
+        assert release.wait(5)
+        return {"history": [], "ok": True}
+    service = ToolsAppService(SimpleNamespace(calculate_dca=calculate), object())
+    command = SimulateDcaCommand(start_date=date(2026, 1, 1))
+    first = asyncio.create_task(service.simulate_dca(command))
+    second = asyncio.create_task(service.simulate_dca(command))
+    try:
+        assert await asyncio.to_thread(entered.wait, 3)
+        first.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await first
+        release.set()
+        assert await second == {"history": [], "ok": True}
+        assert len(calls) == 1
+        assert await service.simulate_dca(command) == {"history": [], "ok": True}
+        assert len(calls) == 2
+    finally:
+        release.set()
+        await asyncio.gather(first, second, return_exceptions=True)
+
+
+@pytest.mark.asyncio
+async def test_chart_catalog_publishes_each_venue_without_waiting_for_optional_sources(monkeypatch):
+    from app.routers.chart_workspace import chart_symbols
+
+    release_usdm, release_okx = asyncio.Event(), asyncio.Event()
+    row = {"symbol": "BTCUSDT", "baseAsset": "BTC", "quoteAsset": "USDT", "status": "TRADING",
+           "contractType": "PERPETUAL", "filters": [{"filterType": "PRICE_FILTER", "tickSize": "0.01"}]}
+    async def spot(*args, **kwargs):
+        return {"symbols": [row]}
+    async def usdm(*args, **kwargs):
+        await release_usdm.wait()
+        return {"symbols": [row]}
+    async def okx(*args, **kwargs):
+        await release_okx.wait()
+        return {"tickSz": "0.01", "lotSz": "1"}
+    service = ChartWorkspaceMarket(SimpleNamespace(spot=SimpleNamespace(client=SimpleNamespace(get_json=spot)),
+        usdm=SimpleNamespace(client=SimpleNamespace(get_json=usdm))), object())
+    monkeypatch.setattr(service.http, "okx_symbol", okx)
+    try:
+        catalog = await asyncio.wait_for(service.symbols(), 1)
+        assert "binance:spot:BTCUSDT" in {info.id for info in catalog}
+        assert not release_okx.is_set() and not release_usdm.is_set()
+        assert (await asyncio.wait_for(service.resolve("binance:spot:BTCUSDT"), 1)).market == "spot"
+        waiting = asyncio.create_task(chart_symbols(symbol="okx:spot:OKB-USDT", service=SimpleNamespace(market=service)))
+        await asyncio.sleep(0)
+        waiting.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await waiting
+        assert not service._catalog_tasks["okx:spot"].cancelled()
+        release_okx.set()
+        assert (await asyncio.wait_for(service.resolve("okx:spot:OKB-USDT"), 1)).exchange == "okx"
+        catalog = await chart_symbols(symbol="okx:spot:OKB-USDT", service=SimpleNamespace(market=service))
+        assert "okx:spot:OKB-USDT" in {info.id for info in catalog}
+        # An unrelated venue can still be pending after the requested one resolves.
+        assert not release_usdm.is_set()
+        release_usdm.set()
+        assert (await asyncio.wait_for(service.resolve("binance:usdm:BTCUSDT"), 1)).market == "usdm"
+        async def unavailable(*args, **kwargs):
+            raise TimeoutError("controlled stale refresh")
+        monkeypatch.setattr(service.binance.spot.client, "get_json", unavailable)
+        service._catalog_checked["binance:spot"] = (0, True)
+        assert (await asyncio.wait_for(service.resolve("binance:spot:BTCUSDT"), 1)).market == "spot"
+        refresh = service._catalog_tasks["binance:spot"]
+        await refresh
+        assert service._catalog_checked["binance:spot"][1] is False
+        assert (await service.resolve("binance:spot:BTCUSDT")).market == "spot"
+    finally:
+        await service.close()
 
 
 @pytest.mark.asyncio

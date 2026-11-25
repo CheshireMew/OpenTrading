@@ -16,38 +16,44 @@ def prepare_dca_dataset(
     timezone: str,
     start_dt_local: datetime,
     target_hour: int | None,
+    strategy: str | None = None,
 ) -> pd.DataFrame:
     all_df = pd.DataFrame(klines, columns=["timestamp", "open", "high", "low", "close", "volume"])
     all_df["datetime"] = pd.to_datetime(all_df["timestamp"], unit="ms", utc=True).astype("datetime64[ns, UTC]")
     tz_obj = get_timezone(timezone)
     all_df["local_dt"] = all_df["datetime"].dt.tz_convert(tz_obj)
 
-    daily_df = all_df.set_index("datetime").resample("D").agg({"close": "last"}).dropna()
-    daily_df["ema20"] = daily_df["close"].ewm(span=20, adjust=False).mean()
-    delta = daily_df["close"].diff()
-    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-    rs = (gain / loss).fillna(0)
-    daily_df["rsi"] = 100 - (100 / (1 + rs))
-    daily_df["ma200"] = daily_df["close"].rolling(window=settings.DCA_MA_PERIOD).mean()
-    genesis_date = datetime.strptime(settings.BTC_GENESIS_DATE, "%Y-%m-%d")
-    daily_df["age_days"] = (daily_df.index.tz_localize(None) - genesis_date).days
-    daily_df = daily_df[daily_df["age_days"] > 0]
-    log_age = np.log10(daily_df["age_days"])
-    daily_df["exp_price"] = 10 ** (settings.AHR999_COEFF_A * log_age - settings.AHR999_COEFF_B)
-    daily_df["ahr999"] = (daily_df["close"] / daily_df["ma200"]) * (daily_df["close"] / daily_df["exp_price"])
+    fields = {"ema_deviation": "ema20", "rsi_dynamic": "rsi", "ahr999": "ahr999"}
+    requested = list(fields.values()) if strategy is None else [fields[strategy]] if strategy in fields else []
+    if requested or target_hour is None:
+        daily_df = all_df.set_index("datetime").resample("D").agg({"close": "last"}).dropna()
+        if "ema20" in requested:
+            daily_df["ema20"] = daily_df["close"].ewm(span=20, adjust=False).mean()
+        if "rsi" in requested:
+            delta = daily_df["close"].diff()
+            gain = delta.where(delta > 0, 0).rolling(window=14).mean()
+            loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+            daily_df["rsi"] = 100 - (100 / (1 + (gain / loss).fillna(0)))
+        if "ahr999" in requested:
+            daily_df["ma200"] = daily_df["close"].rolling(window=settings.DCA_MA_PERIOD).mean()
+            genesis_date = datetime.strptime(settings.BTC_GENESIS_DATE, "%Y-%m-%d")
+            daily_df["age_days"] = (daily_df.index.tz_localize(None) - genesis_date).days
+            daily_df = daily_df[daily_df["age_days"] > 0]
+            log_age = np.log10(daily_df["age_days"])
+            daily_df["exp_price"] = 10 ** (settings.AHR999_COEFF_A * log_age - settings.AHR999_COEFF_B)
+            daily_df["ahr999"] = (daily_df["close"] / daily_df["ma200"]) * (daily_df["close"] / daily_df["exp_price"])
+        daily_df["date_str"] = daily_df.index.strftime("%Y-%m-%d")
+        if target_hour is None:
+            daily_df["datetime"] = daily_df.index
+            return daily_df[daily_df.index.tz_localize(None) >= start_dt_local].copy()
 
-    daily_df["date_str"] = daily_df.index.strftime("%Y-%m-%d")
-    if target_hour is None:
-        daily_df["datetime"] = daily_df.index
-        return daily_df[daily_df.index.tz_localize(None) >= start_dt_local].copy()
-
-    # A UTC daily close is only available at the following UTC midnight.
-    # Execute hourly schedules at the selected candle OPEN, without using its future close.
-    indicators = daily_df[["ema20", "rsi", "ahr999"]].copy()
-    indicators["available_at"] = (indicators.index + pd.Timedelta(days=1)).astype("datetime64[ns, UTC]")
-    dataset = pd.merge_asof(all_df.sort_values("datetime"), indicators.reset_index(drop=True),
-                            left_on="datetime", right_on="available_at", direction="backward")
+    dataset = all_df
+    if requested:
+        # UTC daily observations become available at the next UTC midnight.
+        indicators = daily_df[requested].copy()
+        indicators["available_at"] = (indicators.index + pd.Timedelta(days=1)).astype("datetime64[ns, UTC]")
+        dataset = pd.merge_asof(all_df.sort_values("datetime"), indicators.reset_index(drop=True),
+                                left_on="datetime", right_on="available_at", direction="backward")
     dataset["close"] = dataset["open"]
     dataset["date_str"] = dataset["datetime"].dt.strftime("%Y-%m-%d")
     filtered = dataset[dataset["local_dt"] >= start_dt_local.replace(tzinfo=tz_obj)].copy()
@@ -115,9 +121,16 @@ def simulate_dca_schedule(
                 current_investment = daily_investment * multiplier
             current_investment = max(0, min(current_investment, daily_investment * settings.DCA_STANDARD_MAX_MULTIPLE))
 
-        effective_investment = current_investment * (1 - fee_rate)
-        coins_change = effective_investment / price
-        total_invested += current_investment
+        if current_investment >= 0:
+            # Buys spend the cash budget, with the fee reducing acquired assets.
+            coins_change = current_investment * (1 - fee_rate) / price
+            cash_change = current_investment
+        else:
+            # Sells remove the gross asset value; only net proceeds reduce cash
+            # invested. Applying the buy formula here would retain extra coins.
+            coins_change = current_investment / price
+            cash_change = current_investment * (1 - fee_rate)
+        total_invested += cash_change
         total_coins += coins_change
         if total_coins < settings.DCA_COIN_PRECISION:
             total_coins = 0.0

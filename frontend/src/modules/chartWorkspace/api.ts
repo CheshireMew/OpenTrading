@@ -5,8 +5,13 @@ import { PUBLIC_SITE } from '@/app/publicSite'
 import { browserPineRuns } from './browserPineRuns'
 export type * from './generatedContracts'
 export const BASE = '/api/v1/chart-workspace'
-export async function request<T>(path:string, init:RequestInit = {}):Promise<T> {
-  const response = await fetch(BASE + path, { ...init, headers:{'Content-Type':'application/json', ...init.headers} })
+export async function request<T>(path:string, init:RequestInit = {}, timeoutMs = 30_000):Promise<T> {
+  const controller = new AbortController()
+  const stop = () => controller.abort(init.signal?.reason)
+  if (init.signal?.aborted) stop(); else init.signal?.addEventListener('abort', stop, { once:true })
+  const timer = setTimeout(() => controller.abort(new Error(`timeout of ${timeoutMs}ms exceeded`)), timeoutMs)
+  try {
+  const response = await fetch(BASE + path, { ...init, signal:controller.signal, headers:{'Content-Type':'application/json', ...init.headers} })
   const body = await response.text()
   let payload: any
   try { payload = body ? JSON.parse(body) : null } catch {
@@ -17,6 +22,10 @@ export async function request<T>(path:string, init:RequestInit = {}):Promise<T> 
   })
   if (payload === null) throw new ApiRequestError('Empty server response', { status: 502 })
   return payload as T
+  } catch (cause) {
+    if (controller.signal.aborted) throw controller.signal.reason ?? cause
+    throw cause
+  } finally { clearTimeout(timer); init.signal?.removeEventListener('abort', stop) }
 }
 export type DocumentKind = 'layouts'|'watchlists'|'scripts'
 export const browserWorkspaceDocuments = createBrowserDocuments({
@@ -32,10 +41,10 @@ async function saveDocument(kind:DocumentKind,id:string,body:WorkspaceWrite) {
 }
 export const chartApi = {
   capabilities: () => request<PineCapabilities>('/capabilities'),
-  symbols: () => request<ChartSymbol[]>('/symbols'),
-  bars: (query:Record<string,string|number>, signal?:AbortSignal) => request<ChartBars>('/bars?' + new URLSearchParams(Object.entries(query).map(([k,v])=>[k,String(v)])),{signal}),
-  replayBars: (query:Record<string,string|number>, signal?:AbortSignal) => request<ChartBars>('/replay/bars?' + new URLSearchParams(Object.entries(query).map(([k,v])=>[k,String(v)])),{signal}),
-  quotes: (symbols:string[]) => request<ChartQuote[]>('/quotes?'+new URLSearchParams({symbols:symbols.join(',')})),
+  symbols: (symbol?: string) => request<ChartSymbol[]>('/symbols' + (symbol ? '?' + new URLSearchParams({ symbol }) : ''), {}, 90_000),
+  bars: (query:Record<string,string|number>, signal?:AbortSignal) => request<ChartBars>('/bars?' + new URLSearchParams(Object.entries(query).map(([k,v])=>[k,String(v)])),{signal},120_000),
+  replayBars: (query:Record<string,string|number>, signal?:AbortSignal) => request<ChartBars>('/replay/bars?' + new URLSearchParams(Object.entries(query).map(([k,v])=>[k,String(v)])),{signal},120_000),
+  quotes: (symbols:string[]) => request<ChartQuote[]>('/quotes?'+new URLSearchParams({symbols:symbols.join(',')}),{},120_000),
   documents: async (kind:DocumentKind) => {await waitForWorkspaceWrites();return browserWorkspaceDocuments.list(kind)},
   document: (kind:DocumentKind,id:string,version?:number) => browserWorkspaceDocuments.get(kind,id,version),
   save: saveDocument,

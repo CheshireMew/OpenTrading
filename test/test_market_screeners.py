@@ -14,6 +14,30 @@ from app.infra.persistence.market_screener_repository import MarketScreenerRepos
 from app.services.market_screener_service import MarketScreenerService
 
 
+@pytest.mark.asyncio
+async def test_alerts_screeners_and_http_share_units_and_market_identity():
+    from unittest.mock import AsyncMock
+    from app.routers.market.binance_page import get_market_observations
+    from app.services.market.binance_market_observations import BinanceMarketObservationService
+    from app.services.research_alert_runtime import ResearchAlertRuntime
+
+    snapshot = {"spot_ticker": {"items": [{"symbol": "BTCUSDT", "last_price": 90}]},
+                "usdm_ticker": {"items": [{"symbol": "BTCUSDT", "last_price": 110}]},
+                "usdm_mark": {"items": [{"symbol": "BTCUSDT", "last_funding_rate": 0.0001}]}}
+    page = SimpleNamespace(monitor=SimpleNamespace(items=[]), contract_boards={})
+    snapshots = SimpleNamespace(get_market_page_snapshot_data=AsyncMock(return_value=snapshot))
+    pages = SimpleNamespace(get_page=AsyncMock(return_value=page))
+    service = SimpleNamespace(observations=BinanceMarketObservationService(snapshots, pages))
+    http = await get_market_observations(symbols="BTCUSDT,binance:usdm:BTCUSDT", extended=True, service=service)
+    alert = ResearchAlertRuntime(research_repository=object(), market_query_service=object(), binance_market_service=object())
+    value = await alert._resolve_value({"symbol": "BTC/USDT", "metric": "funding_rate_pct"}, snapshot=snapshot, market_page=page)
+    rows = MarketScreenerService._filter(snapshot, page, {"market": "usdm"})
+    assert value == http["BTCUSDT"]["funding_rate_pct"] == rows[0]["fundingRatePct"] == pytest.approx(0.01)
+    assert http["BTCUSDT"]["price"] == 90
+    assert http["BINANCE:USDM:BTCUSDT"]["price"] == 110
+    assert await alert._resolve_value({"symbol": "BTC/USDT:PERPETUAL", "metric": "price"}, snapshot=snapshot, market_page=page) == 110
+
+
 def _command(name="Momentum"):
     return SavedMarketScreenerCreateCommand.model_validate(
         {
@@ -39,7 +63,7 @@ def test_delete_screener_removes_runs_and_timeline_but_keeps_other_screeners(ins
     repository=MarketScreenerRepository(installed_database_runtime)
     created=repository.create_screener({"name":"Delete", "description":"", "filters":{}})
     other=repository.create_screener({"name":"Keep", "description":"", "filters":{}})
-    run=repository.save_run(created["id"],{"filters_snapshot":{},"result_items":[],"result_count":0,"snapshot_as_of":datetime(2026,1,1),"evaluated_at":datetime(2026,1,1)})
+    run=repository.save_run(created["id"],{"filters_snapshot":{},"result_items":[],"result_count":0,"snapshot_as_of":datetime(2026,1,1),"evaluated_at":datetime(2026,1,1)}, expected_version=created["version"])
     with pytest.raises(ResearchRevisionConflictError):
         repository.delete_screener(created["id"],2)
     repository.delete_screener(created["id"],1)
@@ -72,6 +96,7 @@ def test_saved_screener_is_versioned_archivable_and_replays_as_of(installed_data
             "snapshot_as_of": first_time,
             "evaluated_at": first_time,
         },
+        expected_version=updated.version,
     )
     repository.save_run(
         created.id,
@@ -82,6 +107,7 @@ def test_saved_screener_is_versioned_archivable_and_replays_as_of(installed_data
             "snapshot_as_of": second_time,
             "evaluated_at": second_time,
         },
+        expected_version=updated.version,
     )
 
     replay = repository.get_run_as_of(created.id, first_time + timedelta(hours=1))

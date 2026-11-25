@@ -27,10 +27,17 @@ class ResearchRepository:
     def get_workbench(self, *, event_limit: int, note_limit: int) -> dict[str, Any]:
         return self.workbench.get_workbench(event_limit=event_limit, note_limit=note_limit)
 
+    def get_asset_records(self, symbol: str) -> dict[str, Any]:
+        return self.workbench.get_asset_records(symbol)
+
+    def list_notes(self, symbol: str, *, offset: int, limit: int) -> tuple[list[dict[str, Any]], int]:
+        return self.workbench.list_notes(symbol, offset=offset, limit=limit)
+
     def list_events(
-        self, *, kind: str | None, unacknowledged_only: bool, since: datetime | None, limit: int
+        self, *, kind: str | None, unacknowledged_only: bool, since: datetime | None, limit: int,
+        before: tuple[datetime, datetime, str] | None = None,
     ) -> tuple[list[dict[str, Any]], int]:
-        return self.workbench.list_events(kind=kind, unacknowledged_only=unacknowledged_only, since=since, limit=limit)
+        return self.workbench.list_events(kind=kind, unacknowledged_only=unacknowledged_only, since=since, limit=limit, before=before)
 
     def acknowledge_event(self, event_id: str, acknowledged: bool) -> dict[str, Any]:
         return self.workbench.acknowledge_event(event_id, acknowledged)
@@ -75,8 +82,8 @@ class ResearchRepository:
         return self.alerts.list_enabled_alerts()
 
     def record_alert_evaluation(
-        self, alert_id: str, *, value: float, evaluated_at: datetime, triggered: bool
+        self, alert_id: str, *, value: float, evaluated_at: datetime, expected_version: int
     ) -> dict[str, Any] | None:
         return self.alerts.record_alert_evaluation(
-            alert_id, value=value, evaluated_at=evaluated_at, triggered=triggered
+            alert_id, value=value, evaluated_at=evaluated_at, expected_version=expected_version
         )

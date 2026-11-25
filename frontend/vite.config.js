@@ -4,6 +4,7 @@ import path from 'path'
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import './scripts/patch-vela.mjs'
+import { chartWorkspaceNotices } from './scripts/chart-workspace-notices.mjs'
 
 const velaPatchRevision = createHash('sha256')
   .update(readFileSync(path.resolve(__dirname, 'scripts/patch-vela.mjs')))
@@ -18,7 +19,7 @@ const DEV_API_TARGET = `http://${DEV_API_HOST}:${DEV_API_PORT}`
 // https://vite.dev/config/
 export default defineConfig({
   define: { __INTLIFY_JIT_COMPILATION__: true },
-  plugins: [vue()],
+  plugins: [vue(), chartWorkspaceNotices()],
   // Re-optimize the chart runtime when a local Vela correction changes.
   optimizeDeps: {
     esbuildOptions: {

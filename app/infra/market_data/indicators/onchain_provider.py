@@ -25,10 +25,10 @@ class OnchainProvider(BaseIndicatorProvider):
                         diff = data.get('currentDifficulty')
 
                         # Get latest timestamp from hashrates array
-                        dt = datetime.now()
+                        dt = datetime.now(timezone.utc)
                         if data.get('hashrates') and len(data['hashrates']) > 0:
                             last_point = data['hashrates'][-1]
-                            dt = datetime.fromtimestamp(last_point.get('timestamp', datetime.now().timestamp()), tz=timezone.utc)
+                            dt = datetime.fromtimestamp(last_point.get('timestamp', datetime.now(timezone.utc).timestamp()), tz=timezone.utc)
 
                         if hr:
                             results.append({
@@ -62,7 +62,7 @@ class OnchainProvider(BaseIndicatorProvider):
                         if val:
                             results.append({
                                 "indicator_id": "STABLECOIN_CAP",
-                                "timestamp": datetime.now(),
+                                "timestamp": datetime.fromtimestamp(int(last_point['date']), timezone.utc) if last_point.get('date') else datetime.now(timezone.utc),
                                 "value": val
                             })
 
@@ -77,7 +77,7 @@ class OnchainProvider(BaseIndicatorProvider):
                             if val:
                                 results.append({
                                     "indicator_id": "USDT_CAP",
-                                    "timestamp": datetime.now(),
+                                    "timestamp": datetime.now(timezone.utc),
                                     "value": val
                                 })
                         elif symbol == 'USDC':
@@ -85,7 +85,7 @@ class OnchainProvider(BaseIndicatorProvider):
                             if val:
                                 results.append({
                                     "indicator_id": "USDC_CAP",
-                                    "timestamp": datetime.now(),
+                                    "timestamp": datetime.now(timezone.utc),
                                     "value": val
                                 })
         except Exception as e:

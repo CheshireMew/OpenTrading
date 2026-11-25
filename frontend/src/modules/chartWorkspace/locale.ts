@@ -25,7 +25,8 @@ export function formatDate(value: number, timeOnly = false, timeZone?: string): 
 }
 
 export const workspaceMarketLabel = (id: string) => id.includes(':usdm:') ? cw('binancePerpetual')
-  : id.startsWith('index:') ? cw('index') : id.startsWith('okx:') ? cw('okxSpot') : cw('binanceSpot')
+  : id.startsWith('index:') ? cw('index') : id.startsWith('fx:') ? cw('fx')
+  : id.startsWith('commodity:') ? cw('commodity') : id.startsWith('okx:') ? cw('okxSpot') : cw('binanceSpot')
 
 export const exchangeLabel = (exchange: string) => exchange.toLowerCase() === 'binance'
   ? cw('binance') : exchange.toUpperCase()

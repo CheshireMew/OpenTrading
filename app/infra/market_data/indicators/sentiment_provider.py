@@ -53,6 +53,7 @@ class SentimentProvider(BaseIndicatorProvider):
                 if not data.empty:
                     last_row = data.iloc[-1]
                     dt = last_row.name.to_pydatetime()
+                    dt = dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
                     val = float(last_row['buy bitcoin'])
                     return {
                         "indicator_id": "GOOGLE_TRENDS_BTC",

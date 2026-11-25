@@ -23,14 +23,14 @@ function actualFunction(name, state, file='../src/views/ChartWorkspace.vue') {
 }
 const market={toBaseSymbol:value=>String(value).split('/')[0].toUpperCase(),isIndexSymbol:()=>false,readCashSymbolPrices:()=>({USD:1,USDT:1})}
 
-function asyncPage(kind, api) {
+function asyncPage(kind, api, isIndexSymbol = () => false) {
   let unmount
   const page = load(`../src/modules/tools/use${kind}Page.ts`, {
     vue: { ...vue, onMounted() {}, onBeforeUnmount: fn => { unmount = fn } },
     '@/theme/palette.mjs': { DARK_PALETTE: {} }, '@/composables/useTheme': { useTheme: () => ({ theme: vue.ref('light') }) },
     'vue-i18n': { useI18n: () => ({ t: key => key, locale: vue.ref('zh-CN') }) }, 'vue-router': { useRoute: () => ({ query: {} }) },
     '@/composables/pageSnapshot': { PAGE_SNAPSHOT_KEYS: {}, createPersistentPageSnapshot: () => ({ initial: {} }) },
-    '@/modules/market': { ensureSymbolCatalogLoaded: async () => {}, isIndexSymbol: () => false },
+    '@/modules/market': { ensureSymbolCatalogLoaded: async () => {}, isIndexSymbol },
     '@/composables/useRequestError': { useRequestError: () => ({ error: vue.ref(''), setError() {}, clearError() {} }) },
     '@/composables/useUserPreferences': { useUserPreferences: () => ({ timezone: vue.ref('UTC'), setTimezone() {} }) },
     '@/composables/useMoney': { useMoney: () => ({ displayCurrency: vue.ref('USD') }) },
@@ -47,15 +47,32 @@ function asyncPage(kind, api) {
 
 for (const kind of ['Compare', 'Dca']) for (const action of ['change', 'unmount']) test(`${kind} ignores responses after ${action}`, async () => {
   const pending = deferred()
-  const { page, unmount } = asyncPage(kind, { comparePairs: () => pending.promise, runSimulation: () => pending.promise })
+  let requestSignal
+  const request = (_body, signal) => { requestSignal = signal; return pending.promise }
+  const { page, unmount } = asyncPage(kind, { comparePairs: request, runSimulation: request })
   const running = kind === 'Compare' ? page.fetchComparisonData() : page.runSimulation()
   await Promise.resolve(); await Promise.resolve()
   if (action === 'unmount') unmount()
   else if (kind === 'Compare') page.config.symbolA = 'SOL'
   else page.config.amount = 200
+  assert.equal(requestSignal.aborted, true)
   pending.resolve({ data_a: [{ close: 1 }], data_b: [{ close: 2 }], ratio_ohlc: [{ close: 0.5 }], history: [{ price: 1 }] })
   await running
   assert.equal(kind === 'Compare' ? page.hasData.value : Boolean(page.result.value), false)
   assert.equal(page.loading.value, false)
+  unmount()
+})
+
+test('index comparison normalizes its period before starting a cancellable request', async () => {
+  let requested
+  const { page, unmount } = asyncPage('Compare', { comparePairs: async (body, signal) => {
+    requested = { body, signal }
+    return { data_a: [{ close: 1 }], data_b: [{ close: 2 }], ratio_ohlc: [{ close: .5 }] }
+  } }, symbol => symbol === 'US_SP500')
+  page.config.symbolA = 'US_SP500'; page.config.timeframe = '1h'
+  await page.fetchComparisonData()
+  assert.equal(requested.body.timeframe, '1d')
+  assert.equal(requested.signal.aborted, false)
+  assert.equal(page.hasData.value, true)
   unmount()
 })

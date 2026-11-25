@@ -66,8 +66,10 @@ export function useComparePage() {
   const statistics = ref<Awaited<ReturnType<typeof toolsApi.comparePairs>>['statistics'] | null>(null)
   const hasData = computed(() => dataA.value.length > 0 && dataB.value.length > 0 && dataRatio.value.length > 0)
   let inputVersion = 0, requestVersion = 0
+  let requestController: AbortController | undefined
   watch(config, () => {
     inputVersion++
+    if (requestController) { requestController.abort(); requestController = undefined; loading.value = false }
     dataA.value = []; dataB.value = []; dataRatio.value = []; statistics.value = null
     resultSymbols.symbolA = ''; resultSymbols.symbolB = ''
   }, { deep: true, flush: 'sync' })
@@ -120,6 +122,7 @@ export function useComparePage() {
       return
     }
     loading.value = true
+    requestController?.abort(); requestController = undefined
     const request = ++requestVersion
     let inputs = inputVersion
     const current = () => !disposed && request === requestVersion && inputs === inputVersion
@@ -141,7 +144,8 @@ export function useComparePage() {
         days: config.days,
         timeframe: config.timeframe,
       }
-      const response = await toolsApi.comparePairs(payload)
+      const controller = requestController = new AbortController()
+      const response = await toolsApi.comparePairs(payload, controller.signal)
       if (!current()) return
       dataA.value = response.data_a || []
       dataB.value = response.data_b || []
@@ -156,7 +160,7 @@ export function useComparePage() {
       console.error('Comparison fetch failed', error)
       if (current()) setError(error, 'compare.loadFailed')
     } finally {
-      if (request === requestVersion) loading.value = false
+      if (request === requestVersion) { loading.value = false; requestController = undefined }
     }
   }
 
@@ -218,6 +222,7 @@ export function useComparePage() {
 
   onBeforeUnmount(() => {
     disposed = true
+    requestController?.abort()
     snapshotStop?.()
     snapshotStop = null
     syncUnsubscribers.value.forEach((fn) => fn())

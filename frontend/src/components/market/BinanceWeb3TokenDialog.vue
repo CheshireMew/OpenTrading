@@ -63,7 +63,7 @@
         </div>
       </header>
 
-      <div v-if="detailError" class="border-b border-rose-100 bg-rose-50 px-6 py-3 text-sm text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">{{ detailError }}</div>
+      <div v-if="detailError" role="alert" class="flex items-center justify-between gap-3 border-b border-rose-100 bg-rose-50 px-6 py-3 text-sm text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"><span>{{ detailError }}</span><button type="button" class="app-button-secondary" :disabled="detailLoading" @click="$emit('retry')">{{ t('common.retry') }}</button></div>
 
       <div class="web3-chart-body grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,1fr)] gap-0 overflow-y-auto lg:grid-cols-[360px_minmax(0,1fr)] lg:overflow-hidden">
         <aside class="min-w-0 border-b border-slate-200 p-5 dark:border-slate-700 lg:overflow-y-auto lg:border-b-0 lg:border-r">
@@ -229,6 +229,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: []
+  retry: []
   'update:interval': [interval: string]
 }>()
 

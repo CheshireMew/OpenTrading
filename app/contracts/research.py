@@ -2,13 +2,16 @@ from __future__ import annotations
 
 from datetime import datetime
 import math
-from typing import Any, Literal
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator, with_config
+from typing_extensions import TypedDict
 
 from app.contracts.json_types import JsonObject
 from app.contracts.timestamps import UtcResponseModel
 from app.contracts.dto.market_history import IndicatorSummaryResponse, OhlcvPointResponse
+from app.contracts.dto.binance.common import BinanceTickerStatsItemResponse
+from app.contracts.dto.binance.usdm import BinanceMarkPriceItemResponse
 
 
 ResearchAssetClass = Literal["crypto", "index", "cash", "web3"]
@@ -127,6 +130,13 @@ class ResearchNoteResponse(UtcResponseModel):
     updatedAt: datetime
 
 
+class ResearchNotePageResponse(UtcResponseModel):
+    items: list[ResearchNoteResponse]
+    total: int = Field(ge=0)
+    offset: int = Field(ge=0)
+    limit: int = Field(ge=1)
+
+
 class ResearchAlertCreateCommand(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -213,6 +223,7 @@ class ResearchEventAcknowledgeCommand(BaseModel):
 class ResearchEventPageResponse(UtcResponseModel):
     items: list[ResearchEventResponse] = Field(default_factory=list)
     total: int = Field(ge=0)
+    nextCursor: str | None = None
 
 
 class ResearchWorkbenchResponse(UtcResponseModel):
@@ -330,6 +341,14 @@ class TradeSignalEvaluationRunResponse(UtcResponseModel):
     unavailableCount: int = Field(ge=0)
 
 
+@with_config(ConfigDict(extra="allow"))
+class AssetMarketContext(TypedDict, total=False):
+    # Additional index, Web3 and benchmark context retains its existing shape.
+    spot_ticker: BinanceTickerStatsItemResponse
+    usdm_ticker: BinanceTickerStatsItemResponse
+    usdm_mark: BinanceMarkPriceItemResponse
+
+
 class AssetResearchResponse(UtcResponseModel):
     symbol: str
     assetClass: ResearchAssetClass
@@ -338,9 +357,10 @@ class AssetResearchResponse(UtcResponseModel):
     updatedAt: datetime
     indicators: IndicatorSummaryResponse | None = None
     history: list[OhlcvPointResponse] = Field(default_factory=list)
-    marketContext: dict[str, Any] = Field(default_factory=dict)
+    marketContext: AssetMarketContext = Field(default_factory=dict)
     watchItems: list[ResearchWatchItemResponse] = Field(default_factory=list)
     notes: list[ResearchNoteResponse] = Field(default_factory=list)
+    notesTotal: int = Field(default=0, ge=0)
     alerts: list[ResearchAlertResponse] = Field(default_factory=list)
     events: list[ResearchEventResponse] = Field(default_factory=list)
     signals: list[TradeSignalResponse] = Field(default_factory=list)

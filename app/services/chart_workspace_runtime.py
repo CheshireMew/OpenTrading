@@ -4,11 +4,12 @@ from app.infra.research_files import lock
 from app.services.chart_workspace_seed import seed_workspace
 from app.infra.persistence.chart_workspace_repository import ChartWorkspaceStore
 from app.services.chart_workspace_market import ChartWorkspaceMarket
+from app.services.chart_daily_history import ChartDailyHistory
 from app.services.chart_workspace_runs import ChartPineRuns
 
 
 class ChartWorkspaceRuntime:
-    def __init__(self, binance, indexes, *, root=None, kline_store=None):
+    def __init__(self, binance, indexes, *, root=None, kline_store=None, market_data=None):
         self.store = ChartWorkspaceStore(root)
         self._ownership = lock(self.store.root / "runtime-owner")
         try:
@@ -18,7 +19,8 @@ class ChartWorkspaceRuntime:
         try:
             seed_workspace(self.store)
             self.runs = ChartPineRuns(self.store, None)
-            self.market = ChartWorkspaceMarket(binance, indexes, kline_store=kline_store)
+            self.market = ChartWorkspaceMarket(binance, indexes, kline_store=kline_store,
+                daily_history=ChartDailyHistory(market_data) if market_data is not None else None)
             self.runs.market = self.market
             self.closed = False
         except BaseException:

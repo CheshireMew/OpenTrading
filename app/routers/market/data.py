@@ -32,8 +32,7 @@ async def _run(request: Request, action, *, executor=run_database):
         raise HTTPException(status_code=503, detail="Market data runtime unavailable")
 
     def invoke():
-        with runtime.bind():
-            return action(runtime.views)
+        return action(runtime.views)
 
     try:
         return await executor(invoke)

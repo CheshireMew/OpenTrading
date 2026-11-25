@@ -1,13 +1,14 @@
 """UTC timestamps at the API and persisted JSON boundaries."""
-from datetime import date, datetime, timezone
+from datetime import date, datetime
 import json
 from typing import Any
 
 from pydantic import BaseModel, field_validator
+from utils.time import as_utc
 
 
 def utc_datetime(value: datetime) -> datetime:
-    return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value.astimezone(timezone.utc)
+    return as_utc(value)
 
 
 class UtcResponseModel(BaseModel):

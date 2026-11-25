@@ -11,7 +11,7 @@ from app.domain.market.history.catalog_record import CatalogRecord
 from app.domain.market.history.models import Instrument
 
 
-CATALOG_SEED_VERSION = 2
+CATALOG_SEED_VERSION = 3
 
 
 def seed_records() -> Iterable[CatalogRecord]:
@@ -91,6 +91,11 @@ def seed_records() -> Iterable[CatalogRecord]:
             Instrument("FRED:DGS10", "10-Year Treasury Constant Maturity Rate", "macro", "US", "FRED", "percent", "UTC"),
             {("DGS10", "common_code"), ("美国十年期国债收益率", "chinese_name")},
             {"fred": "DGS10"},
+        ),
+        (
+            Instrument("DXY.INDEX", "US Dollar Index (DXY)", "index", "US", "ICEUS", "USD", "America/New_York"),
+            {("DXY", "common_code"), ("USDX", "common_code"), ("美元指数", "chinese_name"), ("美指", "short_name"), ("DX-Y.NYB", "provider_symbol")},
+            {"yfinance": "DX-Y.NYB"},
         ),
         (
             Instrument("BNB/USDT@BINANCE", "BNB / Tether", "crypto", "crypto", "BINANCE", "USDT", "UTC"),

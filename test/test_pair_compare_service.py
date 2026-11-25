@@ -1,9 +1,38 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock
+
+import pytest
 
 from app.contracts.dto.market_catalog import MarketIndexHistoryResponse
 from app.contracts.market_history import build_ohlcv_points
 from app.services.tools.pair_compare_service import PairCompareService
+from app.services.market.history_range_coordinator import OhlcvRangeResult
+
+
+@pytest.mark.parametrize(
+    ("timeframe", "dates"),
+    [("1w", ["2024-01-29"]), ("1M", ["2024-01-01", "2024-02-01"])],
+    ids=["monday-week", "calendar-month"],
+)
+def test_compare_calendar_buckets_cross_february(timeframe, dates):
+    start = datetime(2024, 1, 31, tzinfo=timezone.utc)
+    rows = [
+        [int((start + timedelta(minutes=5 * i)).timestamp() * 1000), 100, 102, 99, 101, 1]
+        for i in range(3 * 24 * 12)
+    ]
+    market = MagicMock()
+    service = PairCompareService(market, MagicMock())
+    native_rows = service._aggregate_klines(rows, timeframe)
+    market.load_ohlcv_range.return_value = OhlcvRangeResult(native_rows, [])
+
+    result = service.compare_pairs("BTC", "ETH", days=3, timeframe=timeframe)
+
+    assert "error" not in result
+    actual = [datetime.fromtimestamp(row["time"], timezone.utc).strftime("%Y-%m-%d") for row in result["data_a"]]
+    assert actual == dates
+    assert [row["time"] for row in result["data_b"]] == [row["time"] for row in result["data_a"]]
+    assert result["statistics"]["aligned_points"] == len(dates)
+    assert [call.args[1] for call in market.load_ohlcv_range.call_args_list] == [timeframe, timeframe]
 
 
 def test_compare_index_symbols_uses_index_history():
@@ -49,12 +78,26 @@ def test_closed_history_window_excludes_the_open_base_candle():
     start, end = PairCompareService._closed_history_window(
         7,
         "5m",
-        now=datetime(2026, 8, 24, 10, 7, 42),
+        now=datetime(2026, 8, 24, 10, 7, 42, tzinfo=timezone.utc),
     )
 
-    assert end == datetime(2026, 8, 24, 10, 5)
-    assert start == datetime(2026, 8, 17, 10, 5)
+    assert end == datetime(2026, 8, 24, 10, 5, tzinfo=timezone.utc)
+    assert start == datetime(2026, 8, 17, 10, 5, tzinfo=timezone.utc)
     assert int(end.timestamp() * 1000) % (5 * 60 * 1000) == 0
+
+
+def test_native_daily_index_history_excludes_the_current_utc_day():
+    indexes = MagicMock()
+    indexes.get_history.return_value = MarketIndexHistoryResponse(
+        symbol="US_SP500", name="S&P 500", market="US", currency="USD", native_currency="USD",
+        timeframe="1d", source="test", price_basis="index", count=0, data=[],
+        coverage={"complete": True, "calendar": "XNYS", "start_date": "2026-11-23", "end_date": "2026-11-25"},
+    )
+    service = PairCompareService(MagicMock(), indexes)
+    window = service._closed_history_window(3, "1d", now=datetime(2026, 11, 26, 10, tzinfo=timezone(timedelta(hours=8))))
+    service._fetch_history({"asset_class": "index", "symbol": "US_SP500"}, *window, "1d")
+    assert indexes.get_history.call_args.kwargs["start_date"] == "2026-11-23"
+    assert indexes.get_history.call_args.kwargs["end_date"] == "2026-11-25"
 
 
 def test_compare_hides_internal_history_errors():

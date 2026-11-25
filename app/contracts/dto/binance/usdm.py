@@ -8,7 +8,7 @@ class BinanceMarkPriceItemResponse(BaseModel):
     mark_price: float | None = None
     index_price: float | None = None
     estimated_settle_price: float | None = None
-    last_funding_rate: float | None = None
+    last_funding_rate: float | None = Field(default=None, description="Funding-rate fraction (0.0001 means 0.01%)")
     next_funding_time: int | None = None
     interest_rate: float | None = None
     time: int | None = None

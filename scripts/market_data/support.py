@@ -23,12 +23,17 @@ def parse_datetime(value: str) -> datetime:
     return parsed.astimezone(timezone.utc)
 
 
-def history_service(root: Path | None) -> tuple[PriceService, Path, MarketDataConfig]:
-    from app.services.market.history.prices import PriceService
+def market_runtime(ctx: typer.Context, root: Path | None = None):
+    from app.services.market_data_runtime import MarketDataRuntime
+    runtime = ctx.obj
+    if root is None or runtime.config.resolve_data_dir(root) == runtime.database.root:
+        return runtime
+    return MarketDataRuntime(runtime.database_runtime, runtime.settings, root=root)
 
-    settings = MarketDataConfig.load()
-    base = settings.resolve_data_dir(root)
-    return PriceService(base, settings), base, settings
+
+def history_service(ctx: typer.Context, root: Path | None) -> tuple[PriceService, Path, MarketDataConfig]:
+    runtime = market_runtime(ctx, root)
+    return runtime.prices, runtime.database.root, runtime.config
 
 
 def date_option(value: str | None, name: str) -> date | None:

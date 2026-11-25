@@ -8,10 +8,10 @@ export const toolsApi = {
   getContract(): Promise<ToolsPageContractResponse> {
     return apiGet('get_tools_contract')
   },
-  runSimulation(config: SimulateDcaCommand): Promise<DCAResponse> {
-    return apiPost('dca_simulate', config)
+  runSimulation(config: SimulateDcaCommand, signal?: AbortSignal): Promise<DCAResponse> {
+    return apiPost('dca_simulate', config, { client: 'longTask', signal })
   },
-  comparePairs(params: ComparePairsCommand): Promise<PairCompareToolResponse> {
-    return apiPost('compare_pairs', params)
+  comparePairs(params: ComparePairsCommand, signal?: AbortSignal): Promise<PairCompareToolResponse> {
+    return apiPost('compare_pairs', params, { client: 'longTask', signal })
   },
 }

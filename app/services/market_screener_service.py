@@ -16,6 +16,7 @@ from app.contracts.research import (
     SavedMarketScreenerUpdateCommand,
 )
 from app.infra.executor import run_database
+from app.services.market.binance_market_observations import BinanceMarketObservations
 
 
 class MarketScreenerService:
@@ -65,15 +66,16 @@ class MarketScreenerService:
             )
         screener = await run_database(lambda: self._repository.get_screener(screener_id))
         result = await self.preview(screener["filters"])
-        row = await run_database(lambda: self._repository.save_run(screener_id, result))
+        row = await run_database(lambda: self._repository.save_run(screener_id, result, expected_version=screener["version"]))
         return MarketScreenerRunResponse.model_validate(row)
 
     async def preview(self, filters: dict[str, Any]) -> dict[str, Any]:
         """Evaluate filters without saving a visitor's configuration or results."""
-        snapshot = await self._binance.snapshot_service.get_market_page_snapshot_data()
-        page = await self._binance.page.get_page(
+        page = await self._binance.page.get_ready_page(
             min_rise_pct=0, limit=100, quote_asset=filters.get("quoteAsset", "USDT")
         )
+        required = {"spot_ticker", "usdm_ticker"} if filters.get("market", "all") == "all" else {filters["market"] + "_ticker"}
+        snapshot = await self._binance.snapshot_service.get_ready_snapshot(required)
         exchange_items = self._filter(snapshot, page, {**filters, "limit": 500})
         exchange_items = await self._apply_rsi_filters(exchange_items, filters)
         web3_items = await self._load_web3_items(filters)
@@ -120,11 +122,14 @@ class MarketScreenerService:
                 symbol = str(item["symbol"])
                 quote = str(filters.get("quoteAsset") or "USDT").upper()
                 normalized = f"{symbol[:-len(quote)]}/{quote}" if symbol.endswith(quote) else symbol
+                if item.get("market") == "usdm":
+                    normalized += ":PERPETUAL"
                 try:
-                    response = await self._market_query.get_realtime(symbol=normalized, timeframe="1h", limit=200)
+                    response = await self._market_query.get_realtime(symbol=normalized, timeframe="1h", limit=200, use_ai=False)
                     rsi = self._number(response.indicators.rsi if response.indicators else None)
-                except Exception:
-                    return None
+                except Exception as exc:
+                    from app.exceptions import ServiceUnavailableError
+                    raise ServiceUnavailableError(f"{normalized} 的 RSI 暂时无法计算，请稍后重试") from exc
                 if minimum is not None and (rsi is None or rsi < minimum):
                     return None
                 if maximum is not None and (rsi is None or rsi > maximum):
@@ -206,35 +211,15 @@ class MarketScreenerService:
     @classmethod
     def _filter(cls, snapshot: dict[str, Any], page, filters: dict[str, Any]) -> list[dict[str, Any]]:
         market = filters.get("market", "all")
-        rows = []
-        if market in {"spot", "all"}:
-            rows.extend(("spot", item) for item in snapshot.get("spot_ticker", {}).get("items", []))
-        if market in {"usdm", "all"}:
-            rows.extend(("usdm", item) for item in snapshot.get("usdm_ticker", {}).get("items", []))
-        marks = {str(item.get("symbol") or "").upper(): item for item in snapshot.get("usdm_mark", {}).get("items", [])}
-        scores = {(item.market, item.symbol): item for item in page.monitor.items}
-        oi = {}
-        for board in page.contract_boards.values():
-            for item in board.items:
-                if item.symbol:
-                    oi[item.symbol.upper()] = item
+        observations = BinanceMarketObservations(snapshot, page)
         quote = str(filters.get("quoteAsset") or "USDT").upper()
         allow = set(filters.get("symbols") or [])
         result = []
-        for source, raw in rows:
-            symbol = str(raw.get("symbol") or "").upper()
+        for source, symbol, metrics, score_item in observations.rows(market):
             if not symbol.endswith(quote) or (allow and symbol not in allow):
                 continue
-            change = cls._number(raw.get("price_change_pct"))
-            volume = cls._number(raw.get("quote_volume"))
-            mark = marks.get(symbol, {})
-            funding = cls._number(mark.get("funding_rate_pct"))
-            if funding is None:
-                base = cls._number(mark.get("last_funding_rate"))
-                funding = base * 100 if base is not None else None
-            score_item = scores.get((source, symbol))
-            breakout = max(score_item.natural_score, score_item.momentum_score) if score_item else None
-            oi_change = cls._number(getattr(oi.get(symbol), "oi_change_1h_pct", None))
+            change, volume = metrics["price_change_24h"], metrics["quote_volume"]
+            funding, breakout, oi_change = metrics["funding_rate_pct"], metrics["breakout_score"], metrics["oi_change_1h_pct"]
             if filters.get("minPriceChangePct") is not None and (
                 change is None or change < filters["minPriceChangePct"]
             ):
@@ -263,13 +248,13 @@ class MarketScreenerService:
                 {
                     "market": source,
                     "symbol": symbol,
-                    "lastPrice": cls._number(raw.get("last_price")),
+                    "lastPrice": metrics["price"],
                     "priceChangePct": change,
                     "quoteVolume": volume,
                     "fundingRatePct": funding,
                     "breakoutScore": breakout,
                     "oiChange1hPct": oi_change,
-                    "verdict": score_item.verdict if score_item else None,
+                    "verdict": score_item.get("verdict") if score_item else None,
                 }
             )
         result.sort(

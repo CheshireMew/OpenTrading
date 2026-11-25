@@ -28,3 +28,29 @@ def test_macd():
     assert dif == pytest.approx(7.353687798986655)
     assert dea == pytest.approx(7.051042466310648)
     assert hist == pytest.approx(0.3026453326760077)
+
+
+def test_realtime_and_history_share_indicator_values_and_warmup():
+    from datetime import datetime, timedelta, timezone
+    from types import SimpleNamespace
+    import pandas as pd
+    from app.domain.market.history.indicators import indicator_frame
+
+    for count in (0, 14, 15, 20, 33, 34, 80):
+        for closes in ([100.0] * count, [100.0 + i + i % 5 * 2 for i in range(count)]):
+            start = datetime(2026, 1, 1, tzinfo=timezone.utc)
+            bars = [SimpleNamespace(observed_at=start + timedelta(days=i), observation_date=(start + timedelta(days=i)).date(),
+                                    close=close, adjusted_close=close, high=close + 2, low=close - 1, volume=10)
+                    for i, close in enumerate(closes)]
+            frame = indicator_frame(SimpleNamespace(bars=bars, snapshot_hash="parity"), "raw")
+            if not count:
+                assert frame.empty
+                continue
+            expected = {"ema_20": TechnicalAnalysis.calculate_ema(closes, 20),
+                        "rsi_14": TechnicalAnalysis.calculate_rsi(closes),
+                        "atr_14": TechnicalAnalysis.calculate_atr([b.high for b in bars], [b.low for b in bars], closes)}
+            expected.update(zip(("macd", "macd_signal", "macd_histogram"), TechnicalAnalysis.calculate_macd(closes)))
+            for name, value in expected.items():
+                actual = frame.iloc[-1][name]
+                assert pd.isna(actual) if value is None else actual == pytest.approx(value), (count, name)
+    assert TechnicalAnalysis.calculate_rsi([100.0] * 30) == 50.0

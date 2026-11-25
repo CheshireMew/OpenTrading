@@ -33,6 +33,19 @@ def current_candle_open_ms(now_ms: int, timeframe: str) -> int:
     return (now_ms - origin) // interval * interval + origin
 
 
+def candle_count_between(first_ms: int, last_ms: int, timeframe: str) -> int:
+    """Count inclusive candle boundaries using the same calendar as producers."""
+    if last_ms < first_ms:
+        return 0
+    first = current_candle_open_ms(first_ms, timeframe)
+    last = current_candle_open_ms(last_ms, timeframe)
+    if timeframe.endswith("M"):
+        left = datetime.fromtimestamp(first / 1000, timezone.utc)
+        right = datetime.fromtimestamp(last / 1000, timezone.utc)
+        return ((right.year - left.year) * 12 + right.month - left.month) // int(timeframe[:-1]) + 1
+    return (last - first) // timeframe_to_milliseconds(timeframe) + 1
+
+
 @dataclass(frozen=True, slots=True)
 class RecentCandles:
     rows: list[list[float]]

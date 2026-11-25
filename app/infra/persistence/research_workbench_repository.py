@@ -4,7 +4,7 @@ from datetime import datetime
 
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, tuple_
 
 from app.domain.research import ResearchNotFoundError, ResearchRevisionConflictError
 
@@ -28,6 +28,30 @@ from app.infra.persistence.research_rows import (
 class ResearchWorkbenchRepository:
     def __init__(self, database_runtime: DatabaseRuntime) -> None:
         self._database_runtime = database_runtime
+
+    def list_notes(self, symbol: str, *, offset: int = 0, limit: int = 200) -> tuple[list[dict[str, Any]], int]:
+        with self._database_runtime.session_scope() as session:
+            matching = func.lower(ResearchNote.symbol) == symbol.casefold()
+            total = int(session.scalar(select(func.count()).select_from(ResearchNote).where(matching)) or 0)
+            rows = session.scalars(select(ResearchNote).where(matching).order_by(
+                ResearchNote.archived_at.is_not(None), ResearchNote.occurred_at.desc(),
+                ResearchNote.created_at.desc(), ResearchNote.id.desc(),
+            ).offset(offset).limit(limit))
+            return [note_payload(row) for row in rows], total
+
+    def get_asset_records(self, symbol: str) -> dict[str, Any]:
+        # Filter in SQL before imposing a page limit. Other assets cannot evict
+        # this asset's older notes or events from its research page.
+        with self._database_runtime.session_scope() as session:
+            items = session.scalars(select(ResearchWatchItem).where(func.lower(ResearchWatchItem.symbol) == symbol.casefold()))
+            alerts = session.scalars(select(ResearchAlertRule).where(func.lower(ResearchAlertRule.symbol) == symbol.casefold()))
+            events = session.scalars(select(ResearchEvent).where(func.lower(ResearchEvent.symbol) == symbol.casefold())
+                                     .order_by(ResearchEvent.occurred_at.desc(), ResearchEvent.id.desc()).limit(500))
+            result = {"items": [watch_item_payload(row) for row in items],
+                      "alerts": [alert_payload(row) for row in alerts],
+                      "events": [event_payload(row) for row in events]}
+        notes, total = self.list_notes(symbol, limit=200)
+        return {**result, "notes": notes, "notesTotal": total}
 
     def get_workbench(self, *, event_limit: int, note_limit: int) -> dict[str, Any]:
         with write_session(self._database_runtime, ResearchRevisionConflictError) as session:
@@ -103,7 +127,8 @@ class ResearchWorkbenchRepository:
             }
 
     def list_events(
-        self, *, kind: str | None, unacknowledged_only: bool, since: datetime | None, limit: int
+        self, *, kind: str | None, unacknowledged_only: bool, since: datetime | None, limit: int,
+        before: tuple[datetime, datetime, str] | None = None,
     ) -> tuple[list[dict[str, Any]], int]:
         with write_session(self._database_runtime, ResearchRevisionConflictError) as session:
             filters = []
@@ -114,9 +139,11 @@ class ResearchWorkbenchRepository:
             if since is not None:
                 filters.append(ResearchEvent.occurred_at >= since)
             query = select(ResearchEvent).where(*filters)
+            if before is not None:
+                query = query.where(tuple_(ResearchEvent.occurred_at, ResearchEvent.created_at, ResearchEvent.id) < before)
             rows = list(
                 session.scalars(
-                    query.order_by(ResearchEvent.occurred_at.desc(), ResearchEvent.created_at.desc()).limit(limit)
+                    query.order_by(ResearchEvent.occurred_at.desc(), ResearchEvent.created_at.desc(), ResearchEvent.id.desc()).limit(limit)
                 )
             )
             total = int(session.scalar(select(func.count()).select_from(ResearchEvent).where(*filters)) or 0)

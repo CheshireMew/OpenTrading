@@ -10,6 +10,7 @@ let loadingPromise: Promise<void> | null = null
 
 export const toBaseSymbol = (symbol: string) => {
   const value = String(symbol || '').trim().toUpperCase()
+  if (/^(BINANCE|OKX):(SPOT|USDM):/.test(value)) return String(symbol).trim()
   const [base] = value.split('/')
   const [assetCode] = base.split(':')
   return assetCode.trim()

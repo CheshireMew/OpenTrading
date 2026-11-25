@@ -134,6 +134,7 @@ def test_index_catalog_contains_core_us_cn_hk_indexes():
         "US_DOW",
         "US_RUSSELL2000",
         "US_VIX",
+        "US_DXY",
         "CN_CSI300",
         "CN_CSI_A500",
         "CN_SSE50",

@@ -47,7 +47,12 @@ def document_call(fn):
 
 
 @router.get("/symbols",response_model=list[ChartSymbol])
-async def chart_symbols(service=Depends(services)):
+async def chart_symbols(symbol: str | None = Query(default=None, max_length=160), service=Depends(services)):
+    if symbol is not None:
+        try:
+            await service.market.resolve(symbol)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
     return await service.market.symbols()
 
 

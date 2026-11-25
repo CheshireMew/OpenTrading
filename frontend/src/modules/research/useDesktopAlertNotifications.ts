@@ -9,6 +9,7 @@ import {
 import { deliverAlertEvent } from './alertDelivery'
 import { PUBLIC_SITE } from '@/app/publicSite'
 import { evaluateBrowserAlerts } from './browserResearch'
+import { browserNotificationStore } from '@/modules/personal/browserStore'
 
 const POLL_INTERVAL_MS = 3_000
 
@@ -16,28 +17,51 @@ export const useDesktopAlertNotifications = () => {
   let timer: number | undefined
   let running = false
   let disposed = false
-  const memoryDelivered = new Set<string>()
-
+  const controller = new AbortController()
+  const memoryDelivered = new Set<string>(), pendingReceipts = new Set<string>()
+  let memoryCursor: string | null = null, migrated = false, pendingState = false
+  const commit = async (ids: string[], cursor: string | null) => {
+    for (const id of ids) { memoryDelivered.add(id); pendingReceipts.add(id) }
+    memoryCursor = cursor; migrated = true; pendingState = true
+    try {
+      await browserNotificationStore.commit([...pendingReceipts], cursor)
+      pendingReceipts.clear()
+      pendingState = false
+    } catch { /* Retain session receipts until persistent storage recovers. */ }
+  }
   const deliverPending = async () => {
-      if (PUBLIC_SITE) await evaluateBrowserAlerts()
-      const storage = getLocalStorage()
-      let stored: string | null = null
-      try { stored = storage ? readStorageValue(storage, WINDOWS_NOTIFICATION_DELIVERED_KEY) : null } catch { /* In-memory delivery remains available. */ }
-      const delivered = new Set([...memoryDelivered, ...loadDeliveredNotificationIds(stored)])
-      const page = await researchApi.listEvents('alert_triggered', true, 100)
-      if (disposed) return
-      const pending = (page.items || []).filter(event => !event.acknowledgedAt && !delivered.has(event.id)).reverse()
-      for (const event of pending) {
-        if (disposed) break
-        await deliverAlertEvent(event)
-        delivered.add(event.id)
-        memoryDelivered.add(event.id)
+      if (PUBLIC_SITE) await evaluateBrowserAlerts(controller.signal)
+      const state = await browserNotificationStore.state().catch(() => ({ cursor: memoryCursor, migrated }))
+      if (!state.migrated && !migrated) {
+        const storage = getLocalStorage()
+        let stored: string | null = null
+        try { stored = storage ? readStorageValue(storage, WINDOWS_NOTIFICATION_DELIVERED_KEY) : null } catch { /* No legacy receipts to migrate. */ }
+        await commit(loadDeliveredNotificationIds(stored), state.cursor)
       }
-      if (pending.length > 0) {
-        try { storage?.setItem(
-          WINDOWS_NOTIFICATION_DELIVERED_KEY,
-          JSON.stringify(Array.from(delivered).slice(-500)),
-        ) } catch { /* A full/read-only store must not interrupt delivery. */ }
+      let cursor = pendingState ? memoryCursor : state.cursor
+      // Bound each poll without returning to the head until the backlog is drained.
+      // Delivery receipts are independent of the user's acknowledgement state.
+      for (let batch = 0; batch < 5 && !disposed; batch++) {
+        const page = await researchApi.listEvents('alert_triggered', true, 100, cursor ?? undefined, controller.signal)
+        if (disposed) return
+        const items = page.items ?? []
+        const delivered = await browserNotificationStore.delivered(items.map(event => event.id)).catch(() => new Set<string>())
+        const pending = items.filter(event => !event.acknowledgedAt && !delivered.has(event.id) && !memoryDelivered.has(event.id)).reverse()
+        let next = cursor
+        try {
+          for (const event of pending) {
+            if (disposed) break
+            await deliverAlertEvent(event)
+            memoryDelivered.add(event.id); pendingReceipts.add(event.id)
+          }
+          next = disposed ? cursor : page.nextCursor ?? null
+        } finally {
+          // A receipt failure must not suppress delivery or repeat an event
+          // already delivered earlier in this poll or session.
+          await commit([], next)
+        }
+        cursor = next
+        if (!cursor) break
       }
   }
 
@@ -71,6 +95,7 @@ export const useDesktopAlertNotifications = () => {
 
   onBeforeUnmount(() => {
     disposed = true
+    controller.abort()
     if (timer !== undefined) window.clearInterval(timer)
     window.removeEventListener('focus', pollWhenVisible)
     document.removeEventListener('visibilitychange', pollWhenVisible)

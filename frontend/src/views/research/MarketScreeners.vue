@@ -21,21 +21,71 @@
 <script setup lang="ts">
 import AppConfirmDialog from '@/components/AppConfirmDialog.vue'
 import { useRequestError } from '@/composables/useRequestError';
-import { computed, onMounted, reactive, ref } from 'vue'; import { useI18n } from 'vue-i18n'; import { useDateTime } from '@/composables/useDateTime'; import { researchApi } from '@/modules/research'; import type { MarketScreenerRunResponse, SavedMarketScreenerResponse } from '@/modules/research/contracts'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'; import { useI18n } from 'vue-i18n'; import { useDateTime } from '@/composables/useDateTime'; import { researchApi } from '@/modules/research'; import type { MarketScreenerRunResponse, SavedMarketScreenerResponse } from '@/modules/research/contracts'
 const { t }=useI18n(); const screeners=ref<SavedMarketScreenerResponse[]>([]); const active=ref<SavedMarketScreenerResponse|null>(null); const runs=ref<MarketScreenerRunResponse[]>([]); const lastRun=ref<MarketScreenerRunResponse|null>(null); const includeArchived=ref(false); const editing=ref(false); const saving=ref(false); const running=ref(false); const { error, setError, clearError } = useRequestError(t); const replayAt=ref('')
 const confirmation=ref<InstanceType<typeof AppConfirmDialog>>()
+let disposed=false, generation=0, listGeneration=0
+const current=(attempt:number,id:string|null)=>!disposed&&attempt===generation&&(active.value?.id??null)===id
+function changeSelection(){++generation;running.value=false;saving.value=false;clearError()}
+onBeforeUnmount(()=>{disposed=true;++generation;++listGeneration})
 async function removeScreener(){
-  const item=active.value
-  if(!item||saving.value||running.value||!await confirmation.value?.confirm(item.name,t('ui.deleteScreenerContents')))return
+  const item=active.value,attempt=generation
+  if(!item||saving.value||running.value||!await confirmation.value?.confirm(item.name,t('ui.deleteScreenerContents'))||!current(attempt,item.id)||saving.value||running.value)return
   saving.value=true;clearError()
-  try{await researchApi.deleteScreener(item.id,item.version);if(active.value?.id===item.id){active.value=null;runs.value=[];lastRun.value=null;editing.value=false}await loadScreeners()}catch(reason){setError(reason,'ui.retryOperation')}finally{saving.value=false}
+  try{
+    await researchApi.deleteScreener(item.id,item.version)
+    if(current(attempt,item.id)){changeSelection();active.value=null;runs.value=[];lastRun.value=null;editing.value=false}
+    await loadScreeners()
+  }catch(reason){if(current(attempt,item.id))setError(reason,'ui.retryOperation')}
+  finally{if(current(attempt,item.id))saving.value=false}
 }
 const blank=()=>({name:'',description:'',market:'all' as 'all'|'spot'|'usdm',minChange:'',minVolume:'',breakout:'',maxFunding:'',minOi:'',minRsi:'',maxRsi:'',includeWeb3:false,web3ChainId:'',maxWeb3Risk:'',symbols:''}); const form=reactive(blank())
 const optional=(value:string)=>value===''?null:Number(value); const body=()=>({name:form.name,description:form.description,filters:{market:form.market,quoteAsset:'USDT',minPriceChangePct:optional(form.minChange),maxPriceChangePct:null,minQuoteVolume:optional(form.minVolume),maxFundingRatePct:optional(form.maxFunding),minBreakoutScore:optional(form.breakout),minOiChange1hPct:optional(form.minOi),minRsi:optional(form.minRsi),maxRsi:optional(form.maxRsi),includeWeb3:form.includeWeb3,web3ChainId:form.web3ChainId||null,maxWeb3RiskLevel:optional(form.maxWeb3Risk),symbols:form.symbols.split(',').map(v=>v.trim()).filter(Boolean),limit:100}})
-const loadScreeners=async()=>{clearError();try{const response=await researchApi.listScreeners(includeArchived.value);screeners.value=response.items||[];if(active.value){active.value=screeners.value.find(v=>v.id===active.value?.id)||null}}catch(reason){setError(reason, 'ui.retryOperation')}}
-const select=async(item:SavedMarketScreenerResponse)=>{clearError();active.value=item;editing.value=false;lastRun.value=null;try{const response=await researchApi.listScreenerRuns(item.id);if(active.value?.id!==item.id)return;runs.value=response.items||[];lastRun.value=runs.value[0]||null}catch(reason){setError(reason,'ui.retryOperation')}}
-const newScreener=()=>{clearError();active.value=null;Object.assign(form,blank());editing.value=true}; const editActive=()=>{if(!active.value)return;clearError();const f=active.value.filters;Object.assign(form,{name:active.value.name,description:active.value.description,market:f.market,minChange:f.minPriceChangePct??'',minVolume:f.minQuoteVolume??'',breakout:f.minBreakoutScore??'',maxFunding:f.maxFundingRatePct??'',minOi:f.minOiChange1hPct??'',minRsi:f.minRsi??'',maxRsi:f.maxRsi??'',includeWeb3:f.includeWeb3,web3ChainId:f.web3ChainId??'',maxWeb3Risk:f.maxWeb3RiskLevel??'',symbols:(f.symbols||[]).join(', ')});editing.value=true}
-const save=async()=>{clearError();saving.value=true;try{const saved=active.value?await researchApi.updateScreener(active.value.id,{...body(),expectedVersion:active.value.version}):await researchApi.createScreener(body());await loadScreeners();active.value=saved;editing.value=false;await select(saved)}catch(reason){setError(reason, 'ui.retryOperation')}finally{saving.value=false}}
-const run=async(asOf?:string)=>{if(!active.value)return;clearError();running.value=true;try{lastRun.value=await researchApi.runScreener(active.value.id,asOf?new Date(asOf).toISOString():undefined);const response=await researchApi.listScreenerRuns(active.value.id);runs.value=response.items||[]}catch(reason){setError(reason, 'ui.retryOperation')}finally{running.value=false}}
-const filterSummary=computed(()=>{if(!active.value)return '';const f=active.value.filters;const parts=[t('screeners.markets.'+f.market)];for(const [field,key,op] of [['minPriceChangePct','minChange','≥'],['maxPriceChangePct','maxChange','≤'],['minQuoteVolume','minVolume','≥'],['minBreakoutScore','breakoutScore','≥'],['maxFundingRatePct','maxFunding','≤'],['minOiChange1hPct','minOi','≥'],['minRsi','minRsi','≥'],['maxRsi','maxRsi','≤']] as const){if(f[field]!=null)parts.push(`${t('screeners.'+key)} ${op} ${f[field]}`)}if(f.symbols?.length)parts.push(f.symbols.join(', '));if(f.includeWeb3){parts.push('Web3');if(f.web3ChainId)parts.push(f.web3ChainId);if(f.maxWeb3RiskLevel!=null)parts.push(`${t('screeners.maxWeb3Risk')} ≤ ${f.maxWeb3RiskLevel}`)}return parts.join(' · ')});const {formatDateTime:dateTime}=useDateTime();const marketLabel=(value:unknown)=>['spot','usdm','all'].includes(String(value))?t('screeners.markets.'+value):String(value??'—');const asNumber=(v:unknown)=>typeof v==='number'?v:Number(v);const num=(v:unknown)=>Number.isFinite(asNumber(v))?new Intl.NumberFormat(undefined,{maximumFractionDigits:4}).format(asNumber(v)):'--';const pct=(v:unknown)=>Number.isFinite(asNumber(v))?`${asNumber(v).toFixed(2)}%`:'--';const displaySymbol=(v:unknown)=>{const text=String(v||'');return text.endsWith('USDT')?`${text.slice(0,-4)}/USDT`:text};const assetLink=(row:Record<string,unknown>)=>row.market==='web3'?{path:`/research/assets/${encodeURIComponent(String(row.contractAddress||row.symbol))}`,query:{asset_class:'web3',chain_id:String(row.chainId||''),platform:String(row.platform||'')}}:`/research/assets/${encodeURIComponent(displaySymbol(row.symbol))}`;onMounted(loadScreeners)
+const loadScreeners=async()=>{
+  const request=++listGeneration,selection=generation
+  try{
+    const response=await researchApi.listScreeners(includeArchived.value)
+    if(disposed||request!==listGeneration)return
+    screeners.value=response.items||[]
+    if(active.value){
+      const updated=screeners.value.find(v=>v.id===active.value?.id)
+      if(!updated){changeSelection();active.value=null;runs.value=[];lastRun.value=null;editing.value=false}
+      else active.value=updated
+    }
+  }catch(reason){if(!disposed&&request===listGeneration&&selection===generation)setError(reason,'ui.retryOperation')}
+}
+const select=async(item:SavedMarketScreenerResponse)=>{
+  changeSelection();const attempt=generation
+  active.value=item;editing.value=false;lastRun.value=null;runs.value=[]
+  try{const response=await researchApi.listScreenerRuns(item.id);if(current(attempt,item.id)){runs.value=response.items||[];lastRun.value=runs.value[0]||null}}
+  catch(reason){if(current(attempt,item.id))setError(reason,'ui.retryOperation')}
+}
+const newScreener=()=>{changeSelection();active.value=null;runs.value=[];lastRun.value=null;Object.assign(form,blank());editing.value=true}
+const editActive=()=>{if(!active.value)return;changeSelection();const f=active.value.filters;Object.assign(form,{name:active.value.name,description:active.value.description,market:f.market,minChange:f.minPriceChangePct??'',minVolume:f.minQuoteVolume??'',breakout:f.minBreakoutScore??'',maxFunding:f.maxFundingRatePct??'',minOi:f.minOiChange1hPct??'',minRsi:f.minRsi??'',maxRsi:f.maxRsi??'',includeWeb3:f.includeWeb3,web3ChainId:f.web3ChainId??'',maxWeb3Risk:f.maxWeb3RiskLevel??'',symbols:(f.symbols||[]).join(', ')});editing.value=true}
+const save=async()=>{
+  if(saving.value)return
+  const item=active.value,id=item?.id??null,attempt=++generation,payload=body()
+  clearError();saving.value=true
+  try{
+    const saved=item?await researchApi.updateScreener(item.id,{...payload,expectedVersion:item.version}):await researchApi.createScreener(payload)
+    await loadScreeners()
+    if(current(attempt,id))await select(saved)
+  }catch(reason){if(current(attempt,id))setError(reason,'ui.retryOperation')}
+  finally{if(current(attempt,id))saving.value=false}
+}
+const run=async(asOf?:string)=>{
+  const item=active.value
+  if(!item||running.value)return
+  const attempt=++generation
+  clearError();running.value=true
+  try{
+    const result=await researchApi.runScreener(item.id,asOf?new Date(asOf).toISOString():undefined)
+    if(!current(attempt,item.id))return
+    lastRun.value=result
+    const response=await researchApi.listScreenerRuns(item.id)
+    if(current(attempt,item.id))runs.value=response.items||[]
+  }catch(reason){if(current(attempt,item.id))setError(reason,'ui.retryOperation')}
+  finally{if(current(attempt,item.id))running.value=false}
+}
+const filterSummary=computed(()=>{if(!active.value)return '';const f=active.value.filters;const parts=[t('screeners.markets.'+f.market)];for(const [field,key,op] of [['minPriceChangePct','minChange','≥'],['maxPriceChangePct','maxChange','≤'],['minQuoteVolume','minVolume','≥'],['minBreakoutScore','breakoutScore','≥'],['maxFundingRatePct','maxFunding','≤'],['minOiChange1hPct','minOi','≥'],['minRsi','minRsi','≥'],['maxRsi','maxRsi','≤']] as const){if(f[field]!=null)parts.push(`${t('screeners.'+key)} ${op} ${f[field]}`)}if(f.symbols?.length)parts.push(f.symbols.join(', '));if(f.includeWeb3){parts.push('Web3');if(f.web3ChainId)parts.push(f.web3ChainId);if(f.maxWeb3RiskLevel!=null)parts.push(`${t('screeners.maxWeb3Risk')} ≤ ${f.maxWeb3RiskLevel}`)}return parts.join(' · ')});const {formatDateTime:dateTime}=useDateTime();const marketLabel=(value:unknown)=>['spot','usdm','all'].includes(String(value))?t('screeners.markets.'+value):String(value??'—');const asNumber=(v:unknown)=>typeof v==='number'?v:Number(v);const num=(v:unknown)=>Number.isFinite(asNumber(v))?new Intl.NumberFormat(undefined,{maximumFractionDigits:4}).format(asNumber(v)):'--';const pct=(v:unknown)=>Number.isFinite(asNumber(v))?`${asNumber(v).toFixed(2)}%`:'--';const displaySymbol=(v:unknown)=>{const text=String(v||'');return text.endsWith('USDT')?`${text.slice(0,-4)}/USDT`:text};const assetLink=(row:Record<string,unknown>)=>row.market==='web3'?{path:`/research/assets/${encodeURIComponent(String(row.contractAddress||row.symbol))}`,query:{asset_class:'web3',chain_id:String(row.chainId||''),platform:String(row.platform||'')}}:`/research/assets/${encodeURIComponent(displaySymbol(row.symbol)+(row.market==='usdm'?':PERPETUAL':''))}`;onMounted(loadScreeners)
 </script>

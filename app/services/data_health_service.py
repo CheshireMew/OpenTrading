@@ -8,11 +8,18 @@ from app.application.errors import InvalidRequestError
 from app.contracts.data_health import (
     DataHealthResponse,
     DataRepairCommand,
+    DataRepairCoverageResponse,
+    DataRepairGapResponse,
     DataRepairResponse,
     DataSourceHealthResponse,
 )
 from app.infra.executor import run_database
+from app.infra.market_calendar import session_dates
+from app.domain.market.candles import candle_count_between
 from app.domain.market.constants import timeframe_to_milliseconds
+from app.services.market.history_ranges import merge_missing_ranges
+from config import settings
+from app.domain.market.index_catalog import get_stored_index_instrument
 from app.services.market.symbol_catalog import resolve_market_asset
 
 
@@ -73,6 +80,7 @@ class DataHealthService:
     async def repair(self, command: DataRepairCommand) -> DataRepairResponse:
         started = datetime.now(timezone.utc).replace(tzinfo=None)
         result: dict[str, Any] = {}
+        coverage = None
         if command.action == "verify_database":
             await run_database(self._database_verifier)
             detail = "数据库迁移版本、表和模型结构一致"
@@ -91,22 +99,51 @@ class DataHealthService:
             resolved = resolve_market_asset(command.symbol)
             if resolved is None or resolved["asset_class"] == "cash":
                 raise InvalidRequestError("该标的不支持历史数据补齐")
-            start = (datetime.now(timezone.utc).date() - timedelta(days=command.days)).isoformat()
+            end_day = datetime.now(timezone.utc).date()
+            start_day = end_day - timedelta(days=command.days)
+            complete = True
+            gaps = []
+            missing_sessions = []
             if resolved["asset_class"] == "index":
                 response = await self._indexes.get_pricing_history_async(
-                    symbol=resolved["symbol"], timeframe="1d", start_date=start
+                    symbol=resolved["symbol"], timeframe="1d", start_date=start_day.isoformat(),
+                    end_date=end_day.isoformat(),
                 )
                 result = {"symbol": resolved["symbol"], "pointCount": len(response.data), "source": response.source}
+                complete = response.coverage.complete
+                missing_sessions = response.coverage.missing_sessions
             else:
-                response = await self._market_query.get_full_history(
-                    symbol=resolved["symbol"], timeframe=command.timeframe, start_date=start, fetch_policy="hydrate"
-                )
-                result = {
-                    "symbol": resolved["symbol"],
-                    "pointCount": len(response.items),
-                    "coverageComplete": response.coverage.complete,
-                }
-            detail = f"{resolved['symbol']} 的历史数据已检查并补齐可获取区间"
+                interval = timeframe_to_milliseconds(command.timeframe)
+                if interval <= 0:
+                    raise InvalidRequestError("不支持该历史数据周期")
+                # Each inclusive date window fits the same public point limit
+                # as a normal history query. Windows do not overlap, and rows
+                # are released after counting rather than retaining ten years.
+                chunk_days = max(1, (settings.FULL_HISTORY_MAX_POINTS - 1) * interval // 86_400_000)
+                cursor = start_day
+                point_count = 0
+                while cursor <= end_day:
+                    upper = min(end_day, cursor + timedelta(days=chunk_days - 1))
+                    response = await self._market_query.get_full_history(
+                        symbol=resolved["symbol"], timeframe=command.timeframe,
+                        start_date=cursor.isoformat(), end_date=upper.isoformat(), fetch_policy="hydrate",
+                    )
+                    point_count += len(response.items)
+                    complete = complete and response.coverage.complete
+                    gaps.extend((gap.start_ts, gap.end_ts) for gap in response.coverage.missing_ranges)
+                    cursor = upper + timedelta(days=1)
+                result = {"symbol": resolved["symbol"], "pointCount": point_count}
+            result["coverageComplete"] = complete
+            coverage = DataRepairCoverageResponse(
+                complete=complete, startDate=start_day, endDate=end_day,
+                missingRanges=[DataRepairGapResponse(
+                    start=datetime.fromtimestamp(left / 1000, timezone.utc),
+                    end=datetime.fromtimestamp(right / 1000, timezone.utc),
+                ) for left, right in merge_missing_ranges(gaps)],
+                missingSessions=missing_sessions,
+            )
+            detail = (f"{resolved['symbol']} 的历史数据已补齐" if complete else
+                      f"{resolved['symbol']} 已补齐可获取的历史数据，仍有缺失区间")
         elif command.action == "evaluate_research_alerts":
             response = await self._alerts.evaluate_once()
             result = response.model_dump(mode="json")
@@ -118,11 +155,12 @@ class DataHealthService:
         completed = datetime.now(timezone.utc).replace(tzinfo=None)
         return DataRepairResponse(
             action=command.action,
-            status="completed",
+            status="partial" if coverage is not None and not coverage.complete else "completed",
             startedAt=started,
             completedAt=completed,
             detail=detail,
             result=result,
+            coverage=coverage,
         )
 
     @staticmethod
@@ -147,23 +185,35 @@ class DataHealthService:
         age = (now - end).total_seconds() if end else None
         series = []
         total_gaps = 0
+        coverage_errors = 0
         for row in rows:
             interval_ms = timeframe_to_milliseconds(row["timeframe"])
-            expected = (
-                int((row["last"] - row["first"]) // interval_ms) + 1
-                if interval_ms > 0 and row["first"] is not None and row["last"] is not None
-                else row["count"]
-            )
-            gaps = max(expected - row["count"], 0)
-            total_gaps += gaps
+            expected, calendar_error = row["count"], None
+            if interval_ms > 0 and row["first"] is not None and row["last"] is not None:
+                instrument = get_stored_index_instrument(row["symbol"])
+                try:
+                    if instrument and row["timeframe"] == "1d":
+                        _, sessions, _ = session_dates(
+                            instrument.calendar or instrument.market,
+                            cls._from_ms(row["first"]).date(), cls._from_ms(row["last"]).date(),
+                        )
+                        expected = len(sessions)
+                    else:
+                        expected = candle_count_between(row["first"], row["last"], row["timeframe"])
+                except (KeyError, ValueError) as exc:
+                    expected, calendar_error = None, str(exc)
+                    coverage_errors += 1
+            gaps = max(expected - row["count"], 0) if expected is not None else None
+            total_gaps += gaps or 0
             series.append({
                 "symbol": row["symbol"],
                 "timeframe": row["timeframe"],
                 "count": row["count"],
                 "expectedCount": expected,
                 "gapCount": gaps,
+                "coverageError": calendar_error,
             })
-        status = "empty" if not rows else "stale" if total_gaps > 0 or (age is not None and age > 7 * 86400) else "ready"
+        status = "empty" if not rows else "failed" if coverage_errors else "stale" if total_gaps > 0 or (age is not None and age > 7 * 86400) else "ready"
         return DataSourceHealthResponse(
             id="klines",
             name="K 线缓存",
@@ -172,8 +222,8 @@ class DataHealthService:
             coverageStart=cls._from_ms(first),
             coverageEnd=end,
             ageSeconds=max(age, 0) if age is not None else None,
-            gapCount=total_gaps,
-            detail=f"{len(rows)} 个标的/周期序列，{total_gaps} 个缺口",
+            gapCount=None if coverage_errors else total_gaps,
+            detail=f"{len(rows)} 个标的/周期序列，{total_gaps} 个已确认缺口" + (f"，{coverage_errors} 组日历不可用" if coverage_errors else ""),
             metadata={"seriesCount": len(rows), "series": series},
             repairActions=["hydrate_symbol_history"],
         )

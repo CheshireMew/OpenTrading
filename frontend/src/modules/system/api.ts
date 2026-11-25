@@ -14,7 +14,11 @@ export const systemApi = {
     return apiGet('get_data_health')
   },
   repairData(body: DataRepairCommand): Promise<DataRepairResponse> {
-    return apiPost('repair_data_source', body)
+    return apiPost('repair_data_source', body, {
+      client: 'longTask',
+      // The supported ten-year hourly range is hydrated in nine bounded windows.
+      ...(body.action === 'hydrate_symbol_history' ? { timeout: 1_200_000 } : {}),
+    })
   },
   getConfig(): Promise<SystemConfigResponse> {
     return apiGet('get_config')

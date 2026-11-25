@@ -121,7 +121,7 @@ class PriceAcquirer:
                     transport=self.transport,
                 )
                 fetched = adapter.fetch(instrument, mapped_symbol, start, end)
-                raw = RawSnapshotStore(self.root, self.config).save(
+                raw = RawSnapshotStore(self._database, self.config).save(
                     name,
                     f"prices-{instrument.canonical_code}-1d",
                     fetched.payload,

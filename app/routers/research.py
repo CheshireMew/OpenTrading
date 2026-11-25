@@ -2,16 +2,24 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from fastapi import Depends, Query
+from fastapi import Depends, HTTPException, Query
 
 from app.contracts.frontend import FrontendContractRouter
 from app.contracts.research import ResearchAlertCreateCommand, ResearchAlertEvaluationResponse, ResearchAlertEvaluateCommand, ResearchAlertResponse, ResearchAlertUpdateCommand, ResearchArchiveCommand, ResearchEventAcknowledgeCommand, ResearchEventPageResponse, ResearchEventResponse, ResearchNoteCreateCommand, ResearchNoteResponse, ResearchNoteUpdateCommand, ResearchWatchItemCreateCommand, ResearchWatchItemResponse, ResearchWatchItemUpdateCommand, ResearchWatchlistCreateCommand, ResearchWatchlistResponse, ResearchWatchlistUpdateCommand, ResearchWorkbenchResponse, TradeSignalEvaluationCommand, TradeSignalEvaluationRunResponse, TradeSignalPageResponse, TradeSignalResponse, TradeSignalStatsResponse, AssetResearchResponse, MarketScreenerRunCommand, MarketScreenerRunPageResponse, MarketScreenerRunResponse, SavedMarketScreenerCreateCommand, SavedMarketScreenerListResponse, SavedMarketScreenerResponse, SavedMarketScreenerUpdateCommand
 from app.dependencies import get_research_alert_runtime, get_research_service, get_trade_signal_evaluation_runtime, get_trade_signal_service, get_asset_research_service, get_market_screener_service
 from app.infra.executor import run_database
 from app.contracts.research import MarketScreenerFilters
+from app.contracts.research import ResearchNotePageResponse
 
 
 router = FrontendContractRouter(frontend_contract_target="research")
+
+
+@router.get("/research/notes", response_model=ResearchNotePageResponse)
+async def list_research_notes(symbol: str = Query(min_length=1, max_length=160),
+                              offset: int = Query(default=0, ge=0), limit: int = Query(default=200, ge=1, le=500),
+                              service=Depends(get_research_service)):
+    return await run_database(lambda: service.list_notes(symbol, offset=offset, limit=limit))
 
 
 @router.delete("/research/watchlists/{watchlist_id}", response_model=dict[str, bool])
@@ -193,16 +201,21 @@ async def list_research_events(
     unacknowledged_only: bool = False,
     since: datetime | None = None,
     limit: int = Query(default=100, ge=1, le=500),
+    cursor: str | None = Query(default=None, max_length=300),
     service=Depends(get_research_service),
 ):
-    return await run_database(
-        lambda: service.list_events(
-            kind=kind,
-            unacknowledged_only=unacknowledged_only,
-            since=since,
-            limit=limit,
+    try:
+        return await run_database(
+            lambda: service.list_events(
+                kind=kind,
+                unacknowledged_only=unacknowledged_only,
+                since=since,
+                limit=limit,
+                cursor=cursor,
+            )
         )
-    )
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
 
 
 @router.post("/research/watchlists", response_model=ResearchWatchlistResponse)

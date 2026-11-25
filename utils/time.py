@@ -9,6 +9,11 @@ from config import settings
 DEFAULT_TIMEZONE = "Asia/Shanghai"
 
 
+def as_utc(value: datetime) -> datetime:
+    """Storage's established naive timestamps denote UTC, never local time."""
+    return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value.astimezone(timezone.utc)
+
+
 def get_timezone(name: str | None = None) -> tzinfo:
     timezone_name = name or getattr(settings, "TIMEZONE", DEFAULT_TIMEZONE)
     try:

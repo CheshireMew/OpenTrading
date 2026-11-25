@@ -32,7 +32,7 @@ async def test_chart_alert_uses_venue_and_deletes_one_shot_after_notification(in
     await runtime.evaluate_price("binance:usdm:BTCUSDT", 105)
     await runtime.evaluate_price("binance:usdm:BTCUSDT", 110)
     # Even a stale worker cannot trigger the completed alert again.
-    repository.record_alert_evaluation(alert.id, value=120, evaluated_at=utc_now_naive(), triggered=True)
+    repository.record_alert_evaluation(alert.id, value=120, evaluated_at=utc_now_naive(), expected_version=alert.version)
     result = service.get_workbench(event_limit=10, note_limit=1)
     events = [event for event in result.events if event.kind == "alert_triggered"]
     assert len(events) == 1
@@ -41,7 +41,7 @@ async def test_chart_alert_uses_venue_and_deletes_one_shot_after_notification(in
     assert result.alerts == []
     with installed_database_runtime.session_scope() as session:
         assert session.get(ResearchAlertRule, alert.id) is None
-    assert repository.record_alert_evaluation(alert.id, value=120, evaluated_at=utc_now_naive(), triggered=True) is None
+    assert repository.record_alert_evaluation(alert.id, value=120, evaluated_at=utc_now_naive(), expected_version=alert.version) is None
 
 
 def test_alert_delete_endpoint_checks_revision_and_keeps_other_rules(api_harness, installed_database_runtime):
@@ -80,7 +80,7 @@ def test_repeating_price_alert_stays_active_after_trigger(installed_database_run
     repository = ResearchRepository(installed_database_runtime)
     service = ResearchService(repository)
     alert = create_alert(service, configuration={"chartSymbolId": "binance:usdm:BTCUSDT", "initialPrice": 90, "once": False})
-    saved = repository.record_alert_evaluation(alert.id, value=105, evaluated_at=utc_now_naive(), triggered=True)
+    saved = repository.record_alert_evaluation(alert.id, value=105, evaluated_at=utc_now_naive(), expected_version=alert.version)
     assert saved["enabled"] is True
     assert len(service.get_workbench(event_limit=10, note_limit=1).alerts) == 1
 
@@ -93,12 +93,12 @@ def test_chart_alert_rechecks_an_edited_or_paused_rule(installed_database_runtim
         **alert.model_dump(include=set(ResearchAlertCreateCommand.model_fields)),
         "threshold": 200, "expectedVersion": alert.version,
     }))
-    repository.record_alert_evaluation(alert.id, value=110, evaluated_at=utc_now_naive(), triggered=True)
+    repository.record_alert_evaluation(alert.id, value=110, evaluated_at=utc_now_naive(), expected_version=alert.version)
     paused = service.update_alert(alert.id, ResearchAlertUpdateCommand(**{
         **updated.model_dump(include=set(ResearchAlertCreateCommand.model_fields)),
         "enabled": False, "expectedVersion": updated.version,
     }))
-    repository.record_alert_evaluation(alert.id, value=250, evaluated_at=utc_now_naive(), triggered=True)
+    repository.record_alert_evaluation(alert.id, value=250, evaluated_at=utc_now_naive(), expected_version=updated.version)
     result = service.get_workbench(event_limit=10, note_limit=1)
     assert not [event for event in result.events if event.kind == "alert_triggered"]
     assert result.alerts[0].version == paused.version

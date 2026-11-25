@@ -26,13 +26,11 @@ __all__ = ["app"]
 def open_trading_database(ctx: typer.Context) -> None:
     from app.infra.db.database import build_database_runtime
     from config import settings
-    from config.market_data import MarketDataConfig
-    from app.infra.persistence.market.history.database import bind_database
+    from app.services.market_data_runtime import MarketDataRuntime
 
     runtime = build_database_runtime(settings)
-    ctx.obj = runtime
+    ctx.obj = MarketDataRuntime(runtime, settings)
     ctx.call_on_close(runtime.dispose)
-    ctx.with_resource(bind_database(runtime.engine, MarketDataConfig.load().data_dir))
 
 
 if __name__ == "__main__":

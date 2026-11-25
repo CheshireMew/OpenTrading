@@ -10,6 +10,7 @@ from .binance_market_page_service import BinanceMarketPageService
 from .binance_market_snapshot_service import BinanceMarketSnapshotService
 from .binance_spot_market import BinanceSpotMarketService
 from .binance_usdm_market import BinanceUsdmMarketService
+from .binance_market_observations import BinanceMarketObservationService
 
 class BinanceMarketIntelService:
     def __init__(
@@ -46,6 +47,7 @@ class BinanceMarketIntelService:
             usdm=self.usdm,
             snapshot_service=self.snapshot_service,
         )
+        self.observations = BinanceMarketObservationService(self.snapshot_service, self.page)
 
     async def start(self) -> None:
         await self.snapshot_service.start()

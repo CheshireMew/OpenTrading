@@ -79,6 +79,13 @@ async def execute(args: argparse.Namespace) -> Any:
     runtime = await asyncio.to_thread(build_app_runtime_services, "api")
     api = runtime.require_api()
     try:
+        # CLI commands own only the market lifecycle. Starting the full API
+        # runtime would compete with the running server for workspace ownership.
+        needs_market = (args.resource == "asset" or args.resource == "screener" and not args.as_of
+                        or args.resource == "health" and args.repair in {"refresh_binance_snapshot", "evaluate_research_alerts"})
+        if needs_market:
+            await api.market.binance_intel.start()
+            await api.market.binance_intel.snapshot_service.get_ready_snapshot()
         if args.resource == "health":
             if args.repair:
                 return await api.data_health.repair(

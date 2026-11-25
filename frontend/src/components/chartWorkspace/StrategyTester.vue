@@ -23,7 +23,8 @@
       <input v-else v-model="inputs[field.title]" :type="['int','float','price','time'].includes(field.type)?'number':'text'" :step="field.step??'any'" />
     </label></div>
     <p v-if="error" role="alert" class="cw-error">{{ messageText(error) }}</p>
-    <div v-if="selected" class="run-status">{{ statusText(selected.status) }} <progress v-if="running" :value="selected.progress" max="100" /> {{ running?Math.round(selected.progress??0)+'%':'' }} <span v-if="selected.error" class="cw-error">{{ messageText(selected.error) }}</span></div>
+    <div v-if="requestError" role="alert" class="cw-error tester-recovery"><span>{{ messageText(requestError) }}</span><button type="button" :disabled="retrying" @click="retrySelected">{{ cw('retryRequest') }}</button></div>
+    <div v-if="selected" class="run-status" role="status">{{ phaseText }} <progress v-if="running" :key="selected.progress?.phase??selected.status" :value="percentage" max="100" :aria-label="phaseText" /> <span v-if="running&&percentage!==undefined">{{ Math.round(percentage) }}%</span> <span v-if="running&&selected.progress?.completed!=null&&selected.progress.unit==='candles'">{{ cw('processedCandles',{count:selected.progress.completed}) }}</span> <span v-if="selected.error" class="cw-error">{{ messageText(selected.error) }}</span></div>
     <div v-if="selected?.status==='completed'" class="tester-result">
       <p class="result-context">{{ selected.request.symbol }} · {{ selected.request.timeframe }} · {{ stamp(selected.request.start) }} – {{ stamp(selected.request.end) }}</p>
       <div class="result-metrics"><div v-for="metric in metrics" :key="metric.label" :title="metric.hint"><small>{{ metric.label }}</small><strong>{{ metric.value }}</strong></div></div>
@@ -37,7 +38,8 @@
 </template>
 <script setup lang="ts">
 import { DARK_PALETTE } from '@/theme/palette.mjs'
-import { computed,nextTick,onBeforeUnmount,onMounted,ref,watch } from 'vue'
+import { computed,nextTick,onActivated,onBeforeUnmount,onDeactivated,onMounted,ref,watch } from 'vue'
+import { apiErrorMessage } from '@/api/request'
 import { createChart,LineSeries, type IChartApi, type UTCTimestamp } from 'lightweight-charts'
 import { readPineMetadata } from '@/modules/chartWorkspace/pineEngine'
 import { chartApi, type ChartSymbol,type WorkspaceDocument,type PineRun } from '@/modules/chartWorkspace/api'
@@ -65,12 +67,23 @@ const effectiveConfig=computed(()=>[
   ['initial_capital',cw('initialCapital')],['default_qty_type',cw('positionType')],['default_qty_value',cw('positionQuantity')],['commission_type',cw('commissionType')],['commission_value',cw('commissionValue')],['slippage',cw('slippage')],['pyramiding',cw('pyramiding')],['process_orders_on_close',cw('ordersOnClose')],['calc_on_order_fills',cw('recalculateFills')],['currency',cw('accountCurrency')],
 ].map(([key,label])=>({key:key!,label,value:overrides.value[key!]??declarationProps.value[key!],origin:key! in overrides.value?cw('override'):cw('declarationDefault')})))
 const busy=ref(false),exporting=ref(false),error=ref(''),runs=ref<PineRun[]>([]),selectedId=ref(''),selected=ref<PineRun>()
+const requestError=ref(''),retrying=ref(false)
 const records=ref<Record<string,any>[]>([]),offset=ref(0),total=ref(0),recordKind=ref('equity'),equityHost=ref<HTMLElement>()
 let timer:ReturnType<typeof setTimeout>|undefined,chart:IChartApi|undefined
 let disposed=false,selectionGeneration=0,recordGeneration=0,refreshGeneration=0
+let pageActive=true,pollFailures=0,pollInFlight=''
+const recoverable=(cause:unknown)=>{
+  const status=typeof cause==='object'&&cause!==null&&'status' in cause?(cause as {status:number|null}).status:null
+  return status==null||status===408||status===429||status>=500
+}
+function retryPoll(){
+  if(!disposed&&pageActive&&selectedId.value)timer=setTimeout(poll,Math.min(30000,1500*2**Math.min(pollFailures,4)))
+}
 const running=computed(()=>selected.value&&['queued','loading','running'].includes(selected.value.status))
 const tabs=computed(()=>[{key:'equity',label:cw('equity')},{key:'trades',label:cw('trades')},{key:'open_trades',label:cw('openTrades')},{key:'warnings',label:cw('warnings')}])
 const statusText=(s:string)=>({queued:cw('queued'),loading:cw('loadingMarket'),running:cw('running'),completed:cw('completed'),failed:cw('failed'),cancelled:cw('cancelled'),interrupted:cw('interrupted')}[s]??s)
+const percentage=computed(()=>{const p=selected.value?.progress;return running.value&&p?.mode==='measured'&&p.total!=null&&p.total>0&&p.completed!=null?p.completed/p.total*100:undefined})
+const phaseText=computed(()=>{const phase=selected.value?.progress?.phase;return running.value&&phase?cw({loading:'loadingMarket',computing:'computingStrategy',saving:'savingReport'}[phase]):statusText(selected.value?.status??'')})
 const stamp=(value:number)=>formatDate(value)
 const number=(value:unknown)=>formatNumber(value)
 const metrics=computed(()=>{
@@ -123,19 +136,28 @@ async function loadSelected(){
   if(disposed)return
   clearTimeout(timer);const generation=++selectionGeneration,id=selectedId.value;++recordGeneration
   selected.value=undefined;records.value=[];total.value=0;chart?.remove();chart=undefined
-  const result=id?await chartApi.getRun(id):undefined
-  if(disposed||generation!==selectionGeneration||id!==selectedId.value)return
-  selected.value=result;offset.value=0;if(running.value)void poll();else await loadRecords()
+  requestError.value='';pollFailures=0;offset.value=0
+  if(!disposed&&generation===selectionGeneration&&id===selectedId.value&&id)await poll()
 }
 async function poll(){
   clearTimeout(timer);const id=selectedId.value,generation=selectionGeneration
-  const current=()=>!disposed&&id===selectedId.value&&generation===selectionGeneration
-  if(!id||!current())return
+  const current=()=>!disposed&&pageActive&&id===selectedId.value&&generation===selectionGeneration
+  const token=JSON.stringify([id,generation])
+  if(!id||!current()||pollInFlight===token)return
+  pollInFlight=token;retrying.value=true
   try{const result=await chartApi.getRun(id);if(!current())return;selected.value=result
-    if(running.value)timer=setTimeout(poll,1500);else{await refresh().catch(e=>{if(current())error.value=String(e)});if(current())await loadRecords()}
-  }catch(e){if(current())error.value=String(e)}
+    requestError.value='';pollFailures=0
+    if(running.value)retryPoll();else{await refresh().catch(e=>{if(current())requestError.value=apiErrorMessage(e,cw('runRequestFailed'))});if(current())await loadRecords()}
+  }catch(cause){if(current()){
+    requestError.value=apiErrorMessage(cause,cw('runRequestFailed'))
+    if(recoverable(cause)){pollFailures++;retryPoll()}
+  }}finally{if(pollInFlight===token)pollInFlight='';if(current())retrying.value=false}
 }
-async function cancel(){if(selected.value){const id=selected.value.id,generation=selectionGeneration;await chartApi.cancel(id);if(!disposed&&id===selectedId.value&&generation===selectionGeneration)await loadSelected()}}
+async function retrySelected(){
+  clearTimeout(timer);pollFailures=0;requestError.value=''
+  if(selectedId.value)await poll();else await initializeRuns()
+}
+async function cancel(){if(selected.value){const id=selected.value.id,generation=selectionGeneration;try{await chartApi.cancel(id);if(!disposed&&id===selectedId.value&&generation===selectionGeneration)await loadSelected()}catch(cause){if(!disposed&&id===selectedId.value&&generation===selectionGeneration){requestError.value=apiErrorMessage(cause,cw('runRequestFailed'));retryPoll()}}}}
 async function downloadReport(){
   const run=selected.value
   if(!run||exporting.value)return
@@ -161,8 +183,10 @@ async function loadRecords(){
   if(selected.value?.status!=='completed')return
   const id=selected.value.id,kind=recordKind.value
   const current=()=>!disposed&&generation===recordGeneration&&id===selected.value?.id&&kind===recordKind.value&&requestedOffset===offset.value
+  try{
   const result=await chartApi.records(id,kind,offset.value,kind==='equity'?1000:200,kind==='equity')
   if(!current())return
+  requestError.value=''
   records.value=result.items;total.value=result.total
   if(kind==='equity'){
     await nextTick();if(!equityHost.value||!current())return
@@ -171,11 +195,16 @@ async function loadRecords(){
     const points=[...new Map(result.items.filter(r=>r.time).map(r=>[r.time,{time:Number(r.time)/1000 as UTCTimestamp,value:Number(r.equity)}])).values()].sort((a,b)=>Number(a.time)-Number(b.time))
     line.setData(points);chart.timeScale().fitContent()
   }
+  }catch(cause){if(current())requestError.value=apiErrorMessage(cause,cw('runRecordsFailed'))}
 }
-onMounted(async()=>{try{await refresh();if(!disposed&&runs.value[0]){selectedId.value=runs.value[0].id;await loadSelected()}}catch(e){if(!disposed)error.value=String(e)}})
+async function initializeRuns(){try{await refresh();if(!disposed&&pageActive&&!selectedId.value&&runs.value[0]){selectedId.value=runs.value[0].id;await loadSelected()}}catch(cause){if(!disposed)requestError.value=apiErrorMessage(cause,cw('runRequestFailed'))}}
+onMounted(initializeRuns)
+onActivated(()=>{if(pageActive)return;pageActive=true;void retrySelected()})
+onDeactivated(()=>{pageActive=false;++selectionGeneration;++recordGeneration;clearTimeout(timer);retrying.value=false})
 onBeforeUnmount(()=>{disposed=true;++selectionGeneration;++recordGeneration;metadataTask?.cancel();clearTimeout(timer);chart?.remove()})
 </script>
 <style scoped>
+.tester-recovery{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .result-context{padding:8px 18px 0;color:var(--cw-muted);margin:0}.effective-config{margin:0;padding:6px 12px;border-bottom:1px solid var(--cw-border)}.effective-config dl{display:grid;grid-template-columns:140px 1fr;gap:4px 12px;padding:8px}.effective-config small{color:var(--cw-muted);margin-left:8px}
 .tester{height:100%;overflow:auto;font-size:12px}.tester-controls,.tester-properties,.tester-inputs{display:flex;align-items:center;gap:10px;padding:8px 12px;flex-wrap:wrap;border-bottom:1px solid var(--cw-border)}label{display:flex;align-items:center;gap:5px}input{max-width:160px}.tester-properties input{width:115px}.tester-inputs{max-height:150px;overflow:auto}.tester-empty{padding:22px;color:var(--cw-muted)}.run-status{padding:5px 12px}.result-metrics{display:flex;flex-wrap:wrap;gap:16px 32px;padding:12px 18px}.result-metrics div{display:flex;flex-direction:column;gap:3px}.result-metrics strong{font-size:17px}.result-metrics small{color:var(--cw-muted)}nav{display:flex;border-bottom:1px solid var(--cw-border);padding:0 12px;gap:10px}.equity-chart{height:150px}.record-table{max-height:230px;overflow:auto}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:7px 12px;white-space:nowrap;border-bottom:1px solid var(--cw-border)}footer{display:flex;align-items:center;gap:12px;padding:6px 12px}details{margin-left:auto}pre{max-height:150px;overflow:auto}.active{color:var(--cw-accent)!important}
 </style>

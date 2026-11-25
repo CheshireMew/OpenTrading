@@ -36,6 +36,9 @@ class MarketIndicatorCronJob:
                     points,
                 )
                 continue
+            if not points:
+                logger.warning("Provider %s returned no observations", provider.__class__.__name__)
+                continue
             completed_provider_count += 1
             all_data_points.extend(points)
 

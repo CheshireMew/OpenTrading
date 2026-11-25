@@ -2,11 +2,41 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
+import pytest
+
 from app.contracts.dto.market_catalog import MarketIndexHistoryResponse
 from app.contracts.market_history import build_ohlcv_points
 
 from app.services.market.history_range_coordinator import OhlcvRangeResult
 from app.services.tools.dca_service import DCAService
+
+
+@pytest.mark.parametrize("fee_rate", [0.0, 0.001, 0.01], ids=["zero", "default", "one-percent"])
+def test_value_averaging_sell_conserves_assets_and_cash(fee_rate):
+    rows = [
+        [int(datetime(2024, 1, day, 23, tzinfo=timezone.utc).timestamp() * 1000), price, price, price, price, 1000]
+        for day, price in [(1, 100.0), (2, 1000.0)]
+    ]
+    market = MagicMock()
+    market.load_ohlcv_range.return_value = OhlcvRangeResult(rows, [])
+    service = DCAService(market, MagicMock(), MagicMock())
+
+    result = service.calculate_dca(
+        symbol="BTC/USDT", start_date_str="2024-01-01", end_date_str="2024-01-02",
+        daily_investment=1000.0, target_time_str="23:00", timezone="UTC",
+        strategy="value_averaging", strategy_params={"fee_rate": fee_rate},
+    )
+
+    assert "error" not in result
+    # The first buy spends 1000 including its fee. The sell removes the excess
+    # assets at the execution price, and only its net proceeds leave invested cash.
+    gross_sale = 10 * (1 - fee_rate) * 1000 - 2000
+    expected_invested = round(1000 - gross_sale * (1 - fee_rate), 2)
+    assert result["total_coins"] == 2.0
+    assert result["total_invested"] == expected_invested
+    assert result["final_value"] == 2000.0
+    assert result["history"][-1]["coins"] == 2.0
+    assert result["history"][-1]["invested"] == expected_invested
 
 
 class TestValueAveraging(unittest.TestCase):

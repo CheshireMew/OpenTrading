@@ -162,6 +162,7 @@ class AppRuntimeServices:
                     self.api.market.binance_intel,
                     self.api.market.indexes,
                     kline_store=self.api.market.kline_store,
+                    market_data=self.infra.market_data,
                 )
             )
             await self.api.market.binance_intel.start()

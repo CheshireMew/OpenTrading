@@ -1,4 +1,4 @@
-import { computed, ref, watch, type Ref } from 'vue'
+import { computed, onScopeDispose, ref, watch, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import type {
@@ -32,13 +32,17 @@ export function useWeb3HeatRankPanel(chainId: Ref<string>) {
   const web3Dialog = ref<Web3TokenDialogState>({ open: false, token: null })
   const web3DetailLoading = ref(false)
   const web3DetailErrorKey = ref('')
-  const web3DetailError = computed(() => (web3DetailErrorKey.value ? t(web3DetailErrorKey.value) : ''))
+  const failedDetails = ref<string[]>([])
+  const web3DetailError = computed(() => (web3DetailErrorKey.value ? t(web3DetailErrorKey.value, {
+    sources: failedDetails.value.map(source => t('web3Rank.detailSources.' + source)).join(', '),
+  }) : ''))
   const web3Dynamic = ref<BinanceWeb3TokenDynamicResponse | null>(null)
   const web3Audit = ref<BinanceWeb3TokenAuditResponse | null>(null)
   const web3Kline = ref<BinanceWeb3TokenKlineItemResponse[]>([])
   const web3KlineInterval = ref('15min')
   let heatRankFetchState: { key: string; task: Promise<void> } | null = null
   let detailRequestId = 0
+  let disposed = false
 
   const web3ChartData = computed<CandlestickData[]>(() => (
     web3Kline.value
@@ -95,12 +99,12 @@ export function useWeb3HeatRankPanel(chainId: Ref<string>) {
           chain_id: web3ApiChainId(requestChainId),
           size: WEB3_HEAT_RANK_SIZE,
         })
-        if (requestKey !== heatRankRequestKey()) return
+        if (disposed || requestKey !== heatRankRequestKey()) return
         applyHeatRankPayload(response)
         web3UpdatedAt.value = new Date().toISOString()
         web3HeatRankWarmSnapshot.write(response, requestChainId, WEB3_HEAT_RANK_SIZE)
       } catch (requestError) {
-        if (requestKey !== heatRankRequestKey()) return
+        if (disposed || requestKey !== heatRankRequestKey()) return
         web3ErrorKey.value = web3HeatRank.value.length
           ? 'web3Rank.heatRankRefreshFailedWithCache'
           : 'web3Rank.heatRankLoadFailed'
@@ -125,36 +129,36 @@ export function useWeb3HeatRankPanel(chainId: Ref<string>) {
     const requestId = ++detailRequestId
     const token = web3Dialog.value.token
     if (!web3Dialog.value.open || !token?.chain_id || !token?.contract_address || !token?.platform) return
+    const { chain_id, contract_address, platform } = token
     web3DetailLoading.value = true
     web3DetailErrorKey.value = ''
+    failedDetails.value = []
+    const current = () => !disposed && requestId === detailRequestId && web3Dialog.value.open
+    const part = async <T>(load: () => Promise<T>, apply: (value: T) => void) => {
+      const value = await load()
+      if (current()) apply(value)
+    }
     try {
-      const [dynamicRes, auditRes, klineRes] = await Promise.all([
-        binanceWeb3Api.getBinanceWeb3TokenDynamic({
-          chain_id: token.chain_id,
-          contract_address: token.contract_address,
-        }),
-        binanceWeb3Api.getBinanceWeb3TokenAudit({
-          binance_chain_id: token.chain_id,
-          contract_address: token.contract_address,
-        }),
-        binanceWeb3Api.getBinanceWeb3TokenKline({
-          address: token.contract_address,
-          platform: token.platform,
+      const outcomes = await Promise.allSettled([
+        part(() => binanceWeb3Api.getBinanceWeb3TokenDynamic({
+          chain_id,
+          contract_address,
+        }), value => { web3Dynamic.value = value }),
+        part(() => binanceWeb3Api.getBinanceWeb3TokenAudit({
+          binance_chain_id: chain_id,
+          contract_address,
+        }), value => { web3Audit.value = value }),
+        part(() => binanceWeb3Api.getBinanceWeb3TokenKline({
+          address: contract_address,
+          platform,
           interval: web3KlineInterval.value,
           limit: 240,
-        }),
+        }), value => { web3Kline.value = value?.items || [] }),
       ])
-      if (requestId !== detailRequestId) return
-      web3Dynamic.value = dynamicRes
-      web3Audit.value = auditRes
-      web3Kline.value = klineRes?.items || []
-    } catch (requestError) {
-      if (requestId !== detailRequestId) return
-      web3DetailErrorKey.value = 'web3Rank.tokenDetailLoadFailed'
-      web3Dynamic.value = null
-      web3Audit.value = null
-      web3Kline.value = []
-      console.error('Failed to load Web3 token detail', requestError)
+      if (!current()) return
+      failedDetails.value = ['market', 'audit', 'chart'].filter((_, index) => outcomes[index]?.status === 'rejected')
+      if (failedDetails.value.length) web3DetailErrorKey.value = failedDetails.value.length === 3
+        ? 'web3Rank.tokenDetailLoadFailed' : 'web3Rank.tokenDetailPartialFailed'
     } finally {
       if (requestId === detailRequestId) web3DetailLoading.value = false
     }
@@ -199,10 +203,13 @@ export function useWeb3HeatRankPanel(chainId: Ref<string>) {
   })
 
   watch(web3KlineInterval, () => {
+    // A previous interval must not be presented as the newly selected one.
+    web3Kline.value = []
     void loadWeb3TokenDetail()
   })
 
   restoreHeatRankWarmSnapshot()
+  onScopeDispose(() => { disposed = true; detailRequestId++ })
 
   return {
     web3HeatRank,
@@ -215,6 +222,7 @@ export function useWeb3HeatRankPanel(chainId: Ref<string>) {
     web3Audit,
     web3DetailLoading,
     web3DetailError,
+    retryWeb3TokenDetail: loadWeb3TokenDetail,
     web3KlineInterval,
     web3ChartData,
     web3VolumeData,

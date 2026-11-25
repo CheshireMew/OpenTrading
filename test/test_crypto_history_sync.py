@@ -8,7 +8,7 @@ from app.contracts.chart_workspace import ChartSymbol
 from app.services.chart_workspace_market import ChartWorkspaceMarket
 from app.services.market.crypto_history_sync import CryptoHistorySync
 from app.domain.market.history.models import Instrument, PriceBar, PriceSnapshot
-from app.infra.persistence.market.history.database import MarketHistoryDatabase, bind_database
+from app.infra.persistence.market.history.database import MarketHistoryDatabase
 from app.infra.persistence.market.history.price_repository import PriceRepository
 from scripts.market_data_cli import app as market_data_cli
 
@@ -112,8 +112,7 @@ def test_former_snapshot_history_fills_only_missing_shared_candles(installed_dat
         metadata={"internal_timeframe": True},
         bars=tuple(PriceBar(START + timedelta(minutes=15 * index), 100, 103, 98, 101, 101, 10) for index in range(4)),
     )
-    with bind_database(installed_database_runtime.engine, root):
-        PriceRepository(MarketHistoryDatabase(root)).save_price_snapshot(snapshot)
+    PriceRepository(MarketHistoryDatabase(root, engine=installed_database_runtime.engine)).save_price_snapshot(snapshot)
     gateway = Gateway()
     service = CryptoHistorySync(installed_database_runtime, gateway=gateway)
     corrected = [START_MS, 100, 104, 98, 102, 10]

@@ -23,13 +23,14 @@ class LiquidityView:
     ) -> None:
         self._config = config
         self._root = root.resolve()
+        self._database = database
         self._operations = OperationRepository(database)
 
     def liquidity(self, *, days: int = 365, change_days: int = 30) -> dict[str, Any]:
-        return LiquidityService(self._root).build(days=days, change_days=change_days)
+        return LiquidityService(self._database).build(days=days, change_days=change_days)
 
     def refresh(self, *, request_id: str | None = None) -> dict[str, Any]:
-        scheduler = JobScheduler(self._config, self._root)
+        scheduler = JobScheduler(self._config, self._database)
         job = scheduler.ensure_preset(LIQUIDITY_REFRESH_JOB)
         run = scheduler.run(job.job_id)
         self._operations.append_event(

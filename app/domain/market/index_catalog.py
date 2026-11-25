@@ -15,6 +15,7 @@ class IndexInstrument:
     pricing_currency: str | None = None
     pricing_storage_symbol: str | None = None
     aliases: tuple[str, ...] = ()
+    calendar: str | None = None
 
 
 INDEX_CATALOG: dict[str, IndexInstrument] = {
@@ -89,6 +90,15 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
         pricing_currency="USD",
         pricing_storage_symbol="proxy:US:VIX:VIXY",
         aliases=("恐慌指数", "波动率指数", "VIX"),
+    ),
+    "US_DXY": IndexInstrument(
+        symbol="US_DXY",
+        name="US Dollar Index (DXY)",
+        market="US",
+        currency="USD",
+        storage_symbol="index:US:DXY",
+        aliases=("美元指数", "美指", "DXY", "USDX", "DX-Y.NYB"),
+        calendar="ICEUS",
     ),
     "CN_CSI300": IndexInstrument(
         symbol="CN_CSI300",
@@ -245,6 +255,12 @@ def get_index_instrument(symbol: str) -> IndexInstrument | None:
     return INDEX_CATALOG.get(normalize_index_symbol(symbol))
 
 
+def get_stored_index_instrument(symbol: str) -> IndexInstrument | None:
+    """Resolve both raw index and pricing-proxy storage identities."""
+    return next((item for item in INDEX_CATALOG.values()
+                 if symbol in (item.storage_symbol, item.pricing_storage_symbol)), None)
+
+
 def get_supported_index_symbols() -> list[str]:
     return list(INDEX_CATALOG.keys())
 
@@ -253,6 +269,7 @@ __all__ = [
     "INDEX_CATALOG",
     "IndexInstrument",
     "get_index_instrument",
+    "get_stored_index_instrument",
     "get_supported_index_symbols",
     "normalize_index_symbol",
 ]

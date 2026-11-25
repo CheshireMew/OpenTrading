@@ -9,10 +9,11 @@ import pandas as pd
 
 from app.domain.immutability import deep_freeze
 from app.domain.market.history.models import PriceSnapshot
+from app.domain.market.technical_analysis import TechnicalAnalysis
 from app.domain.serialization import canonical_json_bytes
 
 
-INDICATOR_SCHEMA_VERSION = "price-indicators.v2"
+INDICATOR_SCHEMA_VERSION = "price-indicators.v3"
 
 
 @dataclass(frozen=True, slots=True)
@@ -28,11 +29,11 @@ class IndicatorDefinition:
 
 INDICATOR_DEFINITIONS = (
     IndicatorDefinition("sma", "1", {"windows": [20, 50, 200]}, "selected close"),
-    IndicatorDefinition("ema", "1", {"windows": [20, 50]}, "selected close"),
-    IndicatorDefinition("rsi", "wilder-1", {"period": 14}, "selected close"),
-    IndicatorDefinition("macd", "1", {"fast": 12, "slow": 26, "signal": 9}, "selected close"),
+    IndicatorDefinition("ema", "sma-seeded-1", {"windows": [20, 50]}, "selected close"),
+    IndicatorDefinition("rsi", "wilder-sma-2", {"period": 14, "flat": 50}, "selected close"),
+    IndicatorDefinition("macd", "sma-seeded-1", {"fast": 12, "slow": 26, "signal": 9}, "selected close"),
     IndicatorDefinition("bollinger", "1", {"window": 20, "deviations": 2}, "selected close"),
-    IndicatorDefinition("atr", "wilder-1", {"period": 14}, "raw OHLC"),
+    IndicatorDefinition("atr", "wilder-sma-2", {"period": 14}, "raw OHLC"),
     IndicatorDefinition("obv", "1", {}, "selected close and volume"),
 )
 
@@ -62,26 +63,24 @@ def indicator_frame(
     )
     for window in (20, 50, 200):
         frame[f"sma_{window}"] = selected.rolling(window=window, min_periods=window).mean().to_numpy()
+    prices = selected.tolist()
+    def align(values):
+        return [float("nan")] * (len(prices) - len(values)) + values
     for window in (20, 50):
-        frame[f"ema_{window}"] = selected.ewm(span=window, adjust=False, min_periods=window).mean().to_numpy()
-    frame["rsi_14"] = _wilder_rsi_series(selected, 14).to_numpy()
-    ema_fast = selected.ewm(span=12, adjust=False, min_periods=12).mean()
-    ema_slow = selected.ewm(span=26, adjust=False, min_periods=26).mean()
-    macd = ema_fast - ema_slow
-    signal = macd.ewm(span=9, adjust=False, min_periods=9).mean()
-    frame["macd"] = macd.to_numpy()
-    frame["macd_signal"] = signal.to_numpy()
-    frame["macd_histogram"] = (macd - signal).to_numpy()
+        frame[f"ema_{window}"] = align(TechnicalAnalysis.calculate_ema_series(prices, window))
+    frame["rsi_14"] = align(TechnicalAnalysis.calculate_rsi_series(prices, 14))
+    macd, signal, histogram = TechnicalAnalysis.calculate_macd_series(prices)
+    frame["macd"] = align(macd)
+    frame["macd_signal"] = align(signal)
+    frame["macd_histogram"] = align(histogram)
     middle = selected.rolling(window=20, min_periods=20).mean()
     deviation = selected.rolling(window=20, min_periods=20).std(ddof=0)
     frame["bollinger_mid"] = middle.to_numpy()
     frame["bollinger_upper"] = (middle + 2 * deviation).to_numpy()
     frame["bollinger_lower"] = (middle - 2 * deviation).to_numpy()
-    true_range = pd.concat(
-        [high - low, (high - raw_close.shift(1)).abs(), (low - raw_close.shift(1)).abs()],
-        axis=1,
-    ).max(axis=1)
-    frame["atr_14"] = true_range.ewm(alpha=1 / 14, adjust=False, min_periods=14).mean().to_numpy()
+    frame["atr_14"] = align(TechnicalAnalysis.calculate_atr_series(
+        high.tolist(), low.tolist(), raw_close.tolist(), 14,
+    ))
     direction = np.sign(selected.diff().fillna(0.0).to_numpy(dtype=float))
     volume_values = volume.fillna(0.0).to_numpy(dtype=float)
     frame["obv"] = np.cumsum(direction * volume_values)
@@ -160,21 +159,6 @@ def indicator_registry_hash() -> str:
             }
         )
     ).hexdigest()
-
-
-def _wilder_rsi_series(prices: pd.Series, period: int) -> pd.Series:
-    if prices.empty:
-        return pd.Series(index=prices.index, dtype="float64")
-    deltas = prices.diff()
-    gains = deltas.clip(lower=0)
-    losses = -deltas.clip(upper=0)
-    average_gain = gains.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
-    average_loss = losses.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
-    relative_strength = average_gain / average_loss
-    values = 100 - 100 / (1 + relative_strength)
-    values = values.mask((average_loss == 0) & (average_gain > 0), 100.0)
-    values = values.mask((average_loss == 0) & (average_gain == 0), 50.0)
-    return values
 
 
 def _empty_indicators(reason: str) -> dict[str, Any]:

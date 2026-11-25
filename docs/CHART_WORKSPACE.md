@@ -119,4 +119,12 @@ Pine 在独立 Web Worker 中计算，旧图表销毁时停止旧 Worker，运�
 
 ## 代码职责
 
-页面只负责能力组装与展示。`workspaceChart.ts` 持有图表、行情 Provider 与 Pine Worker 生命周期，`workspaceLayouts.ts` 持有布局版本、草稿和保存队列，`workspaceWatchlists.ts` 持有自选内容、版本化写入与报价轮询。`browserDocuments.ts` 负责浏览器正式文档、一次性旧记录迁入和版本事务，`browserDataBackup.ts` 负责已保存数据的导出与导入。`pineDocuments.ts` 管理脚本文档及本地草稿，`pineExecution.ts` 管理指标执行、超时与取消，`workspacePanels.ts` 管理面板尺寸及指针监听。同一标签页切换到其他页面时，工作台保留图表实例、已加载 K 线、视图位置和编辑状态，暂停自选及警报列表轮询；已有行情订阅继续保持 K 线连续。返回时直接显示图表并恢复轮询。真正卸载工作台时才销毁图表、关闭订阅与 Worker；切页及卸载前都会保存布局状态。该行为同时适用于本地和公开网站。
+页面只负责能力组装与展示。`workspaceChart.ts` 持有图表、行情 Provider 与 Pine Worker 生命周期，`workspaceLayouts.ts` 持有布局版本、草稿和保存队列，`workspaceWatchlists.ts` 持有自选内容、版本化写入与报价轮询。`browserDocuments.ts` 负责浏览器正式文档、一次性旧记录迁入和版本事务，`browserDataBackup.ts` 负责已保存数据的导出与导入。`pineDocuments.ts` 管理脚本文档及本地草稿，`pineExecution.ts` 管理指标执行、超时与取消，`workspacePanels.ts` 管理面板尺寸及指针监听。切换页面或隐藏浏览器标签页时，工作台保留图表实例、已加载 K 线、视图位置和编辑状态，暂停图表行情更新、自选及警报列表轮询。实时模拟盘所需的价格订阅与服务端警报监测独立保留。返回时先补齐最后一根未确认 K 线和离开期间的历史，再接入最新行情并恢复轮询；补拉的历史不参与实时订单撮合。真正卸载工作台时才销毁图表、关闭订阅与 Worker；切页及卸载前都会保存布局状态。该行为同时适用于本地和公开网站。
+
+## 免费日线行情
+
+图表品种包含 VIX、ICE 美元指数 DXY、现有美股及中港股指数，以及商品期货和主要外汇。商品期货包括黄金、白银、铜、WTI 原油、天然气、玉米、小麦和大豆；外汇包括 EUR/USD、USD/JPY、GBP/USD、AUD/USD、USD/CAD、USD/CHF 和 NZD/USD。搜索支持中文名称及数据源代码，商品期货和外汇可分别筛选。
+
+这些品种提供已完成日期的日 K，不提供盘中实时行情或分钟线。VIX 优先使用 Cboe 官方历史，DXY 使用 Yahoo 的 `DX-Y.NYB`；DXY 按 ICE 交易日处理。商品和外汇复用现有历史数据服务与缓存，商品标明为连续期货，外汇图表使用含开高低收的 Yahoo 数据。FRED 的每日外汇观察值不作为完整 K 线替代。
+
+“美元流动性”页面中的贸易加权美元指数来自 FRED `DTWEXBGS`，与这里的 ICE DXY 分别保留。新增日线品种用于看图和指标研究，沿用指数的限制，不开放尚未验证的策略成交模拟。

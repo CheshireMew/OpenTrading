@@ -201,6 +201,7 @@
                 <p class="mt-3 text-xs app-muted">{{ formatDateTime(note.occurredAt) }}</p>
               </article>
               <p v-if="!itemNotes.length" class="py-8 text-center text-sm app-muted">{{ t('research.noNotes') }}</p>
+              <button v-if="hasMoreNotes" type="button" class="app-button-secondary" :disabled="notesLoading" @click="loadMoreNotes">{{ t('ui.loadMoreNotes') }}</button>
               <details v-if="archivedNotes.length">
                 <summary class="cursor-pointer text-sm font-semibold app-muted">{{ t('research.archivedNotes', { count: archivedNotes.length }) }}</summary>
                 <div class="mt-3 space-y-2">
@@ -299,6 +300,7 @@ const {
   workbench, loading, initialLoading, saving, error, activeWatchlistId, activeItemId,
   activeWatchlists, archivedWatchlists, activeWatchlist, activeItems, archivedItems,
   activeItem, itemNotes, archivedNotes, itemAlerts,
+  notesLoading, hasMoreNotes, loadMoreNotes,
   load, createWatchlist, createItem, saveItem,
   createNote, createAlert, deleteAlert, deleteWatchlist, deleteItem, deleteNote, acknowledgeEvent,
   requestDesktopPermission,

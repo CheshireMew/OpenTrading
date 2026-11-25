@@ -1,6 +1,6 @@
 ---
 name: OpenTrading
-description: 行情图表、策略研究与投资组合分析工具的现有界面规范。
+description: 行情图表、研究跟踪与 Pine 策略测试工具的现有界面规范。
 colors:
   light-canvas: "#f7f4ed"
   light-panel: "#ffffff"
@@ -140,20 +140,20 @@ components:
 
 ## 页面布局切换
 
-布局选择器使用带图标、文字和按下状态的原生按钮组，选中项使用主题重点色。每页提供与任务对应的视图，不规定统一的布局数量。行情页面可在表格、列表与详情及侧栏筛选间选择；指标在图表概览与紧凑列表间选择；对比图表可调整主次或单图放大；定投可收起配置；组合增加总览和单项资产详情。图表工作台通过独立面板栏切换图表、自选和编辑器，保留原有主图状态。
+布局选择器使用带图标、文字和按下状态的原生按钮组，选中项使用主题重点色。每页提供与任务对应的视图，不规定统一的布局数量。行情页面可在表格、列表与详情及侧栏筛选间选择；指标在图表概览与紧凑列表间选择；对比图表可调整主次或单图放大；定投可收起配置。图表工作台通过独立面板栏切换图表、自选和编辑器，保留原有主图状态。
 
 列表与详情在宽区域按 280px 列表与弹性详情区排列，窄区域上下排列。详情复用现有内容和数据；内嵌时不使用浮层遮罩与焦点锁定。选中行通过底色提示，重复点击可收起。完整页面行为与数据口径见 `docs/UI_LAYOUTS.md`。
 
 ## Overview
 
-本文件记录已实现的界面，依据共享调色板、全局样式、应用导航、行情列表、研究工作台和投资工具。OpenTrading 用于行情图表、策略研究与投资组合分析；界面以图表、表格和配置表单为主，在现有品牌下按当前任务组织内容。
+本文件记录已实现的界面，依据共享调色板、全局样式、应用导航、行情列表、研究工作台和投资工具。OpenTrading 用于行情图表、研究跟踪与 Pine 策略测试；界面以图表、表格和配置表单为主，在现有品牌下按当前任务组织内容。
 
 深色界面以石墨灰承载内容，青绿色标示主要操作和当前状态；浅色界面使用暖白背景与墨绿色重点。品牌字标使用衬线字体，操作界面使用系统无衬线字体。内容区域主要依靠底色、细边框和间距划分。
 
 **Key Characteristics:**
 
 - 深浅主题共享语义颜色，应用外壳与通用页面使用同一套运行时变量。
-- 行情与组合页面通过任务标签页分开操作，指标条、表格和主图各有清楚的层次；图表工作台保留紧凑的工具密度。
+- 行情页面通过任务标签页分开操作，指标条、表格和主图各有清楚的层次；图表工作台保留紧凑的工具密度。
 - 研究从建清单、加资产到查看详情逐步展开，数据健康先显示需要处理的来源，设置按用途分区。
 - 键盘焦点、弹窗关闭与焦点恢复具有明确反馈。
 
@@ -263,12 +263,6 @@ canvas 承载页面，panel 承载内容容器，toolbar 承载工具栏与输�
 
 结果先显示六项指标，再以收益率趋势作为主图（320px 高），价格与成本、每日金额作为两张辅助图（各256px高）。辅助图只在宽容器下并排，不把三张图设成同等层级。没有结果时显示计算引导，首次计算时显示骨架。
 
-### Portfolio Workspace
-
-组合选择采用页面上方的横向选择器与新建操作；导入、导出、复制、删除与回收站收在管理折叠区。组合内容分为目标配置、流水与业绩、历史模拟、风险与情景四个任务页，存储与来源反馈在这些任务之间共享。没有持仓时，配置页提供进入账本的下一步操作。
-
-配置页先呈现资产与权重，组合名称、日期和再平衡参数收在默认折叠的设置内。历史模拟结果的指标按四列展示，容器不超过（48rem）时改为两列。风险页首次进入后再加载；已有持仓时呈现收益与风险指标、净值、风险贡献和相关性，情景测试按实际资产逐项输入冲击幅度。无持仓、加载和错误保持独立反馈。
-
 ### Data Health / Settings
 
 数据健康先显示总状态、待处理来源数、来源总数与数据库版本，再展开全部非 ready 来源及其可执行操作；ready 来源收在默认折叠的列表里。历史补全保留独立表单，后台任务另行折叠。来源修复若需要交易对参数，先定位并聚焦对应表单。表单在容器不超过（48rem）时变为两列，不超过（28rem）时变为单列。
@@ -301,4 +295,4 @@ canvas 承载页面，panel 承载内容容器，toolbar 承载工具栏与输�
 - **Don't** 将临时弹窗和抽屉的投影复制到常驻卡片。
 - **Don't** 将局部硬编码色值当作新的全局主题色。
 
-<!-- Evidence: frontend/src/theme/palette.mjs; frontend/tailwind.config.js; frontend/src/style.css; frontend/src/App.vue; frontend/src/components/AppTabs.vue; frontend/src/components/AppEmptyState.vue; frontend/src/components/AppLoadingState.vue; frontend/src/components/research/ResearchNavigation.vue; frontend/src/components/SymbolSearchBox.vue; frontend/src/views/ChartWorkspace.vue; frontend/src/views/indicators/BinanceMarket.vue; frontend/src/views/indicators/EquityMarket.vue; frontend/src/views/indicators/Web3MarketRank.vue; frontend/src/views/tools/DCA.vue; frontend/src/views/tools/PortfolioBalance.vue; frontend/src/components/portfolio/PortfolioBalanceSidebar.vue; frontend/src/components/portfolio/PortfolioBalanceSetup.vue; frontend/src/components/portfolio/PortfolioSimulationPanel.vue; frontend/src/components/portfolio/PortfolioRiskPanel.vue; frontend/src/views/research/ResearchWorkbench.vue; frontend/src/views/system/DataHealth.vue; frontend/src/views/settings/Settings.vue; frontend/src/composables/useModalDialog.ts; README.md. -->
+<!-- Evidence: frontend/src/theme/palette.mjs; frontend/tailwind.config.js; frontend/src/style.css; frontend/src/App.vue; frontend/src/components/AppTabs.vue; frontend/src/components/AppEmptyState.vue; frontend/src/components/AppLoadingState.vue; frontend/src/components/research/ResearchNavigation.vue; frontend/src/components/SymbolSearchBox.vue; frontend/src/views/ChartWorkspace.vue; frontend/src/views/indicators/BinanceMarket.vue; frontend/src/views/indicators/EquityMarket.vue; frontend/src/views/indicators/Web3MarketRank.vue; frontend/src/views/tools/DCA.vue; frontend/src/views/research/ResearchWorkbench.vue; frontend/src/views/system/DataHealth.vue; frontend/src/views/settings/Settings.vue; frontend/src/composables/useModalDialog.ts; README.md. -->

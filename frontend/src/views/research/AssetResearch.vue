@@ -21,7 +21,7 @@
         </div>
         <section v-if="benchmarkStats" class="app-panel p-5"><div class="flex flex-wrap items-center justify-between gap-3"><div><h2 class="app-section-title">{{ t('assetResearch.benchmarkComparison') }}</h2><p class="mt-1 text-sm app-muted">{{ t('assetResearch.comparisonDays', { days: benchmarkContext.days }) }} · {{ benchmarkContext.benchmarkSymbol }} · {{ benchmarkContext.timeframe }}</p></div><router-link :to="compareTarget || '/tools/compare'" class="app-button-secondary">{{ t('assetResearch.openCompare') }}</router-link></div><dl class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5"><div><dt class="app-muted text-xs">{{ asset.symbol }}</dt><dd class="mt-1 font-semibold">{{ percent(benchmarkStats.symbol_a_return_pct) }}</dd></div><div><dt class="app-muted text-xs">{{ benchmarkContext.benchmarkSymbol }}</dt><dd class="mt-1 font-semibold">{{ percent(benchmarkStats.symbol_b_return_pct) }}</dd></div><div><dt class="app-muted text-xs">{{ t('assetResearch.excessReturn') }}</dt><dd class="mt-1 font-semibold">{{ signedPercent(benchmarkStats.excess_return_pct) }}</dd></div><div><dt class="app-muted text-xs">{{ t('assetResearch.correlation') }}</dt><dd class="mt-1 font-semibold">{{ number(benchmarkStats.return_correlation) }}</dd></div><div><dt class="app-muted text-xs">{{ t('assetResearch.alignedPoints') }}</dt><dd class="mt-1 font-semibold">{{ benchmarkStats.aligned_points ?? '--' }}</dd></div></dl></section>
         <div class="grid gap-5 xl:grid-cols-2">
-          <section class="app-panel"><div class="app-panel-header"><h2 class="app-section-title">{{ t('assetResearch.thesisAndJournal') }}</h2></div><div class="space-y-3 p-5"><article v-for="item in asset.watchItems || []" :key="item.id" class="border p-4 dark:border-slate-700"><p class="text-xs app-muted">{{ item.tags?.join(' · ') }}</p><p class="mt-2 text-sm leading-6">{{ item.thesis || t('assetResearch.noThesis') }}</p><div class="mt-3 flex gap-4 text-xs app-muted"><span>{{ t('assetResearch.target') }} {{ number(item.targetPrice) }}</span><span>{{ t('assetResearch.invalidation') }} {{ number(item.invalidationPrice) }}</span></div></article><article v-for="note in asset.notes || []" :key="note.id" class="border-l-2 border-emerald-600 pl-4"><p class="font-semibold">{{ note.title }}</p><p class="mt-1 text-sm leading-6 app-muted">{{ note.content }}</p><p class="mt-2 text-xs app-muted">{{ dateTime(note.occurredAt) }}</p></article><p v-if="!asset.watchItems?.length && !asset.notes?.length" class="py-8 text-center app-muted">{{ t('assetResearch.noResearch') }}</p></div></section>
+          <section class="app-panel"><div class="app-panel-header"><h2 class="app-section-title">{{ t('assetResearch.thesisAndJournal') }}</h2></div><div class="space-y-3 p-5"><article v-for="item in asset.watchItems || []" :key="item.id" class="border p-4 dark:border-slate-700"><p class="text-xs app-muted">{{ item.tags?.join(' · ') }}</p><p class="mt-2 text-sm leading-6">{{ item.thesis || t('assetResearch.noThesis') }}</p><div class="mt-3 flex gap-4 text-xs app-muted"><span>{{ t('assetResearch.target') }} {{ number(item.targetPrice) }}</span><span>{{ t('assetResearch.invalidation') }} {{ number(item.invalidationPrice) }}</span></div></article><article v-for="note in asset.notes || []" :key="note.id" class="border-l-2 border-emerald-600 pl-4"><p class="font-semibold">{{ note.title }}</p><p class="mt-1 text-sm leading-6 app-muted">{{ note.content }}</p><p class="mt-2 text-xs app-muted">{{ dateTime(note.occurredAt) }}</p></article><p v-if="!asset.watchItems?.length && !asset.notes?.length" class="py-8 text-center app-muted">{{ t('assetResearch.noResearch') }}</p><button v-if="(asset.notesTotal || 0) > (asset.notes?.length || 0)" type="button" class="app-button-secondary" :disabled="notesLoading" @click="loadMoreNotes">{{ t('ui.loadMoreNotes') }}</button></div></section>
           <section class="app-panel"><div class="app-panel-header"><h2 class="app-section-title">{{ t('assetResearch.signals') }}</h2></div><div class="space-y-3 p-5"><article v-for="signal in asset.signals || []" :key="signal.id" class="border p-4 dark:border-slate-700"><div class="flex flex-wrap gap-2"><span class="app-chip">{{ signal.source }}</span><span class="app-chip">{{ signal.timeframe }}</span><span class="app-chip">{{ outcome(signal.outcomeStatus) }}</span></div><p class="mt-3 text-sm leading-6">{{ signal.reason }}</p><dl class="mt-3 grid grid-cols-4 gap-2 text-xs"><div><dt class="app-muted">{{ t('assetResearch.entry') }}</dt><dd>{{ number(signal.entry) }}</dd></div><div><dt class="app-muted">{{ t('assetResearch.target') }}</dt><dd>{{ number(signal.target) }}</dd></div><div><dt class="app-muted">{{ t('assetResearch.mfe') }}</dt><dd>{{ percent(signal.mfePct) }}</dd></div><div><dt class="app-muted">{{ t('assetResearch.mae') }}</dt><dd>{{ percent(signal.maePct) }}</dd></div></dl></article><p v-if="!asset.signals?.length" class="py-8 text-center app-muted">{{ t('assetResearch.noSignals') }}</p></div></section>
           <section class="app-panel"><div class="app-panel-header"><h2 class="app-section-title">{{ t('assetResearch.alerts') }}</h2></div><div class="space-y-3 p-5"><article v-for="alert in asset.alerts || []" :key="alert.id" class="flex items-center justify-between gap-4 border p-4 dark:border-slate-700"><div><p class="font-semibold">{{ alert.name }}</p><p class="mt-1 text-sm app-muted">{{ alert.metric }} · {{ alert.operator }} · {{ alert.threshold }}</p></div><span class="app-chip">{{ alert.enabled ? t('assetResearch.active') : t('assetResearch.paused') }}</span></article><p v-if="!asset.alerts?.length" class="py-8 text-center app-muted">{{ t('assetResearch.noAlerts') }}</p></div></section>
           <section class="app-panel"><div class="app-panel-header"><h2 class="app-section-title">{{ t('assetResearch.timeline') }}</h2></div><div class="space-y-4 p-5"><article v-for="event in asset.events || []" :key="event.id" class="border-l-2 border-stone-300 pl-4 dark:border-slate-600"><p class="font-semibold">{{ event.title }}</p><p v-if="event.body" class="mt-1 text-sm app-muted">{{ event.body }}</p><p class="mt-2 text-xs app-muted">{{ dateTime(event.occurredAt) }}</p></article><p v-if="!asset.events?.length" class="py-8 text-center app-muted">{{ t('assetResearch.noEvents') }}</p></div></section>
@@ -46,6 +46,18 @@ const route = useRoute(); const { t, locale } = useI18n(); const asset = ref<Ass
 const routeSymbol = computed(() => String(route.params.symbol || '').replace(/~/g, '/'))
 let loadVersion = 0
 let loadedKey = '', pendingKey = ''
+const notesLoading = ref(false)
+async function loadMoreNotes() {
+  const current = asset.value, version = loadVersion
+  if (!current || notesLoading.value) return
+  notesLoading.value = true
+  try {
+    const existing = current.notes || []
+    const page = await researchApi.listNotes(current.symbol, existing.length, 200)
+    if (version === loadVersion && asset.value === current) asset.value = { ...current, notes: [...existing, ...page.items], notesTotal: page.total }
+  } catch (reason) { if (version === loadVersion) setError(reason, 'assetResearch.loadFailed') }
+  finally { if (version === loadVersion) notesLoading.value = false }
+}
 const requestKey = () => JSON.stringify([routeSymbol.value, timeframe.value, route.query.asset_class, route.query.chain_id, route.query.platform])
 const load = async () => {
   if (route.name !== 'AssetResearch') return
@@ -53,7 +65,7 @@ const load = async () => {
   if (loading.value && pendingKey === key) return
   const version = ++loadVersion
   if (loadedKey !== key) asset.value = null
-  pendingKey = key; loading.value = true; clearError()
+  pendingKey = key; loading.value = true; notesLoading.value = false; clearError()
   try {
     const response = await researchApi.getAsset(routeSymbol.value, timeframe.value, 365, {
       assetClass: typeof route.query.asset_class === 'string' ? route.query.asset_class : undefined,
@@ -67,7 +79,7 @@ const load = async () => {
 const loadRoute = () => { if (route.name === 'AssetResearch' && (!asset.value || requestKey() !== loadedKey)) void load() }
 function onResearchAdded(symbol: string, item: ResearchWatchItemResponse) {
   const current = asset.value
-  if (!current || current.symbol !== symbol) return
+  if (!current || current.symbol.toUpperCase() !== symbol.toUpperCase()) return
   // The create response is authoritative. Refreshing market history must not
   // hide a successfully saved research record behind a slow quote request.
   ++loadVersion
@@ -88,12 +100,11 @@ const contextRows = computed(() => {
   const rows: { key: string; value: string }[] = []
   if (context.priceBasis) rows.push({ key: t('assetResearch.priceBasis'), value: String(context.priceBasis) })
   for (const [source, label] of [['spot_ticker', 'spot24h'], ['usdm_ticker', 'futures24h']] as const) {
-    const ticker = context[source] as Record<string, unknown> | undefined
-    const change = ticker?.priceChangePercent
-    if (change != null && Number.isFinite(Number(change))) rows.push({ key: t('assetResearch.' + label), value: percent(Number(change)) })
+    const ticker = context[source]
+    if (ticker) rows.push({ key: t('assetResearch.' + label), value: percent(ticker.price_change_pct) })
   }
-  const mark = context.usdm_mark as Record<string, unknown> | undefined
-  if (mark?.lastFundingRate != null && Number.isFinite(Number(mark.lastFundingRate))) rows.push({ key: t('assetResearch.fundingRate'), value: percent(Number(mark.lastFundingRate) * 100) })
+  const mark = context.usdm_mark
+  if (mark) rows.push({ key: t('assetResearch.fundingRate'), value: percent(mark.last_funding_rate == null ? null : mark.last_funding_rate * 100) })
   return rows
 })
 const marketContext = computed<Record<string, any>>(() => asset.value?.marketContext || {})

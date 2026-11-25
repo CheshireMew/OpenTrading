@@ -37,10 +37,10 @@ from app.infra.persistence.market.history.raw_snapshots import RawSnapshotReposi
 class SnapshotBundleService:
     """Export and atomically register verified offline price snapshot bundles."""
 
-    def __init__(self, root: Path, config: MarketDataConfig) -> None:
-        self.root = root.expanduser().resolve()
+    def __init__(self, database: MarketHistoryDatabase, config: MarketDataConfig) -> None:
+        self.root = database.root
         self.config = config
-        database = MarketHistoryDatabase(self.root)
+        self._database = database
         self._prices = PriceRepository(database)
         self._imports = BundleImportRepository(database)
         self._raw_repository = RawSnapshotRepository(database)
@@ -280,7 +280,7 @@ class SnapshotBundleService:
             for item in validated.raw_snapshots:
                 manifest = item.manifest
                 for acquisition in manifest["acquisitions"]:
-                    saved = RawSnapshotStore(self.root, self.config).save(
+                    saved = RawSnapshotStore(self._database, self.config).save(
                         acquisition["provider"],
                         acquisition["resource"],
                         item.payload,

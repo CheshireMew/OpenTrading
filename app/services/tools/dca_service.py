@@ -53,7 +53,7 @@ class DCAService:
                     current_end = True
                     end_dt_local = now_local.replace(tzinfo=None)
                 else:
-                    end_dt_local = end_dt_local.replace(hour=23, minute=59, second=59)
+                    end_dt_local = end_dt_local + timedelta(days=1, milliseconds=-1)
             else:
                 end_dt_local = now_local.replace(tzinfo=None)
 
@@ -62,10 +62,13 @@ class DCAService:
                     f"计算定投: {symbol}, 日投 {daily_investment}, {start_dt_local} - {end_dt_local} (Local), 时区 {timezone}"
                 )
 
-            buffer_days = settings.DCA_INDICATOR_BUFFER_DAYS
-            fetch_start_utc = to_utc(start_dt_local - timedelta(days=buffer_days + 1), timezone)
-            fetch_end_local = end_dt_local if current_end else end_dt_local + timedelta(days=1)
-            fetch_end_utc = to_utc(fetch_end_local, timezone)
+            buffer_days = {
+                "ema_deviation": settings.DCA_INDICATOR_BUFFER_DAYS + 1,
+                "rsi_dynamic": 16,
+                "ahr999": settings.DCA_MA_PERIOD + 1,
+            }.get(strategy, 0)
+            fetch_start_utc = to_utc(start_dt_local - timedelta(days=buffer_days), timezone)
+            fetch_end_utc = to_utc(end_dt_local, timezone)
             if current_end:
                 fetch_end_utc = fetch_end_utc.replace(minute=0, second=0, microsecond=0)
             resolved_asset = resolve_market_asset(symbol)
@@ -104,6 +107,7 @@ class DCAService:
                 timezone=timezone,
                 start_dt_local=start_dt_local,
                 target_hour=None if is_index else target_h,
+                strategy=strategy,
             )
             if not is_index:
                 target_klines = target_klines[target_klines["local_dt"] <= end_dt_local.replace(tzinfo=now_local.tzinfo)]

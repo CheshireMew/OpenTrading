@@ -11,11 +11,12 @@ export interface DataHealthResponse {
 
 export interface DataRepairResponse {
   action: string
-  status: "completed" | "failed"
+  status: "completed" | "partial" | "failed"
   startedAt: string
   completedAt: string
   detail: string
   result?: { [key: string]: string | number | boolean | Array<string | number | boolean | null> | { [key: string]: string | number | boolean | null } | Array<{ [key: string]: string | number | boolean | null }> | { [key: string]: Array<string | number | boolean | null> } | null }
+  coverage?: DataRepairCoverageResponse | null
 }
 
 export interface DataRepairCommand {
@@ -61,6 +62,19 @@ export interface LlmProviderConfigUpdateRequest {
   baseUrl?: string
   modelId?: string
   reasoningEnabled?: boolean
+}
+
+export interface DataRepairCoverageResponse {
+  complete: boolean
+  startDate: string
+  endDate: string
+  missingRanges?: Array<DataRepairGapResponse>
+  missingSessions?: Array<string>
+}
+
+export interface DataRepairGapResponse {
+  start: string
+  end: string
 }
 
 export interface DataSourceHealthResponse {

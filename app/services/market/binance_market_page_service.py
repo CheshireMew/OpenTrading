@@ -41,6 +41,7 @@ class BinanceMarketPageService:
         self._refresh_event: asyncio.Event | None = None
         self._refresh_task: asyncio.Task[None] | None = None
         self._running = False
+        self._computations: dict[PageKey, asyncio.Task] = {}
 
     def start(self) -> None:
         if self._running:
@@ -51,6 +52,10 @@ class BinanceMarketPageService:
 
     async def shutdown(self) -> None:
         self._running = False
+        computations, self._computations = list(self._computations.values()), {}
+        for computation in computations:
+            computation.cancel()
+        await asyncio.gather(*computations, return_exceptions=True)
         if self._refresh_event is not None:
             self._refresh_event.set()
         task = self._refresh_task
@@ -74,6 +79,35 @@ class BinanceMarketPageService:
         if should_notify_refresh:
             self._request_refresh()
         return await self._build_pending_page(key)
+
+    async def get_ready_page(self, *, min_rise_pct=0.0, limit=100, quote_asset="USDT") -> BinanceMarketPageResponse:
+        key = self.state.key(min_rise_pct=min_rise_pct, limit=limit, quote_asset=quote_asset)
+        cached, _ = await self.state.register_request(key)
+        if cached is not None and cached.refresh_status.snapshot_ready and cached.refresh_status.monitor_ready:
+            return cached
+        task = self._computations.get(key)
+        if task is None:
+            async def compute():
+                try:
+                    async with asyncio.timeout(90):
+                        await self.snapshot_service.get_ready_snapshot()
+                        result = await self.refresh_page(key)
+                        if not result.refresh_status.snapshot_ready or not result.refresh_status.monitor_ready:
+                            from app.exceptions import ServiceUnavailableError
+                            raise ServiceUnavailableError("筛选所需的市场指标尚未就绪，请稍后重试")
+                        return result
+                except TimeoutError as exc:
+                    from app.exceptions import ServiceUnavailableError
+                    raise ServiceUnavailableError("市场指标计算超时，请稍后重试") from exc
+            task = asyncio.create_task(compute())
+            self._computations[key] = task
+            def finished(completed):
+                if self._computations.get(key) is completed:
+                    self._computations.pop(key, None)
+                if not completed.cancelled():
+                    completed.exception()
+            task.add_done_callback(finished)
+        return await asyncio.shield(task)
 
     async def refresh_requested_payloads(self) -> None:
         keys = await self.state.requested_keys()

@@ -25,6 +25,7 @@ function loadSource(url, modules, sfc = false) {
 function mountTester(api, overrides = {}) {
   const component = loadSource(new URL('../src/components/chartWorkspace/StrategyTester.vue', import.meta.url), {
     '@/theme/palette.mjs': { DARK_PALETTE: {} },
+    '@/api/request': { apiErrorMessage: (cause, fallback) => cause?.message || fallback },
     '@/modules/chartWorkspace/api': { chartApi: api },
     '@/modules/chartWorkspace/pineEngine': { readPineMetadata: () => ({ result: Promise.resolve({ kind: 'strategy', props: {}, inputs: [] }), cancel() {} }) },
     '@/modules/chartWorkspace/locale': { cw: key => key, formatNumber: String, formatDate: String },
@@ -81,6 +82,62 @@ test('a late run submission cannot replace a selection made while submission was
   assert.equal(mounted.state.selectedId.value, 'chosen')
   assert.equal(mounted.state.selected.value.id, 'chosen')
   mounted.unmount()
+})
+
+test('tester retries a transient status failure and recovers the completed report', async t => {
+  const timers = []
+  t.mock.method(globalThis, 'setTimeout', (run, delay) => { const timer = { run, delay }; timers.push(timer); return timer })
+  t.mock.method(globalThis, 'clearTimeout', () => {})
+  let calls = 0
+  const mounted = mountTester({ runs: async () => [{ id: 'one' }],
+    getRun: async () => { calls++; if (calls === 2) throw Object.assign(new Error('offline'), { status: 503 }); return { id: 'one', status: calls < 3 ? 'running' : 'completed' } },
+    records: async () => ({ items: [], total: 0 }),
+  })
+  await settle()
+  assert.equal(timers[0].delay, 1500)
+  await timers.shift().run()
+  assert.equal(mounted.state.requestError.value, 'offline')
+  assert.equal(timers[0].delay, 3000)
+  await timers.shift().run()
+  assert.equal(calls, 3)
+  assert.equal(mounted.state.selected.value.status, 'completed')
+  assert.equal(mounted.state.requestError.value, '')
+  assert.equal(timers.length, 0)
+  mounted.unmount()
+})
+
+test('tester exposes manual recovery for an initial missing record without retrying a permanent failure', async t => {
+  let timers = 0, calls = 0
+  t.mock.method(globalThis, 'setTimeout', () => { timers++; return 1 })
+  const mounted = mountTester({ runs: async () => [{ id: 'one' }],
+    getRun: async () => { if (++calls === 1) throw Object.assign(new Error('missing'), { status: 404 }); return { id: 'one', status: 'failed' } },
+  })
+  await settle()
+  assert.equal(mounted.state.requestError.value, 'missing')
+  assert.equal(timers, 0)
+  await mounted.state.retrySelected()
+  assert.equal(mounted.state.selected.value.status, 'failed')
+  assert.equal(mounted.state.requestError.value, '')
+  mounted.unmount()
+})
+
+test('chart HTTP requests bound stalled responses and preserve caller cancellation', async t => {
+  const { request } = loadSource(new URL('../src/modules/chartWorkspace/api.ts', import.meta.url), {
+    '@/api/request': { ApiRequestError: Error }, '@/app/publicSite': { PUBLIC_SITE: false },
+    './browserDocuments': { createBrowserDocuments: () => ({}) }, './browserPineRuns': {},
+  })
+  let signal
+  t.mock.method(globalThis, 'fetch', (_url, options) => new Promise((_resolve, reject) => {
+    signal = options.signal
+    signal.addEventListener('abort', () => reject(signal.reason), { once: true })
+  }))
+  await assert.rejects(request('/stalled', {}, 20), /timeout of 20ms exceeded/)
+  assert.equal(signal.aborted, true)
+  const controller = new AbortController(), reason = new Error('caller stopped')
+  const pending = request('/canceled', { signal: controller.signal })
+  controller.abort(reason)
+  await assert.rejects(pending, error => error === reason)
+  assert.equal(signal.aborted, true)
 })
 
 test('market resource drops pending data and cannot restart timers after its scope is disposed', async t => {

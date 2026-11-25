@@ -50,6 +50,7 @@ class MarketRealtimeQueryService:
         symbol: str,
         timeframe: str | None,
         limit: int | None,
+        use_ai: bool = True,
     ) -> RealtimeResponse:
         resolved_timeframe = timeframe or settings.TIMEFRAME
         resolved_limit = limit or settings.LIMIT
@@ -58,7 +59,7 @@ class MarketRealtimeQueryService:
                 symbol=symbol,
                 timeframe=resolved_timeframe,
                 limit=resolved_limit,
-                use_ai=True,
+                use_ai=use_ai,
                 include_type=False,
                 ai_log_context="HTTP",
             )

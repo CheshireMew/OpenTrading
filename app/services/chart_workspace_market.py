@@ -3,18 +3,20 @@ from __future__ import annotations
 import asyncio
 import json
 import time
-from datetime import datetime, timezone
-from app.infra.market_data.chart import ChartMarketClient, MarketHttpError
+from datetime import datetime, timezone, timedelta
+from app.infra.market_data.chart import ChartMarketClient
 from app.infra.market_data.symbol_icons import SymbolIconClient
 
 from app.contracts.chart_workspace import ChartBar, ChartBars, ChartQuote, ChartSymbol
 from app.services.market.symbol_catalog import list_market_search_items
+from app.services.chart_daily_history import daily_chart_symbols
 from app.domain.market.candles import candle_end_ms, current_candle_open_ms
 from app.domain.market.constants import timeframe_to_milliseconds
 from app.domain.market.symbol_catalog import build_market_symbol_source
 from app.infra.executor import run_database
 from app.services.market.history_range_coordinator import HistoryRangeCoordinator, merge_ohlcv_rows
 from config import settings
+from utils.logger import logger
 
 TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w", "1M"]
 
@@ -24,15 +26,19 @@ def close_boundary(open_time: int, timeframe: str) -> int:
 
 
 class ChartWorkspaceMarket:
-    def __init__(self, binance, index, *, kline_store=None):
+    def __init__(self, binance, index, *, kline_store=None, daily_history=None):
         self.binance = binance
         self.index = index
+        self.daily_history = daily_history
         self.http = ChartMarketClient()
         self.icons = SymbolIconClient()
         self.history_ranges = HistoryRangeCoordinator(kline_store, storage_runner=run_database) if kline_store else None
         self.catalog: dict[str, ChartSymbol] = {}
         self.catalog_at = 0.0
-        self.catalog_lock = asyncio.Lock()
+        self._static_catalog_ready = False
+        self._catalog_checked: dict[str, tuple[float, bool]] = {}
+        self._catalog_tasks: dict[str, asyncio.Task] = {}
+        self._closed = False
         self.channels: dict[tuple[str, str], tuple[asyncio.Task, set[asyncio.Queue]]] = {}
         self.channel_status: dict[tuple[str,str],dict] = {}
         self.replay_requests: dict[tuple, asyncio.Task] = {}
@@ -54,14 +60,47 @@ class ChartWorkspaceMarket:
             task.add_done_callback(finished)
         return await asyncio.shield(task)
 
-    async def symbols(self) -> list[ChartSymbol]:
-        if self.catalog and time.time() - self.catalog_at < 600:
-            return list(self.catalog.values())
-        async with self.catalog_lock:
-            if self.catalog and time.time() - self.catalog_at < 600:
-                return list(self.catalog.values())
+    def _static_symbols(self):
+        if self._static_catalog_ready:
+            return
+        self._static_catalog_ready = True
+        for row in list_market_search_items():
+            if row["asset_class"] == "index":
+                key = f"index:index:{row['symbol']}"
+                self.catalog.setdefault(key, ChartSymbol(id=key, symbol=row["symbol"], name=row["name"],
+                    exchange=str(row["exchange"]), market="index", currency=row["currency"], timeframes=["1d"],
+                    close_only=True, aliases=list(row.get("aliases", [])), session="regular",
+                    metadata={"price_basis": "index", "capability_pending": True}))
+        if self.daily_history is not None:
+            for item in daily_chart_symbols():
+                self.catalog.setdefault(item.id, item)
+
+    def _refresh_catalogs(self):
+        self._static_symbols()
+        if self._closed:
+            return
+        now = time.time()
+        # Explicitly injected verified catalogs retain the same TTL as before.
+        if not self._catalog_checked and self.catalog_at and now - self.catalog_at < 600:
+            return
+        for venue in ("binance:spot", "binance:usdm", "okx:spot"):
+            checked, success = self._catalog_checked.get(venue, (0, False))
+            if venue in self._catalog_tasks or now - checked < (600 if success else 30):
+                continue
+            task = asyncio.create_task(self._load_catalog(venue), name=f"chart-symbols:{venue}")
+            self._catalog_tasks[venue] = task
+            def finished(completed, identity=venue):
+                if self._catalog_tasks.get(identity) is completed:
+                    self._catalog_tasks.pop(identity, None)
+                if not completed.cancelled():
+                    completed.exception()
+            task.add_done_callback(finished)
+
+    async def _load_catalog(self, venue):
+        try:
             collected = {}
-            async def venue(market):
+            if venue.startswith("binance:"):
+                market = venue.split(":")[1]
                 loader = self.binance.spot if market == "spot" else self.binance.usdm
                 prefix = "/api/v3" if market == "spot" else "/fapi/v1"
                 payload = await loader.client.get_json(prefix + "/exchangeInfo", ttl=600)
@@ -76,35 +115,38 @@ class ChartWorkspaceMarket:
                     key = f"binance:{market}:{row['symbol']}"
                     collected[key] = ChartSymbol(id=key, symbol=row["symbol"], name=f"{row['baseAsset']}/USDT",
                         exchange="binance", market=market, currency="USDT", timeframes=TIMEFRAMES,
-                        metadata={"mintick": tick, "minmove": 1, "pricescale": round(1/tick), "pointvalue": 1,
-                                  "mincontract": step, "basecurrency": row["baseAsset"]})
-            outcomes = await asyncio.gather(venue("spot"), venue("usdm"), return_exceptions=True)
-            # A failed venue keeps its last verified metadata; never invent a tick size.
-            for market, outcome in zip(("spot", "usdm"), outcomes):
-                if isinstance(outcome, Exception):
-                    collected.update({k:v for k,v in self.catalog.items() if v.exchange == "binance" and v.market == market})
-            for row in list_market_search_items():
-                if row["asset_class"] == "index":
-                    key = f"index:index:{row['symbol']}"
-                    collected[key] = ChartSymbol(id=key, symbol=row["symbol"], name=row["name"], exchange=str(row["exchange"]),
-                        market="index", currency=row["currency"], timeframes=["1d"], close_only=True,
-                        session="regular", metadata={"price_basis": "index", "capability_pending": True})
-            try:
+                        metadata={"mintick":tick, "minmove":1, "pricescale":round(1/tick), "pointvalue":1,
+                                  "mincontract":step, "basecurrency":row["baseAsset"]})
+            else:
                 row = await self.http.okx_symbol("OKB-USDT")
                 tick = float(row["tickSz"])
                 key = "okx:spot:OKB-USDT"
                 collected[key] = ChartSymbol(id=key, symbol="OKB-USDT", name="OKB/USDT", exchange="okx", market="spot",
                     currency="USDT", timeframes=TIMEFRAMES, metadata={"mintick":tick, "minmove":1,
                     "pricescale":round(1/tick), "pointvalue":1, "mincontract":float(row["lotSz"]), "basecurrency":"OKB"})
-            except (MarketHttpError, KeyError, IndexError, ValueError):
-                if "okx:spot:OKB-USDT" in self.catalog:
-                    collected["okx:spot:OKB-USDT"] = self.catalog["okx:spot:OKB-USDT"]
-            self.catalog = collected
+            self.catalog = {**{key:info for key,info in self.catalog.items() if not key.startswith(venue + ":")}, **collected}
             self.catalog_at = time.time()
-            return list(collected.values())
+            self._catalog_checked[venue] = (self.catalog_at, True)
+        except Exception as exc:
+            # A failure retains only this venue's last verified metadata. Other
+            # venues publish independently and never wait behind its timeout.
+            self._catalog_checked[venue] = (time.time(), False)
+            logger.warning("Chart symbol catalog %s unavailable: %s", venue, type(exc).__name__)
+
+    async def symbols(self) -> list[ChartSymbol]:
+        self._refresh_catalogs()
+        pending = set(self._catalog_tasks.values())
+        while pending and not any(info.market in {"spot", "usdm"} for info in self.catalog.values()):
+            _, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+        return list(self.catalog.values())
 
     async def resolve(self, key: str) -> ChartSymbol:
-        await self.symbols()
+        self._refresh_catalogs()
+        if key not in self.catalog:
+            venue = ":".join(key.split(":")[:2])
+            task = self._catalog_tasks.get(venue)
+            if task is not None:
+                await asyncio.shield(task)
         if key not in self.catalog:
             raise ValueError("品种不可用或交易所元数据尚未加载，请重试")
         return self.catalog[key]
@@ -117,23 +159,42 @@ class ChartWorkspaceMarket:
         end = min(end if end is not None else now, now)
         rows = []
         source = info.exchange
+        if info.market in {"index", "fx", "commodity"}:
+            lower = start if start is not None else end - max(limit * 2, 14) * 86400000
+            upper = min(end, lower + limit * 2 * 86400000) if start is not None else end
+            start_day = datetime.fromtimestamp(lower / 1000, timezone.utc).date()
+            end_day = min(datetime.fromtimestamp(upper / 1000, timezone.utc).date(),
+                          datetime.fromtimestamp(now / 1000, timezone.utc).date() - timedelta(days=1))
+            if start_day > end_day:
+                return ChartBars(symbol=info, timeframe=timeframe, bars=[], source=source)
         if info.market == "index":
-            start_day = datetime.fromtimestamp((start or end - limit * 2 * 86400000)/1000, timezone.utc)
             result = await self.index.get_history_async(symbol=info.symbol, timeframe="1d",
-                start_date=start_day.strftime("%Y-%m-%d"), end_date=datetime.fromtimestamp(end/1000, timezone.utc).strftime("%Y-%m-%d"))
+                start_date=start_day.isoformat(), end_date=end_day.isoformat())
             rows = [r.as_row() for r in result.data]
             source = result.source
             info = info.model_copy(update={"close_only": result.is_close_only,
                 "currency":result.native_currency, "metadata": {"price_basis":result.price_basis, "source":source}})
+            self.catalog[key] = info
+        elif info.market in {"fx", "commodity"}:
+            if self.daily_history is None:
+                raise ValueError("日线行情服务尚未就绪")
+            snapshot = await self.daily_history.snapshot(info.symbol, start_day, end_day)
+            rows = [[int(bar.observed_at.timestamp() * 1000), bar.open, bar.high, bar.low, bar.close,
+                     bar.volume or 0.0] for bar in snapshot.bars]
+            source = snapshot.provider
+            info = info.model_copy(update={"close_only": False,
+                "metadata": {**info.metadata, "source": source, "snapshot_hash": snapshot.snapshot_hash}})
             self.catalog[key] = info
         else:
             rows = (await self._shared_crypto_bars(info, timeframe, limit, start, end, now)
                     if self.history_ranges is not None
                     else await self._fetch_crypto_rows(info, timeframe, limit, start, end))
         unique = {int(r[0]):r for r in rows if r[0] <= end and (start is None or r[0] >= start)}
+        ordered = sorted(unique.items())
+        selected = ordered[:limit] if start is not None else ordered[-limit:]
         bars = [ChartBar(time=t, open=r[1], high=r[2], low=r[3], close=r[4], volume=r[5],
                 closeTime=close_boundary(t,timeframe), closed=close_boundary(t,timeframe) <= now)
-                for t,r in sorted(unique.items())][-limit:]
+                for t,r in selected]
         return ChartBars(symbol=info, timeframe=timeframe, bars=bars, source=source)
 
     async def _fetch_crypto_rows(self, info, timeframe, limit, start, end):
@@ -293,13 +354,16 @@ class ChartWorkspaceMarket:
                 while True:
                     data = await self.bars(key,timeframe,limit=1000 if cursor else 2,start=cursor)
                     for bar in data.bars:
-                        emit("bar", bar=bar.model_dump())
+                        polling_quote = info.exchange != "binance" and bar is data.bars[-1]
+                        emit("bar", live=polling_quote,
+                             observed_at=(bar.closeTime if bar.closed else int(time.time() * 1000)) if polling_quote else None,
+                             bar=bar.model_dump())
                         last_open = bar.time
                     if not cursor or len(data.bars)<1000:
                         break
                     cursor = data.bars[-1].closeTime
                 if info.exchange != "binance":
-                    await asyncio.sleep(60 if info.market == "index" else 5)
+                    await asyncio.sleep(60 if info.market in {"index", "fx", "commodity"} else 5)
                     continue
                 # Binance moved USD-M klines to /market in April 2026. The old
                 # socket can accept the connection without delivering any bars.
@@ -308,13 +372,14 @@ class ChartWorkspaceMarket:
                     live = False
                     while True:
                         raw = await asyncio.wait_for(stream.recv(),timeout=30)
-                        row = json.loads(raw).get("k")
+                        event = json.loads(raw)
+                        row = event.get("k")
                         if row:
                             if not live:
                                 emit("status",status="live")
                                 live = True
                             last_open = int(row["t"])
-                            emit("bar",live=True,bar=ChartBar(time=last_open,open=float(row["o"]), high=float(row["h"]),
+                            emit("bar",live=True,observed_at=int(event["E"]),bar=ChartBar(time=last_open,open=float(row["o"]), high=float(row["h"]),
                                 low=float(row["l"]),close=float(row["c"]),volume=float(row["v"]),
                                 closeTime=int(row["T"])+1,closed=bool(row["x"])).model_dump())
             except asyncio.CancelledError:
@@ -329,10 +394,14 @@ class ChartWorkspaceMarket:
                 await asyncio.sleep(5)
 
     async def close(self):
-        tasks = [task for task,_ in self.channels.values()] + list(self.replay_requests.values())
+        self._closed = True
+        tasks = ([task for task,_ in self.channels.values()] + list(self.replay_requests.values())
+                 + list(self._catalog_tasks.values()))
         for task in tasks:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
         self.channels.clear()
+        if self.daily_history is not None:
+            await self.daily_history.close()
         await self.icons.aclose()
         await self.http.aclose()

@@ -40,6 +40,7 @@ export function useDcaPage() {
   const result = ref<DCAResponse | null>(null)
   const resultContext = ref<SimulateDcaCommand | null>(null)
   let inputVersion = 0, requestVersion = 0
+  let requestController: AbortController | undefined
   const { marketData, fetchMarketIndicators } = useDcaMarketContext({
     symbol: () => config.symbol,
     t,
@@ -64,6 +65,7 @@ export function useDcaPage() {
       return
     }
     loading.value = true
+    requestController?.abort(); requestController = undefined
     const request = ++requestVersion, inputs = inputVersion
     const current = () => !disposed && request === requestVersion && inputs === inputVersion
     clearError()
@@ -81,7 +83,8 @@ export function useDcaPage() {
         strategy: config.strategy || undefined,
         strategy_params: { ...config.strategy_params },
       }
-      const response = await toolsApi.runSimulation(payload)
+      const controller = requestController = new AbortController()
+      const response = await toolsApi.runSimulation(payload, controller.signal)
       if (!current()) return
       resultContext.value = payload
       result.value = {
@@ -97,7 +100,7 @@ export function useDcaPage() {
       console.error('DCA Error:', error)
       if (current()) setError(error, 'dca.simFailed')
     } finally {
-      if (request === requestVersion) loading.value = false
+      if (request === requestVersion) { loading.value = false; requestController = undefined }
     }
   }
 
@@ -136,6 +139,7 @@ export function useDcaPage() {
 
   watch(config, () => {
     inputVersion++
+    if (requestController) { requestController.abort(); requestController = undefined; loading.value = false }
     if (result.value) result.value = null
     resultContext.value = null
   }, { deep: true, flush: 'sync' })
@@ -184,6 +188,7 @@ export function useDcaPage() {
 
   onBeforeUnmount(() => {
     disposed = true
+    requestController?.abort()
     snapshotStop?.()
     snapshotStop = null
   })

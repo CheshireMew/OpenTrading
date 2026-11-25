@@ -39,6 +39,13 @@ class KlineStore:
             return []
         with self.database_runtime.session_scope() as session:
             direct = self._exact(session, symbol, timeframe, None, end_ts - 1, limit=limit)
+            if len(direct) >= limit:
+                # There are already enough real candles. Only a newer bar or a
+                # hole inside this tail can change the answer; smaller periods
+                # outside that window cannot displace any returned candle.
+                first = min(int(row[0]) for row in direct)
+                rows = self._fill_from_smaller(session, symbol, timeframe, first, end_ts - 1, direct)
+                return rows[-limit:]
             merged = {int(row[0]): row for row in direct}
             duration = timeframe_to_milliseconds(timeframe)
             for source in synthesis_sources(symbol, timeframe):

@@ -191,6 +191,7 @@
       :format-compact="formatCompact"
       :value-tone="changeClass"
       @close="closeWeb3Token"
+      @retry="retryWeb3TokenDetail"
       @update:interval="web3KlineInterval = $event"
     />
       </div>
@@ -246,6 +247,7 @@ const {
   toggleWeb3Sort,
   openWeb3Token,
   closeWeb3Token,
+  retryWeb3TokenDetail,
   formatScore,
   formatPercent,
   formatWinRate,

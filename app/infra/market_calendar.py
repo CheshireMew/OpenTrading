@@ -7,7 +7,7 @@ import exchange_calendars
 
 @lru_cache(maxsize=24)
 def session_dates(market: str, start: date, end: date) -> tuple[str, list[str], list[str]]:
-    code = {"US": "XNYS", "CN": "XSHG", "HK": "XHKG"}[market]
+    code = {"US": "XNYS", "CN": "XSHG", "HK": "XHKG", "ICEUS": "ICEUS"}[market]
     if end < start:
         return code, [], []
     calendar = exchange_calendars.get_calendar(code, start=(start - timedelta(days=14)).isoformat(), end=end.isoformat())

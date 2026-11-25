@@ -18,7 +18,7 @@
                 <span class="referral-icon"><component :is="section.icon" aria-hidden="true" /></span>
                 <h3>{{ t('referrals.' + provider.name) }}</h3>
               </div>
-              <a :href="provider.url" target="_blank" rel="noopener noreferrer" class="app-button-secondary">
+              <a :href="provider.url" target="_blank" rel="noopener noreferrer" :class="section.id === 'exchanges' ? 'app-button-primary' : 'app-button-secondary'">
                 {{ t('referrals.' + section.action) }}<ArrowUpRightIcon aria-hidden="true" />
               </a>
             </header>
@@ -93,7 +93,7 @@ onBeforeUnmount(() => clearTimeout(copyTimer))
 .referral-intro{margin-top:10px}
 .referral-page section+section{padding-top:8px}
 .referral-section-heading{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px}
-.referral-benefit{padding:4px 9px;border:1px solid var(--ui-border);border-radius:4px;font-size:12px;color:var(--ui-text);background:var(--ui-elevated)}
+.referral-benefit{padding:4px 9px;border:1px solid color-mix(in srgb,var(--ui-favorite) 28%,var(--ui-border));border-radius:4px;font-size:12px;color:var(--ui-favorite);background:color-mix(in srgb,var(--ui-favorite) 8%,var(--ui-panel))}
 .referral-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .referral-card{min-width:0;padding:20px 22px}
 .referral-provider{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}

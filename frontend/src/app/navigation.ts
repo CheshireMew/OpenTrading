@@ -122,7 +122,7 @@ export const APP_ROUTE_DEFINITIONS = [
     name: 'ReferralLinks',
     component: () => import('@/views/ReferralLinks.vue'),
     meta: { titleKey: 'referrals.title' },
-    nav: { section: 'system', labelKey: 'referrals.title', icon: 'LinkIcon' },
+    nav: { section: 'system', labelKey: 'referrals.title', icon: 'GiftIcon' },
   },
   {
     path: '/system/data-health',

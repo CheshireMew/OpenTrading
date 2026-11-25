@@ -49,6 +49,7 @@
             :key="item.path"
             :to="item.path"
             class="app-nav-link flex shrink-0 items-center transition"
+            :class="{ 'app-nav-link--perks': item.name === 'ReferralLinks' }"
             active-class="app-nav-link--active"
             :title="t(item.nav.labelKey)"
             @click="closeSidebar"
@@ -98,7 +99,7 @@ import {
   PresentationChartLineIcon,
   FunnelIcon,
   CircleStackIcon,
-  LinkIcon,
+  GiftIcon,
 } from '@heroicons/vue/24/outline'
 import {
   APP_PAGE_CACHE_LIMIT,
@@ -142,7 +143,7 @@ const iconMap: Record<AppNavIconName, Component> = {
   PresentationChartLineIcon,
   FunnelIcon,
   CircleStackIcon,
-  LinkIcon,
+  GiftIcon,
 }
 const navSections = APP_NAV_SECTIONS.map((section) => ({
   ...section,
@@ -310,6 +311,18 @@ onBeforeUnmount(() => {
   background: var(--app-nav-active-bg);
   color: var(--app-nav-active);
   font-weight: 700;
+}
+
+.app-nav-link--perks {
+  color: var(--ui-favorite);
+  background: color-mix(in srgb, var(--ui-favorite) 6%, var(--app-sidebar-bg));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ui-favorite) 22%, transparent);
+}
+
+.app-nav-link--perks:hover,
+.app-nav-link--perks.app-nav-link--active {
+  color: var(--ui-favorite);
+  background: color-mix(in srgb, var(--ui-favorite) 12%, var(--app-sidebar-bg));
 }
 
 .app-main {

@@ -248,14 +248,14 @@
     "missing": "{count} missing trading days"
   },
   "referrals": {
-    "title": "Invites & Resources",
-    "intro": "Curious about buying Bitcoin? Start here, even if you’re new.",
+    "title": "Starter Perks",
+    "intro": "Save on trading fees and get started with Bitcoin.",
     "exchanges": "Exchanges",
     "exchangeBenefit": "Save 20% on trading fees",
     "wallets": "Web3 Wallets",
     "binance": "Binance",
     "okx": "OKX",
-    "register": "Sign up",
+    "register": "Get offer",
     "openWallet": "Open wallet",
     "inviteCode": "Referral code",
     "futuresInviteCode": "Futures referral code",

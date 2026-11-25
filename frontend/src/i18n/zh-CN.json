@@ -248,14 +248,14 @@
     "missing": "缺少 {count} 个交易日"
   },
   "referrals": {
-    "title": "邀请与资源",
-    "intro": "想试着买比特币？新手也能开始。",
+    "title": "新手福利",
+    "intro": "省下交易手续费，从第一笔比特币开始。",
     "exchanges": "交易所",
     "exchangeBenefit": "省 20% 手续费",
     "wallets": "Web3 钱包",
     "binance": "币安",
     "okx": "OKX",
-    "register": "注册",
+    "register": "领取优惠",
     "openWallet": "打开钱包",
     "inviteCode": "邀请码",
     "futuresInviteCode": "合约邀请码",

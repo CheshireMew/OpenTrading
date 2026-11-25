@@ -55,6 +55,9 @@ export function createWorkspaceLayouts(deps: {
   }
   function dirty() { capture(); if (pending.has(layoutId.value)) schedule(layoutId.value) }
   async function flush(id: string) {
+    // Vela debounces state:changed. Read the live chart before a queued write
+    // so an indicator closed during that gap cannot be saved as still open.
+    if (layoutId.value === id) capture()
     const captured = pending.get(id)
     if (!captured) return
     let data = captured, previous = baseDocument(id)
@@ -64,6 +67,9 @@ export function createWorkspaceLayouts(deps: {
           const saved = previous && sameLayout(data, previous.data) ? previous : await chartApi.save('layouts', id, {
             name: previous?.name ?? cw('defaultLayout'), data, expected_version: previous?.version ?? 0,
           })
+          // A second edit may happen while storage is writing, before its SDK
+          // notification. Merge that live edit rather than restoring the old reply.
+          if (layoutId.value === id) capture()
           // Keep edits made during the request, together with any remote fields
           // merged by the conflict retry. Never acknowledge a newer local edit.
           const latest = mergeLayout(captured, pending.get(id) ?? captured, saved.data)

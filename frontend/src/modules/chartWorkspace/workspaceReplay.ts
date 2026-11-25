@@ -9,12 +9,15 @@ import { cw } from './locale'
 
 class ReplayHistoryUnavailable extends Error {}
 
+export type ReplaySourceBar = { sessionId: string; symbolId: string; bar: ChartBar }
+
 export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | undefined>; symbols: Ref<ChartSymbol[]>; settled?:()=>Promise<void> }) {
   const open = ref(false), active = ref(false), loading = ref(false), playing = ref(false), picking = ref(false)
   const processing = ref(false)
   const error = ref(''), now = ref(0), speed = ref(1), amount = ref(100), ended = ref(false)
   const account = reactive(new ReplayAccount()), clock = new ReplayPacer()
   const listeners = new Set<(bar: OHLCV) => void>(), pulses = new Set<(now: number) => void>()
+  const sourceListeners = new Set<(event: ReplaySourceBar) => void>(), sessionId = ref('')
   const sourceStep = ref('1m'), symbol = ref<ChartSymbol>(), timeframe = ref('5m'), cellId = ref('')
   let target: Vela | undefined, history: ChartBar[] = [], buffer: ChartBar[] = [], offset = 0
   let nextSource = 0, ceiling = 0, generation = 0, abort = new AbortController(), disposed = false
@@ -186,6 +189,7 @@ export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | und
       const oldProvider = providerName
       // Each start owns a cache identity, so rewinding cannot reuse revealed future bars.
       providerName = 'replay' + Date.now() + epoch
+      sessionId.value = providerName
       target.data.registerProvider(providerName, provider)
       await target.data.ready()
       target.renderer.setWallClock({ onTick: cb => { pulses.add(cb); cb(now.value); return () => { pulses.delete(cb) } } })
@@ -300,6 +304,7 @@ export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | und
       if (!bar) { ended.value = true;pause();return }
       // Exactly one historical source candle: no elapsed-time catch-up or earlier wick reuse.
       now.value = bar.closeTime;account.consume(bar);offset++;emitBar(bar)
+      for (const callback of sourceListeners) callback({ sessionId: sessionId.value, symbolId: symbol.value!.id, bar })
       await deps.settled?.()
       if (epoch !== generation) return
       if (buffer.length - offset < 100 && nextSource < ceiling && !fetchAhead)
@@ -328,10 +333,11 @@ export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | und
   }, 50)
   const visibility = () => { if (document.hidden) pause() }
   document.addEventListener('visibilitychange', visibility)
-  function dispose() { disposed = true; pause(); generation++; viewEpoch++;viewAbort?.abort();abort.abort();clearInterval(timer); document.removeEventListener('visibilitychange', visibility); listeners.clear(); pulses.clear() }
+  function dispose() { disposed = true; pause(); generation++; viewEpoch++;viewAbort?.abort();abort.abort();clearInterval(timer); document.removeEventListener('visibilitychange', visibility); listeners.clear(); pulses.clear(); sourceListeners.clear() }
   return { open, active, loading, processing, playing, picking, error, now, speed, amount, ended, account, hasOrder, sourceStep, symbol, timeframe, cellId,
     actualTime, roundedPrice, place, start, startRandom, setTimeframe, exit, pause, play, setSpeed, step, retry, dispose,
     get chart() { return target }, get visibleBars() { return history },
+    sessionId, subscribeSourceBars(callback: (event: ReplaySourceBar) => void) { sourceListeners.add(callback); return () => { sourceListeners.delete(callback) } },
   }
 }
 export type WorkspaceReplay = ReturnType<typeof createWorkspaceReplay>

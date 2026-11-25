@@ -10,7 +10,7 @@
           <label>{{ cw('alertPrice') }}<input v-model="form.price" class="app-control" type="number" inputmode="decimal" step="any" min="0" required /></label>
           <label>{{ cw('alertFrequency') }}<select v-model="form.once" class="app-control"><option :value="true">{{ cw('alertOnce') }}</option><option :value="false">{{ cw('alertRepeat') }}</option></select></label>
           <fieldset><legend>{{ cw('alertNotify') }}</legend><label><input v-model="form.sound" type="checkbox" />{{ cw('alertSound') }}</label><label><input v-model="form.windows" type="checkbox" />{{ cw('alertDesktop') }}</label><button type="button" class="app-button-secondary" @click="testSound">{{ cw('alertTestSound') }}</button></fieldset>
-          <p class="alert-hint">{{ cw('alertRuntimeHint') }}</p>
+          <p class="alert-hint">{{ cw(replayMode ? 'alertReplayHint' : 'alertRuntimeHint') }}</p>
           <p v-if="alertDeliveryStatus" class="alert-message" role="status">{{ cw(alertDeliveryStatus) }}</p>
           <footer><button type="button" class="app-button-secondary" :disabled="saving" @click="editing=false">{{ cw('cancel') }}</button><button type="submit" class="app-button-primary" :disabled="saving || !(Number(form.price)>0)">{{ cw(saving ? 'saving' : 'save') }}</button></footer>
         </form>
@@ -22,7 +22,7 @@
             <div><strong>{{ alert.name }}</strong><p>{{ conditionLabel(alert.operator) }} · {{ formatNumber(alert.threshold,10) }} · {{ cw(alert.enabled ? 'alertActive' : alert.lastTriggeredAt ? 'alertTriggered' : 'alertPaused') }}</p><p v-if="alert.lastTriggeredAt">{{ cw('alertLastTriggered') }} {{ formatDate(new Date(alert.lastTriggeredAt).getTime()) }}</p></div>
             <div class="alert-actions"><button type="button" class="app-button-secondary" :disabled="saving" @click="edit(alert)">{{ cw('alertEdit') }}</button><button type="button" class="app-button-secondary" :disabled="saving" @click="change(alert)">{{ cw(alert.enabled ? 'alertPause' : 'alertResume') }}</button><button type="button" class="app-button-secondary alert-delete" :disabled="saving" @click="remove(alert)">{{ cw('alertDelete') }}</button></div>
           </article>
-          <p class="alert-hint">{{ cw('alertRuntimeHint') }}</p>
+          <p class="alert-hint">{{ cw(replayMode ? 'alertReplayHint' : 'alertRuntimeHint') }}</p>
         </div>
       </section>
     </div>
@@ -34,7 +34,7 @@ import type { createWorkspaceAlerts } from '@/modules/chartWorkspace/workspaceAl
 import { cw, formatNumber, formatDate, workspaceMarketLabel } from '@/modules/chartWorkspace/locale'
 import { alertDeliveryStatus, enableAlertDelivery, playAlertSound } from '@/modules/research/alertDelivery'
 const props = defineProps<{ controller: ReturnType<typeof createWorkspaceAlerts> }>()
-const { open, editing, saving, error, form, selectedSymbol, alerts, startForm, edit, save, change, remove } = props.controller
+const { open, editing, saving, error, form, selectedSymbol, alerts, replayMode, startForm, edit, save, change, remove } = props.controller
 function close() { if (!saving.value) open.value = false }
 const { dialogRef } = useModalDialog(open, close)
 function conditionLabel(operator: string) { return cw(({crosses:'alertCrosses',crosses_above:'alertCrossesAbove',crosses_below:'alertCrossesBelow',gte:'alertAbove',lte:'alertBelow'} as Record<string,string>)[operator] ?? operator) }

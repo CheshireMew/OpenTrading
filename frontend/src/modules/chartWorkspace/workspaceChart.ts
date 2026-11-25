@@ -98,8 +98,11 @@ export function createWorkspaceChart(deps: {
       separateVolumePane(cell.chart)
       // Volume may mount after the initial market load or be restored from a layout.
       cell.chart.on('indicator:added', () => separateVolumePane(cell.chart))
-      // Capture parameter edits before an in-flight layout save can restore an older value.
-      cell.chart.on('indicator:inputs', deps.dirty)
+      // Indicator changes are immediate; the workspace's state event is delayed.
+      // Capture them now so autosave cannot restore an already closed study.
+      for (const event of ['indicator:added', 'indicator:removed', 'indicator:visibility', 'indicator:moved', 'indicator:inputs'] as const) {
+        cell.chart.on(event, deps.dirty)
+      }
       cell.chart.on('load:start', () => { historyByCell.value[cell.id] = { loaded: 0, state: 'loading' } })
       cell.chart.on('history:progress', event => { historyByCell.value[cell.id] = { loaded: event.loaded, state: 'loading' } })
       cell.chart.on('history:complete', event => { historyByCell.value[cell.id] = { loaded: event.barsLoaded, state: event.reason } })

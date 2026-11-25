@@ -1,6 +1,6 @@
 <template>
-  <Teleport :to="host ?? 'body'" :disabled="!floating">
-    <section v-show="visible" ref="panel" class="cw-trading-controls" :class="{'cw-replay-floating':floating,'cw-replay-moving':!!moving}" :style="floating ? floatingStyle : undefined" :aria-label="cw(floating?'replay':'paperTrading')" @pointerdown.stop @pointermove.stop @click.stop @dblclick.stop @contextmenu.stop @wheel.stop @keydown.esc="endMove(true)">
+  <Teleport v-if="host" :to="host">
+    <section v-show="visible" ref="panel" class="cw-trading-controls cw-replay-floating" :class="{'cw-replay-moving':!!moving}" :style="floatingStyle" :aria-label="cw(r.open.value?'replay':'paperTrading')" @pointerdown.stop @pointermove.stop @click.stop @dblclick.stop @contextmenu.stop @wheel.stop @keydown.esc="endMove(true)">
       <div v-if="r.open.value" class="cw-replay-bar">
         <button type="button" class="cw-replay-grip" :aria-label="cw('replayMovePanel')" :title="cw('replayMovePanel')" @pointerdown="startMove" @keydown="moveKey"><IconGripVertical aria-hidden="true" /></button>
         <button type="button" :aria-label="cw('replayDate')" :title="cw('replayDate')" :aria-expanded="dateOpen" @click="emit('date')"><IconCalendar aria-hidden="true" /></button>
@@ -16,13 +16,14 @@
         <button type="button" class="cw-replay-exit" :aria-label="cw('replayExit')" :title="cw('replayExit')" @click="r.exit()"><IconX aria-hidden="true" /></button>
       </div>
       <div class="cw-replay-trading-row">
+        <button v-if="!r.open.value" type="button" class="cw-replay-grip" :aria-label="cw('replayMovePanel')" :title="cw('replayMovePanel')" @pointerdown="startMove" @keydown="moveKey"><IconGripVertical aria-hidden="true" /></button>
         <div class="cw-replay-quick">
           <button type="button" class="cw-replay-sell" :disabled="!t.symbol.value || t.hasOrder.value || t.loading.value" :aria-label="cw('replayShort')" :title="cw('replayShort')" @click="emit('place',-1)"><IconArrowDownRight aria-hidden="true" />{{ cw('replaySell') }}</button>
-          <WorkspaceQuantityField v-model="t.amount.value" :label="cw('replayAmount')" :unit="t.symbol.value?.currency" :compact="floating" />
+          <WorkspaceQuantityField v-model="t.amount.value" :label="cw('replayAmount')" :unit="t.symbol.value?.currency" compact />
           <button type="button" class="cw-replay-buy" :disabled="!t.symbol.value || t.hasOrder.value || t.loading.value" :aria-label="cw('replayLong')" :title="cw('replayLong')" @click="emit('place',1)"><IconArrowUpRight aria-hidden="true" />{{ cw('replayBuy') }}</button>
         </div>
         <div v-if="tradingVisible" class="cw-replay-results">
-          <span v-if="!floating" class="cw-paper-label">{{ cw('paperTrading') }}</span>
+          <span v-if="!r.open.value" class="cw-paper-label">{{ cw('paperTrading') }}</span>
           <span class="cw-replay-metric" :class="profitClass(t.account.realized)" :aria-label="cw('replayRealized')+' '+formatNumber(t.account.realized)+' '+t.symbol.value?.currency" :title="cw('replayRealized')"><IconWallet aria-hidden="true" /><b>{{ formatNumber(t.account.realized) }}</b><small>{{ t.symbol.value?.currency }}</small></span>
           <span v-if="t.account.position" class="cw-replay-metric" :class="profitClass(t.account.unrealized)" :aria-label="cw('replayUnrealized')+' '+formatNumber(t.account.unrealized)+' '+t.symbol.value?.currency" :title="cw('replayUnrealized')"><IconChartLine aria-hidden="true" /><b>{{ formatNumber(t.account.unrealized) }}</b></span>
           <button v-if="t.account.trades.length" type="button" class="cw-replay-trades-toggle" :aria-expanded="tradesOpen" :aria-label="cw('replayTrades',{count:t.account.trades.length})" :title="cw('replayTrades',{count:t.account.trades.length})" @click="tradesOpen=!tradesOpen"><IconListDetails aria-hidden="true" /><span>{{ t.account.trades.length }}</span></button>
@@ -62,7 +63,6 @@ import WorkspaceQuantityField from './WorkspaceQuantityField.vue'
 const props=defineProps<{controller:WorkspaceReplay;paper:WorkspacePaper;host?:HTMLElement;geometry:ReplayGeometry;timeZone:string;dateOpen:boolean;orderError:string;visible:boolean}>()
 const emit=defineEmits<{date:[];toggle:[];place:[side:Side];clearOrderError:[]}>()
 const r=props.controller,t=computed(()=>r.active.value?r:props.paper)
-const floating=computed(()=>r.open.value && !!props.host)
 const tradingVisible=computed(()=>r.active.value || props.paper.active.value)
 const tradesOpen=ref(false),panel=ref<HTMLElement>()
 const size=ref({width:560,height:84}),hostSize=ref({width:0,height:0,gutter:40})
@@ -103,7 +103,7 @@ function move(event:PointerEvent){
   position.value=clamp(drag.left+event.clientX-drag.x,drag.top+event.clientY-drag.y)
 }
 function startMove(event:PointerEvent){
-  if(event.button!==0 || !floating.value)return
+  if(event.button!==0 || !props.host)return
   event.preventDefault();endMove()
   moving.value={pointer:event.pointerId,x:event.clientX,y:event.clientY,left:currentPosition.value.x,top:currentPosition.value.y,previous:position.value}
   window.addEventListener('pointermove',move,{passive:false,capture:true});window.addEventListener('pointerup',finishMove);window.addEventListener('pointercancel',cancelMove);window.addEventListener('keydown',dragKey,true)
@@ -118,12 +118,12 @@ function cancelMove(){endMove(true)}
 function dragKey(event:KeyboardEvent){if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();endMove(true)}}
 function moveKey(event:KeyboardEvent){
   const delta={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[event.key]
-  if(!delta || !floating.value)return
+  if(!delta || !props.host)return
   event.preventDefault();event.stopPropagation()
   const distance=event.shiftKey?50:10
   position.value=clamp(currentPosition.value.x+delta[0]!*distance,currentPosition.value.y+delta[1]!*distance)
 }
-watch(floating,()=>{endMove();tradesOpen.value=false})
+watch(r.open,()=>{endMove();tradesOpen.value=false})
 watch(()=>props.host,()=>endMove())
 watch(()=>props.visible,value=>{if(!value)endMove()})
 onDeactivated(()=>endMove())
@@ -139,5 +139,7 @@ onBeforeUnmount(()=>endMove())
 .cw-replay-results{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap}.cw-replay-results:not(:first-child){border-left:1px solid var(--cw-border);padding-left:10px}.cw-paper-label{color:var(--cw-muted);font-size:11px}.cw-replay-metric{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;font-variant-numeric:tabular-nums}.cw-replay-metric svg{color:var(--cw-muted);width:14px;height:14px}.cw-replay-metric b{font-weight:500}.cw-replay-metric small{font-size:10px;color:var(--cw-muted)}.cw-profit{color:var(--ui-positive)}.cw-loss{color:var(--ui-negative)}.cw-replay-results .cw-replay-trades-toggle{border-color:transparent;padding-inline:4px;min-width:28px}.cw-replay-trades-toggle span{font-size:10px}.cw-replay-trades{overflow:auto;max-height:180px;border-top:1px solid var(--cw-border)}.cw-replay-trades table{width:100%;border-collapse:collapse;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}.cw-replay-trades th,.cw-replay-trades td{padding:5px 7px;border-bottom:1px solid var(--cw-border)}.cw-replay-trades th{font-weight:500;color:var(--cw-muted)}
 .cw-replay-order-error,.cw-replay-error,.cw-replay-hint{display:flex;align-items:center;gap:7px;padding:5px 8px;border-top:1px solid var(--cw-border);overflow-wrap:anywhere}.cw-replay-order-error,.cw-replay-error{color:var(--ui-negative)}.cw-replay-hint{color:var(--cw-accent)}.cw-replay-order-error span,.cw-replay-error span{flex:1;min-width:0}.cw-replay-order-error button{border:0;padding:2px;min-width:24px}
 .cw-replay-floating{position:absolute;z-index:18;width:max-content;box-sizing:border-box;overflow:auto;border:1px solid var(--cw-border);border-radius:9px;box-shadow:0 5px 24px #0003;pointer-events:auto;max-width:560px;scrollbar-width:thin}.cw-replay-floating .cw-replay-trading-row{column-gap:8px}.cw-replay-floating .cw-replay-quick :deep(.cw-quantity-field){width:132px}.cw-replay-floating .cw-replay-quick :deep(input){width:100%}.cw-replay-floating .cw-replay-quick{flex-wrap:nowrap}.cw-replay-floating .cw-replay-results{gap:8px}.cw-replay-moving{user-select:none}
+.cw-trading-controls .cw-replay-grip{width:19px;min-width:19px;flex-shrink:0;padding:0;border-color:transparent;cursor:grab;touch-action:none;color:var(--cw-muted)}
+.cw-replay-moving .cw-replay-grip{cursor:grabbing}
 @keyframes cw-replay-loading{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.cw-replay-status svg{animation:none}}
 </style>

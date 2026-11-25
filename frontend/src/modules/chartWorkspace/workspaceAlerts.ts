@@ -3,22 +3,40 @@ import { registerWidgetAction } from '@luxalgo/vela/plugin'
 import type { VelaWorkspace } from '@luxalgo/vela/workspace'
 import { researchApi } from '@/modules/research/api'
 import type { ResearchAlertResponse, ResearchAlertCreateCommand } from '@/modules/research/contracts'
-import { enableAlertDelivery, prepareAlertAudio } from '@/modules/research/alertDelivery'
+import { deliverAlertEvent, enableAlertDelivery, prepareAlertAudio } from '@/modules/research/alertDelivery'
 import { WorkspaceRenderer } from './chartPresentation'
 import { chartApi, type ChartSymbol } from './api'
 import { fromVela } from './provider'
 import { cw, formatNumber } from './locale'
 import type { PriceAlertGeometry } from './priceAlertLayer'
+import type { WorkspaceReplay, ReplaySourceBar } from './workspaceReplay'
+import { replayPriceAlertMatches } from './replayPriceAlerts'
 
-export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | undefined>; symbols: Ref<ChartSymbol[]> }) {
+export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | undefined>; symbols: Ref<ChartSymbol[]>; activeCell?: Ref<string>; replay?: WorkspaceReplay }) {
   const alerts = ref<ResearchAlertResponse[]>([]), open = ref(false), editing = ref(false), saving = ref(false)
+  const replayAlerts = ref<ResearchAlertResponse[]>([]), formSession = ref('')
   const error = ref(''), selectedId = ref(''), draggingId = ref('')
   const overlays = shallowRef<({ cellId: string; host: HTMLElement } & PriceAlertGeometry)[]>([])
   function fail(cause: unknown) { error.value = cause instanceof Error ? cause.message : String(cause) }
   const form = reactive({ id: '', version: 0, symbolId: '', price: '', operator: 'crosses' as ResearchAlertCreateCommand['operator'], once: true, sound: true, windows: true })
   const selectedSymbol = computed(() => deps.symbols.value.find(symbol => symbol.id === form.symbolId))
   const finished = (alert: ResearchAlertResponse) => !alert.enabled && !!alert.lastTriggeredAt && alert.configuration?.once !== false
-  const visibleAlerts = computed(() => alerts.value.filter(alert => !alert.archivedAt && !finished(alert) && alert.configuration?.chartSymbolId))
+  function currentReplay() {
+    const replay = deps.replay, observedCell = deps.activeCell?.value
+    const cellId = deps.workspace.value?.active?.id ?? observedCell
+    return replay?.active.value && replay.cellId.value === cellId ? replay : undefined
+  }
+  const replayMode = computed(() => editing.value ? !!formSession.value : !!currentReplay())
+  const visibleAlerts = computed(() => (currentReplay() ? replayAlerts.value : alerts.value)
+    .filter(alert => !alert.archivedAt && !finished(alert) && alert.configuration?.chartSymbolId))
+  function rulesForCell(cellId: string) {
+    return deps.replay?.active.value && deps.replay.cellId.value === cellId ? replayAlerts.value : alerts.value
+  }
+  function replayBaseline() {
+    const replay = deps.replay
+    if (!replay?.active.value || replay.sessionId.value !== formSession.value) throw new Error(cw('alertReplayEnded'))
+    return { price: replay.account.price, time: replay.now.value }
+  }
   let pending: { symbolId: string; price: number } | undefined
   let pendingAlert: string | undefined
   let drag: { alert: ResearchAlertResponse; renderer: WorkspaceRenderer; cellId: string; symbolId: string; pointerId: number; startY: number; anchorY: number; price: number; moved: boolean } | undefined
@@ -46,7 +64,7 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
         if (old && old.host === host && JSON.stringify({ ...old, host: null, cellId: null }) === JSON.stringify({ ...geometry, host: null, cellId: null })) return
         overlays.value = [...overlays.value.filter(overlay => overlay.cellId !== cell.id), { ...geometry, host, cellId: cell.id }]
       }
-      renderer.setPriceAlerts(visibleAlerts.value.filter(alert => alert.enabled && alert.configuration?.chartSymbolId === fromVela(cell.symbol))
+      renderer.setPriceAlerts(rulesForCell(cell.id).filter(alert => alert.enabled && !alert.archivedAt && !finished(alert) && alert.configuration?.chartSymbolId === fromVela(cell.symbol))
         .map(alert => {
           const price = drag?.alert.id === alert.id ? drag.price : alert.threshold
           return { id: alert.id, price, label: cw('priceAlertLine', { price: formatNumber(price, 10) }) }
@@ -69,12 +87,14 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
     const current = request ?? (cell && renderer?.latestPrice ? { symbolId: fromVela(cell.symbol), price: renderer.latestPrice } : undefined)
     if (!current) return
     error.value = ''
+    formSession.value = currentReplay()?.sessionId.value ?? ''
     Object.assign(form, { id: '', version: 0, symbolId: current.symbolId, price: String(roundedPrice(current.price, current.symbolId)), operator: 'crosses', once: true, sound: true, windows: true })
     editing.value = true; open.value = true
     void prepareAlertAudio()
   }
   function edit(alert: ResearchAlertResponse) {
     error.value = ''
+    formSession.value = replayAlerts.value.some(item => item.id === alert.id) ? deps.replay?.sessionId.value ?? '' : ''
     Object.assign(form, { id: alert.id, version: alert.version, symbolId: String(alert.configuration?.chartSymbolId), price: String(alert.threshold), operator: alert.operator,
       once: alert.configuration?.once !== false, sound: alert.notificationChannels?.includes('sound') ?? false, windows: alert.notificationChannels?.includes('windows') ?? false })
     editing.value = true; open.value = true; void prepareAlertAudio()
@@ -91,18 +111,25 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
     writeEpoch++
     error.value = ''
     try {
-      await enableAlertDelivery(form.sound, form.windows)
-      const quotes = await chartApi.quotes([symbol.id])
-      const quote = quotes[0]
+      void enableAlertDelivery(form.sound, form.windows)
+      const baseline = formSession.value ? replayBaseline() : undefined
+      const quote = baseline ? { price: baseline.price, error: undefined } : (await chartApi.quotes([symbol.id]))[0]
       if (!quote?.price || quote.error) throw new Error(quote?.error || cw('alertQuoteUnavailable'))
       const configuration = { chartSymbolId: symbol.id, once: form.once, initialPrice: quote.price }
       const payload: ResearchAlertCreateCommand = { symbol: symbol.name, name: `${symbol.name} · ${cw(symbol.market === 'usdm' ? 'perpetual' : symbol.market === 'index' ? 'index' : 'spot')} · ${formatNumber(price, 10)}`,
         metric: 'price', operator: form.operator, threshold: price, enabled: true, cooldownMinutes: 1,
         notificationChannels: ['in_app', ...(form.sound ? ['sound' as const] : []), ...(form.windows ? ['windows' as const] : [])], configuration }
-      const saved = form.id ? await researchApi.updateAlert(form.id, { ...payload, expectedVersion: form.version }) : await researchApi.createAlert(payload)
+      let saved: ResearchAlertResponse
+      if (baseline) {
+        const date = new Date().toISOString()
+        saved = { ...payload, enabled: true, cooldownMinutes: 1, id: form.id || crypto.randomUUID(), version: form.version + 1,
+          createdAt: date, updatedAt: date, lastValue: baseline.price, lastEvaluatedAt: new Date(baseline.time).toISOString(),
+          configuration: { ...configuration, replaySessionId: formSession.value, replayCreatedAt: baseline.time } }
+      } else saved = form.id ? await researchApi.updateAlert(form.id, { ...payload, expectedVersion: form.version }) : await researchApi.createAlert(payload)
       if (disposed) return
-      alerts.value = [saved, ...alerts.value.filter(alert => alert.id !== saved.id)]
-      editing.value = false; project()
+      if (baseline) replayAlerts.value = [saved, ...replayAlerts.value.filter(alert => alert.id !== saved.id)]
+      else alerts.value = [saved, ...alerts.value.filter(alert => alert.id !== saved.id)]
+      editing.value = false; open.value = false; project()
     } catch (cause) {
       if (missing(cause) && form.id) { removeLocal(form.id); editing.value = false }
       else fail(cause)
@@ -110,6 +137,7 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
   }
   function removeLocal(id: string) {
     alerts.value = alerts.value.filter(alert => alert.id !== id)
+    replayAlerts.value = replayAlerts.value.filter(alert => alert.id !== id)
     if (selectedId.value === id) selectedId.value = ''
     if (drag?.alert.id === id) cancelDrag()
     project()
@@ -120,6 +148,13 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
     saving.value = true; writeEpoch++; error.value = ''
     let failed = false
     try {
+      if (replayAlerts.value.some(item => item.id === alert.id)) {
+        const replay = deps.replay!
+        alert.enabled = !alert.enabled; alert.lastValue = replay.account.price
+        alert.lastEvaluatedAt = new Date(replay.now.value).toISOString(); alert.lastTriggeredAt = null
+        if (alert.enabled) void enableAlertDelivery(alert.notificationChannels?.includes('sound') ?? false, alert.notificationChannels?.includes('windows') ?? false)
+        project(); return
+      }
       const payload = body(alert)
       if (!alert.enabled) {
         await enableAlertDelivery(alert.notificationChannels?.includes('sound') ?? false, alert.notificationChannels?.includes('windows') ?? false)
@@ -139,6 +174,7 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
     saving.value = true; writeEpoch++; error.value = ''
     let failed = false
     try {
+      if (replayAlerts.value.some(item => item.id === alert.id)) { removeLocal(alert.id); return }
       await researchApi.deleteAlert(alert.id, alert.version)
       if (!disposed) removeLocal(alert.id)
     } catch (cause) {
@@ -150,6 +186,13 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
   function removeId(id: string) { const alert = visibleAlerts.value.find(alert => alert.id === id); if (alert) void remove(alert) }
   async function movePrice(alert: ResearchAlertResponse, price: number) {
     if (saving.value || price === alert.threshold) { project(); return }
+    if (replayAlerts.value.some(item => item.id === alert.id)) {
+      const replay = deps.replay!
+      alert.threshold = price; alert.lastValue = replay.account.price
+      alert.lastEvaluatedAt = new Date(replay.now.value).toISOString(); alert.lastTriggeredAt = null
+      alert.name = alert.name.replace(/[^·]+$/, ' ' + formatNumber(price, 10))
+      project(); return
+    }
     saving.value = true; writeEpoch++; error.value = ''
     // Keep the preview visible until the persisted rule replaces it.
     const previous = alert.threshold
@@ -179,7 +222,7 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
       if (target && !cell.host.contains(target)) continue
       const renderer = WorkspaceRenderer.forHost(cell.host)
       const id = elementId ?? renderer?.priceAlerts.hitAt?.(event.clientX, event.clientY)
-      const alert = visibleAlerts.value.find(alert => alert.id === id && alert.enabled && alert.configuration?.chartSymbolId === fromVela(cell.symbol))
+      const alert = rulesForCell(cell.id).find(alert => alert.id === id && alert.enabled && alert.configuration?.chartSymbolId === fromVela(cell.symbol))
       if (alert && renderer) return { cell, renderer, alert }
     }
   }
@@ -280,6 +323,30 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
     void refresh()
   }
   const stop = watch(deps.workspace, attach, { flush: 'sync' })
+  const stopReplay = deps.replay ? watch([deps.replay.active, deps.replay.sessionId], () => {
+    replayAlerts.value = []
+    if (formSession.value) { open.value = false; editing.value = false; formSession.value = '' }
+    project()
+  }, { flush: 'sync' }) : () => {}
+  const offReplay = deps.replay?.subscribeSourceBars(({ sessionId, symbolId, bar }: ReplaySourceBar) => {
+    if (disposed || paused) return
+    for (const alert of [...replayAlerts.value]) {
+      if (!alert.enabled || alert.configuration?.replaySessionId !== sessionId || alert.configuration.chartSymbolId !== symbolId ||
+          bar.time < Number(alert.configuration.replayCreatedAt) || bar.closeTime <= Date.parse(alert.lastEvaluatedAt ?? '')) continue
+      const ready = !alert.lastTriggeredAt || bar.closeTime - Date.parse(alert.lastTriggeredAt) >= alert.cooldownMinutes * 60000
+      const triggered = ready && replayPriceAlertMatches(alert, bar)
+      alert.lastValue = bar.close; alert.lastEvaluatedAt = new Date(bar.closeTime).toISOString()
+      if (!triggered) continue
+      alert.lastTriggeredAt = alert.lastEvaluatedAt
+      if (alert.configuration.once !== false) removeLocal(alert.id)
+      const date = new Date().toISOString()
+      void deliverAlertEvent({ id: crypto.randomUUID(), entityType: 'alert', entityId: alert.id, symbol: alert.symbol, kind: 'alert_triggered',
+        title: `${cw('replay')} · ${alert.name}`, body: cw('alertReplayTriggered', { symbol: alert.symbol, price: formatNumber(alert.threshold, 10) }),
+        occurredAt: alert.lastEvaluatedAt, createdAt: date, payload: { value: alert.threshold, notificationChannels: alert.notificationChannels ?? [],
+          replaySessionId: sessionId } }).catch(fail)
+    }
+    project()
+  })
   function show() { if (!paused && !disposed) { error.value = ''; open.value = true; editing.value = false; void refresh() } }
   function pause() { paused = true; clearInterval(timer); cancelDrag() }
   function resume() {
@@ -288,7 +355,7 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
     if (host) { void refresh(); timer = setInterval(() => void refresh(), 10_000) }
   }
   function dispose() {
-    disposed = true; stop(); clearInterval(timer); releaseDrag(); overlays.value = []
+    disposed = true; stop(); stopReplay(); offReplay?.(); clearInterval(timer); releaseDrag(); overlays.value = []
     host?.removeEventListener('pointerdown', pointerDown, true)
     host?.removeEventListener('click', click, true)
     window.removeEventListener('pointermove', pointerMove, true)
@@ -299,5 +366,5 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
     window.removeEventListener('opentrading:alert-triggered', onTriggered)
     window.removeEventListener('opentrading:open-alerts', show)
   }
-  return { alerts: visibleAlerts, overlays, selectedId, draggingId, remove, editId, removeId, open, editing, saving, error, form, selectedSymbol, refresh, startForm, edit, save, change, show, pause, resume, dispose }
+  return { alerts: visibleAlerts, replayMode, overlays, selectedId, draggingId, remove, editId, removeId, open, editing, saving, error, form, selectedSymbol, refresh, startForm, edit, save, change, show, pause, resume, dispose }
 }

@@ -490,6 +490,38 @@ test('two windows merge separate layout edits automatically and current changes 
   a.controller.dispose(); b.controller.dispose(); await tick()
 })
 
+test('autosave reads a removed indicator even before the SDK emits its delayed state notification', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  const server = layoutServer({ indicators: [] }), state = automaticLayout(server.api)
+  try {
+    await state.controller.initialize([server.latest()])
+    state.change(view => { view.indicators = ['rsi'] })
+    // The pane closes immediately; Vela's state:changed arrives 500ms later.
+    state.view().indicators = []
+    t.mock.timers.tick(700); await tick(); await tick()
+    assert.deepEqual(state.view().indicators, [])
+    assert.deepEqual(server.latest().data.indicators, [])
+    assert.deepEqual(state.errors, [])
+  } finally { state.controller.dispose(); await tick() }
+})
+
+test('a save response cannot reopen an indicator removed while the write is in flight', async () => {
+  const wait = deferred(), server = layoutServer({ indicators: [] })
+  const state = automaticLayout({ ...server.api, save: async (...args) => { await wait.promise; return server.api.save(...args) } })
+  try {
+    await state.controller.initialize([server.latest()])
+    state.change(view => { view.indicators = ['rsi'] })
+    const saving = state.controller.saveNow(); await tick()
+    state.view().indicators = []
+    wait.resolve(); await saving
+    assert.deepEqual(state.view().indicators, [])
+    assert.equal(state.drafts.at(-1).data.pending, true)
+    await state.controller.saveNow()
+    assert.deepEqual(server.latest().data.indicators, [])
+    assert.deepEqual(state.errors, [])
+  } finally { state.controller.dispose(); await tick() }
+})
+
 test('initial loading, unchanged saves and closing an idle stale window do not write revisions', async () => {
   const server = layoutServer({ rightOpen: true })
   const a = automaticLayout(server.api), b = automaticLayout(server.api)

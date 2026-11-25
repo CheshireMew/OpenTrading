@@ -105,7 +105,7 @@ async function removeScript(){const item=selectedScript.value;if(item&&await con
 const requestName = (title: string, value: string) => namePrompt.value?.requestName(title, value) ?? Promise.resolve(null)
 const chart = createWorkspaceChart({ host: chartHost, controlsHost: nativeToolsHost, theme, dirty: () => layoutsController.dirty(), refreshQuotes: () => void listsController.refreshQuotes(), log: addLog, onError: fail })
 const { workspace, symbols, activeCell, activeSymbolId, activeTimeframe, activeSymbol, backendPeriod, layout, historyDepth, historyText, feedText, feedError, sync, snapshotRun, selectSymbol, setPeriod, setLayout, setSync, setHistoryDepth, returnLive, locateTrade } = chart
-const alertsController = createWorkspaceAlerts({ workspace, symbols })
+const alertsController = createWorkspaceAlerts({ workspace, symbols, activeCell, replay: chart.replay })
 const panels = useWorkspacePanels({ dirty: () => layoutsController.dirty(), resizeChart: () => workspace.value?.resize() })
 const { rightOpen, rightWidth, bottomHeight, bottomTab, editorMounted, testerMounted, compactWorkspace, watchlistDrawerOpen, maxBottomHeight, watchlistVisible, toggleWatchlist, toggleBottom, resizeRight, resizeBottom } = panels
 const listsController = createSharedWorkspaceWatchlists({ activeSymbolId, requestName, onError: fail })

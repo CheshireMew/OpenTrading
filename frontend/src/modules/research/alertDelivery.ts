@@ -4,6 +4,7 @@ import type { ResearchEventResponse } from './contracts'
 export const alertNotices = ref<ResearchEventResponse[]>([])
 export const alertDeliveryStatus = ref('')
 let audio: AudioContext | undefined
+const noticeTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
 export async function prepareAlertAudio() {
   try {
@@ -46,13 +47,22 @@ export async function enableAlertDelivery(sound: boolean, desktop: boolean) {
 }
 
 export function dismissAlertNotice(id: string) {
+  clearTimeout(noticeTimers.get(id))
+  noticeTimers.delete(id)
   alertNotices.value = alertNotices.value.filter(event => event.id !== id)
+}
+
+function showAlertNotice(event: ResearchEventResponse) {
+  dismissAlertNotice(event.id)
+  while (alertNotices.value.length >= 5) dismissAlertNotice(alertNotices.value[0]!.id)
+  alertNotices.value = [...alertNotices.value, event]
+  noticeTimers.set(event.id, setTimeout(() => dismissAlertNotice(event.id), 8000))
 }
 
 export async function deliverAlertEvent(event: ResearchEventResponse) {
   const channels: unknown = event.payload?.notificationChannels
   if (!Array.isArray(channels)) return
-  if (channels.includes('in_app')) alertNotices.value = [...alertNotices.value.filter(item => item.id !== event.id), event].slice(-5)
+  if (channels.includes('in_app')) showAlertNotice(event)
   if (channels.includes('sound') && !await playAlertSound()) alertDeliveryStatus.value = 'alertSoundBlocked'
   if (channels.includes('windows') && 'Notification' in window && Notification.permission === 'granted') {
     try {

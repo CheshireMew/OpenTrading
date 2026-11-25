@@ -6,6 +6,7 @@ import { fromVela, velaSymbol, timeframes } from './provider'
 import { ReplayAccount, ReplayPacer, aggregateMinute, periodStart, periodEnd, MINUTE, type Side, type OrderKind } from './replayModel'
 import { quantityForAmount } from './replayQuantity'
 import { cw } from './locale'
+import { catalogSymbolIcon } from './symbolIcons'
 
 class ReplayHistoryUnavailable extends Error {}
 
@@ -76,6 +77,7 @@ export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | und
     try { await operation } finally { if (fetchAhead === operation) fetchAhead = undefined }
   }
   const provider: DataProvider = {
+    resolveSymbolIcon: descriptor => catalogSymbolIcon(deps.symbols.value, descriptor.ticker),
     listSymbols: async () => deps.symbols.value.map(s => ({ ticker: s.id, description: s.name })),
     getSymbolInfo: async ticker => {
       const info = deps.symbols.value.find(s => s.id === fromVela(ticker)) ?? symbol.value!

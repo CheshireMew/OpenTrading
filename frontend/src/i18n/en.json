@@ -247,6 +247,25 @@
     "latestRevisedScope": "The series uses the latest revisions for monitoring. It cannot be used directly as point-in-time backtest data.",
     "missing": "{count} missing trading days"
   },
+  "referrals": {
+    "title": "Invites & Resources",
+    "intro": "Curious about buying Bitcoin? Start here, even if you’re new.",
+    "exchanges": "Exchanges",
+    "exchangeBenefit": "Save 20% on trading fees",
+    "wallets": "Web3 Wallets",
+    "binance": "Binance",
+    "okx": "OKX",
+    "register": "Sign up",
+    "openWallet": "Open wallet",
+    "inviteCode": "Referral code",
+    "futuresInviteCode": "Futures referral code",
+    "copyCode": "Copy referral code {code}",
+    "copied": "Copied {code}",
+    "copyFailed": "Couldn’t copy. Select the referral code and copy it manually.",
+    "communityAndLearning": "Community & Learning",
+    "community": "Telegram community",
+    "tutorial": "Web3 guide"
+  },
   "nav": {
     "signalLab": "Dollar liquidity",
     "localBacktests": "Strategy Backtests",

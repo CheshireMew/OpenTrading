@@ -39,6 +39,7 @@ const routeTemplates = {
   chart_replay_bars: "/chart-workspace/replay/bars",
   chart_rerun_pine: "/chart-workspace/pine-runs/{key}/rerun",
   chart_save_document: "/chart-workspace/{kind}/{key}",
+  chart_symbol_icon: "/chart-workspace/symbol-icons/{asset}",
   chart_symbols: "/chart-workspace/symbols",
   compare_pairs: "/tools/compare_pairs",
   create_market_screener: "/research/screeners",
@@ -166,6 +167,7 @@ const endpointQueryContracts = {
   chart_replay_bars: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   chart_rerun_pine: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   chart_save_document: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
+  chart_symbol_icon: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   chart_symbols: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   compare_pairs: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   create_market_screener: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
@@ -261,6 +263,7 @@ export type ApiRouteResponseMap = {
   chart_replay_bars: ChartWorkspaceTypes.ChartBars
   chart_rerun_pine: ChartWorkspaceTypes.PineRun
   chart_save_document: ChartWorkspaceTypes.WorkspaceDocument
+  chart_symbol_icon: unknown
   chart_symbols: Array<ChartWorkspaceTypes.ChartSymbol>
   compare_pairs: ToolsTypes.PairCompareToolResponse
   create_market_screener: ResearchTypes.SavedMarketScreenerResponse
@@ -356,6 +359,7 @@ export type ApiRouteBodyMap = {
   chart_replay_bars: never
   chart_rerun_pine: never
   chart_save_document: ChartWorkspaceTypes.WorkspaceWrite
+  chart_symbol_icon: never
   chart_symbols: never
   compare_pairs: ToolsTypes.ComparePairsCommand
   create_market_screener: ResearchTypes.SavedMarketScreenerCreateCommand
@@ -451,6 +455,7 @@ export type ApiRoutePathMap = {
   chart_replay_bars: never
   chart_rerun_pine: { key: string | number }
   chart_save_document: { kind: string | number; key: string | number }
+  chart_symbol_icon: { asset: string | number }
   chart_symbols: never
   compare_pairs: never
   create_market_screener: never
@@ -546,6 +551,7 @@ export type ApiRouteQueryMap = {
   chart_replay_bars: ChartWorkspaceTypes.ChartReplayBarsQueryParams
   chart_rerun_pine: never
   chart_save_document: never
+  chart_symbol_icon: never
   chart_symbols: never
   compare_pairs: never
   create_market_screener: never

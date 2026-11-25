@@ -247,6 +247,25 @@
     "latestRevisedScope": "历史曲线使用当前可获得的最新修订值，只用于状态监控，不得直接作为点时回测输入。",
     "missing": "缺少 {count} 个交易日"
   },
+  "referrals": {
+    "title": "邀请与资源",
+    "intro": "想试着买比特币？新手也能开始。",
+    "exchanges": "交易所",
+    "exchangeBenefit": "省 20% 手续费",
+    "wallets": "Web3 钱包",
+    "binance": "币安",
+    "okx": "OKX",
+    "register": "注册",
+    "openWallet": "打开钱包",
+    "inviteCode": "邀请码",
+    "futuresInviteCode": "合约邀请码",
+    "copyCode": "复制邀请码 {code}",
+    "copied": "已复制 {code}",
+    "copyFailed": "复制失败，请选择邀请码手动复制。",
+    "communityAndLearning": "群聊与教程",
+    "community": "Telegram 群聊",
+    "tutorial": "Web3 教程"
+  },
   "nav": {
     "signalLab": "美元流动性",
     "localBacktests": "策略回测",

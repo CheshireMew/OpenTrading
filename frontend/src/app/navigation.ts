@@ -118,6 +118,13 @@ export const APP_ROUTE_DEFINITIONS = [
     nav: { section: 'system', labelKey: 'nav.settings', icon: 'CogIcon' },
   },
   {
+    path: '/referrals',
+    name: 'ReferralLinks',
+    component: () => import('@/views/ReferralLinks.vue'),
+    meta: { titleKey: 'referrals.title' },
+    nav: { section: 'system', labelKey: 'referrals.title', icon: 'LinkIcon' },
+  },
+  {
     path: '/system/data-health',
     name: 'DataHealth',
     component: () => import('@/views/system/DataHealth.vue'),

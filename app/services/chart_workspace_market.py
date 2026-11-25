@@ -5,6 +5,7 @@ import json
 import time
 from datetime import datetime, timezone
 from app.infra.market_data.chart import ChartMarketClient, MarketHttpError
+from app.infra.market_data.symbol_icons import SymbolIconClient
 
 from app.contracts.chart_workspace import ChartBar, ChartBars, ChartQuote, ChartSymbol
 from app.services.market.symbol_catalog import list_market_search_items
@@ -27,6 +28,7 @@ class ChartWorkspaceMarket:
         self.binance = binance
         self.index = index
         self.http = ChartMarketClient()
+        self.icons = SymbolIconClient()
         self.history_ranges = HistoryRangeCoordinator(kline_store, storage_runner=run_database) if kline_store else None
         self.catalog: dict[str, ChartSymbol] = {}
         self.catalog_at = 0.0
@@ -332,4 +334,5 @@ class ChartWorkspaceMarket:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
         self.channels.clear()
+        await self.icons.aclose()
         await self.http.aclose()

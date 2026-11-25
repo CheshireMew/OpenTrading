@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import time
 from typing import Literal
-from fastapi import Depends, HTTPException, Query, Request, Response, WebSocket, WebSocketDisconnect
+from fastapi import Depends, HTTPException, Path, Query, Request, Response, WebSocket, WebSocketDisconnect
 from starlette.requests import HTTPConnection
 from app.contracts.frontend import FrontendContractRouter
 from app.contracts.chart_workspace import (ChartSymbol, ChartBars, ChartQuote, WorkspaceDocument, WorkspaceWrite,
@@ -49,6 +49,19 @@ def document_call(fn):
 @router.get("/symbols",response_model=list[ChartSymbol])
 async def chart_symbols(service=Depends(services)):
     return await service.market.symbols()
+
+
+@router.get("/symbol-icons/{asset}", response_class=Response,
+            responses={200: {"content": {"image/png": {}, "image/jpeg": {}, "image/webp": {}, "image/gif": {}}}})
+async def chart_symbol_icon(request: Request, asset: str = Path(pattern=r"^[A-Z0-9._-]{1,40}$"), service=Depends(services)):
+    icon = await service.market.icons.get(asset)
+    if icon is None:
+        return Response(status_code=404, headers={"Cache-Control": "public, max-age=60"})
+    headers = {"Cache-Control": "public, max-age=86400, stale-if-error=604800", "ETag": icon.etag,
+               "X-Content-Type-Options": "nosniff"}
+    if request.headers.get("if-none-match") == icon.etag:
+        return Response(status_code=304, headers=headers)
+    return Response(icon.content, media_type=icon.media_type, headers=headers)
 
 
 @router.get("/bars",response_model=ChartBars)

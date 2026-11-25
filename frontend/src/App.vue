@@ -98,6 +98,7 @@ import {
   PresentationChartLineIcon,
   FunnelIcon,
   CircleStackIcon,
+  LinkIcon,
 } from '@heroicons/vue/24/outline'
 import {
   APP_PAGE_CACHE_LIMIT,
@@ -141,6 +142,7 @@ const iconMap: Record<AppNavIconName, Component> = {
   PresentationChartLineIcon,
   FunnelIcon,
   CircleStackIcon,
+  LinkIcon,
 }
 const navSections = APP_NAV_SECTIONS.map((section) => ({
   ...section,

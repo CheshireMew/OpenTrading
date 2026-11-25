@@ -4,18 +4,19 @@ import test from 'node:test'
 import ts from 'typescript'
 import * as vue from 'vue'
 
-function delivery() {
+function delivery(t) {
   const exports = {}, events = []
   global.window = { isSecureContext: true, dispatchEvent: event => events.push(event.type), focus() {} }
   const code = ts.transpileModule(fs.readFileSync(new URL('../src/modules/research/alertDelivery.ts', import.meta.url), 'utf8'),
     { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
   new Function('require', 'exports', code)(id => id === 'vue' ? vue : {}, exports)
+  t.after(() => { for (const notice of exports.alertNotices.value) exports.dismissAlertNotice(notice.id) })
   return { ...exports, events }
 }
 const event = (channels) => ({ id: 'price-event', title: 'BTC price alert', body: 'Price reached 100', payload: { notificationChannels: channels } })
 
-test('in-page alerts work without a system notification API', async () => {
-  const alerts = delivery()
+test('in-page alerts work without a system notification API', async t => {
+  const alerts = delivery(t)
   await alerts.deliverAlertEvent(event(['in_app', 'windows']))
   assert.equal(alerts.alertNotices.value.length, 1)
   assert.ok(alerts.events.includes('opentrading:alert-triggered'))
@@ -23,8 +24,8 @@ test('in-page alerts work without a system notification API', async () => {
   assert.equal(alerts.alertNotices.value.length, 0)
 })
 
-test('system notification and three-tone audio are delivered independently', async () => {
-  const alerts = delivery(), notifications = [], tones = []
+test('system notification and three-tone audio are delivered independently', async t => {
+  const alerts = delivery(t), notifications = [], tones = []
   global.Notification = class {
     static permission = 'granted'
     constructor(title, options) { notifications.push({ title, ...options }) }
@@ -47,8 +48,8 @@ test('system notification and three-tone audio are delivered independently', asy
   assert.equal(alerts.alertNotices.value.length, 2)
 })
 
-test('blocked autoplay cannot hold system or in-page notifications', async () => {
-  const alerts = delivery(), notifications = []
+test('blocked autoplay cannot hold system or in-page notifications', async t => {
+  const alerts = delivery(t), notifications = []
   global.Notification = class {
     static permission = 'granted'
     constructor(title) { notifications.push(title) }
@@ -62,4 +63,32 @@ test('blocked autoplay cannot hold system or in-page notifications', async () =>
   assert.equal(alerts.alertNotices.value.length, 1)
   assert.equal(notifications.length, 1)
   assert.equal(alerts.alertDeliveryStatus.value, 'alertSoundBlocked')
+})
+
+test('each in-page alert disappears eight seconds after its own arrival', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  const alerts = delivery(t)
+  await alerts.deliverAlertEvent({ ...event(['in_app']), id: 'first' })
+  t.mock.timers.tick(4000)
+  await alerts.deliverAlertEvent({ ...event(['in_app']), id: 'second' })
+  t.mock.timers.tick(3999)
+  assert.deepEqual(alerts.alertNotices.value.map(item => item.id), ['first', 'second'])
+  t.mock.timers.tick(1)
+  assert.deepEqual(alerts.alertNotices.value.map(item => item.id), ['second'])
+  t.mock.timers.tick(4000)
+  assert.deepEqual(alerts.alertNotices.value, [])
+})
+
+test('a replaced notice gets a fresh timeout and manual dismissal cancels expiry', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  const alerts = delivery(t)
+  await alerts.deliverAlertEvent(event(['in_app']))
+  t.mock.timers.tick(4000)
+  await alerts.deliverAlertEvent(event(['in_app']))
+  t.mock.timers.tick(4000)
+  assert.equal(alerts.alertNotices.value.length, 1)
+  alerts.dismissAlertNotice('price-event')
+  assert.deepEqual(alerts.alertNotices.value, [])
+  t.mock.timers.tick(8000)
+  assert.deepEqual(alerts.alertNotices.value, [])
 })

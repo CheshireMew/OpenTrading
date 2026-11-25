@@ -226,6 +226,8 @@ onBeforeUnmount(() => {
 .cw-chart .vela-dtb-flyout .vela-dtb-item{min-height:34px;gap:10px!important;padding:6px 12px!important}
 .cw-chart .vela-dtb-flyout .vela-dtb-item>span:first-child:has(svg[data-cw-drawing-icon]){width:24px!important;height:24px!important}
 .cw-chart .vela-widget-style svg[data-cw-drawing-icon]{width:24px;height:24px}
+.cw-chart :is(.vela-sl-avatar,.vela-ot-avatar,.vela-sp-avatar) img{object-fit:contain!important;object-position:center;border-radius:0!important}
+.cw-chart :is(.vela-sl-avatar,.vela-ot-avatar,.vela-sp-avatar):has(img){border-radius:0;overflow:visible;background:transparent}
 .cw-native-tools{display:flex;align-items:center;flex:0 0 auto;min-width:0;max-width:100%}
 .cw-native-tools:empty{display:none}
 .cw-native-tools .vela-widget-topbar{padding:0;border:0;gap:4px;min-height:32px}

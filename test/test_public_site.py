@@ -47,6 +47,26 @@ async def test_public_tools_pages_can_read_their_initial_configuration(public_ap
 
 
 @pytest.mark.asyncio
+async def test_public_symbol_icons_are_readable_and_keep_browser_cache_headers(public_app):
+    from app.routers.chart_workspace import services
+
+    async def get_icon(asset):
+        assert asset == "BTC"
+        return SimpleNamespace(content=b"public-logo", media_type="image/png", etag='"logo-v1"')
+
+    public_app.dependency_overrides[services] = lambda: SimpleNamespace(market=SimpleNamespace(icons=SimpleNamespace(get=get_icon)))
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=public_app), base_url="https://trade.blacknico.com") as client:
+        response = await client.get("/api/v1/chart-workspace/symbol-icons/BTC")
+        assert response.status_code == 200 and response.content == b"public-logo"
+        assert response.headers["content-type"] == "image/png"
+        assert "max-age=86400" in response.headers["cache-control"]
+        assert "no-store" not in response.headers["cache-control"]
+        cached = await client.get("/api/v1/chart-workspace/symbol-icons/BTC", headers={"If-None-Match": response.headers["etag"]})
+        assert cached.status_code == 304 and not cached.content
+        assert (await client.post("/api/v1/chart-workspace/symbol-icons/BTC")).status_code in {404, 405}
+
+
+@pytest.mark.asyncio
 async def test_public_defaults_are_code_defaults_without_personal_repository_access(public_app):
     public_app.state.runtime_services = SimpleNamespace(require_api=lambda: pytest.fail("Defaults must not read personal storage"))
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=public_app), base_url="https://trade.blacknico.com") as client:

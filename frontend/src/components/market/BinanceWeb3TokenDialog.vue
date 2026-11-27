@@ -71,64 +71,64 @@
 
           <div class="grid grid-cols-2 gap-3">
             <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
-              <div class="text-xs text-slate-400 dark:text-slate-500">{{ t('web3Rank.dialog.price') }}</div>
+              <div class="text-xs app-muted">{{ t('web3Rank.dialog.price') }}</div>
               <div class="mt-2 font-semibold text-slate-900 dark:text-white">{{ formatPrice(dynamic?.price ?? token.metrics?.price) }}</div>
             </div>
             <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
-              <div class="text-xs text-slate-400 dark:text-slate-500">24H</div>
+              <div class="text-xs app-muted">24H</div>
               <div class="mt-2 font-semibold" :class="valueTone(dynamic?.percent_change_24h ?? token.metrics?.percent_change_24h)">
                 {{ formatSigned(dynamic?.percent_change_24h ?? token.metrics?.percent_change_24h) }}
               </div>
             </div>
             <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
-              <div class="text-xs text-slate-400 dark:text-slate-500">{{ t('web3Rank.dialog.marketCap') }}</div>
+              <div class="text-xs app-muted">{{ t('web3Rank.dialog.marketCap') }}</div>
               <div class="mt-2 font-semibold text-slate-900 dark:text-white">{{ formatCompact(dynamic?.market_cap ?? token.metrics?.market_cap) }}</div>
             </div>
             <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
-              <div class="text-xs text-slate-400 dark:text-slate-500">{{ t('web3Rank.dialog.liquidity') }}</div>
+              <div class="text-xs app-muted">{{ t('web3Rank.dialog.liquidity') }}</div>
               <div class="mt-2 font-semibold text-slate-900 dark:text-white">{{ formatCompact(dynamic?.liquidity ?? token.metrics?.liquidity) }}</div>
             </div>
             <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
-              <div class="text-xs text-slate-400 dark:text-slate-500">{{ t('web3Rank.dialog.volume1h') }}</div>
+              <div class="text-xs app-muted">{{ t('web3Rank.dialog.volume1h') }}</div>
               <div class="mt-2 font-semibold text-slate-900 dark:text-white">{{ formatCompact(dynamic?.volume_1h ?? token.metrics?.volume_1h) }}</div>
             </div>
             <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
-              <div class="text-xs text-slate-400 dark:text-slate-500">{{ t('web3Rank.dialog.volume24h') }}</div>
+              <div class="text-xs app-muted">{{ t('web3Rank.dialog.volume24h') }}</div>
               <div class="mt-2 font-semibold text-slate-900 dark:text-white">{{ formatCompact(dynamic?.volume_24h ?? token.metrics?.volume_24h) }}</div>
             </div>
             <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
-              <div class="text-xs text-slate-400 dark:text-slate-500">{{ t('web3Rank.dialog.holders') }}</div>
+              <div class="text-xs app-muted">{{ t('web3Rank.dialog.holders') }}</div>
               <div class="mt-2 font-semibold text-slate-900 dark:text-white">{{ formatCompact(dynamic?.holders ?? token.metrics?.holders) }}</div>
             </div>
             <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
-              <div class="text-xs text-slate-400 dark:text-slate-500">{{ t('web3Rank.dialog.trades') }}</div>
+              <div class="text-xs app-muted">{{ t('web3Rank.dialog.trades') }}</div>
               <div class="mt-2 font-semibold text-slate-900 dark:text-white">{{ formatCompact(dynamic?.count_24h ?? token.metrics?.count_24h) }}</div>
             </div>
           </div>
 
           <div class="mt-5 border border-[var(--ui-border)] bg-white p-4 text-sm text-stone-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
             <div class="flex items-center justify-between">
-              <span class="text-slate-400">{{ t('web3Rank.dialog.topSearch') }}</span>
+              <span class="app-muted">{{ t('web3Rank.dialog.topSearch') }}</span>
               <span>{{ token.components?.top_search?.toFixed?.(1) ?? '--' }}</span>
             </div>
             <div class="mt-3 flex items-center justify-between">
-              <span class="text-slate-400">{{ t('web3Rank.dialog.trending') }}</span>
+              <span class="app-muted">{{ t('web3Rank.dialog.trending') }}</span>
               <span>{{ token.components?.trending?.toFixed?.(1) ?? '--' }}</span>
             </div>
             <div class="mt-3 flex items-center justify-between">
-              <span class="text-slate-400">{{ t('web3Rank.dialog.social') }}</span>
+              <span class="app-muted">{{ t('web3Rank.dialog.social') }}</span>
               <span>{{ token.components?.social_hype?.toFixed?.(1) ?? '--' }}</span>
             </div>
             <div class="mt-3 flex items-center justify-between">
-              <span class="text-slate-400">{{ t('web3Rank.dialog.volumeTx') }}</span>
+              <span class="app-muted">{{ t('web3Rank.dialog.volumeTx') }}</span>
               <span>{{ token.components?.volume_growth?.toFixed?.(1) ?? '--' }} / {{ token.components?.transaction_growth?.toFixed?.(1) ?? '--' }}</span>
             </div>
             <div class="mt-3 flex items-center justify-between">
-              <span class="text-slate-400">{{ t('web3Rank.dialog.smartMoney') }}</span>
+              <span class="app-muted">{{ t('web3Rank.dialog.smartMoney') }}</span>
               <span>{{ formatCompact(token.metrics?.smart_money_inflow) }}</span>
             </div>
             <div class="mt-3 flex items-center justify-between">
-              <span class="text-slate-400">{{ t('web3Rank.dialog.meme') }}</span>
+              <span class="app-muted">{{ t('web3Rank.dialog.meme') }}</span>
               <span>{{ token.ranks?.meme ? `#${token.ranks.meme}` : '--' }}</span>
             </div>
           </div>
@@ -141,19 +141,19 @@
             <p v-if="token.summary" class="mt-3 text-xs leading-5 text-slate-500 dark:text-slate-400">{{ token.summary }}</p>
             <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
               <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-3 py-2 dark:border-slate-700 dark:bg-slate-900/70">
-                <div class="text-slate-400">{{ t('web3Rank.dialog.topSearch') }}</div>
+                <div class="app-muted">{{ t('web3Rank.dialog.topSearch') }}</div>
                 <div class="mt-1 font-semibold text-slate-900 dark:text-white">{{ token.ranks?.top_search ? `#${token.ranks.top_search}` : '--' }}</div>
               </div>
               <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-3 py-2 dark:border-slate-700 dark:bg-slate-900/70">
-                <div class="text-slate-400">{{ t('web3Rank.dialog.trending') }}</div>
+                <div class="app-muted">{{ t('web3Rank.dialog.trending') }}</div>
                 <div class="mt-1 font-semibold text-slate-900 dark:text-white">{{ token.ranks?.trending ? `#${token.ranks.trending}` : '--' }}</div>
               </div>
               <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-3 py-2 dark:border-slate-700 dark:bg-slate-900/70">
-                <div class="text-slate-400">{{ t('web3Rank.dialog.socialHype') }}</div>
+                <div class="app-muted">{{ t('web3Rank.dialog.socialHype') }}</div>
                 <div class="mt-1 font-semibold text-slate-900 dark:text-white">{{ formatCompact(token.metrics?.social_hype) }}</div>
               </div>
               <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-3 py-2 dark:border-slate-700 dark:bg-slate-900/70">
-                <div class="text-slate-400">{{ t('web3Rank.dialog.memeScore') }}</div>
+                <div class="app-muted">{{ t('web3Rank.dialog.memeScore') }}</div>
                 <div class="mt-1 font-semibold text-slate-900 dark:text-white">{{ formatCompact(token.metrics?.meme_score) }}</div>
               </div>
             </div>

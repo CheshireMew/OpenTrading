@@ -15,7 +15,7 @@ export function createWorkspacePaper(deps: {
   const accounts = reactive(new Map<string, ReplayAccount>()), idle = reactive(new ReplayAccount())
   const symbol = computed(() => deps.symbols.value.find(info => info.id === deps.symbolId.value))
   const active = computed(() => accounts.has(deps.symbolId.value))
-  const amount = ref(100), loading = ref(false), error = ref('')
+  const amount = ref(1000), loading = ref(false), error = ref('')
   const subscriptions = new Map<string, () => void>()
   const observed = new Map<string, number>()
   const account = () => accounts.get(deps.symbolId.value) ?? idle

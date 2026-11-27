@@ -20,14 +20,18 @@ export class OpenTradingProvider implements DataProvider {
   private subscriptions=new Map<string,{generation:number;sequence:number}>()
   private closed = false
   private paused = false
+  private connected = false
   private callbacks = new Map<string,Set<(bar:OHLCV)=>void>>()
   private quoteCallbacks = new Map<string,Set<(quote:LiveQuote)=>void>>()
   private requests = new Set<AbortController>()
   private inFlight = new Map<string,Promise<OHLCV[]>>()
   private catalogRequests = new Map<string, Promise<void>>()
   private lastBars = new Map<string, number>()
+  private lastCloses = new Map<string, number>()
   private repairs = new Map<string, HistoryRepair>()
-  constructor(private status:(symbol:string,status:string,error?:string)=>void) {}
+  private historyErrors = new Set<string>()
+  constructor(private status:(symbol:string,status:string,error?:string)=>void,
+    private discovered?: (symbol: ChartSymbol) => void) {}
   async resolve(ticker:string):Promise<ChartSymbol> {
     if (!this.catalog.length) this.catalog = await chartApi.symbols()
     const normalized = fromVela(ticker)
@@ -51,6 +55,7 @@ export class OpenTradingProvider implements DataProvider {
       }
       await request
       result = find()
+      if (result && !this.closed) this.discovered?.(result)
     }
     if (!result) throw new Error(cw('symbolUnavailable',{symbol:ticker}))
     return result
@@ -65,6 +70,11 @@ export class OpenTradingProvider implements DataProvider {
     return { ...s.metadata,ticker:s.symbol,tickerid:velaSymbol(s.id),prefix:s.exchange,currency:s.currency,
       timezone:s.timezone,session:s.session,type:marketSymbolType(s.market),description:s.name}
   }
+  async preload(ticker: string, timeframe: string, signal: AbortSignal) {
+    const info = await this.resolve(ticker), tf = timeframes[timeframe] ?? timeframe
+    if (this.closed || signal.aborted || !info.timeframes.includes(tf)) return
+    await chartApi.bars({ symbol: info.id, timeframe: tf, end: Date.now(), limit: 200 }, signal)
+  }
   async getBars(ticker:string,timeframe:string,range:BarRange):Promise<OHLCV[]> {
     const info = await this.resolve(ticker)
     const tf = timeframes[timeframe] ?? timeframe
@@ -78,7 +88,17 @@ export class OpenTradingProvider implements DataProvider {
   async getBarsProgressive(ticker:string,timeframe:string,range:BarRange,onBatch:(bars:OHLCV[])=>void,opts?:{signal?:AbortSignal}) {
     const info=await this.resolve(ticker),tf=timeframes[timeframe]??timeframe
     if(!info.timeframes.includes(tf))throw new Error(cw('unsupportedTimeframe',{symbol:info.name,timeframe:tf}))
-    return this.load(info,tf,range,opts?.signal,onBatch)
+    if (range.from !== undefined || (range.limit ?? 1000) <= 200) return this.load(info,tf,range,opts?.signal,onBatch)
+    const target = range.limit ?? 1000, end = range.to ?? Date.now()
+    const query = { symbol: info.id, timeframe: tf, end, limit: 200 }
+    const cached = chartApi.cachedBars?.(query)?.bars.filter(bar => bar.time <= end).slice(-200) ?? []
+    if (cached.length && !opts?.signal?.aborted) onBatch(cached)
+    const head = await this.load(info,tf,{ ...range, to: end, limit: 200 },opts?.signal)
+    if (opts?.signal?.aborted || !head.length) return head
+    onBatch(head)
+    const older = await this.load(info,tf,{ to: head[0]!.time - 1, limit: target - head.length },opts?.signal,
+      bars => onBatch([...bars, ...head]))
+    return [...older, ...head]
   }
   private async load(info:ChartSymbol,tf:string,range:BarRange,signal?:AbortSignal,onBatch?:(bars:OHLCV[])=>void):Promise<OHLCV[]> {
     const abort = new AbortController()
@@ -111,11 +131,16 @@ export class OpenTradingProvider implements DataProvider {
         end=next
       }
       const result = [...new Map(collected.map(b=>[b.time,b])).values()].sort((a,b)=>a.time-b.time)
+      if (this.historyErrors.delete(info.id)) {
+        const connection = this.statuses.get(info.id)
+        this.status(info.id, connection?.status ?? 'connecting', connection?.error)
+      }
       const key = JSON.stringify([info.id, tf])
-      if (result.length && !this.repairs.has(key)) this.lastBars.set(key, Math.max(this.lastBars.get(key) ?? 0, result[result.length - 1]!.time))
+      if (result.length && !this.repairs.has(key)) this.rememberBar(key, result[result.length - 1]!)
       return result
     } catch(error) {
       if(abort.signal.aborted)return collected.sort((a,b)=>a.time-b.time)
+      this.historyErrors.add(info.id)
       this.status(info.id,'error',String(error))
       throw error
     } finally { this.requests.delete(abort);signal?.removeEventListener('abort',stop) }
@@ -146,6 +171,7 @@ export class OpenTradingProvider implements DataProvider {
     const [symbol, tf] = JSON.parse(key)
     if (wanted && !this.subscriptions.has(key)) {
       this.subscriptions.set(key, { generation: ++this.generation, sequence: 0 })
+      if (this.socket?.readyState === WebSocket.OPEN) this.beginRepair(key)
       this.send('subscribe', symbol, tf)
     } else if (!wanted && this.subscriptions.has(key)) {
       this.send('unsubscribe', symbol, tf)
@@ -162,28 +188,57 @@ export class OpenTradingProvider implements DataProvider {
     if (repair) { clearTimeout(repair.timer);repair.abort.abort();this.repairs.delete(key) }
   }
   private publish(key: string, bar: OHLCV) {
-    this.lastBars.set(key, Math.max(this.lastBars.get(key) ?? 0, bar.time))
+    this.rememberBar(key, bar)
     for (const callback of this.callbacks.get(key) ?? []) callback(bar)
+  }
+  private rememberBar(key: string, bar: OHLCV) {
+    this.lastBars.set(key, Math.max(this.lastBars.get(key) ?? 0, bar.time))
+    const closeTime = (bar as OHLCV & { closeTime?: number }).closeTime
+    if (typeof closeTime === 'number' && Number.isFinite(closeTime))
+      this.lastCloses.set(key, Math.max(this.lastCloses.get(key) ?? 0, closeTime))
+  }
+  private beginRepair(key: string) {
+    if (this.closed || this.paused || !this.callbacks.has(key) || !this.lastBars.has(key) || this.repairs.has(key)) return
+    const repair = { abort: new AbortController(), bars: new Map<number, OHLCV>(), failures: 0 }
+    this.repairs.set(key, repair)
+    void this.repairHistory(key, repair)
   }
   private async repairHistory(key: string, repair: HistoryRepair) {
     const current = () => !this.closed && !this.paused && this.repairs.get(key) === repair && this.callbacks.has(key)
     const [symbol, tf] = JSON.parse(key)
     try {
       const info = await this.resolve(symbol)
-      const bars = await this.load(info, tf, { from: this.lastBars.get(key)!, to: Date.now() }, repair.abort.signal)
-      if (!current()) return
       // Include the last displayed candle again: it may have closed while the
-      // page was hidden. Buffer live plot updates until all intervening bars
-      // have landed; trading quotes continue independently throughout the repair.
-      const merged = new Map(bars.map(bar => [bar.time, bar]))
-      for (const [time, bar] of repair.bars) merged.set(time, bar)
-      for (const bar of [...merged.values()].sort((left, right) => left.time - right.time)) {
+      // page was hidden. Commit completed pages so a long outage uses bounded
+      // temporary memory and a later failure resumes from verified progress.
+      let cursor = this.lastBars.get(key)!
+      const end = Date.now()
+      while (current() && cursor <= end) {
+        const bars = await this.load(info, tf, { from: cursor, to: end, limit: 1000 }, repair.abort.signal)
         if (!current()) return
+        for (const bar of bars) {
+          if (!current()) return
+          this.publish(key, repair.bars.get(bar.time) ?? bar)
+          repair.bars.delete(bar.time)
+        }
+        if (bars.length < 1000) break
+        const last = bars[bars.length - 1]!
+        const next = (last as OHLCV & { closeTime?: number }).closeTime ?? last.time + 1
+        if (next <= cursor) throw new Error(cw('loadFailed'))
+        cursor = next
+      }
+      // Historical bars never reach quote listeners or execute live orders.
+      for (const bar of [...repair.bars.values()].sort((left, right) => left.time - right.time)) {
+        if (!current()) return
+        if (bar.time < (this.lastBars.get(key) ?? 0)) continue
+        const expected = this.lastCloses.get(key)
+        if (expected !== undefined && bar.time > expected) throw new Error(cw('loadFailed'))
         this.publish(key, bar)
       }
       this.repairs.delete(key)
     } catch (cause) {
       if (!current()) return
+      this.historyErrors.add(symbol)
       this.status(symbol, 'error', String(cause))
       repair.failures++
       repair.timer = setTimeout(() => void this.repairHistory(key, repair), Math.min(30_000, 1500 * 2 ** Math.min(repair.failures, 4)))
@@ -194,11 +249,7 @@ export class OpenTradingProvider implements DataProvider {
     this.paused = paused
     if (paused) for (const key of this.repairs.keys()) this.cancelRepair(key)
     for (const key of new Set([...this.callbacks.keys(), ...this.quoteCallbacks.keys()])) {
-      if (!paused && this.callbacks.has(key) && this.lastBars.has(key)) {
-        const repair = { abort: new AbortController(), bars: new Map<number, OHLCV>(), failures: 0 }
-        this.repairs.set(key, repair)
-        void this.repairHistory(key, repair)
-      }
+      if (!paused) this.beginRepair(key)
       this.syncSubscription(key)
     }
   }
@@ -210,7 +261,15 @@ export class OpenTradingProvider implements DataProvider {
     clearTimeout(this.retry);this.retry=undefined
     const socket = new WebSocket(`${location.protocol==='https:'?'wss:':'ws:'}//${location.host}${BASE}/stream`)
     this.socket=socket
-    socket.onopen=()=>{if(this.socket!==socket||this.closed)return;for(const key of this.subscriptions.keys()){this.subscriptions.set(key,{generation:++this.generation,sequence:0});const [symbol,tf]=JSON.parse(key);this.send('subscribe',symbol,tf)}}
+    socket.onopen=()=>{
+      if(this.socket!==socket||this.closed)return
+      const reconnect = this.connected; this.connected = true
+      for(const key of this.subscriptions.keys()){
+        this.subscriptions.set(key,{generation:++this.generation,sequence:0})
+        if (reconnect) this.beginRepair(key)
+        const [symbol,tf]=JSON.parse(key);this.send('subscribe',symbol,tf)
+      }
+    }
     socket.onmessage=e=>{
       if(this.socket!==socket||this.closed)return
       const data=JSON.parse(e.data),key=JSON.stringify([data.symbol,data.timeframe]),subscription=this.subscriptions.get(key)
@@ -218,6 +277,8 @@ export class OpenTradingProvider implements DataProvider {
       if(data.sequence!=null){if(data.sequence<=subscription.sequence)return;subscription.sequence=data.sequence}
       if(data.type==='bar') {
         if (!this.paused) {
+          const expected = this.lastCloses.get(key)
+          if (expected !== undefined && data.bar.time > expected) this.beginRepair(key)
           const repair = this.repairs.get(key)
           if (repair) {
             repair.bars.set(data.bar.time, data.bar)
@@ -228,7 +289,11 @@ export class OpenTradingProvider implements DataProvider {
         if(data.live===true && Number.isFinite(data.observed_at))
           for(const cb of this.quoteCallbacks.get(key)??[]) cb({price:data.bar.close,observedAt:data.observed_at})
       }
-      if(data.type==='status'){this.statuses.set(data.symbol,{status:data.status,error:data.error});this.status(data.symbol,data.status,data.error)}
+      if(data.type==='status'){
+        const previous = this.statuses.get(data.symbol)?.status
+        if (data.status === 'live' && previous && previous !== 'live') this.beginRepair(key)
+        this.statuses.set(data.symbol,{status:data.status,error:data.error});this.status(data.symbol,data.status,data.error)
+      }
     }
     socket.onclose=()=>{
       if(this.socket!==socket||this.closed)return
@@ -243,5 +308,7 @@ export class OpenTradingProvider implements DataProvider {
     this.callbacks.clear();this.subscriptions.clear()
     this.quoteCallbacks.clear()
     this.lastBars.clear()
+    this.lastCloses.clear()
+    this.historyErrors.clear()
   }
 }

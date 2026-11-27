@@ -95,3 +95,80 @@ test('tail refresh and older history cannot append rows after the selected marke
     assert.equal(view.series.loadingMore.value, false)
   } finally { view.close() }
 })
+
+test('older history continues past 5000 candles and a refresh retains the expanded history', async () => {
+  const view = mount()
+  try {
+    view.calls[0].resolve(Array.from({ length: 1000 }, (_, i) => bar(10, 5000 + i))); await settle()
+    for (let page = 0; page < 9; page++) {
+      const older = view.series.loadMore()
+      view.calls.at(-1).resolve(Array.from({ length: 500 }, (_, i) => bar(10, 4500 - page * 500 + i)))
+      await older; await settle()
+    }
+    assert.equal(view.series.chartData.value.length, 5500)
+    assert.equal(view.series.chartData.value[0].time, 0.5)
+    const timer = [...view.timers.values()][0]; timer()
+    view.calls.at(-1).resolve([bar(20, 5999), bar(30, 6000)]); await settle()
+    assert.equal(view.series.chartData.value.length, 5501)
+    assert.equal(view.series.chartData.value[0].time, 0.5)
+    assert.equal(view.series.chartData.value.at(-1).close, 30)
+  } finally { view.close() }
+})
+
+test('a tail beyond the last loaded candle fills the missing interval before publishing it', async () => {
+  const view = mount()
+  try {
+    view.calls[0].resolve([bar(10, 1000)]); await settle()
+    const timer = [...view.timers.values()][0]; timer()
+    view.calls[1].resolve([bar(40, 4000), bar(50, 5000)]); await settle()
+    assert.equal(view.calls[2]?.kind, 'before')
+    assert.deepEqual(view.series.chartData.value.map(row => row.time), [1])
+    timer(); await settle()
+    assert.equal(view.calls.length, 3, 'tail repair must not launch overlapping refreshes')
+    view.calls[2].resolve([bar(11, 1000), bar(20, 2000), bar(30, 3000)]); await settle()
+    assert.deepEqual(view.series.chartData.value.map(row => row.time), [1, 2, 3, 4, 5])
+    assert.equal(view.series.chartData.value[0].close, 11, 'the old forming candle must be corrected too')
+  } finally { view.close() }
+})
+
+test('a history page containing no older candles ends pagination instead of requesting the same page again', async () => {
+  const view = mount()
+  try {
+    view.calls[0].resolve([bar(10, 1000)]); await settle()
+    const older = view.series.loadMore()
+    view.calls[1].resolve([bar(10, 1000)]); await older; await settle()
+    assert.equal(view.series.noMoreHistory.value, true)
+    await view.series.loadMore()
+    assert.equal(view.calls.length, 2)
+  } finally { view.close() }
+})
+
+test('retrying the latest snapshot repairs its gap before replacing the visible tail', async () => {
+  const view = mount()
+  try {
+    view.calls[0].resolve([bar(10, 1000)]); await settle()
+    const retry = view.series.retry()
+    view.calls[1].resolve([bar(50, 5000)]); await settle()
+    assert.equal(view.calls[2]?.kind, 'before')
+    assert.deepEqual(view.series.chartData.value.map(row => row.time), [1])
+    view.calls[2].resolve([bar(11, 1000), bar(20, 2000), bar(30, 3000), bar(40, 4000)])
+    await retry; await settle()
+    assert.deepEqual(view.series.chartData.value.map(row => row.time), [1, 2, 3, 4, 5])
+  } finally { view.close() }
+})
+
+test('switching market during a multi-page gap repair discards every old-market repair page', async () => {
+  const view = mount()
+  try {
+    view.calls[0].resolve([bar(10, 1000)]); await settle()
+    const timer = [...view.timers.values()][0]; timer()
+    view.calls[1].resolve([bar(60, 6000)]); await settle()
+    view.calls[2].resolve([bar(40, 4000), bar(50, 5000)]); await settle()
+    assert.equal(view.calls[3]?.kind, 'before')
+    assert.deepEqual(view.series.chartData.value.map(row => row.time), [1])
+    view.key.value = 'usdm:TOKEN:15m'; await settle()
+    view.calls[4].resolve([bar(80, 8000)]); await settle()
+    view.calls[3].resolve([bar(11, 1000), bar(20, 2000), bar(30, 3000)]); await settle()
+    assert.deepEqual(view.series.chartData.value.map(row => row.close), [80])
+  } finally { view.close() }
+})

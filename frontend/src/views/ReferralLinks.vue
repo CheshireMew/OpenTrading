@@ -15,7 +15,7 @@
           <article v-for="provider in section.providers" :key="provider.url" class="app-panel referral-card">
             <header class="referral-provider">
               <div class="referral-provider-name">
-                <span class="referral-icon"><component :is="section.icon" aria-hidden="true" /></span>
+                <span class="referral-icon" :class="{ 'referral-icon--app': section.id === 'wallets', 'referral-icon--monochrome': provider.icon.monochrome }" aria-hidden="true"><img :src="provider.icon.src" alt="" width="26" height="26" /></span>
                 <h3>{{ t('referrals.' + provider.name) }}</h3>
               </div>
               <a :href="provider.url" target="_blank" rel="noopener noreferrer" :class="section.id === 'exchanges' ? 'app-button-primary' : 'app-button-secondary'">
@@ -41,7 +41,7 @@
         <div class="referral-section-heading"><h2 id="referral-resources" class="app-section-title">{{ t('referrals.communityAndLearning') }}</h2></div>
         <div class="referral-grid">
           <a v-for="resource in resources" :key="resource.url" :href="resource.url" target="_blank" rel="noopener noreferrer" class="app-panel referral-resource">
-            <span class="referral-icon"><component :is="resource.icon" aria-hidden="true" /></span>
+            <span class="referral-icon" :class="{ 'referral-icon--monochrome': resource.icon.monochrome }" aria-hidden="true"><img :src="resource.icon.src" alt="" width="26" height="26" /></span>
             <div><h3>{{ t('referrals.' + resource.name) }}</h3><p>{{ resource.address }}</p></div>
             <ArrowUpRightIcon class="referral-resource-arrow" aria-hidden="true" />
           </a>
@@ -56,23 +56,34 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ArrowUpRightIcon, BookOpenIcon, BuildingLibraryIcon, ChatBubbleLeftRightIcon, CheckIcon, ClipboardDocumentIcon, WalletIcon } from '@heroicons/vue/24/outline'
+import { ArrowUpRightIcon, CheckIcon, ClipboardDocumentIcon } from '@heroicons/vue/24/outline'
 
 defineOptions({ name: 'ReferralLinks' })
 const { t } = useI18n()
+// SVG marks: Simple Icons (CC0) and telegram.org/img/t_logo.svg.
+// Wallet app icons: web3.okx.com's touch icon and Binance's official Chrome
+// Web Store listing (cadiboklkpojfamcoggejbbdjcoiljjk), linked by Binance Support.
+const icons = {
+  binance: { src: '/brand-icons/binance.svg', monochrome: false },
+  okx: { src: '/brand-icons/okx.svg', monochrome: true },
+  okxWallet: { src: '/brand-icons/okx-wallet.png', monochrome: false },
+  binanceWallet: { src: '/brand-icons/binance-wallet.png', monochrome: false },
+  telegram: { src: '/brand-icons/telegram.svg', monochrome: false },
+  gitbook: { src: '/brand-icons/gitbook.svg', monochrome: true },
+}
 const sections = [
-  { id: 'exchanges', icon: BuildingLibraryIcon, action: 'register', providers: [
-    { name: 'binance', url: 'https://binance.com/join?ref=SRXT5KUM', codes: [{ label: 'inviteCode', value: 'SRXT5KUM' }, { label: 'futuresInviteCode', value: '416378774' }] },
-    { name: 'okx', url: 'https://okx.com/join/A999998', codes: [{ label: 'inviteCode', value: 'A999998' }] },
+  { id: 'exchanges', action: 'register', providers: [
+    { name: 'binance', icon: icons.binance, url: 'https://binance.com/join?ref=SRXT5KUM', codes: [{ label: 'inviteCode', value: 'SRXT5KUM' }, { label: 'futuresInviteCode', value: '416378774' }] },
+    { name: 'okx', icon: icons.okx, url: 'https://okx.com/join/A999998', codes: [{ label: 'inviteCode', value: 'A999998' }] },
   ] },
-  { id: 'wallets', icon: WalletIcon, action: 'openWallet', providers: [
-    { name: 'okx', url: 'https://web3.okx.com/ul/joindex?ref=1234567', codes: [{ label: 'inviteCode', value: '1234567' }] },
-    { name: 'binance', url: 'https://web3.binance.com/referral?ref=RP3AEJ2M', codes: [{ label: 'inviteCode', value: 'RP3AEJ2M' }] },
+  { id: 'wallets', action: 'openWallet', providers: [
+    { name: 'okx', icon: icons.okxWallet, url: 'https://web3.okx.com/ul/joindex?ref=1234567', codes: [{ label: 'inviteCode', value: '1234567' }] },
+    { name: 'binance', icon: icons.binanceWallet, url: 'https://web3.binance.com/referral?ref=RP3AEJ2M', codes: [{ label: 'inviteCode', value: 'RP3AEJ2M' }] },
   ] },
 ]
 const resources = [
-  { name: 'community', icon: ChatBubbleLeftRightIcon, url: 'https://t.me/CheshireBTC', address: 't.me/CheshireBTC' },
-  { name: 'tutorial', icon: BookOpenIcon, url: 'https://0xcheshire.gitbook.io/web3/', address: '0xcheshire.gitbook.io/web3/' },
+  { name: 'community', icon: icons.telegram, url: 'https://t.me/CheshireBTC', address: 't.me/CheshireBTC' },
+  { name: 'tutorial', icon: icons.gitbook, url: 'https://0xcheshire.gitbook.io/web3/', address: '0xcheshire.gitbook.io/web3/' },
 ]
 const copied = ref(''), copyError = ref(false)
 let copyTimer: ReturnType<typeof setTimeout> | undefined
@@ -99,8 +110,10 @@ onBeforeUnmount(() => clearTimeout(copyTimer))
 .referral-provider{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .referral-provider-name{display:flex;align-items:center;gap:12px}
 h3{font-size:16px;font-weight:600;color:var(--ui-title)}
-.referral-icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:40px;height:40px;border:1px solid var(--ui-border);border-radius:6px;background:var(--ui-toolbar);color:var(--ui-text)}
-.referral-icon svg{width:22px;height:22px}
+.referral-icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:40px;height:40px;overflow:hidden;border:1px solid var(--ui-border);border-radius:6px;background:var(--ui-toolbar)}
+.referral-icon img{width:26px;height:26px;object-fit:contain}
+.referral-icon--app img{width:100%;height:100%}
+.dark .referral-icon--monochrome img{filter:invert(1)}
 .referral-provider>a{padding:6px 12px;min-height:36px;font-size:13px}
 .referral-provider>a svg{width:15px;height:15px}
 .referral-codes{margin-top:20px;border-top:1px solid var(--ui-border);padding-top:8px}
@@ -115,7 +128,7 @@ dt{color:var(--ui-muted);font-size:13px}
 .referral-resource>div{flex:1;min-width:0}
 .referral-resource p{margin-top:5px;font-size:12px;color:var(--ui-muted);overflow-wrap:anywhere}
 .referral-resource-arrow{flex-shrink:0;width:18px;height:18px;color:var(--ui-muted)}
-.referral-copy-error{font-size:13px;color:var(--ui-negative)}
+.referral-copy-error{font-size:13px;color:var(--ui-negativeInk)}
 @container app-content (max-width:48rem){.referral-grid{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:767px){.referral-card,.referral-resource{padding:18px}.referral-provider>a,.referral-copy{min-height:44px}.referral-page section+section{padding-top:0}}
 @media(prefers-reduced-motion:reduce){.referral-resource{transition:none}}

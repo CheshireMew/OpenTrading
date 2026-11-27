@@ -103,7 +103,7 @@
           <button v-if="form.apiKeySet" type="button" class="app-button-secondary app-touch-target px-4 py-2 text-rose-600 dark:text-rose-300" :disabled="saving" @click="clearLlmApiKey">
             {{ $t('settings.clearKey') }}
           </button>
-          <span v-if="message" role="status" aria-live="polite" class="text-sm text-emerald-600 dark:text-emerald-300">{{ message }}</span>
+          <span v-if="message" role="status" aria-live="polite" class="text-sm text-[var(--ui-positiveInk)]">{{ message }}</span>
           <span v-if="error" role="alert" class="text-sm text-rose-600 dark:text-rose-300">{{ error }}</span>
         </div>
         </template>

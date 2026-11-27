@@ -15,7 +15,7 @@ export interface ChartSymbol {
   symbol: string
   name: string
   exchange: string
-  market: "spot" | "usdm" | "index" | "fx" | "commodity"
+  market: "spot" | "usdm" | "alpha" | "web3" | "index" | "fx" | "commodity"
   currency: string
   timeframes: Array<string>
   close_only?: boolean
@@ -140,4 +140,9 @@ export interface ChartReplayBarsQueryParams {
 
 export interface ChartSymbolsQueryParams {
   symbol?: string | null
+  wait?: boolean
+}
+
+export interface SearchChartSymbolsQueryParams {
+  query: string
 }

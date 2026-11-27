@@ -9,6 +9,8 @@ from app.contracts.frontend import FrontendContractRouter
 from app.contracts.chart_workspace import (ChartSymbol, ChartBars, ChartQuote, WorkspaceDocument, WorkspaceWrite,
     PineRun, PineRunRequest, PineRecords, PineCapabilities)
 from app.infra.executor import run_workspace
+from app.infra.market_data.chart import MarketHttpError
+from app.infra.market_data.exchange import MarketDataError
 from app.infra.persistence.chart_workspace_repository import WorkspaceConflict
 from app.services.chart_workspace_runs import PineCapacityError
 
@@ -47,13 +49,23 @@ def document_call(fn):
 
 
 @router.get("/symbols",response_model=list[ChartSymbol])
-async def chart_symbols(symbol: str | None = Query(default=None, max_length=160), service=Depends(services)):
+async def chart_symbols(symbol: str | None = Query(default=None, max_length=160), wait: bool = False, service=Depends(services)):
     if symbol is not None:
         try:
             await service.market.resolve(symbol)
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
-    return await service.market.symbols()
+    return await service.market.symbols(wait_for_refresh=wait)
+
+
+@router.get("/symbols/search", response_model=list[ChartSymbol])
+async def search_chart_symbols(query: str = Query(min_length=1, max_length=128), service=Depends(services)):
+    try:
+        return await service.market.search_symbols(query)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(502, str(exc)) from exc
 
 
 @router.get("/symbol-icons/{asset}", response_class=Response,
@@ -75,6 +87,8 @@ async def chart_bars(symbol:str,timeframe:str,limit:int=Query(1000,ge=1,le=1000)
         return await service.market.bars(symbol,timeframe,limit,start,end)
     except ValueError as exc:
         raise HTTPException(422,str(exc))
+    except (MarketHttpError, MarketDataError, TimeoutError) as exc:
+        raise HTTPException(502, "历史行情暂时加载失败，请重试") from exc
 
 
 @router.get("/quotes",response_model=list[ChartQuote])
@@ -93,6 +107,8 @@ async def chart_replay_bars(response: Response, symbol: str, timeframe: str,
         result = await service.market.replay_bars(symbol, timeframe, limit, start, upper)
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
+    except (MarketHttpError, MarketDataError, TimeoutError) as exc:
+        raise HTTPException(502, "回放历史行情暂时加载失败，请重试") from exc
     response.headers["Cache-Control"] = "public, max-age=" + (
         "86400" if result.bars and end == upper and upper < int(time.time() * 1000) - 86400000 else "30")
     return result

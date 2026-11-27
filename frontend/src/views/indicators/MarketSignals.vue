@@ -35,7 +35,7 @@
       <template v-else-if="totalCount > 0">
         <section v-if="selectedCard" class="signal-detail app-panel p-5" aria-labelledby="signal-detail-title">
           <header class="flex flex-wrap items-center justify-between gap-3"><h2 id="signal-detail-title" class="app-section-title">{{ t('indicator.' + selectedCard.indicator.indicator_id, selectedCard.indicator.name) }}</h2><button type="button" class="app-button-secondary" @click="selectedId = ''">{{ t('workspaceViews.close') }}</button></header>
-          <div class="my-4 flex flex-wrap items-baseline gap-4"><strong class="text-3xl">{{ selectedCard.valueLabel }}</strong><span :class="changeToneClass(selectedCard.changeValue)">{{ t("marketSignals.changePeriod", { days: changeDays }) }} {{ selectedCard.changeLabel }}</span><span class="text-xs app-muted">{{ selectedCard.lastUpdatedLabel }}</span></div>
+          <div class="my-4 flex flex-wrap items-baseline gap-4"><strong class="text-3xl">{{ selectedCard.valueLabel }}</strong><span class="change-pill" :class="changeToneClass(selectedCard.changeValue)">{{ t("marketSignals.changePeriod", { days: changeDays }) }} {{ selectedCard.changeLabel }}</span><span class="text-xs app-muted">{{ selectedCard.lastUpdatedLabel }}</span></div>
           <IndicatorChart v-if="selectedCard.indicator.history.length >= 2" :key="selectedId" :indicator="selectedCard.indicator" height="h-80" />
           <p v-else class="py-12 text-center app-muted">{{ t('marketSignals.collectingHistory', { count: selectedCard.indicator.history.length }) }}</p>
           <p v-if="selectedCard.indicator.description" class="mt-4 text-sm app-muted">{{ selectedCard.indicator.description }}</p>
@@ -80,7 +80,7 @@
 
           <div v-else-if="group.cards.length > 0" class="signal-compact-list">
             <button v-for="card in group.cards" :key="card.indicator.indicator_id" type="button" :aria-expanded="selectedId === card.indicator.indicator_id" @click="selectIndicator(card.indicator.indicator_id)">
-              <strong>{{ t('indicator.' + card.indicator.indicator_id, card.indicator.name) }}</strong><span class="signal-list-value">{{ card.valueLabel }}</span><span :class="changeToneClass(card.changeValue)">{{ t("marketSignals.changePeriod", { days: changeDays }) }} {{ card.changeLabel }}</span><time>{{ card.lastUpdatedLabel }}</time>
+              <strong>{{ t('indicator.' + card.indicator.indicator_id, card.indicator.name) }}</strong><span class="signal-list-value">{{ card.valueLabel }}</span><span class="change-pill" :class="changeToneClass(card.changeValue)">{{ t("marketSignals.changePeriod", { days: changeDays }) }} {{ card.changeLabel }}</span><time>{{ card.lastUpdatedLabel }}</time>
             </button>
           </div>
           <div v-else class="empty-row">
@@ -142,7 +142,7 @@ const selectIndicator = (id: string) => { selectedId.value = selectedId.value ==
 .signal-page { background: var(--ui-canvas); }
 .signal-page--embedded .app-page-header { justify-content: flex-end; }
 .signal-panel, .metric-card { min-width: 0; border: 1px solid var(--ui-border); background: var(--ui-panel); border-radius: 8px; }
-.summary-card { min-width: 0; padding: 12px 16px; border: 1px solid var(--ui-border); border-radius: 6px; background: var(--ui-toolbar); }
+.summary-card { min-width: 0; border: 1px solid var(--ui-border); border-radius: 6px; background: var(--ui-toolbar); }
 .summary-card span, .summary-card em { display: block; color: var(--ui-muted); font-size: 12px; font-style: normal; }
 .summary-card strong { display: block; margin-top: 6px; font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ui-title); }
 .summary-card em { margin-top: 4px; }
@@ -160,8 +160,7 @@ const selectIndicator = (id: string) => { selectedId.value = selectedId.value ==
 </style>
 
 <style scoped>
-.signal-navigation .summary-card { border: 0; border-radius: 0; padding: 16px 20px; background: transparent; text-align: left; }
-.signal-navigation .summary-card:first-child { padding-left: 0; }
+.signal-navigation .summary-card { border: 0; border-radius: 0; background: transparent; text-align: left; }
 .signal-navigation .summary-card:hover { background: var(--ui-elevated); }
 .signal-navigation .summary-card[aria-pressed=true] { background: color-mix(in srgb, var(--ui-accent) 8%, var(--ui-canvas)); }
 .signal-navigation .summary-card[aria-pressed=true] strong { color: var(--ui-accent); }

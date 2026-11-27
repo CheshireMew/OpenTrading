@@ -110,7 +110,7 @@
                       <button type="button" class="app-touch-target font-semibold text-stone-950 transition hover:text-[var(--ui-title)] dark:text-white" @click.stop="selectToken(item)">
                         {{ item.symbol || '--' }}
                       </button>
-                      <div class="max-w-[160px] truncate text-xs text-slate-400 dark:text-slate-500">{{ item.contract_address }}</div>
+                      <div class="max-w-[160px] truncate text-xs app-muted">{{ item.contract_address }}</div>
                     </div>
                   </div>
                 </td>
@@ -130,7 +130,7 @@
                 <td class="px-5 py-4 text-stone-600 dark:text-slate-300" :data-label="t('web3Rank.columns.smartMoney')">{{ formatCompact(item.metrics?.smart_money_inflow) }}</td>
               </tr>
               <tr v-if="!web3HeatRank.length">
-                <td colspan="8" class="px-5 py-8 text-center text-sm text-slate-400 dark:text-slate-500">{{ t('web3Rank.heatRank.noRows') }}</td>
+                <td colspan="8" class="px-5 py-8 text-center text-sm app-muted">{{ t('web3Rank.heatRank.noRows') }}</td>
               </tr>
             </tbody>
           </table>

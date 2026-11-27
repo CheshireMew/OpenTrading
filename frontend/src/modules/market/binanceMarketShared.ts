@@ -138,12 +138,12 @@ export const formatTime = (timestamp: number | null | undefined, locale?: string
 export const valueTone = (value: number | null | undefined, positiveIsGood = true) => {
   if (value === null || value === undefined || Number.isNaN(value)) return 'text-slate-500 dark:text-slate-400'
   const rising = positiveIsGood ? value >= 0 : value <= 0
-  return rising ? 'text-emerald-500' : 'text-rose-500'
+  return rising ? 'text-[var(--ui-positiveInk)]' : 'text-[var(--ui-negativeInk)]'
 }
 
 export const verdictTone = (verdict: string | null | undefined) => {
-  if (verdict === '优先关注') return 'bg-emerald-500/10 text-emerald-600 ring-emerald-500/20 dark:text-emerald-300'
-  if (verdict === '继续跟踪') return 'bg-amber-500/10 text-amber-600 ring-amber-500/20 dark:text-amber-300'
+  if (verdict === '优先关注') return 'bg-emerald-500/10 text-[var(--ui-positiveInk)] ring-emerald-500/20'
+  if (verdict === '继续跟踪') return 'bg-amber-500/10 text-amber-800 ring-amber-500/20 dark:text-amber-300'
   return 'bg-stone-100 text-stone-600 ring-stone-300/70 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-600/40'
 }
 

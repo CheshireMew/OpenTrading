@@ -198,12 +198,16 @@ class AppRuntimeServices:
         from app.infra.executor import shutdown_blocking_executors
 
         await asyncio.to_thread(shutdown_blocking_executors)
+        if self.api is not None and (close := getattr(self.api.market.data, "close", None)) is not None:
+            close()
         self.infra.database_runtime.dispose()
 
     def dispose(self) -> None:
         from app.infra.executor import shutdown_blocking_executors
 
         shutdown_blocking_executors()
+        if self.api is not None and (close := getattr(self.api.market.data, "close", None)) is not None:
+            close()
         self.infra.database_runtime.dispose()
 
 

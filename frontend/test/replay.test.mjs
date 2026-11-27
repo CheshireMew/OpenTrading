@@ -269,6 +269,7 @@ test('live paper orders follow new quotes and never fill using earlier candle wi
 test('live paper positions survive period and symbol changes and keep receiving their own market quotes',async()=>{
   const {paper,btc,eth,symbolId,timeframe,subscriptions,unsubscribed}=paperFixture()
   try{
+    paper.amount.value=100
     await paper.place(1,'market',100)
     const btcAccount=paper.account,position=paper.account.position
     timeframe.value='1m';assert.equal(paper.account,btcAccount);assert.equal(paper.account.position,position)
@@ -356,6 +357,23 @@ test('replay series use verified market identities, paginate and clamp requests 
   assert.equal(rows.at(-1).closeTime,1500*60000)
 })
 
+test('replay indicator history walks backward beyond the first page without duplicate or future candles', async () => {
+  const symbol = { id: 'binance:spot:BTCUSDT' }, requests = [], source = Array.from({ length: 3000 }, (_, i) => minute(i * 60000))
+  const { loadReplaySeries } = load('replaySeries', {
+    './provider': { timeframes: { '1': '1m' } },
+    './api': { chartApi: { async replayBars(query) {
+      requests.push(query)
+      return { bars: source.filter(bar => bar.closeTime <= query.end).slice(-query.limit) }
+    } } },
+  })
+  const rows = await loadReplaySeries(symbol, '1', { limit: 2500, to: 4000 * 60000 }, 3000 * 60000)
+  assert.equal(rows.length, 2500)
+  assert.equal(rows[0].time, 500 * 60000)
+  assert.equal(rows.at(-1).closeTime, 3000 * 60000)
+  assert.equal(new Set(rows.map(bar => bar.time)).size, 2500)
+  assert.deepEqual(requests.map(query => query.limit), [1000, 1000, 500])
+})
+
 test('replay provider reveals one minute at a time, emits forming candles, restores live and cancels stale loads', async () => {
   const previous = { document: globalThis.document, setInterval: globalThis.setInterval, clearInterval: globalThis.clearInterval }
   globalThis.document = { hidden: false, addEventListener() {}, removeEventListener() {} }
@@ -413,13 +431,13 @@ async function replayFixture(task, reply, options = {}) {
     unsubscribe?.();if(/^replay\d*:/.test(chart.market.symbol))unsubscribe=provider.subscribe('','',bar=>messages.push(bar))
   }}
   const {createWorkspaceReplay}=load('workspaceReplay',{
-    './replayModel':model,'./replayQuantity':sizing,'./locale':{cw:key=>key},'./provider':{fromVela:value=>value.replace(/^(opentrading|replay\d*):/,''),velaSymbol:value=>'opentrading:'+value,timeframes:{D:'1d','1':'1m','5':'5m','15':'15m','60':'1h'}},
+    './replayModel':model,'./replayQuantity':sizing,'./locale':{cw:key=>key},'./provider':{fromVela:value=>value.replace(/^(opentrading|replay\d*):/,''),velaSymbol:value=>'opentrading:'+value,timeframes:{D:'1d',W:'1w',M:'1M','1':'1m','5':'5m','15':'15m','60':'1h'}},
     './api':{chartApi:{replayBars:query=>reply(query,start,symbol)}},
   })
   cell={id:'c1',symbol:'opentrading:'+symbol.id,timeframe:options.timeframe??'D',chart}
   const replay=createWorkspaceReplay({workspace:vue.shallowRef({active:cell}),symbols:vue.ref([symbol]),settled:options.settled})
   const tick=async()=>{timers.forEach(callback=>callback());for(const [id,task]of [...timeouts])if(task.due<=performance.now()){timeouts.delete(id);task.callback()}for(let i=0;i<12;i++)await Promise.resolve()}
-  try { await task(replay,start,messages,{cell,tick}) } finally { replay.dispose();Object.assign(globalThis,previous) }
+  try { await task(replay,start,messages,{cell,tick,provider:()=>provider}) } finally { replay.dispose();Object.assign(globalThis,previous) }
 }
 
 function replayViewReply(query,_start,symbol){
@@ -462,7 +480,7 @@ test('random replay replaces dates with no minute source and validates the new c
       assert.equal(r.account.position,undefined)
       const starts=queries.filter(q=>q.timeframe==='1m'&&q.start!==undefined)
       assert.ok(starts.some(q=>q.start===missing));assert.ok(starts.some(q=>q.start===valid))
-      assert.ok(starts.every(q=>q.end-q.start<=1000*60000&&q.limit===1000))
+      assert.ok(starts.every(q=>q.end-q.start<=1000*60000&&q.limit<=1000))
     },(query,start,symbol)=>{
       queries.push(query)
       if(query.timeframe==='1M')return{symbol,bars:[{...minute(month),closeTime:month+31*day}]}
@@ -667,7 +685,82 @@ test('minute stepping across history pages consumes every minute of a daily cand
     assert.equal(messages.length,1440)
     assert.equal(messages.at(-1).closed,true)
     assert.equal(messages.at(-1).volume,1440*2)
-  },(query,start,symbol)=>({symbol,bars:query.start===undefined?[{...minute(start-86400000),closeTime:start}]:Array.from({length:1000},(_,i)=>minute(query.start+i*60000))}))
+  },(query,start,symbol)=>({symbol,bars:query.start===undefined?[{...minute(start-86400000),closeTime:start}]:Array.from({length:query.limit},(_,i)=>minute(query.start+i*60000))}))
+})
+
+test('replay shows its first history page before older candles finish and never exposes its prefetched future', async () => {
+  let release
+  const older = new Promise(resolve => { release = resolve })
+  await replayFixture(async (r, start, _messages, context) => {
+    await r.start(start)
+    const batches = [], provider = context.provider()
+    const pending = provider.getBarsProgressive(r.symbol.value.id, '5', { limit: 1000 }, bars => batches.push(bars))
+    for (let i = 0; i < 6; i++) await Promise.resolve()
+    assert.equal(batches[0].length, 200)
+    assert.ok(batches[0].every(bar => bar.closeTime <= r.now.value))
+    release()
+    const full = await pending
+    assert.equal(full.length, 1000)
+    assert.equal(new Set(full.map(bar => bar.time)).size, 1000)
+    assert.ok(full.every(bar => bar.closeTime <= r.now.value))
+  }, async (query, _start, symbol) => {
+    if (query.start !== undefined) return replayViewReply(query, _start, symbol)
+    if (query.limit > 200) await older
+    return { symbol, bars: Array.from({ length: query.limit }, (_, i) => {
+      const time = query.end - (query.limit - i) * 300000
+      return { ...minute(time), closeTime: time + 300000 }
+    }) }
+  }, { timeframe: '5', symbol: { timeframes: ['1m','5m'] } })
+})
+
+test('failed ahead-of-time fetching keeps verified playback running and retries at the buffer boundary', async () => {
+  let failing = true, calls = 0
+  await replayFixture(async (r, start) => {
+    await r.start(start)
+    for (let i = 0; i < 12; i++) await Promise.resolve()
+    assert.equal(r.error.value, '')
+    for (let i = 0; i < 200; i++) await r.step()
+    assert.equal(r.now.value, start + 200 * 60000)
+    assert.equal(calls, 1, 'a failed prefetch must not spin while verified candles remain')
+    await r.step()
+    assert.ok(r.error.value)
+    assert.equal(r.now.value, start + 200 * 60000)
+    failing = false; await r.retry()
+    assert.equal(r.now.value, start + 201 * 60000)
+    assert.equal(r.error.value, '')
+  }, (query, start, symbol) => {
+    if (query.start >= start + 200 * 60000) { calls++; if (failing) throw new Error('temporary network failure') }
+    return replayViewReply(query, start, symbol)
+  }, { timeframe: '5' })
+})
+
+test('a monthly replay view uses closed days and hours plus only its final minutes without advancing the account', async () => {
+  const requests = [], day = 86400000
+  await replayFixture(async (r, start) => {
+    await r.start(start + 20 * day + 17 * 3600000)
+    for (let i = 0; i < 13; i++) await r.step()
+    const at = r.now.value, before = requests.length
+    r.account.prepare(1,'market',r.account.price,2,at); r.account.submit(at)
+    const position = JSON.stringify(r.account.position)
+    await r.setTimeframe('M')
+    const view = requests.slice(before), monthStart = periodStart(at, '1M')
+    assert.equal(r.now.value, at)
+    assert.equal(JSON.stringify(r.account.position), position)
+    assert.equal(r.visibleBars.at(-1).volume, (at - monthStart) / 60000 * 2)
+    assert.equal(r.visibleBars.at(-1).closed, false)
+    assert.ok(view.some(query => query.timeframe === '1d'))
+    assert.ok(view.some(query => query.timeframe === '4h'))
+    assert.ok(view.filter(query => query.timeframe === '1m').every(query => query.limit < 60))
+    assert.ok(view.every(query => query.end <= at), 'no partial candle may read after the replay clock')
+    assert.ok(view.length <= 6, 'rebuilding a month should not walk thousands of individual minutes')
+  }, (query, start, symbol) => {
+    requests.push(query)
+    const size = query.timeframe === '1M' ? 31 * day : periodEnd(query.start ?? query.end - 1, query.timeframe) - periodStart(query.start ?? query.end - 1, query.timeframe)
+    if (query.start === undefined) return { symbol, bars: [{ ...minute(query.end - size), closeTime: query.end, volume: size / 60000 * 2 }] }
+    return { symbol, bars: Array.from({ length: Math.min(query.limit, Math.floor((query.end-query.start)/size)) }, (_, i) => {
+      const time = query.start + i * size; return { ...minute(time), closeTime: time + size, volume: size / 60000 * 2 }
+    }) }
+  }, { timeframe: '15', symbol: { timeframes: ['1m','5m','15m','30m','1h','4h','1d','1w','1M'] } })
 })
 
 test('leaving while a date is loading discards the late history response',async()=>{

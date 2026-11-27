@@ -32,6 +32,7 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
   let isRouteActive = true
   let shouldRefreshOnActivate = false
   let requestVersion = 0
+  let tailRequest: { version: number; promise: Promise<void> } | undefined
 
   const cacheKey = computed(() => options.source?.key.value || `${symbol.value}:${timeframe.value}`)
   const klineData = computed(() => (
@@ -60,6 +61,34 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
     }))
   )
 
+  const mergeKlines = (...batches: OhlcvPointResponse[][]) => Array.from(
+    new Map(batches.flat().map((item) => [item.timestamp, item])).values(),
+  ).sort((left, right) => left.timestamp - right.timestamp)
+
+  const applySourceUpdate = async (items: OhlcvPointResponse[], version: number, requestKey: string) => {
+    const source = options.source
+    const currentRequest = () => isRouteActive && enabled.value && version === requestVersion && requestKey === cacheKey.value
+    if (!source || !items.length || !currentRequest()) return
+    let update = items
+    const current = sourceKlineData.value
+    const lastKnown = current[current.length - 1]?.timestamp
+    if (lastKnown !== undefined) {
+      let before = Math.min(...update.map(row => row.timestamp))
+      // A hidden panel or a retry can miss more than the latest snapshot.
+      // Fill back to its last candle before publishing the new tail, including
+      // that candle again so an old forming close is corrected.
+      while (before > lastKnown) {
+        const page = await source.before(before - 1, 500)
+        if (!currentRequest()) return
+        const preceding = page.filter(row => row.timestamp < before)
+        if (!preceding.length) break
+        update = mergeKlines(preceding.filter(row => row.timestamp >= lastKnown), update)
+        before = Math.min(...preceding.map(row => row.timestamp))
+      }
+    }
+    sourceKlineData.value = mergeKlines(sourceKlineData.value, update)
+  }
+
   const fetchLatest = async (fetchOptions: { force?: boolean } = {}, version = requestVersion) => {
     const requestSymbol = symbol.value
     const requestTimeframe = timeframe.value
@@ -71,8 +100,7 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
     noMoreHistory.value = false
     if (options.source) {
       const items = await options.source.latest(1000)
-      if (!isRouteActive || !enabled.value || version !== requestVersion || requestKey !== cacheKey.value) return
-      sourceKlineData.value = mergeKlines(sourceKlineData.value, items)
+      await applySourceUpdate(items, version, requestKey)
       return
     }
     if (isIndexSymbol(requestSymbol)) {
@@ -97,7 +125,7 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
     if (!isIndexSymbol(requestSymbol)) await refreshTail()
   }
 
-  const refreshTail = async () => {
+  const fetchTail = async () => {
     const requestSymbol = symbol.value
     const requestTimeframe = timeframe.value
     const requestKey = cacheKey.value
@@ -112,8 +140,16 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
         })).kline_data || []
     if (!isRouteActive || !enabled.value || version !== requestVersion || requestKey !== cacheKey.value) return
     if (tail.length === 0) return
-    if (options.source) sourceKlineData.value = mergeKlines(sourceKlineData.value, tail)
+    if (options.source) await applySourceUpdate(tail, version, requestKey)
     else klineStore.applyKlineTail(requestSymbol, requestTimeframe, tail, 1000)
+  }
+
+  const refreshTail = () => {
+    const version = requestVersion
+    if (tailRequest?.version === version) return tailRequest.promise
+    const promise = fetchTail().finally(() => { if (tailRequest?.promise === promise) tailRequest = undefined })
+    tailRequest = { version, promise }
+    return promise
   }
 
   const stopAutoRefresh = () => {
@@ -143,6 +179,8 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
 
   const loadLatest = async (fetchOptions: { force?: boolean } = {}) => {
     const version = ++requestVersion
+    stopAutoRefresh()
+    tailRefreshPending = false
     loading.value = klineData.value.length === 0
     loadError.value = false
     try {
@@ -161,7 +199,7 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
   }
 
   const loadMore = async () => {
-    if (loadingMore.value || noMoreHistory.value || klineData.value.length === 0) return
+    if (!isRouteActive || !enabled.value || loading.value || loadingMore.value || noMoreHistory.value || klineData.value.length === 0) return
 
     loadingMore.value = true
     const version = requestVersion
@@ -190,7 +228,7 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
         return
       }
 
-      const newKlines = options.source
+      const page = options.source
         ? await options.source.before(oldest.timestamp - 1, 500)
         : (await marketHistoryApi.getPriceSeriesWindow({
         symbol: requestSymbol,
@@ -199,13 +237,14 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
         limit: 500,
       })).items || []
       if (!isRouteActive || !enabled.value || version !== requestVersion || requestKey !== cacheKey.value) return
+      const newKlines = page.filter(row => row.timestamp < oldest.timestamp)
 
       if (newKlines.length === 0) {
         noMoreHistory.value = true
         return
       }
 
-      if (options.source) sourceKlineData.value = mergeKlines(newKlines, sourceKlineData.value).slice(-5000)
+      if (options.source) sourceKlineData.value = mergeKlines(newKlines, sourceKlineData.value)
       else klineStore.prependKlineHistory(requestSymbol, requestTimeframe, newKlines)
     } catch (e) {
       if (version === requestVersion) console.error('Load history failed', e)
@@ -213,10 +252,6 @@ export function useKlineSeries(symbol: Ref<string>, timeframe: Ref<string>, opti
       if (version === requestVersion) loadingMore.value = false
     }
   }
-
-  const mergeKlines = (...batches: OhlcvPointResponse[][]) => Array.from(
-    new Map(batches.flat().map((item) => [item.timestamp, item])).values(),
-  ).sort((left, right) => left.timestamp - right.timestamp)
 
   watch([symbol, timeframe, enabled, cacheKey], async () => {
     requestVersion += 1

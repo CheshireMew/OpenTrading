@@ -43,7 +43,7 @@
           <div class="mb-4 flex h-3 overflow-hidden bg-stone-200 text-xs dark:bg-gray-700" role="progressbar" :aria-label="$t('halving.cycleProgress')" :aria-valuenow="cycleProgress" :aria-valuemin="0" :aria-valuemax="100">
             <div :style="{ width: cycleProgress + '%' }" class="flex flex-col justify-center whitespace-nowrap bg-[var(--ui-accent)] text-center text-[var(--ui-onAccent)] shadow-none transition-all duration-1000 ease-out"></div>
           </div>
-          <div class="flex justify-between text-xs text-stone-400">
+          <div class="flex justify-between text-xs app-muted">
             <span>{{ lastHalvingDate }}</span>
             <span>{{ $t('halving.estimatedDate', { date: nextHalvingDate }) }}</span>
           </div>
@@ -148,7 +148,6 @@ const {
 .halving-estimate-date { font-size:clamp(22px, 2vw, 28px); line-height:1.3; text-wrap:balance; word-break:keep-all; overflow-wrap:normal; }
 .halving-summary-strip .app-card { border:0; border-radius:0; background:transparent; padding:20px 24px; }
 .halving-summary-strip .app-card + .app-card { border-left:1px solid var(--ui-border); }
-.halving-summary-strip .app-card:first-child { padding-left:0; }
-@container app-content (max-width:48rem) { .halving-summary-strip .app-card { padding:16px 12px; } .halving-summary-strip .halving-progress-card { border-left:0; border-top:1px solid var(--ui-border); padding-left:0; } }
-@container app-content (max-width:34rem) { .halving-summary-strip .app-card { padding-left:0; } .halving-summary-strip .app-card + .app-card { border-left:0; border-top:1px solid var(--ui-border); } }
+@container app-content (max-width:48rem) { .halving-summary-strip .app-card { padding:16px 12px; } .halving-summary-strip .halving-progress-card { border-left:0; border-top:1px solid var(--ui-border); } }
+@container app-content (max-width:34rem) { .halving-summary-strip .app-card + .app-card { border-left:0; border-top:1px solid var(--ui-border); } }
 </style>

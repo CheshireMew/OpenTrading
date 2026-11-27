@@ -100,6 +100,30 @@ function liveProvider(t, barsApi) {
 const settle = async () => { for (let i = 0; i < 12; i++) await Promise.resolve() }
 const deferred = () => { let resolve; const promise = new Promise(done => { resolve = done }); return { resolve, promise } }
 
+for (const mode of ['missing candle', 'venue recovery']) {
+  test(`the provider repairs a ${mode} while the browser connection stays open`, async t => {
+    const start = Math.floor(Date.now() / 60_000) * 60_000 - 120_000
+    const bar = index => ({ time: start + index * 60_000, closeTime: start + (index + 1) * 60_000,
+      open: 100, high: 1000, low: 100, close: 100 + index, volume: 1 })
+    const waiting = deferred(), plotted = [], quotes = []
+    const { provider, sockets, info } = liveProvider(t, query => query.start === undefined ? [bar(0)] : waiting.promise)
+    provider.subscribe(info.id, '1', value => plotted.push(value))
+    provider.subscribeQuotes(info.id, '1', quote => quotes.push(quote.price))
+    sockets[0].open(); await provider.getBars(info.id, '1', { limit: 1 }); sockets[0].bar(bar(0))
+    if (mode === 'venue recovery') {
+      const subscription = sockets[0].sent.findLast(message => message.type === 'subscribe')
+      for (const status of ['offline', 'live']) sockets[0].onmessage({ data: JSON.stringify({ ...subscription, type: 'status', status }) })
+    }
+    sockets[0].bar({ ...bar(2), close: 999 })
+    assert.equal(plotted.length, 1)
+    assert.deepEqual(quotes, [100, 999])
+    waiting.resolve([bar(0), bar(1), bar(2)]); await settle(); await settle()
+    assert.deepEqual(plotted.slice(1).map(value => value.time), [0, 1, 2].map(index => bar(index).time))
+    assert.equal(plotted.at(-1).close, 999)
+    assert.equal(sockets.length, 1)
+  })
+}
+
 test('hidden charts stop plot updates, keep live order quotes and repair all missed bars in order', async t => {
   const start = Math.floor(Date.now() / 60_000) * 60_000 - 180_000
   const bar = (index, close = 100) => ({ time: start + index * 60_000, closeTime: start + (index + 1) * 60_000, open: 100, high: Math.max(close, 100), low: 100, close, volume: 1 })
@@ -134,6 +158,39 @@ test('hidden charts stop plot updates, keep live order quotes and repair all mis
   assert.equal(provider.subscriptions.size, 0)
   assert.equal(provider.retry, undefined)
   stopPlot()
+})
+
+test('long history recovery commits pages and resumes after a later network failure', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  const step = 60_000, start = Date.UTC(2026, 10, 1), end = start + 2005 * step
+  t.mock.method(Date, 'now', () => end)
+  const bar = index => ({ time: start + index * step, closeTime: start + (index + 1) * step,
+    open: 100, high: 100, low: 100, close: 100, volume: 1 })
+  let fail, failed = false
+  const stalled = new Promise((_resolve, reject) => { fail = reject })
+  const queries = [], plotted = [], quotes = []
+  const { provider, sockets, info } = liveProvider(t, async query => {
+    queries.push(query)
+    if (query.start === undefined) return [bar(0)]
+    const index = (query.start - start) / step
+    if (index === 1000 && !failed) { failed = true; return stalled }
+    return Array.from({ length: Math.max(0, Math.min(query.limit, 2006 - index)) }, (_, offset) => bar(index + offset))
+  })
+  provider.subscribe(info.id, '1', value => plotted.push(value.time))
+  provider.subscribeQuotes(info.id, '1', value => quotes.push(value.price))
+  sockets[0].open(); await provider.getBars(info.id, '1', { limit: 1 }); sockets[0].bar(bar(0))
+  provider.setPaused(true); provider.setPaused(false)
+  await settle(); await settle()
+  assert.equal(plotted.at(-1), bar(999).time, 'verified pages must be visible before the whole outage has loaded')
+  sockets[0].bar({ ...bar(2005), close: 999 })
+  assert.equal(quotes.at(-1), 999)
+  assert.equal(plotted.at(-1), bar(999).time)
+  fail(new Error('temporary network failure')); await settle()
+  const before = queries.length
+  t.mock.timers.tick(3000); await settle(); await settle(); await settle()
+  assert.equal(queries[before].start, bar(999).time, 'a retry must resume from its committed page')
+  assert.deepEqual([...new Set(plotted)], Array.from({ length: 2006 }, (_, index) => bar(index).time))
+  assert.equal(provider.repairs.size, 0)
 })
 
 test('pausing again cancels pending history repair and disposal prevents late chart updates', async t => {

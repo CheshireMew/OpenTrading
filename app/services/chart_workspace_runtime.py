@@ -4,6 +4,7 @@ from app.infra.research_files import lock
 from app.services.chart_workspace_seed import seed_workspace
 from app.infra.persistence.chart_workspace_repository import ChartWorkspaceStore
 from app.services.chart_workspace_market import ChartWorkspaceMarket
+from app.services.chart_onchain_market import ChartOnchainMarket
 from app.services.chart_daily_history import ChartDailyHistory
 from app.services.chart_workspace_runs import ChartPineRuns
 
@@ -19,8 +20,10 @@ class ChartWorkspaceRuntime:
         try:
             seed_workspace(self.store)
             self.runs = ChartPineRuns(self.store, None)
+            client = getattr(getattr(binance, "spot", None), "client", None)
             self.market = ChartWorkspaceMarket(binance, indexes, kline_store=kline_store,
-                daily_history=ChartDailyHistory(market_data) if market_data is not None else None)
+                daily_history=ChartDailyHistory(market_data) if market_data is not None else None,
+                onchain=ChartOnchainMarket(cache_service=getattr(client, "cache_service", None)))
             self.runs.market = self.market
             self.closed = False
         except BaseException:

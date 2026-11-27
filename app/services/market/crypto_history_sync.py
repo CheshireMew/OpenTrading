@@ -19,6 +19,15 @@ class CryptoHistorySync:
             kline_store=self.store,
         )
 
+    def close(self):
+        self.market.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        self.close()
+
     def sync(self, symbol, start, end):
         if start >= end:
             raise ValueError("start must be earlier than end")

@@ -25,6 +25,8 @@ export function formatDate(value: number, timeOnly = false, timeZone?: string): 
 }
 
 export const workspaceMarketLabel = (id: string) => id.includes(':usdm:') ? cw('binancePerpetual')
+  : id.startsWith('binance:alpha:') ? cw('binanceAlpha')
+  : id.startsWith('web3:') ? `${({ ethereum: 'Ethereum', bsc: 'BSC', base: 'Base', solana: 'Solana' } as Record<string, string>)[id.split(':')[1]!] ?? id.split(':')[1]} · ${cw('web3')}`
   : id.startsWith('index:') ? cw('index') : id.startsWith('fx:') ? cw('fx')
   : id.startsWith('commodity:') ? cw('commodity') : id.startsWith('okx:') ? cw('okxSpot') : cw('binanceSpot')
 

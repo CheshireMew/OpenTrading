@@ -208,8 +208,8 @@ onDeactivated(listsController.pause)
 .observation-main-metric > span { font-size: 13px; color: var(--ui-muted); }
 .observation-main-metric > strong { font-size: clamp(30px, 3vw, 44px); font-weight: 550; letter-spacing: -.04em; line-height: 1.4; color: var(--ui-title); }
 .observation-main-metric p { color: var(--ui-muted); font-size: 12px; line-height: 1.7; }
-.observation-positive { color: var(--ui-positive) !important; }
-.observation-negative { color: var(--ui-negative) !important; }
+.observation-positive { color: var(--ui-positiveInk) !important; }
+.observation-negative { color: var(--ui-negativeInk) !important; }
 .observation-chart-panel { padding: 20px 20px 14px; background: var(--ui-panel); border: 1px solid var(--ui-border); border-radius: 8px; }
 .observation-chart-toolbar { justify-content: space-between; margin-bottom: 6px; flex-wrap: wrap; }
 .observation-page section h2 { font-size: 15px; font-weight: 600; color: var(--ui-title); }
@@ -243,7 +243,7 @@ onDeactivated(listsController.pause)
 .observation-source-links a { color: var(--ui-accent); text-decoration: underline; text-underline-offset: 3px; }
 .observation-loading { padding: 80px 20px; text-align: center; color: var(--ui-muted); }
 .observation-notice { padding: 12px 16px; margin-bottom: 18px; background: var(--ui-elevated); border-radius: 6px; font-size: 13px; line-height: 1.6; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.observation-error { color: var(--ui-negative); }
+.observation-error { color: var(--ui-negativeInk); }
 .observation-page button:disabled { opacity: .6; cursor: wait; }
 @container observation-content (max-width: 1050px) { .observation-page { padding: 24px 20px; } .observation-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; } .observation-main-metric { padding-left: 20px; } .observation-summary > :nth-child(3) { border-left: 0; padding-left: 0; } .observation-details { gap: 12px; } .observation-detail-panel { padding: 16px; } }
 @container observation-content (max-width: 760px) { .observation-header { align-items: flex-start; flex-direction: column; } .observation-summary { gap: 18px 12px; } .observation-main-metric { padding-left: 12px; } .observation-main-metric > strong, .observation-price { font-size: 26px; } .observation-details { grid-template-columns: 1fr; } .observation-chart-panel { padding: 16px 8px 12px; } .observation-chart-toolbar { padding-inline: 8px; } .observation-chart-controls { gap: 8px; } .observation-page { padding: 20px 16px; } .observation-actions { width: 100%; } .observation-actions > :first-child { flex: 1; min-width: 160px; } }

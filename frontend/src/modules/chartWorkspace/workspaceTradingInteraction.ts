@@ -19,7 +19,7 @@ export function createWorkspaceTradingInteraction(deps: {
 const r=deps.replay,t=deps.target,order=deps.orders.order
 const tradingVisible = computed(() => r.active.value || t.value.active.value)
 const overlayHost=shallowRef<HTMLElement>(),timeZone=ref('Asia/Shanghai')
-const hover=ref<{price:number;y:number}>(),drag=ref<TradingDrag>()
+const drag=ref<TradingDrag>()
 const menu=deps.orders.menu
 let renderer: WorkspaceRenderer | undefined, attached: HTMLElement | undefined, offCell: (()=>void) | undefined
 let menuHost: HTMLElement | undefined, offMenu: (()=>void)[] = []
@@ -48,18 +48,11 @@ function dragEnd() {
   deps.orders.move(value.target,value.price)
 }
 function dragKey(event:KeyboardEvent) { if(event.key==='Escape'){event.preventDefault();cancelDrag()} }
-function onMove(event:PointerEvent) {
-  if (drag.value) return
-  const point=renderer?.replayOrders.pointAt?.(event.clientX,event.clientY)
-  const rect=overlayHost.value?.getBoundingClientRect()
-  hover.value=point&&rect?{price:t.value.roundedPrice(point.price),y:event.clientY-rect.top}:undefined
-}
 function lineDown(event:PointerEvent) {
   if(!tradingVisible.value || (event.target as HTMLElement).closest('button,input,select,.cw-trading-controls,.cw-replay-order,.cw-replay-menu,.cw-replay-price-editor'))return
   const target=renderer?.replayOrders.hitAt?.(event.clientX,event.clientY)
   if(target){event.preventDefault();event.stopImmediatePropagation();beginDrag(event,target)}
 }
-function leave() { hover.value=undefined }
 function captureContext(event:MouseEvent) {
   if((event.target as HTMLElement).closest('.cw-trading-controls'))return
   pendingContext=undefined;menu.value=undefined
@@ -71,10 +64,6 @@ function captureContext(event:MouseEvent) {
     pendingContext={chart:cell.chart,symbol:fromVela(cell.symbol),price:t.value.roundedPrice(point.price),y:event.clientY-rect.top}
     break
   }
-}
-function openAxisMenu(){
-  const rect=overlayHost.value?.getBoundingClientRect(),point=hover.value
-  if(rect&&point)attached?.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:rect.left+geometry.value.right+10,clientY:rect.top+point.y,button:2}))
 }
 function detachMenus(){menuHost?.removeEventListener('contextmenu',captureContext,{ capture: true });offMenu.forEach(off=>off());offMenu=[];menuHost=undefined;pendingContext=undefined}
 function attachMenus(){
@@ -102,11 +91,11 @@ function pick(event:MouseEvent) {
   const point=renderer?.replayOrders.pointAt?.(event.clientX,event.clientY)
   if(point){event.preventDefault();event.stopImmediatePropagation();void r.start(point.time).then(()=>{if(r.active.value&&!r.error.value)deps.picked()})}
 }
-function detach() { cancelDrag();attached?.removeEventListener('pointermove',onMove);attached?.removeEventListener('pointerleave',leave);attached?.removeEventListener('pointerdown',lineDown,{ capture: true });attached?.removeEventListener('click',pick,{ capture: true });renderer?.setReplayOrders({lines:[],geometry:undefined});attached=undefined;overlayHost.value=undefined }
-function attach() { detach();const cell=deps.workspace()?.active;if(!cell)return;renderer=WorkspaceRenderer.forHost(cell.host);timeZone.value=renderer?.getConfig().timeScale.timezone??'Asia/Shanghai';attached=cell.host;overlayHost.value=renderer?.replayOrders.host;attached.addEventListener('pointermove',onMove);attached.addEventListener('pointerleave',leave);attached.addEventListener('pointerdown',lineDown,{ capture: true });attached.addEventListener('click',pick,{ capture: true });project() }
+function detach() { cancelDrag();attached?.removeEventListener('pointerdown',lineDown,{ capture: true });attached?.removeEventListener('click',pick,{ capture: true });renderer?.setReplayOrders({lines:[],geometry:undefined});attached=undefined;overlayHost.value=undefined }
+function attach() { detach();const cell=deps.workspace()?.active;if(!cell)return;renderer=WorkspaceRenderer.forHost(cell.host);timeZone.value=renderer?.getConfig().timeScale.timezone??'Asia/Shanghai';attached=cell.host;overlayHost.value=renderer?.replayOrders.host;attached.addEventListener('pointerdown',lineDown,{ capture: true });attached.addEventListener('click',pick,{ capture: true });project() }
 const stopWorkspace=watch(deps.workspace,value=>{offCell?.();detachMenus();attach();attachMenus();offCell=value?.on('cell:active',attach)},{flush:'post',immediate:true})
 const stopActive=watch(r.active,()=>{menu.value=undefined;attach()})
 const stopSymbol=watch(()=>t.value.symbol.value?.id,()=>{menu.value=undefined;attach()})
-return {overlayHost,timeZone,hover,geometry,visibleLines,beginLineDrag,beginDrag,cancelDrag,openAxisMenu,attach,
+return {overlayHost,timeZone,geometry,visibleLines,beginLineDrag,beginDrag,cancelDrag,attach,
   dispose(){stopWorkspace();stopActive();stopSymbol();offCell?.();detachMenus();detach();projection.dispose()} }
 }

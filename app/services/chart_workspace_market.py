@@ -13,9 +13,11 @@ from app.services.chart_daily_history import daily_chart_symbols
 from app.domain.market.candles import candle_end_ms, current_candle_open_ms
 from app.domain.market.constants import timeframe_to_milliseconds
 from app.domain.market.symbol_catalog import build_market_symbol_source
+from app.domain.market.web3_chains import web3_storage_symbol
 from app.infra.executor import run_database
 from app.services.market.history_range_coordinator import HistoryRangeCoordinator, merge_ohlcv_rows
 from config import settings
+from app.infra.market_data.exchange import normalize_ohlcv
 from utils.logger import logger
 
 TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w", "1M"]
@@ -26,10 +28,12 @@ def close_boundary(open_time: int, timeframe: str) -> int:
 
 
 class ChartWorkspaceMarket:
-    def __init__(self, binance, index, *, kline_store=None, daily_history=None):
+    def __init__(self, binance, index, *, kline_store=None, daily_history=None, onchain=None):
         self.binance = binance
         self.index = index
         self.daily_history = daily_history
+        self.onchain = onchain
+        self.kline_store = kline_store
         self.http = ChartMarketClient()
         self.icons = SymbolIconClient()
         self.history_ranges = HistoryRangeCoordinator(kline_store, storage_runner=run_database) if kline_store else None
@@ -83,7 +87,8 @@ class ChartWorkspaceMarket:
         # Explicitly injected verified catalogs retain the same TTL as before.
         if not self._catalog_checked and self.catalog_at and now - self.catalog_at < 600:
             return
-        for venue in ("binance:spot", "binance:usdm", "okx:spot"):
+        venues = ("binance:spot", "binance:usdm", "okx:spot") + (("binance:alpha", "web3") if self.onchain else ())
+        for venue in venues:
             checked, success = self._catalog_checked.get(venue, (0, False))
             if venue in self._catalog_tasks or now - checked < (600 if success else 30):
                 continue
@@ -99,7 +104,11 @@ class ChartWorkspaceMarket:
     async def _load_catalog(self, venue):
         try:
             collected = {}
-            if venue.startswith("binance:"):
+            if venue == "binance:alpha":
+                collected = await self.onchain.alpha_catalog()
+            elif venue == "web3":
+                collected = await self.onchain.web3_catalog()
+            elif venue.startswith("binance:"):
                 market = venue.split(":")[1]
                 loader = self.binance.spot if market == "spot" else self.binance.usdm
                 prefix = "/api/v3" if market == "spot" else "/fapi/v1"
@@ -107,7 +116,7 @@ class ChartWorkspaceMarket:
                 for row in payload["symbols"]:
                     if row.get("status") != "TRADING" or row.get("quoteAsset") != "USDT":
                         continue
-                    if market == "usdm" and row.get("contractType") != "PERPETUAL":
+                    if market == "usdm" and row.get("contractType") not in {"PERPETUAL", "TRADIFI_PERPETUAL"}:
                         continue
                     filters = {f["filterType"]: f for f in row.get("filters", [])}
                     tick = float(filters["PRICE_FILTER"]["tickSize"])
@@ -133,23 +142,38 @@ class ChartWorkspaceMarket:
             self._catalog_checked[venue] = (time.time(), False)
             logger.warning("Chart symbol catalog %s unavailable: %s", venue, type(exc).__name__)
 
-    async def symbols(self) -> list[ChartSymbol]:
+    async def symbols(self, *, wait_for_refresh: bool = False) -> list[ChartSymbol]:
         self._refresh_catalogs()
         pending = set(self._catalog_tasks.values())
-        while pending and not any(info.market in {"spot", "usdm"} for info in self.catalog.values()):
+        if wait_for_refresh:
+            # Background browser refreshes need the completed snapshot. A
+            # cancelled visitor must not cancel shared exchange acquisition.
+            await asyncio.gather(*(asyncio.shield(task) for task in pending))
+        while pending and not any(info.market in {"spot", "usdm", "alpha", "web3"} for info in self.catalog.values()):
             _, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
         return list(self.catalog.values())
 
     async def resolve(self, key: str) -> ChartSymbol:
         self._refresh_catalogs()
         if key not in self.catalog:
-            venue = ":".join(key.split(":")[:2])
+            venue = "web3" if key.startswith("web3:") else ":".join(key.split(":")[:2])
             task = self._catalog_tasks.get(venue)
             if task is not None:
                 await asyncio.shield(task)
+        if key not in self.catalog and self.onchain is not None and key.startswith("web3:"):
+            info = await self.onchain.resolve_web3(key)
+            self.catalog[info.id] = info
+            return info
         if key not in self.catalog:
             raise ValueError("品种不可用或交易所元数据尚未加载，请重试")
         return self.catalog[key]
+
+    async def search_symbols(self, query: str) -> list[ChartSymbol]:
+        if self.onchain is None:
+            raise ValueError("链上行情服务尚未就绪")
+        found = await self.onchain.search(query)
+        self.catalog.update({info.id: info for info in found})
+        return found
 
     async def bars(self, key: str, timeframe: str, limit=1000, start=None, end=None) -> ChartBars:
         info = await self.resolve(key)
@@ -158,10 +182,11 @@ class ChartWorkspaceMarket:
         now = int(time.time()*1000)
         end = min(end if end is not None else now, now)
         rows = []
-        source = info.exchange
+        source = "binance-alpha" if info.market == "alpha" else "binance-web3" if info.market == "web3" else info.exchange
         if info.market in {"index", "fx", "commodity"}:
-            lower = start if start is not None else end - max(limit * 2, 14) * 86400000
-            upper = min(end, lower + limit * 2 * 86400000) if start is not None else end
+            span = max(limit * 2, 14) * 86400000
+            lower = start if start is not None else end - span
+            upper = min(end, lower + span) if start is not None else end
             start_day = datetime.fromtimestamp(lower / 1000, timezone.utc).date()
             end_day = min(datetime.fromtimestamp(upper / 1000, timezone.utc).date(),
                           datetime.fromtimestamp(now / 1000, timezone.utc).date() - timedelta(days=1))
@@ -185,6 +210,8 @@ class ChartWorkspaceMarket:
             info = info.model_copy(update={"close_only": False,
                 "metadata": {**info.metadata, "source": source, "snapshot_hash": snapshot.snapshot_hash}})
             self.catalog[key] = info
+        elif info.market == "web3":
+            rows = await self._web3_bars(info, timeframe, limit, start, end, now)
         else:
             rows = (await self._shared_crypto_bars(info, timeframe, limit, start, end, now)
                     if self.history_ranges is not None
@@ -197,20 +224,44 @@ class ChartWorkspaceMarket:
                 for t,r in selected]
         return ChartBars(symbol=info, timeframe=timeframe, bars=bars, source=source)
 
+    async def _web3_bars(self, info, timeframe, limit, start, end, now):
+        # Chain candles can be sparse. A request for the latest N trades must
+        # not become a request for N consecutive periods ending at the clock.
+        storage = self._storage_symbol(info)
+        # N cached rows do not prove completeness for a sparse source. The
+        # upstream client caches exact historical pages, including their gaps.
+        rows = await self.onchain.history(info, timeframe, limit, start, end)
+        confirmed = [row for row in rows if candle_end_ms(int(row[0]), timeframe) <= now]
+        if confirmed and self.kline_store is not None:
+            await run_database(lambda: self.kline_store.save(storage, timeframe, confirmed))
+        return rows
+
     async def _fetch_crypto_rows(self, info, timeframe, limit, start, end):
         rows = []
+        if info.market in {"alpha", "web3"}:
+            return await self.onchain.history(info, timeframe, limit, start, end)
         if info.exchange == "binance":
             loader = self.binance.spot if info.market == "spot" else self.binance.usdm
-            result = await loader.get_klines(symbol=info.symbol, interval=timeframe,
-                limit=min(limit,1000), start_time=start, end_time=end)
-            for row in result["items"]:
-                rows.append([int(row["open_time"]), *[float(row[k]) for k in ("open","high","low","close","volume")]])
+            prefix = "/api/v3" if info.market == "spot" else "/fapi/v1"
+            params = {"symbol": info.symbol, "interval": timeframe, "limit": min(limit, 1000)}
+            if start is not None:
+                params["startTime"] = start
+            if end is not None:
+                params["endTime"] = end
+            # The chart range coordinator already owns persistence. Reading the
+            # raw endpoint avoids a second normalized history copy and prevents
+            # a partial research-store fallback from looking like empty history.
+            rows = normalize_ohlcv(await loader.client.get_json(prefix + "/klines", params=params))
         else:
             rows = await self.http.okx_history(info.symbol, timeframe, limit, start, end)
         return rows
 
     @staticmethod
     def _storage_symbol(info):
+        if info.market == "alpha":
+            return info.id
+        if info.market == "web3":
+            return web3_storage_symbol(info.symbol, info.metadata["platform"])
         if info.market == "usdm":
             return f"{info.exchange}:usdm:{info.symbol}"
         pair = (info.symbol.replace("-", "/") if "-" in info.symbol
@@ -237,11 +288,20 @@ class ChartWorkspaceMarket:
         upper = min(upper, candle_end_ms(final_open, timeframe))
         current_open = current_candle_open_ms(now, timeframe)
         closed_upper = min(upper, current_open)
+        needs_live = start <= current_open < upper and current_open <= end
+        live = None
 
         async def fetch_gap(since, until):
+            nonlocal live
             output = []
             while since < until:
-                batch = await self._fetch_crypto_rows(info, timeframe, min(limit, 1000), since, until - 1)
+                # A cold recent page includes its forming candle in the same
+                # venue request. Only confirmed rows enter shared persistence.
+                include_live = needs_live and until == current_open
+                batch = await self._fetch_crypto_rows(info, timeframe, min(limit, 1000), since,
+                                                      end if include_live else until - 1)
+                if include_live:
+                    live = [row for row in batch if int(row[0]) == current_open]
                 batch = [row for row in batch if since <= int(row[0]) < until]
                 if not batch:
                     break
@@ -256,10 +316,9 @@ class ChartWorkspaceMarket:
             storage_symbol=self._storage_symbol(info), timeframe=timeframe,
             start_ts=start, end_ts_exclusive=closed_upper, fetch_gap=fetch_gap,
         )
-        live = []
-        if start <= current_open < upper and current_open <= end:
+        if needs_live and live is None:
             live = await self._fetch_crypto_rows(info, timeframe, 1, current_open, end)
-        return merge_ohlcv_rows(result.rows, live, start_ts=start, end_ts_exclusive=min(upper, end + 1))
+        return merge_ohlcv_rows(result.rows, live or [], start_ts=start, end_ts_exclusive=min(upper, end + 1))
 
     async def quotes(self, keys: list[str]) -> list[ChartQuote]:
         now = int(time.time()*1000)
@@ -292,6 +351,8 @@ class ChartWorkspaceMarket:
         async def quote(key):
             try:
                 info = await self.resolve(key)
+                if info.market in {"alpha", "web3"}:
+                    return await self.onchain.quote(info)
                 if info.exchange == "binance":
                     rows = batches[info.market]
                     if isinstance(rows,Exception):
@@ -348,13 +409,20 @@ class ChartWorkspaceMarket:
         while True:
             try:
                 info = await self.resolve(key)
-                emit("status", status="connecting" if info.exchange == "binance" else "polling")
+                if info.market in {"alpha", "web3"}:
+                    stream_url = self.onchain.stream_url(info, timeframe)
+                elif info.exchange == "binance":
+                    host = "wss://stream.binance.com:9443/ws" if info.market == "spot" else "wss://fstream.binance.com/market/ws"
+                    stream_url = f"{host}/{info.symbol.lower()}@kline_{timeframe}"
+                else:
+                    stream_url = None
+                emit("status", status="connecting" if stream_url else "polling")
                 # Heal from the last received bar before resuming native updates.
                 cursor = last_open
                 while True:
                     data = await self.bars(key,timeframe,limit=1000 if cursor else 2,start=cursor)
                     for bar in data.bars:
-                        polling_quote = info.exchange != "binance" and bar is data.bars[-1]
+                        polling_quote = not stream_url and bar is data.bars[-1]
                         emit("bar", live=polling_quote,
                              observed_at=(bar.closeTime if bar.closed else int(time.time() * 1000)) if polling_quote else None,
                              bar=bar.model_dump())
@@ -362,26 +430,31 @@ class ChartWorkspaceMarket:
                     if not cursor or len(data.bars)<1000:
                         break
                     cursor = data.bars[-1].closeTime
-                if info.exchange != "binance":
+                if not stream_url:
                     await asyncio.sleep(60 if info.market in {"index", "fx", "commodity"} else 5)
                     continue
                 # Binance moved USD-M klines to /market in April 2026. The old
                 # socket can accept the connection without delivering any bars.
-                host = "wss://stream.binance.com:9443/ws" if info.market == "spot" else "wss://fstream.binance.com/market/ws"
-                async with self.http.websocket(f"{host}/{info.symbol.lower()}@kline_{timeframe}") as stream:
+                async with self.http.websocket(stream_url) as stream:
+                    if info.market in {"alpha", "web3"}:
+                        await stream.send(json.dumps({"method": "SUBSCRIBE",
+                            "params": [self.onchain.stream_name(info, timeframe)], "id": 1}))
                     live = False
                     while True:
                         raw = await asyncio.wait_for(stream.recv(),timeout=30)
                         event = json.loads(raw)
+                        event = event.get("data", event)
                         row = event.get("k")
                         if row:
                             if not live:
                                 emit("status",status="live")
                                 live = True
-                            last_open = int(row["t"])
-                            emit("bar",live=True,observed_at=int(event["E"]),bar=ChartBar(time=last_open,open=float(row["o"]), high=float(row["h"]),
+                            last_open = int(row["ot"] if "ot" in row else row["t"])
+                            close_time = int(row["ct"]) if "ct" in row else int(row["T"]) + 1
+                            observed_at = int(event.get("E") or time.time() * 1000)
+                            emit("bar",live=True,observed_at=observed_at,bar=ChartBar(time=last_open,open=float(row["o"]), high=float(row["h"]),
                                 low=float(row["l"]),close=float(row["c"]),volume=float(row["v"]),
-                                closeTime=int(row["T"])+1,closed=bool(row["x"])).model_dump())
+                                closeTime=close_time,closed=bool(row.get("x", close_time <= observed_at))).model_dump())
             except asyncio.CancelledError:
                 raise
             except Exception as exc:
@@ -403,5 +476,7 @@ class ChartWorkspaceMarket:
         self.channels.clear()
         if self.daily_history is not None:
             await self.daily_history.close()
+        if self.onchain is not None:
+            await self.onchain.aclose()
         await self.icons.aclose()
         await self.http.aclose()

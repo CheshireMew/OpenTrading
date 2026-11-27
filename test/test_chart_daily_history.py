@@ -11,6 +11,7 @@ from app.domain.market.index_fetch import IndexFetchResult
 from app.infra.market_data.providers import ProviderFetch, YFinanceProvider
 from app.services.chart_daily_history import ChartDailyHistory, daily_chart_symbols
 from app.services.chart_workspace_market import ChartWorkspaceMarket
+from app.contracts.chart_workspace import ChartSymbol
 from app.services.market.history.catalog import resolve_instrument
 from app.services.market.index_data_service import IndexDataService
 from app.services.market_data_runtime import MarketDataRuntime
@@ -20,6 +21,29 @@ from test.test_index_data_service import FakeKlineStore
 
 def stamp(value):
     return int(datetime.fromisoformat(value).replace(tzinfo=timezone.utc).timestamp() * 1000)
+
+
+@pytest.mark.asyncio
+async def test_forward_daily_page_crosses_a_long_exchange_holiday():
+    class Index:
+        async def get_history_async(self, *, start_date, end_date, **kwargs):
+            row = SimpleNamespace(as_row=lambda: [stamp('2024-10-08'), 100, 103, 99, 102, 10])
+            return SimpleNamespace(data=[row] if start_date <= '2024-10-08' <= end_date else [],
+                                   source='fixture', is_close_only=False, native_currency='CNY', price_basis='index')
+
+    market = ChartWorkspaceMarket(None, Index())
+    info = ChartSymbol(id='index:index:CN_SHCOMP', symbol='CN_SHCOMP', name='Shanghai Composite',
+                       exchange='SSE', market='index', currency='CNY', timeframes=['1d'])
+
+    async def resolve(_):
+        return info
+
+    market.resolve = resolve
+    try:
+        result = await market.bars(info.id, '1d', limit=1, start=stamp('2024-10-01'), end=stamp('2024-10-10'))
+        assert [bar.time for bar in result.bars] == [stamp('2024-10-08')]
+    finally:
+        await market.close()
 
 
 @pytest.fixture

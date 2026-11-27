@@ -3,6 +3,7 @@ import { ApiRequestError } from '@/api/request'
 import { createBrowserDocuments } from './browserDocuments'
 import { PUBLIC_SITE } from '@/app/publicSite'
 import { browserPineRuns } from './browserPineRuns'
+import { createBarRequests } from './barRequests'
 export type * from './generatedContracts'
 export const BASE = '/api/v1/chart-workspace'
 export async function request<T>(path:string, init:RequestInit = {}, timeoutMs = 30_000):Promise<T> {
@@ -39,11 +40,24 @@ async function saveDocument(kind:DocumentKind,id:string,body:WorkspaceWrite) {
   pendingWrites.add(pending)
   try{return await pending}finally{pendingWrites.delete(pending)}
 }
+const marketBars = createBarRequests((query, signal) => request<ChartBars>('/bars?' + new URLSearchParams(
+  Object.entries(query).map(([key,value])=>[key,String(value)])), { signal }, 120_000))
+const replayBars = createBarRequests((query, signal) => request<ChartBars>('/replay/bars?' + new URLSearchParams(
+  Object.entries(query).map(([key,value])=>[key,String(value)])), { signal }, 120_000), { historical: true })
+
 export const chartApi = {
   capabilities: () => request<PineCapabilities>('/capabilities'),
-  symbols: (symbol?: string) => request<ChartSymbol[]>('/symbols' + (symbol ? '?' + new URLSearchParams({ symbol }) : ''), {}, 90_000),
-  bars: (query:Record<string,string|number>, signal?:AbortSignal) => request<ChartBars>('/bars?' + new URLSearchParams(Object.entries(query).map(([k,v])=>[k,String(v)])),{signal},120_000),
-  replayBars: (query:Record<string,string|number>, signal?:AbortSignal) => request<ChartBars>('/replay/bars?' + new URLSearchParams(Object.entries(query).map(([k,v])=>[k,String(v)])),{signal},120_000),
+  searchSymbols: (query: string, signal?: AbortSignal) => request<ChartSymbol[]>(
+    '/symbols/search?' + new URLSearchParams({ query }), { signal }, 90_000),
+  symbols: (symbol?: string, options: { waitForRefresh?: boolean } = {}) => {
+    const query = new URLSearchParams()
+    if (symbol) query.set('symbol', symbol)
+    if (options.waitForRefresh) query.set('wait', 'true')
+    return request<ChartSymbol[]>('/symbols' + (query.size ? '?' + query : ''), {}, 90_000)
+  },
+  bars: marketBars.load,
+  cachedBars: marketBars.peek,
+  replayBars: replayBars.load,
   quotes: (symbols:string[]) => request<ChartQuote[]>('/quotes?'+new URLSearchParams({symbols:symbols.join(',')}),{},120_000),
   documents: async (kind:DocumentKind) => {await waitForWorkspaceWrites();return browserWorkspaceDocuments.list(kind)},
   document: (kind:DocumentKind,id:string,version?:number) => browserWorkspaceDocuments.get(kind,id,version),

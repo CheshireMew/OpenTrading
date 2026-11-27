@@ -84,7 +84,7 @@ async function sourceAction(action: string) {
   }
 }
 const statusLabel = (value: string) => t('dataHealth.status.' + value)
-const statusTone = (value: string) => value === 'ready' || value === 'healthy' ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'
+const statusTone = (value: string) => value === 'ready' || value === 'healthy' ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-800 dark:text-amber-300'
 // Health timestamps are UTC; this endpoint also returns ISO values without an offset.
 const dateTime = (value?: string | null) => value ? formatDateTime(/(?:Z|[+-]\d{2}:\d{2})$/i.test(value) ? value : value + 'Z') : '—'
 const age = (value: number) => value < 3600 ? Math.round(value / 60) + 'm' : value < 86400 ? (value / 3600).toFixed(1) + 'h' : (value / 86400).toFixed(1) + 'd'

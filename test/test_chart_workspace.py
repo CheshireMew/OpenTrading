@@ -61,6 +61,32 @@ async def test_okx_client_bounds_backward_pages_to_the_requested_forward_window(
         await client.aclose()
 
 
+@pytest.mark.asyncio
+async def test_okx_history_crosses_multiple_api_pages_with_exact_start_and_end_bounds():
+    import httpx
+    from app.infra.market_data.chart import ChartMarketClient
+
+    requests = []
+    times = [i * 60000 for i in range(250)]
+
+    def respond(request):
+        requests.append(request)
+        before, limit = int(request.url.params['after']), int(request.url.params['limit'])
+        selected = [stamp for stamp in reversed(times) if stamp < before][:limit]
+        return httpx.Response(200, json={'code': '0', 'data': [
+            [str(stamp), '100', '103', '99', '102', '10'] for stamp in selected
+        ]})
+
+    client = ChartMarketClient(httpx.MockTransport(respond))
+    try:
+        rows = await client.okx_history('OKB-USDT', '1m', 230, times[10], times[-1])
+        assert sorted(row[0] for row in rows) == times[10:240]
+        assert len({row[0] for row in rows}) == 230
+        assert [int(request.url.params['after']) for request in requests] == [times[240], times[140], times[40]]
+    finally:
+        await client.aclose()
+
+
 def test_retired_order_route_and_new_contracts():
     schema=create_app('api').openapi()
     assert '/api/v1/trade-setup' not in schema['paths']

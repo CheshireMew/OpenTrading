@@ -6,6 +6,7 @@ OpenTrading uses a small set of public data sources. Runtime configuration lives
 
 - `DATABASE_URL`: the only database entrypoint. Use PostgreSQL for normal use; SQLite is used by tests.
 - Binance public APIs: spot, USD-M futures, and Web3 endpoints are configured by the `BINANCE_*` settings.
+- Crypto candles and Bitcoin technical indicators use native public REST endpoints. The supported exchange gateways are `binance`, `binanceusdm`, and `okx`; they reuse bounded connection pools without loading exchange-wide market tables. Chart candles share the existing history store with research and CLI readers. Failed upstream reads remain errors and are never cached as an empty history boundary.
 
 ## Fallbacks
 

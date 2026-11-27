@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import threading
+
 from app.services.market.symbol_catalog import get_market_symbol_source
 from app.infra.market_data.exchange import ExchangeGateway
 from app.domain.market.symbol_catalog import MarketSymbolSource
@@ -11,6 +13,7 @@ class MarketSymbolRouting:
         self._exchange_gateways: dict[str, ExchangeGateway] = {
             default_gateway.exchange_id: default_gateway,
         }
+        self._lock = threading.Lock()
 
     def storage_symbol(self, symbol: str) -> str:
         source = self._resolve_market_source(symbol)
@@ -23,12 +26,18 @@ class MarketSymbolRouting:
     def gateway_for_symbol(self, symbol: str) -> ExchangeGateway:
         source = self._resolve_market_source(symbol)
         exchange_id = source.exchange_id if source else self.default_gateway.exchange_id
-        gateway = self._exchange_gateways.get(exchange_id)
-        if gateway:
+        with self._lock:
+            gateway = self._exchange_gateways.get(exchange_id)
+            if gateway is None:
+                gateway = ExchangeGateway(exchange_id=exchange_id)
+                self._exchange_gateways[exchange_id] = gateway
             return gateway
-        gateway = ExchangeGateway(exchange_id=exchange_id)
-        self._exchange_gateways[exchange_id] = gateway
-        return gateway
+
+    def close(self) -> None:
+        for gateway in self._exchange_gateways.values():
+            close = getattr(gateway, "close", None)
+            if close is not None:
+                close()
 
     def _resolve_market_source(self, symbol: str):
         value = symbol.strip().upper()

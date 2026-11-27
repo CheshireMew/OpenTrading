@@ -10,7 +10,6 @@ dependencies = [
   "alembic>=1.13.0",
   "apscheduler>=3.10.0",
   "baostock>=0.8.9",
-  "ccxt>=4.5.89",
   "exchange-calendars==4.13.2",
   "fastapi>=0.100.0",
   "httpx>=0.24.0",

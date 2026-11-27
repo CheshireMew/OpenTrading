@@ -8,10 +8,12 @@
           <button v-for="filter in filters" :key="filter.value" type="button" class="app-segment-button" :class="{ 'is-active': market === filter.value }" :aria-pressed="market === filter.value" @click="market = filter.value">{{ cw(filter.label) }}</button>
         </div>
         <div class="symbol-results">
-          <button v-for="item in results" :key="item.id" type="button" @click="pick(item.id)">
+          <button v-for="item in results" :key="item.id" type="button" @pointerenter="emit('preload',item.id)" @focus="emit('preload',item.id)" @click="pick(item.id)">
             <strong>{{ item.name }}</strong><small>{{ workspaceMarketLabel(item.id) }}</small>
           </button>
-          <p v-if="!results.length">{{ cw('noSymbols') }}</p>
+          <p v-if="!results.length && !searching && !searchError">{{ cw('noSymbols') }}</p>
+          <p v-if="searching" role="status">{{ cw('searchingOnchain') }}</p>
+          <p v-else-if="searchError" role="alert">{{ cw('onchainSearchFailed') }}</p>
         </div>
       </section>
     </div>
@@ -19,23 +21,40 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
 import { useModalDialog } from '@/composables/useModalDialog'
 import type { ChartSymbol } from '@/modules/chartWorkspace/api'
+import { chartApi } from '@/modules/chartWorkspace/api'
 import { cw, workspaceMarketLabel } from '@/modules/chartWorkspace/locale'
-import { matchesChartSymbol } from '@/modules/chartWorkspace/symbolSearch'
+import { isOnchainAddressQuery, matchesChartSymbol } from '@/modules/chartWorkspace/symbolSearch'
 
 const props = defineProps<{ symbols: ChartSymbol[]; title: 'addWatch' | 'switchSymbol' }>()
 const open = defineModel<boolean>({ required: true })
-const emit = defineEmits<{ select: [id: string] }>()
+const emit = defineEmits<{ select: [id: string]; preload: [id: string]; discovered: [symbols: ChartSymbol[]] }>()
 const query = ref('')
 const market = ref('all')
 const searchInput = ref<HTMLInputElement>()
-const filters = [{ value: 'all', label: 'all' }, { value: 'spot', label: 'spot' }, { value: 'usdm', label: 'perpetual' }, { value: 'index', label: 'index' }, { value: 'fx', label: 'fx' }, { value: 'commodity', label: 'commodity' }]
-const results = computed(() => props.symbols.filter(item => (market.value === 'all' || item.market === market.value)
+const remote = ref<ChartSymbol[]>([]), searching = ref(false), searchError = ref(false)
+const filters = [{ value: 'all', label: 'all' }, { value: 'spot', label: 'spot' }, { value: 'usdm', label: 'perpetual' }, { value: 'alpha', label: 'alpha' }, { value: 'web3', label: 'web3' }, { value: 'index', label: 'index' }, { value: 'fx', label: 'fx' }, { value: 'commodity', label: 'commodity' }]
+const results = computed(() => [...new Map([...props.symbols, ...remote.value].map(item => [item.id, item])).values()].filter(item => (market.value === 'all' || item.market === market.value)
   && (matchesChartSymbol(item, query.value) || workspaceMarketLabel(item.id).toLowerCase().includes(query.value.trim().toLowerCase()))).slice(0, 100))
 const { dialogRef } = useModalDialog(open, () => { open.value = false }, searchInput)
+watch([open, query], ([isOpen, text], _, cleanup) => {
+  remote.value = []; searching.value = false; searchError.value = false
+  if (!isOpen || !isOnchainAddressQuery(text)) return
+  const abort = new AbortController()
+  searching.value = true
+  const timer = setTimeout(() => {
+    void chartApi.searchSymbols(text.trim(), abort.signal).then(items => {
+      if (abort.signal.aborted) return
+      remote.value = items
+      emit('discovered', items)
+    }).catch(() => { if (!abort.signal.aborted) searchError.value = true })
+      .finally(() => { if (!abort.signal.aborted) searching.value = false })
+  }, 300)
+  cleanup(() => { clearTimeout(timer); abort.abort() })
+})
 function pick(id: string) {
   emit('select', id)
   open.value = false

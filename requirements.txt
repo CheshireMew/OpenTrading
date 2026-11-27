@@ -2,7 +2,6 @@
 # Python Dependencies
 
 # 核心依赖
-ccxt>=4.5.89              # 加密货币交易所数据接口
 requests>=2.31.0         # 同步外部数据源 HTTP 请求
 httpx>=0.24.0            # 异步 HTTP 请求库
 pytrends>=4.9.2          # Google Trends indicator data

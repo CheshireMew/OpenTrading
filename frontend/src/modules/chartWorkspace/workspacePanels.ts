@@ -1,7 +1,10 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+export type WorkspacePanelTab = 'watchlist' | 'objects' | 'dataWindow'
+
 export function useWorkspacePanels(deps: { dirty: () => void; resizeChart: () => void }) {
   const rightOpen = ref(true), rightWidth = ref(360), bottomHeight = ref(340), bottomTab = ref('')
+  const rightTab = ref<WorkspacePanelTab>('watchlist')
   const editorMounted = ref(false), testerMounted = ref(false), compactWorkspace = ref(false)
   const watchlistDrawerOpen = ref(false), maxBottomHeight = ref(700)
   const watchlistVisible = computed(() => compactWorkspace.value ? watchlistDrawerOpen.value : rightOpen.value)
@@ -30,17 +33,21 @@ export function useWorkspacePanels(deps: { dirty: () => void; resizeChart: () =>
   function resizeRight(event: PointerEvent) { const width = rightWidth.value; resize(event, dx => { rightWidth.value = Math.max(320, Math.min(520, width - dx)) }) }
   function resizeBottom(event: PointerEvent) { const height = bottomHeight.value; resize(event, (_, dy) => { bottomHeight.value = Math.max(180, Math.min(window.innerHeight - 180, height - dy)) }) }
   const toggleBottom = (tab: string) => { bottomTab.value = bottomTab.value === tab ? '' : tab }
-  function snapshot() { return { rightWidth: rightWidth.value, rightOpen: rightOpen.value, bottomHeight: bottomHeight.value } }
+  function snapshot() { return { rightWidth: rightWidth.value, rightOpen: rightOpen.value, rightTab: rightTab.value, bottomHeight: bottomHeight.value } }
   function restore(data: Record<string, any>) {
     rightWidth.value = Math.max(320, Math.min(520, data.rightWidth ?? 360))
     rightOpen.value = data.rightOpen ?? true
+    const tab = data.rightTab ?? data.state?.panels?.open
+    rightTab.value = tab === 'objects' || tab === 'dataWindow' ? tab : 'watchlist'
+    if (!data.rightTab && (tab === 'objects' || tab === 'dataWindow')) rightOpen.value = true
     bottomHeight.value = data.bottomHeight ?? 340
   }
   watch(bottomTab, value => { if (value === 'editor') editorMounted.value = true; if (value === 'tester') testerMounted.value = true; resizeChart() })
   watch([rightOpen, rightWidth, bottomHeight], () => { deps.dirty(); resizeChart() })
+  watch(rightTab, deps.dirty)
   onMounted(() => { syncViewport(); window.addEventListener('resize', syncViewport) })
   onBeforeUnmount(() => { stopDrag?.(); window.removeEventListener('resize', syncViewport) })
-  return { rightOpen, rightWidth, bottomHeight, bottomTab, editorMounted, testerMounted, compactWorkspace,
+  return { rightOpen, rightWidth, rightTab, bottomHeight, bottomTab, editorMounted, testerMounted, compactWorkspace,
     watchlistDrawerOpen, maxBottomHeight, watchlistVisible,
     toggleWatchlist, toggleBottom, resizeRight, resizeBottom, snapshot, restore }
 }

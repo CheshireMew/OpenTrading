@@ -15,20 +15,28 @@ export function resolveReplaySymbol(value: string, catalog: ChartSymbol[], prima
 /** Bypass the live chart cache: it may already contain bars after the replay cutoff. */
 export async function loadReplaySeries(info: ChartSymbol, timeframe: string,
   range: { from?: number; to?: number; limit?: number }, cutoff: number, signal?: AbortSignal): Promise<ChartBar[]> {
-  const tf = timeframes[timeframe] ?? timeframe, end = Math.min(range.to ?? cutoff, cutoff)
+  const tf = timeframes[timeframe] ?? timeframe
+  let end = Math.min(range.to ?? cutoff, cutoff)
   let cursor = range.from
-  const count = range.limit ?? (cursor === undefined ? 1000 : Infinity), rows: ChartBar[] = []
-  while (rows.length < count && (cursor === undefined || cursor < end)) {
-    const query: Record<string, string | number> = { symbol: info.id, timeframe: tf, end, limit: Math.min(1000, count - rows.length) }
+  const count = range.limit ?? (cursor === undefined ? 1000 : Infinity), rows = new Map<number, ChartBar>()
+  while (rows.size < count && (cursor === undefined || cursor < end)) {
+    signal?.throwIfAborted()
+    const query: Record<string, string | number> = { symbol: info.id, timeframe: tf, end, limit: Math.min(1000, count - rows.size) }
     if (cursor !== undefined) query.start = cursor
     const result = await chartApi.replayBars(query, signal)
+    signal?.throwIfAborted()
     const batch = result.bars.filter(bar => bar.closed && bar.closeTime <= end && (cursor === undefined || bar.time >= cursor))
     if (!batch.length) break
-    rows.push(...batch)
-    if (cursor === undefined) break
-    const next = batch[batch.length - 1]!.closeTime
-    if (next <= cursor) break
-    cursor = next
+    for (const bar of batch) rows.set(bar.time, bar)
+    if (cursor === undefined) {
+      const next = Math.min(...batch.map(bar => bar.time))
+      if (next >= end) break
+      end = next
+    } else {
+      const next = Math.max(...batch.map(bar => bar.closeTime))
+      if (next <= cursor) break
+      cursor = next
+    }
   }
-  return rows
+  return [...rows.values()].sort((left, right) => left.time - right.time)
 }

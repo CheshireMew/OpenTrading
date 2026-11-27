@@ -22,7 +22,7 @@ const toggleLocale = () => setAppLocale(locale, toggleAppLocale(locale.value))
 </script>
 
 <style scoped>
-.app-appearance-controls{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.app-appearance-controls{display:flex;align-items:center;gap:12px;flex-shrink:0}
 .app-appearance-controls>button{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;min-height:32px;padding:6px;border:0;border-radius:4px;color:var(--ui-text);background:transparent;cursor:pointer}
 .app-appearance-controls>button:hover{background:var(--ui-hover)}
 .app-appearance-controls>button:focus-visible{outline:2px solid var(--ui-accent);outline-offset:1px}

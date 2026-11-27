@@ -1,5 +1,6 @@
 from app.infra.persistence.market.kline_store import KlineStore
 from app.services.market.market_data_service import MarketDataService
+import pytest
 
 
 class DeterministicExchangeGateway:
@@ -34,3 +35,20 @@ def test_fetch_data_uses_injected_gateway_and_returns_ohlcv(installed_database_r
     assert len(data) == 5
     assert all(len(row) == 6 for row in data)
     assert data[-1][4] == 105
+
+
+@pytest.mark.parametrize("live", [False, True])
+def test_cache_write_failure_does_not_discard_fresh_candles(live):
+    class UnavailableCache:
+        def get(self, _):
+            return None
+
+        def set(self, *_args, **_kwargs):
+            raise RuntimeError("cache unavailable")
+
+    gateway = DeterministicExchangeGateway()
+    service = MarketDataService(gateway, object(), UnavailableCache())
+    method = service.get_live_kline_data if live else service.get_kline_data
+    rows = method("BTC/USDT", "1h", limit=5)
+    assert len(rows) == 5
+    assert gateway.calls == 1

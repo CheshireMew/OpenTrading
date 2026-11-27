@@ -25,9 +25,9 @@ def crypto_sync(
     try:
         first = parse_datetime(start)
         last = parse_datetime(end) if end else datetime.now(timezone.utc)
-        service = CryptoHistorySync(ctx.obj.database_runtime)
-        for symbol in symbols:
-            results.append(service.sync(symbol, first, last))
+        with CryptoHistorySync(ctx.obj.database_runtime) as service:
+            for symbol in symbols:
+                results.append(service.sync(symbol, first, last))
     except Exception as exc:
         warnings.append(str(exc))
     complete = not warnings and all(item["status"] == "complete" for item in results)

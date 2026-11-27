@@ -1,4 +1,4 @@
-import { NativeRenderer, type ChartConfig, type OHLCV, type VelaTheme } from '@luxalgo/vela'
+import { NativeRenderer, type ChartConfig, type OHLCV, type VelaTheme, type VisibleRange } from '@luxalgo/vela'
 import { registerRendererLayer } from '@luxalgo/vela/plugin'
 import { DARK_PALETTE, LIGHT_PALETTE } from '@/theme/palette.mjs'
 import { PRICE_ALERT_LAYER, type PriceAlertLayerSource } from './priceAlertLayer'
@@ -42,7 +42,7 @@ export function readableCandleRange(bars: readonly OHLCV[], width: number) {
   return { from: bars[bars.length - count].time, to: last + interval * RIGHT_MARGIN_BARS }
 }
 
-type GridSource = () => { config: ChartConfig; visible: boolean }
+type GridSource = () => { config: ChartConfig; visible: boolean; onViewport: (range: VisibleRange) => void }
 
 // Add coordinate-bound minor lines through Vela's public layer API. The native
 // major grid, axis labels and every indicator keep their existing rendering path.
@@ -59,7 +59,12 @@ registerRendererLayer({
         context.setTransform(1, 0, 0, 1, 0, 0)
         context.clearRect(0, 0, canvas.width, canvas.height)
         const source = typeof data === 'function' ? (data as GridSource)() : null
-        if (!source?.visible || bounds.height <= 0 || coords.barCount < 2) return
+        if (!source || coords.barCount < 1) return
+        // The native viewport event clips to loaded candles, and disappears
+        // entirely when a fast pan leaves them offscreen. Keep the full range
+        // available to history loading, including the empty space to the left.
+        source.onViewport(coords.visibleTimeRange())
+        if (!source.visible || bounds.height <= 0 || coords.barCount < 2) return
         const { config } = source, { from, to } = coords.visibleTimeRange()
         if (!(to > from)) return
         const midpoint = (from + to) / 2
@@ -144,8 +149,14 @@ export class WorkspaceRenderer extends NativeRenderer {
   private framed = false
   private disposeLocale?: () => void
   private disposeIndicatorInteraction?: () => void
+  private historyViewport?: (range: VisibleRange) => void
   cursorSurface?: { plot: HTMLElement; canvas: HTMLCanvasElement }
   get hasReadableViewport() { return this.framed }
+
+  onHistoryViewport(listener: (range: VisibleRange) => void) {
+    this.historyViewport = listener
+    return () => { if (this.historyViewport === listener) this.historyViewport = undefined }
+  }
 
   bindIndicatorInteraction(deps: { enabled: () => boolean; activate: () => void }) {
     this.disposeIndicatorInteraction?.()
@@ -172,7 +183,8 @@ export class WorkspaceRenderer extends NativeRenderer {
     this.replayOrders.host = container
     this.setNativeData(REPLAY_ORDER_LAYER, this.replayOrders)
     this.setNativeData(PRICE_ALERT_LAYER, this.priceAlerts)
-    this.setNativeData(GRID_LAYER, () => ({ config: this.getConfig(), visible: this.readFeature('gridlines') !== false }))
+    this.setNativeData(GRID_LAYER, () => ({ config: this.getConfig(), visible: this.readFeature('gridlines') !== false,
+      onViewport: (range: VisibleRange) => this.historyViewport?.(range) }))
   }
 
   override setBars(bars: OHLCV[], options?: { preserveView?: boolean }) {
@@ -182,6 +194,7 @@ export class WorkspaceRenderer extends NativeRenderer {
   }
 
   override destroy() {
+    this.historyViewport = undefined
     this.disposeIndicatorInteraction?.()
     this.disposeLocale?.()
     WorkspaceRenderer.mounted.delete(this)

@@ -21,5 +21,5 @@ onBeforeUnmount(()=>finish(false))
 defineExpose({confirm})
 </script>
 <style scoped>
-.confirm-dialog{width:min(420px,calc(100vw - 32px));padding:20px;color:var(--ui-text)}h2{font-size:16px;font-weight:600;margin:0}p{font-size:13px;color:var(--ui-muted);line-height:1.65;margin:12px 0 20px}footer{display:flex;justify-content:flex-end;gap:8px}.confirm-delete{background:var(--ui-negative);color:white}
+.confirm-dialog{width:min(420px,calc(100vw - 32px));padding:20px;color:var(--ui-text)}h2{font-size:16px;font-weight:600;margin:0}p{font-size:13px;color:var(--ui-muted);line-height:1.65;margin:12px 0 20px}footer{display:flex;justify-content:flex-end;gap:8px}.confirm-delete,.confirm-delete:hover:not(:disabled){background:var(--ui-negativeInk);color:var(--ui-onAccent)}
 </style>

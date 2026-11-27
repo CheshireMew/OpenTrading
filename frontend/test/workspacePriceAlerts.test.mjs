@@ -28,7 +28,7 @@ function setup(api = {}, options = {}) {
     '@/modules/research/api': { researchApi }, '@/modules/research/alertDelivery': { prepareAlertAudio: async () => true, enableAlertDelivery: options.enableDelivery ?? (async () => {}), deliverAlertEvent: async event => { delivered.push(event) } },
     './chartPresentation': { WorkspaceRenderer: { forHost: () => renderer } }, './api': { chartApi: { quotes: async () => { quoteCalls++; return [{ price: 95 }] } } },
     './replayPriceAlerts': replayMatcher,
-    './provider': { fromVela: () => 'binance:spot:BTCUSDT' }, './locale': { cw: key => key, formatNumber: String },
+    './provider': { fromVela: () => 'binance:spot:BTCUSDT' }, './locale': { cw: key => key, formatNumber: String, workspaceMarketLabel: id => id },
   }
   const cache = new Map()
   function load(name) {

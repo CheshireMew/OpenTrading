@@ -10,7 +10,7 @@
       </div>
 
       <div class="flex items-center justify-center p-2">
-         <span class="text-stone-400 dark:text-slate-500 font-bold text-xl">VS</span>
+         <span class="app-muted font-bold text-xl">VS</span>
       </div>
 
       <div class="flex-1 min-w-[200px]">

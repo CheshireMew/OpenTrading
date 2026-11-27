@@ -124,7 +124,6 @@ const layoutOptions = computed(() => [{ value:'split', label:t('workspaceViews.c
 .dca-context-values dd { margin-top: 6px; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .dca-output-values { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .dca-output-values > * { padding: 16px 12px; }
-.dca-output-values > :nth-child(3n + 1) { padding-left: 0; }
 .dca-output-values dd { font-size: 22px; }
 .dca-supporting-charts { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; gap: 20px; }
 .dca-supporting-charts > section, .dca-supporting-charts > section > div { min-width: 0; }

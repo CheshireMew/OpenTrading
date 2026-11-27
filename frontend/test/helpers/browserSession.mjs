@@ -1,11 +1,13 @@
 import { spawn } from 'node:child_process'
 import { once } from 'node:events'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { mkdir, mkdtemp } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const frontend = fileURLToPath(new URL('../../', import.meta.url))
+const velaPatchRevision = createHash('sha256').update(readFileSync(new URL('../../scripts/patch-vela.mjs', import.meta.url))).digest('hex')
 
 class Protocol {
   constructor(socket) {
@@ -82,11 +84,15 @@ export async function browserSession({ publicSite = true } = {}) {
     } else next()
   }
   const server = await createServer({
-    configFile: false, root: frontend, cacheDir: path.join(profile, 'vite-cache'),
+    configFile: false, root: frontend, cacheDir: process.env.OPENTRADING_TEST_VITE_CACHE ?? path.join(profile, 'vite-cache'),
     plugins: [vue(), { name: 'offline-browser-test', configureServer: server => { server.middlewares.use(route) } }],
     resolve: { alias: { '@': path.join(frontend, 'src') } },
     define: { 'import.meta.env.VITE_PUBLIC_SITE': JSON.stringify(String(publicSite)), __INTLIFY_JIT_COMPILATION__: true },
-    optimizeDeps: { include: ['vue', 'vue-router', 'vue-i18n', 'axios', 'pinia', 'pinets'] },
+    // Match the app config: a cached runtime from before a Vela patch cannot
+    // exercise the current indicator dialog or drawing integration.
+    optimizeDeps: { include: ['vue', 'vue-router', 'vue-i18n', 'axios', 'pinia', 'pinets'],
+      esbuildOptions: { define: { __OPENTRADING_VELA_PATCH_REVISION__: JSON.stringify(velaPatchRevision) } },
+    },
     server: { host: '127.0.0.1', port: 0, strictPort: false, proxy: {} },
     logLevel: 'error',
   })
@@ -95,6 +101,7 @@ export async function browserSession({ publicSite = true } = {}) {
   let child, protocol
   async function start() {
     child = spawn(executable, [
+      ...(process.platform === 'win32' ? ['--edge-skip-compat-layer-relaunch'] : []),
       '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
       '--disable-background-networking', '--disable-component-update', '--disable-sync',
       '--disable-extensions', '--disable-background-timer-throttling', '--remote-debugging-port=0',
@@ -135,6 +142,8 @@ export async function browserSession({ publicSite = true } = {}) {
       await protocol.send('Page.navigate', { url: origin + '/__tests__/blank' }, sessionId)
       await loaded
       return {
+        viewport: (width, height) => protocol.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false }, sessionId),
+        screenshot: async () => Buffer.from((await protocol.send('Page.captureScreenshot', { format: 'png' }, sessionId)).data, 'base64'),
         async evaluate(body, value) {
           const result = await protocol.send('Runtime.evaluate', {
             expression: `(async (input) => { ${body}\n})(${JSON.stringify(value) ?? 'undefined'})`, awaitPromise: true, returnByValue: true,

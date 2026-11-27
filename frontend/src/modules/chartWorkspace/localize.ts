@@ -1,6 +1,6 @@
 import { watch } from 'vue'
 import i18n from '@/i18n'
-import { cw, exchangeLabel, messageText } from './locale'
+import { cw, messageText, workspaceMarketLabel } from './locale'
 import type { ChartSymbol } from './api'
 
 // Vela 0.7.6 exposes English chrome but no locale option. Keep the translation
@@ -10,7 +10,7 @@ const vocabulary:Record<string,string>={
   'Show chart':'显示图表','Hide chart':'隐藏图表','Symbol logo':'品种图标','Symbol name':'品种名称','Market status':'市场状态','OHLC values':'开高低收','Bar change values':'K 线涨跌','Indicator values':'指标数值',
   'Titles':'名称','Values':'数值','Open':'开盘','High':'最高','Low':'最低','Price':'价格','Date':'日期','Time':'时间','Interval':'周期','Session':'交易时段',
   'Layout':'布局','Single':'单图','Sync':'同步','Timeframes':'周期','Change timeframe':'切换周期','Extended hours':'延长交易时段','Trading session':'交易时段','Pre-market':'盘前','Post-market':'盘后',
-  'Session — regular (RTH) vs extended (ETH) hours':'交易时段：常规时段（RTH）或延长时段（ETH）','Bars to fetch':'加载 K 线数量',
+  'Session — regular (RTH) vs extended (ETH) hours':'交易时段：常规时段（RTH）或延长时段（ETH）','Bars to fetch':'历史根数',
   'Auto (fits data to screen)':'自动（适应屏幕）','Toggle logarithmic scale':'切换对数坐标','Toggle percent scale':'切换百分比坐标','Price axis labels':'价格轴标签',
   'Last Price Line':'最新价线','Last price label':'最新价标签','Countdown to bar close':'K 线收盘倒计时','Labels':'标签','Levels':'水平','Mode':'模式','Percent':'百分比','Indexed to 100':'以 100 为基准',
   'Line color':'线条颜色','Top fill':'顶部填充','Bottom fill':'底部填充','Top line':'上方线条','Bottom line':'下方线条','Fill top area':'填充上方区域','Fill bottom area':'填充下方区域','Base level %':'基准位置 %',
@@ -91,8 +91,8 @@ export function localizeChart(host:HTMLElement, symbols: () => ChartSymbol[] = (
     if(replayLabel!==value)return replayLabel
     if (/^REPLAY\d*$/.test(value)) return cw('replay')
     const id = value.replace(/^(?:opentrading|heimdall|replay\d*):/, '')
-    const symbol = /^(?:binance|okx|index):/.test(id) ? symbols().find(item => item.id === id) : undefined
-    if (symbol) return `${symbol.name} · ${exchangeLabel(symbol.exchange)} · ${cw(symbol.market === 'usdm' ? 'perpetual' : symbol.market === 'index' ? 'index' : 'spot')}`
+    const symbol = symbols().find(item => item.id === id)
+    if (symbol) return `${symbol.name} · ${workspaceMarketLabel(symbol.id)}`
     const key=keys.get(value)
     if(key)return i18n.global.t('chartNative.'+key.key)
     if(value.startsWith('Chart style — '))return i18n.global.t('chartNative.'+keys.get('Chart style')!.key)+' — '+translate(value.slice(14))

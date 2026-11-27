@@ -1,9 +1,9 @@
 <template>
-  <button v-if="compact && visible" class="watch-backdrop" type="button" :aria-label="cw('close')" @click="emit('close')" />
-  <aside v-if="visible" ref="dialogRef" class="watch-panel" :class="{ 'watch-drawer': compact }" :style="{ width: width + 'px' }"
-    tabindex="-1" :role="compact ? 'dialog' : undefined" :aria-modal="compact ? true : undefined" :aria-label="cw('watchlist')" >
+  <button v-if="compact && visible && !embedded" class="watch-backdrop" type="button" :aria-label="cw('close')" @click="emit('close')" />
+  <component :is="embedded ? 'div' : 'aside'" v-if="visible" ref="dialogRef" class="watch-panel" :class="{ 'watch-drawer': compact && !embedded, 'watch-embedded': embedded }" :style="embedded ? undefined : { width: width + 'px' }"
+    tabindex="-1" :role="compact && !embedded ? 'dialog' : undefined" :aria-modal="compact && !embedded ? true : undefined" :aria-label="cw('watchlist')" >
     <header class="watch-header">
-      <button v-if="compact" class="watch-icon" type="button" :aria-label="cw('close')" @click="emit('close')"><IconX /></button>
+      <button v-if="compact && !embedded" class="watch-icon" type="button" :aria-label="cw('close')" @click="emit('close')"><IconX /></button>
       <div class="watch-list-select">
         <select v-model="watchlistId" :aria-label="cw('watchlists')" :disabled="!watchlists.length">
           <option v-for="item in watchlists" :key="item.id" :value="item.id">{{ item.name }}</option>
@@ -31,8 +31,8 @@
         <thead><tr><th scope="col">{{ cw('symbol') }}</th><th scope="col">{{ cw('lastPrice') }}</th><th scope="col">{{ cw('change') }}</th><th scope="col">{{ cw('changePercent') }}</th><th scope="col"><span class="sr-only">{{ cw('editWatchlist') }}</span></th></tr></thead>
         <tbody>
           <tr v-for="(id, index) in watchSymbols" :key="id" :class="{ selected: activeSymbolId === id }" draggable="true"
-            @dragstart="startDrag($event, index)" @dragend="dragIndex = -1" @dragover.prevent @drop.prevent="controller.moveWatch(index)" @click="emit('select', id)">
-            <td :title="symbolTitle(id)"><button class="watch-symbol" type="button" :aria-label="symbolTitle(id)" :aria-pressed="activeSymbolId === id" @click.stop="emit('select', id)">
+            @dragstart="startDrag($event, index)" @dragend="dragIndex = -1" @dragover.prevent @drop.prevent="controller.moveWatch(index)" @pointerenter="emit('preload', id)" @click="emit('select', id)">
+            <td :title="symbolTitle(id)"><button class="watch-symbol" type="button" :aria-label="symbolTitle(id)" :aria-pressed="activeSymbolId === id" @focus="emit('preload', id)" @click.stop="emit('select', id)">
               <WorkspaceSymbolIcon :symbol="symbolsById.get(id)" :fallback="id" /><span>{{ displaySymbol(id) }}</span>
             </button></td>
             <td :class="quoteClass(id)" :title="priceText(quotes[id]?.price)">{{ priceText(quotes[id]?.price) }}</td>
@@ -58,7 +58,7 @@
       </dl>
       <footer v-if="$slots.actions"><slot name="actions" /></footer>
     </section>
-  </aside>
+  </component>
   <AppConfirmDialog ref="confirmation" />
 </template>
 
@@ -89,10 +89,11 @@ const props = defineProps<{
   visible: boolean
   compact: boolean
   width: number
+  embedded?: boolean
 }>()
-const emit = defineEmits<{ add: []; select: [id: string]; close: [] }>()
+const emit = defineEmits<{ add: []; select: [id: string]; preload: [id: string]; close: [] }>()
 const { watchlists, watchlist, watchlistId, watchSymbols, pendingWatch, quotes, dragIndex } = props.controller
-const { dialogRef } = useModalDialog(computed(() => props.visible && props.compact), () => emit('close'))
+const { dialogRef } = useModalDialog(computed(() => props.visible && props.compact && !props.embedded), () => emit('close'))
 const symbolsById = computed(() => new Map(props.symbols.map(item => [item.id, item])))
 const activeSymbol = computed(() => symbolsById.value.get(props.activeSymbolId))
 const activeQuote = computed(() => quotes.value[props.activeSymbolId])
@@ -103,7 +104,8 @@ async function removeList(){optionsMenu.value?.close();const list=watchlist.valu
 function listAction(action: () => unknown) { optionsMenu.value?.close(); void action() }
 const displaySymbol = (id: string) => {
   const symbol = symbolsById.value.get(id)
-  return (symbol?.symbol ?? id.split(':').pop() ?? id) + (symbol?.market === 'usdm' ? '.P' : '')
+  const ticker = symbol?.market === 'alpha' || symbol?.market === 'web3' ? symbol.name.split('/')[0] : symbol?.symbol
+  return (ticker ?? id.split(':').pop() ?? id) + (symbol?.market === 'usdm' ? '.P' : '')
 }
 const symbolTitle = (id: string) => [displaySymbol(id), workspaceMarketLabel(id), quotes.value[id]?.basis === '交易日' ? cw('tradingDay') : '24h'].join(' · ')
 const priceText = (value: unknown) => formatNumber(value, 8)
@@ -122,6 +124,7 @@ function startDrag(event: DragEvent, index: number) {
 
 <style scoped>
 .watch-panel { display: flex; flex: 0 0 auto; flex-direction: column; min-width: 320px; max-width: 520px; min-height: 0; background: var(--ui-panel); color: var(--ui-text); font-size: 13px; outline: none; }
+.watch-panel.watch-embedded { flex: 1; min-width: 0; max-width: none; }
 .watch-header { display: flex; flex: 0 0 auto; align-items: center; gap: 4px; min-height: 48px; padding: 4px 8px 4px 12px; border-bottom: 1px solid var(--ui-border); }
 .watch-list-select { position: relative; flex: 1; min-width: 0; }
 .watch-header .watch-list-select select { display: block; width: 100%; min-width: 0; padding: 5px 22px 5px 0; border: 0; appearance: none; outline-offset: 2px; background: transparent; color: var(--ui-title); font-size: 15px; font-weight: 600; text-overflow: ellipsis; cursor: pointer; }
@@ -156,8 +159,8 @@ function startDrag(event: DragEvent, index: number) {
 .watch-rows .watch-remove { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; color: var(--ui-muted); }
 .watch-rows .watch-remove:hover { color: var(--ui-negative); }
 .watch-empty { padding: 12px; color: var(--ui-muted); }
-.watch-up { color: var(--ui-positive) !important; }
-.watch-down { color: var(--ui-negative) !important; }
+.watch-up { color: var(--ui-positiveInk) !important; }
+.watch-down { color: var(--ui-negativeInk) !important; }
 .watch-instrument { flex: 0 0 auto; max-height: 48%; overflow: auto; padding: 11px 12px; border-top: 1px solid var(--ui-border); }
 .watch-instrument > strong { color: var(--ui-title); font-size: 15px; }
 .watch-instrument small { font-size: 11px; color: var(--ui-muted); }
@@ -168,7 +171,7 @@ function startDrag(event: DragEvent, index: number) {
 .watch-instrument dd { margin: 0; text-align: right; }
 .watch-instrument footer { display: flex; gap: 4px; margin-top: 6px; }
 .watch-instrument footer button{min-height:32px;padding:4px 6px}
-.watch-quote-error { color: var(--ui-negative); margin-bottom: 6px; }
+.watch-quote-error { color: var(--ui-negativeInk); margin-bottom: 6px; }
 .watch-backdrop { position: absolute; inset: 0; z-index: 29; background: #0005 !important; border-radius: 0 !important; }
 .watch-drawer { position: absolute; inset-block: 0; right: 0; z-index: 30; min-width: 0; max-width: calc(100% - 32px); box-shadow: -8px 0 24px #0003; }
 @media(pointer:coarse){.watch-remove-column{width:44px}.watch-rows .watch-remove{width:44px;height:44px}.watch-rows td{height:44px}.watch-icon,.watch-options :deep(summary),.watch-instrument footer button{min-width:44px;min-height:44px}.watch-header{padding-left:8px}.watch-rows table{min-width:320px}}

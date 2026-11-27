@@ -11,7 +11,7 @@
       :class="[triggerClass, disabled ? 'cursor-not-allowed' : '']"
       @click="openSearch"
     >
-      <span class="truncate" :class="displayText ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'">
+      <span class="truncate" :class="displayText ? 'text-gray-900 dark:text-white' : 'text-[var(--ui-faint)]'">
         {{ displayText || placeholderText }}
       </span>
       <MagnifyingGlassIcon class="h-4 w-4 shrink-0 text-[var(--ui-muted)]" />
@@ -279,6 +279,7 @@ onMounted(() => {
 .symbol-search-field { border-radius: 6px; border-color: var(--ui-borderStrong); background: var(--ui-toolbar); }
 .symbol-search-field:focus-within { border-color: var(--ui-accent); outline: 2px solid var(--ui-accent); outline-offset: 2px; }
 .symbol-search-field input:focus-visible { outline: none; }
+.symbol-search-field input::placeholder { color: var(--ui-faint); opacity: 1; }
 .symbol-search-field input::-webkit-search-cancel-button { display: none; }
 .symbol-result { grid-template-columns: minmax(0, 1fr) auto; border-color: var(--ui-border); }
 .symbol-result:hover:not(:disabled) { background: var(--ui-elevated); }

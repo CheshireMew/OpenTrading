@@ -19,7 +19,7 @@ class ExchangeKlineFetcher:
         gateway = self._symbol_routing.gateway_for_symbol(symbol)
 
         while current_since < until:
-            limit = settings.EXCHANGE_FETCH_LIMIT
+            limit = min(settings.EXCHANGE_FETCH_LIMIT, getattr(gateway, "fetch_limit", settings.EXCHANGE_FETCH_LIMIT))
             batch, _attempts = gateway.fetch_ohlcv(
                 fetch_symbol,
                 timeframe,

@@ -3,7 +3,7 @@ import type { DataProvider, BarRange, OHLCV, Vela } from '@luxalgo/vela'
 import type { VelaWorkspace } from '@luxalgo/vela/workspace'
 import { chartApi, type ChartBar, type ChartSymbol } from './api'
 import { fromVela, velaSymbol, timeframes } from './provider'
-import { ReplayAccount, ReplayPacer, aggregateMinute, periodStart, periodEnd, MINUTE, type Side, type OrderKind } from './replayModel'
+import { ReplayAccount, ReplayPacer, aggregateMinute, periodStart, periodEnd, periodDuration, MINUTE, type Side, type OrderKind } from './replayModel'
 import { quantityForAmount } from './replayQuantity'
 import { cw } from './locale'
 import { catalogSymbolIcon } from './symbolIcons'
@@ -15,7 +15,7 @@ export type ReplaySourceBar = { sessionId: string; symbolId: string; bar: ChartB
 export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | undefined>; symbols: Ref<ChartSymbol[]>; settled?:()=>Promise<void> }) {
   const open = ref(false), active = ref(false), loading = ref(false), playing = ref(false), picking = ref(false)
   const processing = ref(false)
-  const error = ref(''), now = ref(0), speed = ref(1), amount = ref(100), ended = ref(false)
+  const error = ref(''), now = ref(0), speed = ref(1), amount = ref(1000), ended = ref(false)
   const account = reactive(new ReplayAccount()), clock = new ReplayPacer()
   const listeners = new Set<(bar: OHLCV) => void>(), pulses = new Set<(now: number) => void>()
   const sourceListeners = new Set<(event: ReplaySourceBar) => void>(), sessionId = ref('')
@@ -23,9 +23,11 @@ export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | und
   let target: Vela | undefined, history: ChartBar[] = [], buffer: ChartBar[] = [], offset = 0
   let nextSource = 0, ceiling = 0, generation = 0, abort = new AbortController(), disposed = false
   let fetchAhead: Promise<void> | undefined, busy = false, anchor = 0, providerName = '', failedStart: number | 'random' | undefined
+  let prefetchFailed = false
   let failedStartAutoplay = false
   let viewEpoch = 0, viewAbort: AbortController | undefined, switchingView = false, failedTimeframe: string | undefined
   let advancing: Promise<void> = Promise.resolve()
+  const sourceHistory = new Map<number, ChartBar>()
   let playbackTimer: ReturnType<typeof setTimeout> | undefined
   const actualTime = () => active.value ? now.value : undefined
   const roundedPrice = (price: number) => {
@@ -47,10 +49,10 @@ export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | und
   }
   function pause() { clearPlayback();clock.pause(performance.now());playing.value=false }
   function report(cause: unknown) { pause();error.value = cause instanceof Error ? cause.message : String(cause) }
-  async function fetchChunk(cursor: number, epoch: number, signal: AbortSignal, info: ChartSymbol, tf: string, cutoff = ceiling) {
-    const end = Math.min(cutoff, tf === '1m' ? cursor + 1000 * MINUTE : cursor + 1000 * 86_400_000)
+  async function fetchChunk(cursor: number, epoch: number, signal: AbortSignal, info: ChartSymbol, tf: string, cutoff = ceiling, limit = 1000) {
+    const end = Math.min(cutoff, cursor + limit * periodDuration(tf))
     if (cursor >= end) return []
-    const result = await chartApi.replayBars({ symbol: info.id, timeframe: tf, start: cursor, end, limit: 1000 }, signal)
+    const result = await chartApi.replayBars({ symbol: info.id, timeframe: tf, start: cursor, end, limit }, signal)
     if (epoch !== generation || disposed) return []
     const bars = result.bars
     for (let i = 0; i < bars.length; i++) {
@@ -61,6 +63,13 @@ export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | und
           (prior && (b.time <= prior.time || (tf === '1m' && b.time !== prior.closeTime)))) throw new ReplayHistoryUnavailable(cw('replayGap'))
     }
     if (tf === '1m' && bars.length && bars[0]!.time !== cursor) throw new ReplayHistoryUnavailable(cw('replayGap'))
+    if (tf === sourceStep.value && info.id === symbol.value?.id) {
+      for (const bar of bars) sourceHistory.set(bar.time, bar)
+      if (sourceHistory.size > 10000) {
+        const times = [...sourceHistory.keys()].sort((left, right) => left - right)
+        for (const time of times.slice(0, sourceHistory.size - 10000)) sourceHistory.delete(time)
+      }
+    }
     return bars
   }
   async function prefetch() {
@@ -73,6 +82,7 @@ export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | und
       if (rows.length) nextSource = rows[rows.length - 1]!.closeTime
       else if (cursor < ceiling) throw new Error(cw('replayGap'))
     })()
+    prefetchFailed = false
     fetchAhead = operation
     try { await operation } finally { if (fetchAhead === operation) fetchAhead = undefined }
   }
@@ -102,6 +112,26 @@ export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | und
       }
       const rows = history.filter(b => (range.from === undefined || b.time >= range.from) && (range.to === undefined || b.time <= range.to))
       return range.limit ? rows.slice(-range.limit) : rows
+    },
+    getBarsProgressive: async (ticker, value, range, onBatch, opts) => {
+      const epoch = generation, view = viewEpoch, tf = timeframes[value] ?? value
+      if (fromVela(ticker) !== symbol.value!.id || tf !== timeframe.value || range.from !== undefined || range.to !== undefined)
+        return provider.getBars(ticker, value, range)
+      const signal = opts?.signal ?? abort.signal
+      const current = () => epoch === generation && view === viewEpoch && !disposed && !signal.aborted
+      const limit = range.limit ?? 1000
+      if (history.length && current()) onBatch(history.slice(-limit))
+      while (current() && history.length > 0 && history.length < limit) {
+        const oldest = history[0]!.time
+        const result = await chartApi.replayBars({ symbol: symbol.value!.id, timeframe: tf, end: oldest,
+          limit: Math.min(1000, limit - history.length) }, signal)
+        if (!current()) return []
+        const older = result.bars.filter(bar => bar.closed && bar.closeTime <= oldest && bar.time < oldest)
+        if (!older.length) break
+        history = [...new Map([...older, ...history].map(bar => [bar.time, bar])).values()].sort((a,b) => a.time-b.time)
+        onBatch(history.slice(-limit))
+      }
+      return current() ? history.slice(-limit) : []
     },
     subscribe: (_ticker, _tf, cb) => { listeners.add(cb); return () => { listeners.delete(cb) } },
   }
@@ -136,7 +166,8 @@ export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | und
     failedStart = date
     failedStartAutoplay = autoplay
     const epoch = ++generation
-    abort.abort(); abort = new AbortController(); fetchAhead = undefined
+    abort.abort(); abort = new AbortController(); fetchAhead = undefined; prefetchFailed = false
+    sourceHistory.clear()
     const info = deps.symbols.value.find(s => s.id === fromVela(cell.symbol))!
     const tf = timeframes[cell.timeframe] ?? cell.timeframe, base = info.timeframes.includes('1m') ? '1m' : '1d'
     ceiling = periodStart(Date.now(), base)
@@ -148,8 +179,8 @@ export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | und
         failedStart = startAt
         // The bounded history endpoint fills cache gaps from the venue before returning.
         const [past, future] = await Promise.all([
-          chartApi.replayBars({ symbol: info.id, timeframe: tf, end: startAt, limit: Math.min(cell.chart.market.bars ?? 1000, 1000) }, signal),
-          fetchChunk(startAt, epoch, signal, info, base),
+          chartApi.replayBars({ symbol: info.id, timeframe: tf, end: startAt, limit: Math.min(cell.chart.market.bars ?? 1000, 200) }, signal),
+          fetchChunk(startAt, epoch, signal, info, base, ceiling, 200),
         ])
         const history = past.bars.filter(bar => bar.closed && bar.closeTime <= startAt)
         if (!future.length || !history.length) throw new ReplayHistoryUnavailable(cw('replayNoData'))
@@ -186,6 +217,7 @@ export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | und
       if (target && target !== cell.chart) await leaveChart()
       target = cell.chart; symbol.value = info; timeframe.value = tf; sourceStep.value = base; cellId.value = cell.id
       history = past; buffer = future; offset = 0; nextSource = future[future.length - 1]!.closeTime
+      for (const bar of future) sourceHistory.set(bar.time, bar)
       account.reset(history[history.length - 1]!.close)
       now.value = startAt; clock.reset(performance.now()); active.value = open.value = true; ended.value = false; picking.value = false
       const oldProvider = providerName
@@ -199,6 +231,9 @@ export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | und
       if (oldProvider) target.data.unregisterProvider?.(oldProvider)
       if (epoch !== generation) return
       failedStart = undefined
+      // Playback starts with a small verified buffer; the larger next page
+      // fills in the background before fast playback reaches its boundary.
+      if (nextSource < ceiling) void prefetch().catch(() => { if (epoch === generation) prefetchFailed = true })
     } catch (cause) { if (epoch === generation && !disposed) report(cause) }
     finally {
       if (epoch === generation) {
@@ -208,25 +243,59 @@ export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | und
     }
   }
   const startRandom=()=>start('random')
-  async function viewHistory(tf: string, at: number, epoch: number, signal: AbortSignal) {
-    const boundary = periodStart(at, tf), info = symbol.value!, base = sourceStep.value
-    const past = await chartApi.replayBars({ symbol: info.id, timeframe: tf, end: boundary,
-      limit: Math.min(target?.market.bars ?? 1000, 1000) }, signal)
-    const rows = past.bars.filter(bar => bar.closed && bar.closeTime <= boundary)
-    let forming: ChartBar | undefined, cursor = boundary
-    const cutoff = periodStart(at, base)
-    while (cursor < cutoff && epoch === generation && !signal.aborted) {
-      const batch = await fetchChunk(cursor, epoch, signal, info, base, cutoff)
-      if (!batch.length) {
-        if (base === '1m') throw new Error(cw('replayGap'))
-        break
-      }
-      for (const bar of batch) forming = aggregateMinute(forming, bar, tf)
-      cursor = batch[batch.length - 1]!.closeTime
+  async function partialHistory(tf: string, at: number, epoch: number, signal: AbortSignal) {
+    const boundary = periodStart(at, tf), base = sourceStep.value, cutoff = periodStart(at, base), info = symbol.value!
+    if (boundary >= cutoff) return []
+    const known = [...sourceHistory.values()].filter(bar => bar.time >= boundary && bar.closeTime <= cutoff)
+      .sort((left, right) => left.time - right.time)
+    if (known.length && known[0]!.time === boundary && known[known.length-1]!.closeTime === cutoff &&
+        (base !== '1m' || known.every((bar, i) => i === 0 || bar.time === known[i-1]!.closeTime))) return known
+    // Assemble only candles already closed at the replay clock. Whole days or
+    // hours need one OHLCV each; only the unfinished remainder needs minutes.
+    const steps = ['1d', '4h', '1h', '30m', '15m', '5m', '1m'].filter(period =>
+      info.timeframes.includes(period) && periodDuration(period) >= periodDuration(base))
+    if (!steps.includes(base)) steps.push(base)
+    const requests: { cursor: number; timeframe: string; end: number; limit: number }[] = []
+    let cursor = boundary
+    while (cursor < cutoff) {
+      const period = steps.find(period => periodStart(cursor, period) === cursor && periodEnd(cursor, period) <= cutoff) ?? base
+      const size = periodDuration(period), limit = Math.min(1000, Math.floor((cutoff - cursor) / size))
+      if (!limit) break
+      const end = cursor + limit * size
+      requests.push({ cursor, timeframe: period, end, limit }); cursor = end
     }
+    const batches: ChartBar[][] = new Array(requests.length)
+    let index = 0
+    await Promise.all(Array.from({ length: Math.min(3, requests.length) }, async () => {
+      while (index < requests.length && !signal.aborted && epoch === generation) {
+        const current = index++, request = requests[current]!
+        batches[current] = await fetchChunk(request.cursor, epoch, signal, info, request.timeframe, request.end, request.limit)
+        const rows = batches[current]!
+        if (base === '1m' && (rows[0]?.time !== request.cursor || rows[rows.length-1]?.closeTime !== request.end ||
+            rows.some((bar, i) => i > 0 && bar.time !== rows[i-1]!.closeTime)))
+          throw new ReplayHistoryUnavailable(cw('replayGap'))
+      }
+    }))
+    return batches.flat()
+  }
+  async function viewHistory(tf: string, at: number, epoch: number, signal: AbortSignal) {
+    const boundary = periodStart(at, tf), info = symbol.value!
+    const [past, partial] = await Promise.all([
+      chartApi.replayBars({ symbol: info.id, timeframe: tf, end: boundary,
+        limit: Math.min(target?.market.bars ?? 1000, 200) }, signal),
+      partialHistory(tf, at, epoch, signal),
+    ])
+    const rows = past.bars.filter(bar => bar.closed && bar.closeTime <= boundary)
+    let forming: ChartBar | undefined
+    for (const bar of partial) forming = aggregateMinute(forming, bar, tf)
     if (forming) rows.push(forming)
     if (!rows.length) throw new Error(cw('replayNoData'))
     return rows
+  }
+  async function preloadTimeframe(value: string, signal: AbortSignal) {
+    const tf = timeframes[value] ?? value
+    if (!active.value || loading.value || tf === timeframe.value || !symbol.value?.timeframes.includes(tf)) return
+    await viewHistory(tf, now.value, generation, signal)
   }
   /** Rebuild the chart view without seeking the replay or touching its trading account. */
   async function setTimeframe(value: string) {
@@ -309,8 +378,8 @@ export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | und
       for (const callback of sourceListeners) callback({ sessionId: sessionId.value, symbolId: symbol.value!.id, bar })
       await deps.settled?.()
       if (epoch !== generation) return
-      if (buffer.length - offset < 100 && nextSource < ceiling && !fetchAhead)
-        void prefetch().catch(cause => { if (epoch === generation) report(cause) })
+      if (buffer.length - offset < Math.max(250, Math.min(1500, speed.value * 3)) && nextSource < ceiling && !fetchAhead && !prefetchFailed)
+        void prefetch().catch(() => { if (epoch === generation) prefetchFailed = true })
     } catch (cause) { if (epoch === generation) report(cause) }
     finally {
       busy = processing.value = false
@@ -337,7 +406,7 @@ export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | und
   document.addEventListener('visibilitychange', visibility)
   function dispose() { disposed = true; pause(); generation++; viewEpoch++;viewAbort?.abort();abort.abort();clearInterval(timer); document.removeEventListener('visibilitychange', visibility); listeners.clear(); pulses.clear(); sourceListeners.clear() }
   return { open, active, loading, processing, playing, picking, error, now, speed, amount, ended, account, hasOrder, sourceStep, symbol, timeframe, cellId,
-    actualTime, roundedPrice, place, start, startRandom, setTimeframe, exit, pause, play, setSpeed, step, retry, dispose,
+    actualTime, roundedPrice, place, start, startRandom, setTimeframe, preloadTimeframe, exit, pause, play, setSpeed, step, retry, dispose,
     get chart() { return target }, get visibleBars() { return history },
     sessionId, subscribeSourceBars(callback: (event: ReplaySourceBar) => void) { sourceListeners.add(callback); return () => { sourceListeners.delete(callback) } },
   }

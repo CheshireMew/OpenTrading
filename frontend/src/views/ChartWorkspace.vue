@@ -2,18 +2,15 @@
   <section @keydown.esc="indicatorsOpen = false" class="chart-workspace" :class="{ 'cw-dark':theme==='dark' }">
     <header class="cw-header">
       <button class="cw-symbol" aria-haspopup="dialog" :aria-expanded="searchOpen && searchMode==='chart'" @click="searchOpen=true;searchMode='chart'">{{ activeSymbol?.name??cw('selectSymbol') }} <small>{{ cw(marketLabelKey(activeSymbol?.market)) }}</small><MagnifyingGlassIcon class="cw-icon" aria-hidden="true" /></button>
-      <div class="cw-periods"><button v-for="tf in availablePeriods" :key="tf.value" :class="{active:activeTimeframe===tf.value}" :aria-pressed="activeTimeframe===tf.value" @click="setPeriod(tf.value)">{{ tf.label }}</button></div>
+      <div class="cw-periods"><button v-for="tf in availablePeriods" :key="tf.value" :class="{active:activeTimeframe===tf.value}" :aria-pressed="activeTimeframe===tf.value" @pointerenter="chart.preloadPeriod(tf.value)" @focus="chart.preloadPeriod(tf.value)" @click="setPeriod(tf.value)">{{ tf.label }}</button></div>
       <button ref="indicatorTrigger" :aria-expanded="indicatorsOpen" @click="indicatorsOpen=!indicatorsOpen"><AdjustmentsHorizontalIcon class="cw-icon" aria-hidden="true" /> {{ cw('indicators') }}</button>
       <button type="button" :aria-expanded="alertsController.open.value" @click="alertsController.show()"><BellIcon class="cw-icon" aria-hidden="true" /> {{ cw('priceAlerts') }}</button>
       <button type="button" :aria-pressed="chart.replay.open.value" @click="chart.replay.open.value?chart.replay.exit():chart.replay.open.value=true">{{ cw('replay') }}</button>
-      <WorkspacePopover class="cw-sync" :label="cw('settings')"><div><label>{{ cw('historyDepth') }} <select :aria-label="cw('historyDepth')" :value="historyDepth" @change="setHistoryDepth(Number(($event.target as HTMLSelectElement).value))"><option :value="1000">1,000</option><option :value="5000">5,000</option><option :value="10000">10,000</option></select></label><button @click="workspace?.chart.renderer.set('logScale',!workspace.chart.renderer.get('logScale'))">{{ cw('priceScale') }}</button></div></WorkspacePopover>
-      <select :aria-label="cw('layout')" :value="layout" @change="setLayout(($event.target as HTMLSelectElement).value)"><option value="1">{{ cw('single') }}</option><option value="2h">{{ cw('horizontal') }}</option><option value="2v">{{ cw('vertical') }}</option><option value="4">{{ cw('four') }}</option></select>
-      <WorkspacePopover class="cw-sync" :label="cw('sync')"><div><label v-for="link in syncOptions" :key="link.key"><input type="checkbox" :checked="sync[link.key]" @change="setSync(link.key,($event.target as HTMLInputElement).checked)" />{{ link.label }}</label></div></WorkspacePopover>
+      <WorkspaceLayoutMenu :layout="layout" :sync="sync" @layout="setLayout" @sync="setSync" />
       <div ref="nativeToolsHost" class="cw-native-tools vela-ui" />
       <span class="cw-spacer" /><button @click="saveNow(true)">{{ cw(saveStatus) }}</button><WorkspacePopover :label="cw('manageLayout')"><div class="cw-document-actions"><button type="button" @click="saveAsLayout">{{ cw('saveLayoutAs') }}</button><button type="button" :disabled="layoutsController.managing.value || !layouts.some(item=>item.id===layoutId)" @click="layoutsController.renameLayout()">{{ cw('renameLayout') }}</button><button type="button" :disabled="layoutsController.managing.value || !layouts.some(item=>item.id===layoutId)" @click="removeLayout">{{ cw('deleteLayout') }}</button></div></WorkspacePopover>
       <select v-if="layouts.length>1" :aria-label="cw('savedLayouts')" :value="layoutId" @change="switchLayout(($event.target as HTMLSelectElement).value)"><option v-for="item in layouts" :key="item.id" :value="item.id">{{ item.name }}</option></select>
-      <button @click="toggleWatchlist" :aria-expanded="watchlistVisible">{{ cw('watchlist') }}</button>
-      <div ref="appToolbarHost" class="cw-app-controls" />
+      <button @click="toggleWatchlist" :aria-expanded="watchlistVisible">{{ cw('sidebar') }}</button>
     </header>
     <div v-if="error" class="cw-notice" role="alert"><span>{{ messageText(error) }}</span><button @click="clearError">{{ cw('close') }}</button><button v-if="!workspace" @click="initialize">{{ cw('reload') }}</button></div>
     <div v-if="snapshotRun" class="cw-notice"><span>{{ cw('viewingSnapshot',{run:snapshotRun.slice(0,8)}) }}</span><button @click="returnLive">{{ cw('returnLive') }}</button></div>
@@ -40,21 +37,18 @@
         </div>
       </div>
       <div v-if="rightOpen && !compactWorkspace" class="cw-vertical-resizer" role="separator" aria-orientation="vertical" tabindex="0" :aria-valuenow="rightWidth" :aria-valuemin="320" :aria-valuemax="520" :aria-label="cw('resizeWatchlist')" @keydown.left.prevent="rightWidth=Math.min(520,rightWidth+20)" @keydown.right.prevent="rightWidth=Math.max(320,rightWidth-20)" @pointerdown="resizeRight" />
-      <WorkspaceWatchlist :controller="listsController" :symbols="symbols" :active-symbol-id="activeSymbolId"
-        :visible="watchlistVisible" :compact="compactWorkspace" :width="rightWidth"
-        @select="selectSymbol" @add="searchMode='watchlist';searchOpen=true" @close="watchlistDrawerOpen=false">
-        <template #actions>
-          <button type="button" @click="workspace?.context().togglePanel('objects')">{{ cw('objects') }}</button>
-          <button type="button" @click="workspace?.context().togglePanel('dataWindow')">{{ cw('dataWindow') }}</button>
-        </template>
-      </WorkspaceWatchlist>
+      <WorkspaceSidebar v-model:tab="rightTab" :workspace="workspace" :symbols="symbols" :theme="theme" :visible="watchlistVisible" :compact="compactWorkspace" :width="rightWidth" @close="compactWorkspace ? watchlistDrawerOpen=false : rightOpen=false">
+        <WorkspaceWatchlist :controller="listsController" :symbols="symbols" :active-symbol-id="activeSymbolId" embedded
+          :visible="true" :compact="false" :width="rightWidth"
+          @select="selectSymbol" @preload="chart.preloadSymbol" @add="searchMode='watchlist';searchOpen=true" />
+      </WorkspaceSidebar>
     </div>
     <WorkspaceNamePrompt ref="namePrompt" />
     <AppConfirmDialog ref="confirmation" />
     <WorkspacePriceAlerts :controller="alertsController" />
     <WorkspacePriceAlertLines :controller="alertsController" />
     <div v-if="capabilitiesOpen" class="cw-modal-backdrop" @click.self="capabilitiesOpen=false"><section ref="capabilitiesDialogRef" tabindex="-1" class="cw-search cw-capabilities" role="dialog" aria-modal="true" :aria-label="cw('pineCompatibility')"><header><strong>Pine v5/v6 · PineTS {{ capabilities?.version }}</strong><button @click="capabilitiesOpen=false">{{ cw('close') }}</button></header><div><h3>{{ cw('supported') }}</h3><p v-for="item in capabilities?.supported" :key="item">{{ messageText(item) }}</p><h3>{{ cw('limited') }}</h3><p v-for="item in capabilities?.limited" :key="item">{{ messageText(item) }}</p><h3>{{ cw('unsupported') }}</h3><p v-for="item in capabilities?.unsupported" :key="item">{{ messageText(item) }}</p><p>{{ cw('analysisOnly') }}</p></div></section></div>
-    <WorkspaceSymbolPicker v-model="searchOpen" :symbols="symbols" :title="searchMode === 'watchlist' ? 'addWatch' : 'switchSymbol'" @select="pickSearch" />
+    <WorkspaceSymbolPicker v-model="searchOpen" :symbols="symbols" :title="searchMode === 'watchlist' ? 'addWatch' : 'switchSymbol'" @select="pickSearch" @discovered="chart.registerSymbols" @preload="searchMode==='chart' && chart.preloadSymbol($event)" />
   </section>
 </template>
 
@@ -66,17 +60,18 @@ import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon, ChevronDownIcon, BellIc
 import { useI18n } from 'vue-i18n'
 import { useModalDialog } from '@/composables/useModalDialog'
 import { useTheme } from '@/composables/useTheme'
-import { useAppToolbarHost } from '@/composables/useAppToolbarHost'
 import WorkspaceWatchlist from '@/components/chartWorkspace/WorkspaceWatchlist.vue'
+import WorkspaceSidebar from '@/components/chartWorkspace/WorkspaceSidebar.vue'
+import WorkspaceLayoutMenu from '@/components/chartWorkspace/WorkspaceLayoutMenu.vue'
 import WorkspacePriceAlertLines from '@/components/chartWorkspace/WorkspacePriceAlertLines.vue'
 import WorkspaceNamePrompt from '@/components/chartWorkspace/WorkspaceNamePrompt.vue'
 import AppConfirmDialog from '@/components/AppConfirmDialog.vue'
 import WorkspaceSymbolPicker from '@/components/chartWorkspace/WorkspaceSymbolPicker.vue'
 import StrategyTester from '@/components/chartWorkspace/StrategyTester.vue'
 import { chartApi, type PineCapabilities } from '@/modules/chartWorkspace/api'
-import { timeframes } from '@/modules/chartWorkspace/provider'
+import { workspacePeriodOptions } from '@/modules/chartWorkspace/cellTimeframes'
 import { marketLabelKey } from '@/modules/chartWorkspace/symbolSearch'
-import { cw, messageText, formatDate } from '@/modules/chartWorkspace/locale'
+import { cw, messageText, formatDate, formatNumber } from '@/modules/chartWorkspace/locale'
 import { createWorkspaceChart } from '@/modules/chartWorkspace/workspaceChart'
 import { createWorkspaceLayouts } from '@/modules/chartWorkspace/workspaceLayouts'
 import { createSharedWorkspaceWatchlists } from '@/modules/chartWorkspace/workspaceWatchlists'
@@ -93,7 +88,6 @@ import WorkspaceCursorMenu from '@/components/chartWorkspace/WorkspaceCursorMenu
 const PineEditor = defineAsyncComponent(() => import('@/components/chartWorkspace/PineEditor.vue'))
 defineOptions({ name: 'ChartWorkspace' })
 const { theme } = useTheme(), { t } = useI18n()
-const appToolbarHost = useAppToolbarHost()
 const chartHost = ref<HTMLElement>(), nativeToolsHost = ref<HTMLElement>(), importFile = ref<HTMLInputElement>()
 const { error, setError, clearError } = useRequestError(t)
 const loading = ref(true), logs = ref<{ time: number; message: string }[]>([])
@@ -105,10 +99,10 @@ async function removeLayout(){const item=layouts.value.find(item=>item.id===layo
 async function removeScript(){const item=selectedScript.value;if(item&&await confirmation.value?.confirm(item.name))await documents.deleteScript()}
 const requestName = (title: string, value: string) => namePrompt.value?.requestName(title, value) ?? Promise.resolve(null)
 const chart = createWorkspaceChart({ host: chartHost, controlsHost: nativeToolsHost, theme, dirty: () => layoutsController.dirty(), refreshQuotes: () => void listsController.refreshQuotes(), log: addLog, onError: fail })
-const { workspace, symbols, activeCell, activeSymbolId, activeTimeframe, activeSymbol, backendPeriod, layout, historyDepth, historyText, feedText, feedError, sync, snapshotRun, selectSymbol, setPeriod, setLayout, setSync, setHistoryDepth, returnLive, locateTrade } = chart
+const { workspace, symbols, activeCell, activeSymbolId, activeTimeframe, activeSymbol, backendPeriod, layout, historyText, feedText, feedError, sync, snapshotRun, selectSymbol, setPeriod, setLayout, setSync, returnLive, locateTrade } = chart
 const alertsController = createWorkspaceAlerts({ workspace, symbols, activeCell, replay: chart.replay })
 const panels = useWorkspacePanels({ dirty: () => layoutsController.dirty(), resizeChart: () => workspace.value?.resize() })
-const { rightOpen, rightWidth, bottomHeight, bottomTab, editorMounted, testerMounted, compactWorkspace, watchlistDrawerOpen, maxBottomHeight, watchlistVisible, toggleWatchlist, toggleBottom, resizeRight, resizeBottom } = panels
+const { rightOpen, rightWidth, rightTab, bottomHeight, bottomTab, editorMounted, testerMounted, compactWorkspace, watchlistDrawerOpen, maxBottomHeight, watchlistVisible, toggleWatchlist, toggleBottom, resizeRight, resizeBottom } = panels
 const listsController = createSharedWorkspaceWatchlists({ activeSymbolId, requestName, onError: fail })
 const { watchlists, watchlistId, watchSymbols, persistWatch } = listsController
 const favoriteIndicators = ref<string[]>([])
@@ -135,9 +129,7 @@ function pickSearch(id: string) {
   else if (searchMode.value === 'chart') selectSymbol(id)
 }
 const { dialogRef: capabilitiesDialogRef } = useModalDialog(capabilitiesOpen, () => { capabilitiesOpen.value = false })
-const syncOptions = computed(() => [{ key: 'crosshair', label: cw('crosshair') }, { key: 'viewport', label: cw('timeRange') }, { key: 'symbol', label: cw('symbol') }, { key: 'timeframe', label: cw('timeframe') }])
-const periods = computed(() => [{ value: '1', label: cw('minute1') }, { value: '5', label: cw('minute5') }, { value: '15', label: cw('minute15') }, { value: '30', label: cw('minute30') }, { value: '60', label: cw('hour1') }, { value: '240', label: cw('hour4') }, { value: 'D', label: cw('day') }, { value: 'W', label: cw('week') }, { value: 'M', label: cw('month') }])
-const availablePeriods = computed(() => periods.value.filter(period => activeSymbol.value?.timeframes.includes(timeframes[period.value]!)))
+const availablePeriods = computed(() => workspacePeriodOptions(activeSymbol.value))
 const indicatorTrigger = ref<HTMLButtonElement>()
 const indicatorsOpen = ref(false)
 watch(indicatorsOpen, async (open) => { if (!open) { await nextTick(); indicatorTrigger.value?.focus({ preventScroll: true }) } })
@@ -192,22 +184,18 @@ onBeforeUnmount(() => {
 <style>
 .cw-capabilities>div{padding:0 18px 18px;overflow:auto;line-height:1.6}.cw-capabilities h3{font-size:13px;margin:15px 0 7px}.cw-capabilities p{margin:5px 0;color:var(--cw-muted)}
 .cw-no-drawing-sync{display:none!important}
-.chart-workspace{--cw-bg:var(--ui-panel);--cw-panel:var(--ui-toolbar);--cw-border:var(--ui-border);--cw-text:var(--ui-text);--cw-muted:var(--ui-muted);--cw-hover:var(--ui-hover);--cw-accent:var(--ui-accent);display:flex;flex-direction:column;height:100%;min-height:400px;background:var(--cw-bg);color:var(--cw-text);font-family:inherit;font-size:13px;overflow:hidden}.chart-workspace.cw-dark{--cw-bg:var(--ui-panel);--cw-panel:var(--ui-toolbar);--cw-border:var(--ui-border);--cw-text:var(--ui-text);--cw-muted:var(--ui-muted);--cw-hover:var(--ui-hover);--cw-accent:var(--ui-accent)}.chart-workspace :is(.cw-header,.cw-bottom,.cw-notice,.cw-indicator-picker,.cw-modal-backdrop) button,.chart-workspace select,.chart-workspace input{font:inherit;color:inherit;background:transparent;border:1px solid transparent;border-radius:4px;min-height:28px}.chart-workspace :is(.cw-header,.cw-bottom,.cw-notice,.cw-indicator-picker,.cw-modal-backdrop) button{padding:3px 7px;font-weight:600;cursor:pointer;white-space:nowrap}.chart-workspace :is(.cw-header,.cw-bottom,.cw-notice,.cw-indicator-picker,.cw-modal-backdrop) button:hover{background:var(--cw-hover)}.chart-workspace :is(.cw-header,.cw-bottom,.cw-notice,.cw-indicator-picker,.cw-modal-backdrop) button:disabled{opacity:.45;cursor:default}.chart-workspace input,.chart-workspace select{border-color:var(--cw-border);padding:4px 7px;background:var(--cw-panel);max-width:100%}.chart-workspace input[type=checkbox]{min-height:0}.chart-workspace :is(.cw-header,.cw-bottom,.cw-notice,.cw-indicator-picker,.cw-modal-backdrop) button.active{color:var(--cw-accent);background:var(--cw-hover)}.chart-workspace :is(.cw-header,.cw-bottom,.cw-notice,.cw-indicator-picker,.cw-modal-backdrop) button:focus-visible,.chart-workspace select:focus-visible,.chart-workspace input:focus-visible{outline:2px solid var(--cw-accent);outline-offset:1px}.cw-header{height:48px;min-height:48px;display:flex;align-items:center;gap:5px;padding:0 10px;border-bottom:1px solid var(--cw-border);background:var(--cw-panel);z-index:4}.cw-symbol{font-weight:600!important;font-size:14px!important}.cw-symbol small{font-weight:500;color:var(--cw-muted);font-size:11px}.cw-periods{display:flex;border-left:1px solid var(--cw-border);border-right:1px solid var(--cw-border);padding:0 5px}.cw-spacer{flex:1}.cw-body{display:flex;flex:1;min-height:0;position:relative}.cw-center{flex:1;min-width:0;display:flex;flex-direction:column;position:relative}.cw-chart-region{position:relative;display:flex;flex:1;min-height:100px;min-width:0;overflow:hidden}.cw-chart{min-height:100px;flex:1;position:relative;overflow:hidden}.cw-search>header,.cw-indicator-picker>header{display:flex;gap:3px;padding:10px;border-bottom:1px solid var(--cw-border);align-items:center;justify-content:space-between}.cw-vertical-resizer{width:4px;background:var(--cw-border);cursor:col-resize;flex-shrink:0}.cw-horizontal-resizer{height:4px;background:var(--cw-border);cursor:row-resize;position:absolute;top:-2px;width:100%;z-index:5}.cw-bottom{flex-shrink:0;display:flex;flex-direction:column;position:relative;border-top:1px solid var(--cw-border);min-height:34px}.cw-bottom-tabs{display:flex;align-items:center;gap:12px;min-height:33px;padding:0 10px;background:var(--cw-panel);border-bottom:1px solid var(--cw-border)}.cw-bottom-tabs small,.cw-version{color:var(--cw-muted)}.cw-feed{font-size:11px;color:var(--cw-muted)}.cw-editor-panel{display:flex;flex:1;min-height:0;flex-direction:column}.cw-editor-panel[style*="display: none"]{display:none}.cw-editor-tools{display:flex;align-items:center;gap:5px;padding:5px 10px;min-height:38px;border-bottom:1px solid var(--cw-border)}.cw-editor-tools select{max-width:260px}.cw-primary{background:var(--cw-accent)!important;color:var(--ui-onAccent)!important;padding:5px 12px!important}.cw-notice{display:flex;gap:10px;align-items:center;background:#703d1a22;color:#c78131;padding:6px 14px;z-index:5}.cw-notice span{flex:1}.cw-loading{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;background:var(--cw-bg);z-index:3;color:var(--cw-muted)}.cw-sync{position:relative;padding:4px;cursor:pointer}.cw-sync>div{position:absolute;top:32px;left:0;width:145px;background:var(--cw-panel);border:1px solid var(--cw-border);padding:12px;z-index:25;box-shadow:0 8px 30px #0003}.cw-sync label{display:flex;gap:8px;padding:5px}.cw-log{overflow:auto;padding:10px 16px;color:var(--cw-muted);line-height:1.8}.cw-error{color:#e35b6a;padding:5px 12px}.cw-modal-backdrop{position:fixed;inset:0;background:#0008;z-index:90;display:grid;place-items:center}.cw-search{width:560px;max-width:90vw;height:560px;max-height:85vh;background:var(--cw-bg);border:1px solid var(--cw-border);border-radius:8px;box-shadow:0 20px 80px #0006;display:flex;flex-direction:column}.cw-search>input{margin:12px;min-height:36px}.cw-indicator-picker{position:absolute;left:25%;top:12px;width:310px;z-index:15;background:var(--cw-panel);border:1px solid var(--cw-border);box-shadow:0 10px 35px #0005;padding-bottom:8px}.cw-indicator-picker>input{margin:10px;width:calc(100% - 20px)}.cw-indicator-picker>label{display:flex;align-items:center;gap:6px;margin:0 12px 10px}.cw-indicator-row{display:flex;align-items:center;padding:1px 8px}.cw-indicator-row>button:last-child{flex:1;text-align:left}.cw-chart .vela-workspace{height:100%!important}.cw-chart .vela-topbar{min-height:32px!important}.cw-chart .vela-topbar:empty{display:none}@container app-content (max-width:1250px){.cw-periods button{padding:3px 5px}.cw-version{display:none}.cw-header{gap:2px}}@media(max-width:950px){.cw-vertical-resizer{display:none}.cw-header{overflow-x:auto}.cw-bottom-tabs{gap:3px}}
+.chart-workspace{--cw-bg:var(--ui-panel);--cw-panel:var(--ui-toolbar);--cw-border:var(--ui-border);--cw-text:var(--ui-text);--cw-muted:var(--ui-muted);--cw-hover:var(--ui-hover);--cw-accent:var(--ui-accent);display:flex;flex-direction:column;height:100%;min-height:400px;background:var(--cw-bg);color:var(--cw-text);font-family:inherit;font-size:13px;overflow:hidden}.chart-workspace.cw-dark{--cw-bg:var(--ui-panel);--cw-panel:var(--ui-toolbar);--cw-border:var(--ui-border);--cw-text:var(--ui-text);--cw-muted:var(--ui-muted);--cw-hover:var(--ui-hover);--cw-accent:var(--ui-accent)}.chart-workspace :is(.cw-header,.cw-bottom,.cw-notice,.cw-indicator-picker,.cw-modal-backdrop) :is(button,select,input){font:inherit;color:inherit;background:transparent;border:1px solid transparent;border-radius:4px;min-height:28px}.chart-workspace :is(.cw-header,.cw-bottom,.cw-notice,.cw-indicator-picker,.cw-modal-backdrop) button{padding:3px 7px;font-weight:600;cursor:pointer;white-space:nowrap}.chart-workspace :is(.cw-header,.cw-bottom,.cw-notice,.cw-indicator-picker,.cw-modal-backdrop) button:hover{background:var(--cw-hover)}.chart-workspace :is(.cw-header,.cw-bottom,.cw-notice,.cw-indicator-picker,.cw-modal-backdrop) button:disabled{opacity:.45;cursor:default}.chart-workspace :is(.cw-header,.cw-bottom,.cw-notice,.cw-indicator-picker,.cw-modal-backdrop) :is(input,select){border-color:var(--cw-border);padding:4px 7px;background:var(--cw-panel);max-width:100%}.chart-workspace input[type=checkbox]{min-height:0}.chart-workspace :is(.cw-header,.cw-bottom,.cw-notice,.cw-indicator-picker,.cw-modal-backdrop) button.active{color:var(--cw-accent);background:var(--cw-hover)}.chart-workspace :is(.cw-header,.cw-bottom,.cw-notice,.cw-indicator-picker,.cw-modal-backdrop) :is(button,select,input):focus-visible{outline:2px solid var(--cw-accent);outline-offset:1px}.cw-header{height:48px;min-height:48px;display:flex;align-items:center;gap:5px;padding:0 10px;border-bottom:1px solid var(--cw-border);background:var(--cw-panel);z-index:4}.cw-symbol{font-weight:600!important;font-size:14px!important}.cw-symbol small{font-weight:500;color:var(--cw-muted);font-size:11px}.cw-periods{display:flex;border-left:1px solid var(--cw-border);border-right:1px solid var(--cw-border);padding:0 5px}.cw-spacer{flex:1}.cw-body{display:flex;flex:1;min-height:0;position:relative}.cw-center{flex:1;min-width:0;display:flex;flex-direction:column;position:relative}.cw-chart-region{position:relative;display:flex;flex:1;min-height:100px;min-width:0;overflow:hidden}.cw-chart{min-height:100px;flex:1;position:relative;overflow:hidden}.cw-search>header,.cw-indicator-picker>header{display:flex;gap:3px;padding:10px;border-bottom:1px solid var(--cw-border);align-items:center;justify-content:space-between}.cw-vertical-resizer{width:4px;background:var(--cw-border);cursor:col-resize;flex-shrink:0}.cw-horizontal-resizer{height:4px;background:var(--cw-border);cursor:row-resize;position:absolute;top:-2px;width:100%;z-index:5}.cw-bottom{flex-shrink:0;display:flex;flex-direction:column;position:relative;border-top:1px solid var(--cw-border);min-height:34px}.cw-bottom-tabs{display:flex;align-items:center;gap:12px;min-height:33px;padding:0 10px;background:var(--cw-panel);border-bottom:1px solid var(--cw-border)}.cw-bottom-tabs small,.cw-version{color:var(--cw-muted)}.cw-feed{font-size:11px;color:var(--cw-muted)}.cw-editor-panel{display:flex;flex:1;min-height:0;flex-direction:column}.cw-editor-panel[style*="display: none"]{display:none}.cw-editor-tools{display:flex;align-items:center;gap:5px;padding:5px 10px;min-height:38px;border-bottom:1px solid var(--cw-border)}.cw-editor-tools select{max-width:260px}.cw-primary{background:var(--cw-accent)!important;color:var(--ui-onAccent)!important;padding:5px 12px!important}.cw-notice{display:flex;gap:10px;align-items:center;background:#703d1a22;color:#c78131;padding:6px 14px;z-index:5}.cw-notice span{flex:1}.cw-loading{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;background:var(--cw-bg);z-index:3;color:var(--cw-muted)}.cw-log{overflow:auto;padding:10px 16px;color:var(--cw-muted);line-height:1.8}.cw-error{color:#e35b6a;padding:5px 12px}.cw-modal-backdrop{position:fixed;inset:0;background:#0008;z-index:90;display:grid;place-items:center}.cw-search{width:560px;max-width:90vw;height:560px;max-height:85vh;background:var(--cw-bg);border:1px solid var(--cw-border);border-radius:8px;box-shadow:0 20px 80px #0006;display:flex;flex-direction:column}.cw-search>input{margin:12px;min-height:36px}.cw-indicator-picker{position:absolute;left:25%;top:12px;width:310px;z-index:15;background:var(--cw-panel);border:1px solid var(--cw-border);box-shadow:0 10px 35px #0005;padding-bottom:8px}.cw-indicator-picker>input{margin:10px;width:calc(100% - 20px)}.cw-indicator-picker>label{display:flex;align-items:center;gap:6px;margin:0 12px 10px}.cw-indicator-row{display:flex;align-items:center;padding:1px 8px}.cw-indicator-row>button:last-child{flex:1;text-align:left}.cw-chart .vela-workspace{height:100%!important}.cw-chart .vela-topbar{min-height:32px!important}.cw-chart .vela-topbar:empty{display:none}@container app-content (max-width:1250px){.cw-periods button{padding:3px 5px}.cw-version{display:none}.cw-header{gap:2px}}@media(max-width:950px){.cw-vertical-resizer{display:none}.cw-header{overflow-x:auto}.cw-bottom-tabs{gap:3px}}
 
 .cw-icon{display:inline-block;width:18px;height:18px;flex-shrink:0;vertical-align:middle}
 .cw-starred{fill:currentColor}
-.chart-workspace :is(.cw-header,.cw-bottom,.cw-notice,.cw-indicator-picker,.cw-modal-backdrop) button:focus-visible,.chart-workspace select:focus-visible,.chart-workspace input:focus-visible,.chart-workspace summary:focus-visible{outline:2px solid var(--cw-accent);outline-offset:1px}
+.chart-workspace :is(.cw-header,.cw-bottom,.cw-notice,.cw-indicator-picker,.cw-modal-backdrop) :is(button,select,input):focus-visible,.chart-workspace summary:focus-visible{outline:2px solid var(--cw-accent);outline-offset:1px}
 .cw-symbol{display:inline-flex;align-items:center;gap:5px}
-.cw-header>.cw-sync{flex-shrink:0;white-space:nowrap}
+.cw-header>.cw-layout{white-space:nowrap}
 .cw-header{flex-wrap:wrap;height:auto;padding-block:5px;row-gap:4px}
 .cw-header>button,.cw-header>select,.cw-periods{flex-shrink:0}
 .cw-header>select{max-width:160px}
 .cw-header button.active{font-weight:700}
 .cw-header{position:relative}
-.cw-header:has(.cw-app-controls:not(:empty)){padding-right:86px}
-.cw-app-controls{position:absolute;right:8px;top:7px}
-.cw-app-controls:empty{display:none}
-@media(pointer:coarse){.cw-header:has(.cw-app-controls:not(:empty)){padding-right:110px}.cw-app-controls{top:2px}}
 .cw-bottom-tabs>small{font-size:11px}
 .cw-search>header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--cw-border)}
 .cw-bottom-tabs{min-width:0}
@@ -231,6 +219,11 @@ onBeforeUnmount(() => {
 .cw-chart .vela-widget-bottombar{min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;overscroll-behavior-inline:contain}
 .cw-chart .vela-widget-bottombar>*{flex-shrink:0}
 .cw-chart .vela-ot-row[data-selected]{box-shadow:none}
+.cw-chart .vela-sl-identity>select.cw-cell-timeframe{flex:none;width:auto;max-width:none;min-height:24px;padding:0 2px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--vela-fg-muted);font:inherit;cursor:pointer}
+.cw-chart .vela-sl-identity>select.cw-cell-timeframe:hover{background:var(--vela-hover);color:var(--vela-fg)}
+.cw-chart .vela-sl-identity>select.cw-cell-timeframe:focus-visible{outline:2px solid var(--vela-focus);outline-offset:1px}
+.cw-cell-timeframe option{background:var(--vela-bg);color:var(--vela-fg)}
+.cw-cell-timeframe option{background:var(--cw-panel);color:var(--cw-text)}
 /* Wheel zoom and the context-menu reset keep navigation off the plot. */
 .cw-chart div:has(> .vela-cc-btn){display:none!important}
 .cw-chart .vela-dtb svg[data-cw-drawing-icon],.cw-chart .vela-dtb-flyout svg[data-cw-drawing-icon]{width:100%;height:100%}
@@ -246,10 +239,31 @@ onBeforeUnmount(() => {
 .cw-native-tools .vela-widget-topbar .vela-icon{width:18px;height:18px;font-size:18px}
 .cw-native-tools svg[data-cw-drawing-icon]{width:100%;height:100%}
 .cw-native-tools .vela-topbar-right{margin-left:4px;padding-left:4px;border-left:1px solid var(--ui-border)}
+.cw-native-tools .vela-topbar-right:empty{display:none}
 @media(pointer:coarse){.cw-native-tools .vela-widget-topbar button{width:44px;height:44px;min-height:44px;flex-basis:44px}}
 /* Keep Vela cards stable between sections; override its inline shell minimum
    so short windows scroll the fields rather than push the footer out of view. */
 .chart-workspace .vela-dialog--form{width:min(560px,calc(100% - 24px));min-width:0;height:min(560px,82%);max-height:calc(100dvh - 32px)}
+.chart-workspace .vela-ind-dialog:has(.cw-ma-settings){width:min(600px,calc(100% - 24px));height:min(440px,calc(100% - 24px));min-height:0;max-height:calc(100% - 24px)}
+.chart-workspace .vela-ind-dialog:has(.cw-ma-settings) .vela-dialog-body{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.chart-workspace .vela-ind-dialog:has(.cw-ma-settings) .vela-dialog-body>.cw-ma-settings{flex:1}
+.cw-ma-settings{padding:14px 20px 18px;gap:12px;align-content:start;overflow:auto;min-height:0;color:var(--vela-fg)}
+.cw-ma-settings :is(input,select){font:inherit;color:var(--vela-fg);background:var(--vela-surface-sunken);border:1px solid var(--vela-border-strong);border-radius:4px;color-scheme:inherit}
+.cw-ma-settings :is(input,select,button):focus-visible{outline:2px solid var(--vela-focus);outline-offset:1px}
+.cw-ma-source{display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--vela-border);font-size:13px;color:var(--vela-fg-muted)}
+.chart-workspace .cw-ma-source select{width:150px;height:32px;min-height:32px;font-size:13px}
+.cw-ma-table{display:grid;gap:8px}
+.cw-ma-row{display:grid;grid-template-columns:minmax(90px,1fr) 90px 36px 28px;align-items:center;gap:10px}
+.cw-ma-head{font-size:12px;color:var(--vela-fg-muted)}
+.cw-ma-row>[role=cell]{min-width:0}
+.chart-workspace .cw-ma-row :is(input,select){width:100%;min-width:0;height:32px;min-height:32px;padding:4px 7px;font-size:13px}
+.chart-workspace .cw-ma-row input[type=color]{padding:3px;cursor:pointer}
+.cw-ma-remove{display:grid;place-items:center;width:28px;height:32px;border:0;border-radius:4px;background:transparent;color:var(--vela-fg-muted);font:22px/1 Arial;cursor:pointer}
+.cw-ma-remove:hover{background:var(--vela-hover);color:var(--vela-danger)}
+.cw-ma-remove:disabled{opacity:.3;cursor:default}
+.cw-ma-add{justify-self:start;min-height:32px;padding:5px 10px;border:1px solid var(--vela-border);border-radius:4px;background:var(--vela-surface-sunken);color:var(--vela-fg);font:inherit;cursor:pointer}
+.cw-ma-add:hover{background:var(--vela-hover)}
+@media(max-width:600px){.cw-ma-settings{padding:12px}.cw-ma-row{grid-template-columns:minmax(60px,1fr) 64px 30px 26px;gap:6px}.chart-workspace .cw-ma-row :is(input,select){height:36px;padding-inline:4px}.cw-ma-remove{width:26px;height:36px}}
 .chart-workspace .vela-dialog--settings{width:min(720px,calc(100% - 24px));min-width:0;height:min(600px,70dvh);max-height:calc(100% - 24px)}
 .chart-workspace .vela-dialog-header,.chart-workspace .vela-dialog-footer{flex-shrink:0}
 .chart-workspace .vela-dialog--settings .vela-dialog-body>div{min-height:0!important;max-height:none!important;overflow:hidden}

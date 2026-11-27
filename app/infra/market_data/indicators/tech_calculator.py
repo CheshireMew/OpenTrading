@@ -1,5 +1,4 @@
 import httpx
-import time
 import asyncio
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta, timezone
@@ -7,12 +6,14 @@ from .base_provider import BaseIndicatorProvider, logger
 from config import settings
 from app.infra.executor import run_external_io
 from app.infra.ttl_cache import TtlMemoryCache
+from app.infra.market_data.exchange import ExchangeGateway
+from app.domain.market.candles import candle_end_ms
 
 class TechCalculatorProvider(BaseIndicatorProvider):
     """
     技术面与逻辑测算指标提供者
     拉取/计算: 200WMA, S19/S21/S23_BREAKEVEN, BTC_DRAWDOWN
-    数据源: Binance (via CCXT) + Mempool.space
+    数据源: Binance 公共 REST API + Mempool.space
     """
 
     def __init__(self):
@@ -21,20 +22,20 @@ class TechCalculatorProvider(BaseIndicatorProvider):
             settings.MARKET_EXPENSIVE_INDICATOR_TTL,
             copy_value=dict,
         )
+        self._drawdown_peak = 0.0
+        self._drawdown_since = int(datetime(2017, 8, 1, tzinfo=timezone.utc).timestamp() * 1000)
 
     async def _calculate_200wma(self) -> Optional[Dict[str, Any]]:
-        """计算比特币的 200 周移动平均线 (数据源: Binance CCXT)"""
+        """计算比特币的 200 周移动平均线。"""
         cached = self._expensive_cache.get("200wma")
         if cached is not None:
             return cached
         try:
             def _get():
-                import ccxt
-
-                exchange = ccxt.binance({'enableRateLimit': True})
                 # 200周 ≈ 1400天，多拿一些确保够
-                since = int((datetime.now() - timedelta(days=1500)).timestamp() * 1000)
-                ohlcv = exchange.fetch_ohlcv('BTC/USDT', '1w', since=since, limit=250)
+                since = int((datetime.now(timezone.utc) - timedelta(days=1500)).timestamp() * 1000)
+                with ExchangeGateway("binance") as exchange:
+                    ohlcv, _ = exchange.fetch_ohlcv('BTC/USDT', '1w', since=since, limit=250)
                 if not ohlcv or len(ohlcv) < 200:
                     logger.warning(f"200WMA: insufficient data, got {len(ohlcv) if ohlcv else 0} weeks")
                     return None
@@ -109,39 +110,43 @@ class TechCalculatorProvider(BaseIndicatorProvider):
         return results
 
     async def _calculate_drawdown(self) -> Optional[Dict[str, Any]]:
-        """计算 BTC 距历史最高点的回撤幅度 (%) (数据源: Binance CCXT)"""
+        """计算 BTC 日线收盘价距历史最高收盘价的回撤幅度。"""
         cached = self._expensive_cache.get("drawdown")
         if cached is not None:
             return cached
         try:
             def _get():
-                import ccxt
+                # Keep a scalar maximum for completed days. Refresh the open day
+                # each time; an intraday close must not become a permanent ATH.
+                peak, since = self._drawdown_peak, self._drawdown_since
+                now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+                current = last_ts = None
+                checkpoint = since
+                with ExchangeGateway("binance") as exchange:
+                    while since <= now_ms:
+                        batch, _ = exchange.fetch_ohlcv('BTC/USDT', '1d', since=since, limit=exchange.fetch_limit)
+                        if not batch:
+                            break
+                        for row in batch:
+                            current, last_ts = row[4], int(row[0])
+                            if candle_end_ms(last_ts, "1d") <= now_ms:
+                                peak = max(peak, current)
+                                checkpoint = candle_end_ms(last_ts, "1d")
+                        following = int(batch[-1][0]) + 1
+                        if following <= since:
+                            raise ValueError("BTC 历史分页未向前推进")
+                        since = following
+                        if len(batch) < exchange.fetch_limit:
+                            break
 
-                exchange = ccxt.binance({'enableRateLimit': True})
-                # Binance BTC/USDT 数据从 2017年8月开始
-                all_data = []
-                since = int(datetime(2017, 8, 1).timestamp() * 1000)  # Binance BTC/USDT start
-                while True:
-                    batch = exchange.fetch_ohlcv('BTC/USDT', '1d', since=since, limit=1000)
-                    if not batch:
-                        break
-                    all_data.extend(batch)
-                    since = batch[-1][0] + 1
-                    if len(batch) < 1000:
-                        break
-                    time.sleep(exchange.rateLimit / 1000)
-
-                if not all_data:
+                if current is None or last_ts is None:
                     return None
-
-                closes = [x[4] for x in all_data]
-                ath = max(closes)
-                current = closes[-1]
+                self._drawdown_peak, self._drawdown_since = peak, checkpoint
+                ath = max(peak, current)
                 drawdown = ((current - ath) / ath) * 100  # negative %
-                last_ts = all_data[-1][0] / 1000
                 return {
                     "indicator_id": "BTC_DRAWDOWN",
-                    "timestamp": datetime.fromtimestamp(last_ts, tz=timezone.utc),
+                    "timestamp": datetime.fromtimestamp(last_ts / 1000, tz=timezone.utc),
                     "value": round(drawdown, 2)
                 }
             result = await run_external_io(_get)

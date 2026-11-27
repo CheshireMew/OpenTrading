@@ -11,14 +11,15 @@ export const LIGHT_PALETTE = Object.freeze({
   text: '#303030',
   title: '#131313',
   muted: '#626262',
-  faint: '#767676',
+  faint: '#666666',
   accent: '#181818',
   accentHover: '#333333',
   onAccent: '#ffffff',
-  favorite: '#9a6700',
+  favorite: '#8f5e00',
   positive: '#089981',
-  positiveInk: '#087f6b',
+  positiveInk: '#066c5a',
   negative: '#f23645',
+  negativeInk: '#c52b3a',
   blue: '#2962ff',
 })
 
@@ -42,6 +43,7 @@ export const DARK_PALETTE = Object.freeze({
   positive: '#089981',
   positiveInk: '#29bda3',
   negative: '#f23645',
+  negativeInk: '#ff707c',
   blue: '#5086f5',
 })
 

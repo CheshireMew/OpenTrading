@@ -1,6 +1,6 @@
 import type { VelaWorkspace } from '@luxalgo/vela/workspace'
-import type { InputValue } from '@luxalgo/vela'
 import { cw } from './locale'
+import { configureMovingAverageSettings, type IndicatorSettingsDetail } from './movingAverageSettings'
 
 const guides: Record<string, string> = {
   sma: 'Ma', ema: 'Ema', rsi: 'Rsi', volume: 'Volume', 'bollinger-bands': 'Boll',
@@ -10,14 +10,14 @@ const ADX_SOURCE = 'https://www.tradingview.com/support/solutions/43000502250-di
 
 export function installIndicatorHelp(host: HTMLElement, workspace: () => VelaWorkspace | undefined) {
   const settings = (event: Event) => {
-    const detail = (event as CustomEvent<{ id: string; values: Record<string, InputValue>; propValues: Record<string, InputValue>;
-      tabs: { name: string; inputs: []; body: HTMLElement }[] }>).detail
+    const detail = (event as CustomEvent<IndicatorSettingsDetail>).detail
     const handle = workspace()?.cells().flatMap(cell => cell.chart.indicators()).find(handle => handle.id === detail.id)
     if (handle) {
       // Read the chart's live values before the dialog takes its Cancel snapshot.
       detail.values = handle.inputValues()
       detail.propValues = handle.propValues()
     }
+    configureMovingAverageSettings(handle?.nativeType, detail)
     const guide = guides[handle?.nativeType ?? '']
     if (!guide) return
     const body = document.createElement('div')

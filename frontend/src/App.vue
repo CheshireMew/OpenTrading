@@ -4,7 +4,6 @@
 
     <header class="app-mobile-header flex h-14 flex-shrink-0 items-center justify-between border-b px-4 md:hidden">
       <span class="app-brand text-lg font-semibold tracking-tight">OpenTrading</span>
-      <div ref="mobileControlsHost" class="ml-auto" />
       <button type="button" class="app-icon-button inline-flex" :aria-label="t('app.openMenu')" :aria-expanded="sidebarOpen" @click="sidebarOpen = true">
         <Bars3Icon class="h-6 w-6" />
       </button>
@@ -60,10 +59,23 @@
         </template>
 
       </nav>
+      <footer class="app-sidebar-footer">
+        <nav class="app-project-links" :aria-label="t('app.projectLinks')">
+          <a href="https://t.me/CheshireBTC" target="_blank" rel="noopener noreferrer" :aria-label="t('app.feedback')" :title="t('app.feedback')">
+            <img src="/brand-icons/telegram.svg" width="20" height="20" alt="" aria-hidden="true" />
+          </a>
+          <a href="https://x.com/0xCheshire" target="_blank" rel="noopener noreferrer" :aria-label="t('app.xAccount')" :title="t('app.xAccount')">
+            <IconBrandXFilled aria-hidden="true" />
+          </a>
+          <a href="https://github.com/CheshireMew/OpenTrading" target="_blank" rel="noopener noreferrer" :aria-label="t('app.sourceCode')" :title="t('app.sourceCode')">
+            <IconBrandGithubFilled aria-hidden="true" />
+          </a>
+        </nav>
+        <AppAppearanceControls />
+      </footer>
     </aside>
 
     <main ref="mainContentRef" id="main-content" class="app-main min-h-0 min-w-0 flex-1 overflow-auto" :inert="navigationModalOpen" tabindex="-1">
-      <div v-show="desktopNavigation && route.path!=='/'" class="app-global-toolbar"><div ref="globalControlsHost" /></div>
       <div v-if="bootstrapError" role="alert" class="m-4 flex items-center justify-between gap-4 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-950/30 dark:text-rose-200">
         <span>{{ t('app.bootstrapLoadFailed') }}</span>
         <button type="button" class="font-semibold underline disabled:opacity-60" :disabled="bootstrapLoading" @click="loadBootstrapResources">
@@ -77,13 +89,12 @@
         </keep-alive>
       </router-view>
     </main>
-    <Teleport v-if="controlsTarget" :to="controlsTarget"><AppAppearanceControls /></Teleport>
     <PriceAlertNotices />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch, watchEffect, type Component } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import {
@@ -108,7 +119,7 @@ import {
   type AppNavIconName,
 } from '@/app/navigation'
 import AppAppearanceControls from '@/components/AppAppearanceControls.vue'
-import { APP_TOOLBAR_HOST } from '@/composables/useAppToolbarHost'
+import { IconBrandGithubFilled, IconBrandXFilled } from '@tabler/icons-vue'
 import ResearchNavigation from '@/components/research/ResearchNavigation.vue'
 import { useMoney } from '@/composables/useMoney'
 import { useSymbolCatalog } from '@/modules/market'
@@ -124,11 +135,6 @@ const bootstrapError = ref(false)
 const bootstrapLoading = ref(false)
 const desktopNavigation = ref(false)
 const navigationModalOpen = computed(() => sidebarOpen.value && !desktopNavigation.value)
-const mobileControlsHost = ref<HTMLElement>(), globalControlsHost = ref<HTMLElement>()
-const pageControlsHost = shallowRef<HTMLElement>()
-provide(APP_TOOLBAR_HOST, pageControlsHost)
-const controlsTarget = computed(() => !desktopNavigation.value ? mobileControlsHost.value
-  : route.path==='/' && pageControlsHost.value ? pageControlsHost.value : globalControlsHost.value)
 const { loadCurrencyRates } = useMoney()
 const { loadSymbols } = useSymbolCatalog()
 useDesktopAlertNotifications()
@@ -242,8 +248,13 @@ onBeforeUnmount(() => {
 .app-nav-link--active { font-weight: 600; }
 .app-nav-section { margin-top: 10px; padding: 4px 6px; font-size: 11px; letter-spacing: 0.02em; }
 @media(min-width:768px){.app-sidebar{width:max-content;max-width:220px}}
-.app-global-toolbar{position:sticky;top:0;z-index:20;display:flex;justify-content:flex-end;align-items:center;height:40px;padding:4px 10px;background:var(--ui-toolbar);border-bottom:1px solid var(--ui-border)}
-@media(pointer:coarse){.app-global-toolbar{height:48px;padding-block:2px}}
+.app-sidebar-footer{display:flex;flex:none;flex-direction:column;align-items:center;gap:6px;padding:10px 8px max(10px,env(safe-area-inset-bottom));border-top:1px solid var(--app-sidebar-border)}
+.app-project-links{display:flex;align-items:center;justify-content:center;gap:12px}
+.app-project-links>a{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:4px;color:var(--app-nav)}
+.app-project-links>a:hover{background:var(--app-nav-hover-bg);color:var(--app-nav-hover)}
+.app-project-links>a:focus-visible{outline:2px solid var(--ui-accent);outline-offset:1px}
+.app-project-links :is(svg,img){width:20px;height:20px;flex:none}
+@media(pointer:coarse){.app-project-links>a{width:44px;height:44px}}
 
 .app-mobile-header {
   border-color: var(--app-sidebar-border);

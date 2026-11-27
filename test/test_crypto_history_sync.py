@@ -103,6 +103,15 @@ def test_crypto_cli_reports_partial_history_as_json_with_a_nonzero_exit(installe
     assert payload["results"][0]["missing_ranges"]
 
 
+def test_crypto_sync_releases_native_connections_on_failure(installed_database_runtime):
+    gateway, closed = Gateway(), []
+    gateway.close = lambda: closed.append(True)
+    with pytest.raises(ValueError):
+        with CryptoHistorySync(installed_database_runtime, gateway=gateway) as service:
+            service.sync("BTC/USDT", START, START)
+    assert closed == [True]
+
+
 def test_former_snapshot_history_fills_only_missing_shared_candles(installed_database_runtime, tmp_path, monkeypatch):
     root = tmp_path / "legacy"
     snapshot = PriceSnapshot(

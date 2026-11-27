@@ -3,7 +3,7 @@ import type { VelaWorkspace } from '@luxalgo/vela/workspace'
 import type { ResearchAlertResponse, ResearchAlertCreateCommand } from '@/modules/research/contracts'
 import { enableAlertDelivery, prepareAlertAudio } from '@/modules/research/alertDelivery'
 import { chartApi, type ChartSymbol } from './api'
-import { cw, formatNumber } from './locale'
+import { cw, formatNumber, workspaceMarketLabel } from './locale'
 import type { WorkspaceReplay } from './workspaceReplay'
 import { finishedPriceAlert, alertCommand } from './priceAlertRules'
 import { createLiveWorkspaceAlerts } from './workspaceLiveAlerts'
@@ -67,7 +67,7 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
       const quote = baseline ? { price: baseline.price, error: undefined } : (await chartApi.quotes([symbol.id]))[0]
       if (!quote?.price || quote.error) throw new Error(quote?.error || cw('alertQuoteUnavailable'))
       const configuration = { chartSymbolId: symbol.id, once: form.once, initialPrice: quote.price }
-      const payload: ResearchAlertCreateCommand = { symbol: symbol.name, name: `${symbol.name} · ${cw(symbol.market === 'usdm' ? 'perpetual' : symbol.market === 'index' ? 'index' : 'spot')} · ${formatNumber(price, 10)}`,
+      const payload: ResearchAlertCreateCommand = { symbol: symbol.name, name: `${symbol.name} · ${workspaceMarketLabel(symbol.id)} · ${formatNumber(price, 10)}`,
         metric: 'price', operator: form.operator, threshold: price, enabled: true, cooldownMinutes: 1,
         notificationChannels: ['in_app', ...(form.sound ? ['sound' as const] : []), ...(form.windows ? ['windows' as const] : [])], configuration }
       let saved: ResearchAlertResponse
@@ -135,7 +135,7 @@ export function createWorkspaceAlerts(deps: { workspace: Ref<VelaWorkspace | und
       const id = String(alert.configuration?.chartSymbolId), symbol = deps.symbols.value.find(symbol => symbol.id === id)
       const quote = (await chartApi.quotes([id]))[0]
       if (!quote?.price || quote.error) throw new Error(quote?.error || cw('alertQuoteUnavailable'))
-      const name = symbol ? `${symbol.name} · ${cw(symbol.market === 'usdm' ? 'perpetual' : symbol.market === 'index' ? 'index' : 'spot')} · ${formatNumber(price, 10)}` : alert.name
+      const name = symbol ? `${symbol.name} · ${workspaceMarketLabel(symbol.id)} · ${formatNumber(price, 10)}` : alert.name
       const saved = await live.save(alert.id, alert.version, { ...alertCommand(alert), name, threshold: price,
         configuration: { ...alert.configuration, initialPrice: quote.price } })
       if (!disposed) live.upsert(saved)

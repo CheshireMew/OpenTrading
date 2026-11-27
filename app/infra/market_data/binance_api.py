@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 
 import httpx
 
+from app.infra.market_data.exchange import MarketDataError
 from config import settings
 from utils.logger import logger
 
@@ -173,7 +174,10 @@ class BinanceApiSupport:
                     headers=self._headers(extra_headers),
                 )
                 response.raise_for_status()
-                payload = response.json()
+                try:
+                    payload = response.json()
+                except ValueError as exc:
+                    raise MarketDataError("行情接口返回内容无效，请稍后重试") from exc
                 if use_cache:
                     await optional_cache_aset(
                         self.cache_service,
@@ -197,6 +201,12 @@ class BinanceApiSupport:
                     await asyncio.sleep(self.retry_delay * attempt)
                     continue
                 logger.warning(f"Binance API request error: {method} {path} error={exc}")
+                break
+            except MarketDataError as exc:
+                last_error = exc
+                if attempt < self.max_retries:
+                    await asyncio.sleep(self.retry_delay * attempt)
+                    continue
                 break
 
         if last_error is not None:

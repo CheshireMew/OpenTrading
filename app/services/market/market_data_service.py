@@ -52,21 +52,25 @@ class MarketDataService:
             fetch_symbol = self.symbol_routing.fetch_symbol(symbol)
             gateway = self.symbol_routing.gateway_for_symbol(symbol)
             cache_key = f"{KEY_PREFIX_KLINE}:{storage_symbol}:{timeframe}:{limit}"
-            cached_data = self.cache_service.get(cache_key) if self.cache_service is not None else None
+            try:
+                cached_data = self.cache_service.get(cache_key) if self.cache_service is not None else None
+            except Exception as exc:
+                logger.warning("K 线缓存读取失败，改用交易所: %s", type(exc).__name__)
+                cached_data = None
             if cached_data:
                 cache_hit = True
                 return cached_data
 
             data, attempts = gateway.fetch_ohlcv(fetch_symbol, timeframe, limit=limit)
             if data and self.cache_service is not None:
-                self.cache_service.set(cache_key, data, ttl=settings.KLINE_CACHE_TTL)
+                try:
+                    self.cache_service.set(cache_key, data, ttl=settings.KLINE_CACHE_TTL)
+                except Exception as exc:
+                    logger.warning("K 线缓存写入失败: %s", type(exc).__name__)
             return data
         except Exception as e:
             logger.error(f"K线数据获取错误 (Cache/Exchange): {e}")
-            fetch_symbol = self.symbol_routing.fetch_symbol(symbol)
-            gateway = self.symbol_routing.gateway_for_symbol(symbol)
-            data, attempts = gateway.fetch_ohlcv(fetch_symbol, timeframe, limit=limit)
-            return data
+            raise
         finally:
             elapsed = time.time() - start_time
             logger.debug(
@@ -91,7 +95,10 @@ class MarketDataService:
             cache_key = f"{KEY_PREFIX_KLINE}:{storage_symbol}:{timeframe}:{limit}"
             data, attempts = gateway.fetch_ohlcv(fetch_symbol, timeframe, limit=limit, max_retries=max_retries)
             if data and self.cache_service is not None:
-                self.cache_service.set(cache_key, data, ttl=settings.KLINE_CACHE_TTL)
+                try:
+                    self.cache_service.set(cache_key, data, ttl=settings.KLINE_CACHE_TTL)
+                except Exception as exc:
+                    logger.warning("实时 K 线缓存写入失败: %s", type(exc).__name__)
             return data
         except Exception as e:
             logger.error(f"实时K线获取错误 (Exchange): {e}")
@@ -244,3 +251,6 @@ class MarketDataService:
             logger.info(f"[Background] Saved {len(klines)} klines for {symbol}")
         except Exception as e:
             logger.error(f"[Background] Save failed: {e}")
+
+    def close(self) -> None:
+        self.symbol_routing.close()

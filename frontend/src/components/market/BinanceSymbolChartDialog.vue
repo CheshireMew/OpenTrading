@@ -54,9 +54,9 @@
         </div>
       </header>
 
-      <div class="binance-chart-body grid min-h-0 flex-1 overflow-y-auto bg-slate-950 lg:overflow-hidden" :class="hasSidePanel ? 'lg:grid-cols-[minmax(0,1fr)_460px]' : ''">
-        <div class="binance-chart-plot relative min-h-[320px] p-4 sm:min-h-[420px]">
-          <p v-if="!chartData.length && !chartError" role="status" class="absolute inset-x-4 top-6 z-10 text-center text-sm app-muted">{{ loading ? t('binanceMarket.refreshing') : t('common.noHistory') }}</p>
+      <div class="binance-chart-body grid min-h-0 flex-1 overflow-y-auto bg-[var(--ui-panel)] lg:overflow-hidden" :class="hasSidePanel ? 'lg:grid-cols-[minmax(0,1fr)_460px]' : ''">
+        <div class="binance-chart-plot relative min-h-[320px] p-4 sm:min-h-[420px]" :style="{ background: chartColors.bg }">
+          <p v-if="!chartData.length && !chartError" role="status" class="absolute inset-x-4 top-6 z-10 text-center text-sm" :style="{ color: chartColors.text }">{{ loading ? t('binanceMarket.refreshing') : t('common.noHistory') }}</p>
           <div v-if="chartError" role="alert" class="absolute left-1/2 top-6 z-20 flex -translate-x-1/2 items-center gap-3 border border-rose-500/30 bg-rose-950/90 px-4 py-2 text-sm text-rose-200 shadow-lg">
             <span>{{ chartError }}</span>
             <button type="button" class="font-semibold underline" @click="emit('retryChart')">{{ t('app.retry') }}</button>
@@ -88,19 +88,19 @@
 
           <div v-if="monitorItem" class="mt-5 grid grid-cols-2 gap-3">
             <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
-              <div class="text-xs uppercase tracking-[0.18em] text-slate-400">{{ t('binanceMarket.columns.today') }}</div>
+              <div class="text-xs uppercase tracking-[0.18em] app-muted">{{ t('binanceMarket.columns.today') }}</div>
               <div class="mt-2 text-lg font-semibold" :class="renderValueTone(monitorItem.price_change_pct)">{{ renderSigned(monitorItem.price_change_pct) }}</div>
             </div>
             <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
-              <div class="text-xs uppercase tracking-[0.18em] text-slate-400">{{ t('binanceMarket.columns.quoteVolume') }}</div>
+              <div class="text-xs uppercase tracking-[0.18em] app-muted">{{ t('binanceMarket.columns.quoteVolume') }}</div>
               <div class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">{{ renderCompact(monitorItem.quote_volume) }}</div>
             </div>
             <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
-              <div class="text-xs uppercase tracking-[0.18em] text-slate-400">{{ t('binanceMarket.columns.naturalScore') }}</div>
+              <div class="text-xs uppercase tracking-[0.18em] app-muted">{{ t('binanceMarket.columns.naturalScore') }}</div>
               <div class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">{{ renderScore(monitorItem.natural_score) }}</div>
             </div>
             <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
-              <div class="text-xs uppercase tracking-[0.18em] text-slate-400">{{ t('binanceMarket.columns.momentumScore') }}</div>
+              <div class="text-xs uppercase tracking-[0.18em] app-muted">{{ t('binanceMarket.columns.momentumScore') }}</div>
               <div class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">{{ renderScore(monitorItem.momentum_score) }}</div>
             </div>
           </div>
@@ -155,19 +155,19 @@
 
             <div class="grid grid-cols-2 gap-3">
               <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
-                <div class="text-xs uppercase tracking-[0.18em] text-slate-400">{{ t('binanceMarket.columns.oi') }}</div>
+                <div class="text-xs uppercase tracking-[0.18em] app-muted">{{ t('binanceMarket.columns.oi') }}</div>
                 <div class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">{{ renderCompact(latestOpenInterest?.sum_open_interest_value) }}</div>
               </div>
               <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
-                <div class="text-xs uppercase tracking-[0.18em] text-slate-400">{{ t('binanceMarket.columns.oi24h') }}</div>
+                <div class="text-xs uppercase tracking-[0.18em] app-muted">{{ t('binanceMarket.columns.oi24h') }}</div>
                 <div class="mt-2 text-lg font-semibold" :class="renderValueTone(openInterestChange24h)">{{ renderSigned(openInterestChange24h) }}</div>
               </div>
               <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
-                <div class="text-xs uppercase tracking-[0.18em] text-slate-400">{{ t('binanceMarket.columns.takerBuySell') }}</div>
+                <div class="text-xs uppercase tracking-[0.18em] app-muted">{{ t('binanceMarket.columns.takerBuySell') }}</div>
                 <div class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">{{ renderSigned(latestTakerVolume?.buy_sell_ratio, 2, '', false) }}</div>
               </div>
               <div class="border border-[var(--ui-border)] bg-[var(--ui-panel)] px-4 py-3 dark:border-slate-700 dark:bg-slate-900/70">
-                <div class="text-xs uppercase tracking-[0.18em] text-slate-400">{{ t('binanceMarket.columns.basisPremium') }}</div>
+                <div class="text-xs uppercase tracking-[0.18em] app-muted">{{ t('binanceMarket.columns.basisPremium') }}</div>
                 <div class="mt-2 text-lg font-semibold" :class="renderValueTone(latestBasisRatePct)">{{ renderSigned(latestBasisRatePct, 3) }}</div>
               </div>
             </div>
@@ -326,7 +326,7 @@ const MiniSeries = defineComponent({
           h('span', { class: 'text-slate-500 dark:text-slate-400' }, formatTime(row)),
           h('span', { class: 'font-medium text-slate-900 dark:text-white' }, String(seriesProps.formatValue(row[seriesProps.valueKey] as number | null | undefined))),
         ]))
-        : [h('div', { class: 'text-sm text-slate-400 dark:text-slate-500' }, '--')]),
+        : [h('div', { class: 'text-sm app-muted' }, '--')]),
     ])
   },
 })

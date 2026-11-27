@@ -8,7 +8,7 @@
   .input { width: 100%; }
   .btn-primary, .app-button-primary { @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold transition; background: var(--ui-accent); color: var(--ui-onAccent); border: 1px solid transparent; border-radius: 5px; min-height: 38px; }
   .btn-secondary, .app-button-secondary { @apply inline-flex items-center justify-center gap-2 border px-4 py-2 text-sm font-semibold transition; background: var(--ui-toolbar); border-color: var(--ui-borderStrong); color: var(--ui-text); min-height: 38px; border-radius: 5px; }
-  .btn-danger { @apply inline-flex items-center justify-center gap-2 border px-3 py-2 text-sm font-semibold transition; border-color: var(--ui-negative); color: var(--ui-negative); border-radius: 5px; min-height: 38px; }
+  .btn-danger { @apply inline-flex items-center justify-center gap-2 border px-3 py-2 text-sm font-semibold transition; border-color: var(--ui-negative); color: var(--ui-negativeInk); border-radius: 5px; min-height: 38px; }
   .section-title { @apply text-sm font-semibold; color: var(--ui-title); }
   .editor-section { @apply space-y-3 border p-3; background: var(--ui-panel); border-color: var(--ui-border); border-radius: 8px; }
   .editor-card { @apply border p-3; background: var(--ui-toolbar); border-color: var(--ui-border); border-radius: 6px; }
@@ -38,7 +38,6 @@
 .app-workspace-header .app-muted { margin-top: 6px; font-size: 12px; }
 .app-metric-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); border-block: 1px solid var(--ui-border); color: var(--ui-title); }
 .app-metric-strip > * { min-width: 0; padding: 16px 20px; }
-.app-metric-strip > :first-child { padding-left: 0; }
 .app-metric-strip dt, .app-metric-label { display: block; font-size: 12px; color: var(--ui-muted); }
 .app-metric-strip dd, .app-metric-value { display: block; margin-top: 6px; font-size: 24px; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .app-metric-strip > button { text-align: left; transition: background 160ms ease; }
@@ -76,7 +75,6 @@
   .app-settings-section { grid-template-columns: minmax(0, 1fr); gap: 20px; }
   .app-metric-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .app-metric-strip > * { padding: 14px 12px; }
-  .app-metric-strip > :nth-child(odd) { padding-left: 0; }
   .app-tabs { gap: 20px; }
 }
 
@@ -258,6 +256,8 @@ html { scrollbar-color: var(--ui-borderStrong) transparent; scrollbar-width: thi
 /* Drawing tool and flyout controls have separate, non-overlapping hit areas. */
 .cw-chart .vela-dtb{--cw-tool-hit:32px;--cw-tool-arrow:10px;--cw-tool-row:40px;--cw-tool-pad:2px;border-right:0!important;box-shadow:inset -1px 0 0 var(--ui-border);overflow-y:auto;overscroll-behavior:contain}
 .cw-chart .vela-dtb-cell{height:var(--cw-tool-row)!important;flex-shrink:0;justify-content:space-between!important;padding:0 0 0 var(--cw-tool-pad)}
+/* Vela's unclassed dividers align with the icon column, excluding the flyout arrow. */
+.cw-chart .vela-dtb>div:not([class]){align-self:flex-start;margin-left:calc(var(--cw-tool-pad) + (var(--cw-tool-hit) - 24px)/2)!important;margin-right:0!important}
 .cw-chart .vela-dtb-icon{width:var(--cw-tool-hit)!important;height:var(--cw-tool-row)!important;flex:0 0 var(--cw-tool-hit);opacity:1!important}
 .cw-chart .vela-dtb-arrow{position:static!important;transform:none!important;width:var(--cw-tool-arrow)!important;height:var(--cw-tool-row)!important;opacity:0!important;pointer-events:auto!important;flex:0 0 var(--cw-tool-arrow)}
 .cw-chart .vela-dtb-cell:is(:hover,:focus-within,.vela-open) .vela-dtb-arrow{opacity:1!important}

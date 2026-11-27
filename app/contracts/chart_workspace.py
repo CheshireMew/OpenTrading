@@ -15,7 +15,7 @@ class ChartSymbol(BaseModel):
     symbol: str
     name: str
     exchange: str
-    market: Literal["spot", "usdm", "index", "fx", "commodity"]
+    market: Literal["spot", "usdm", "alpha", "web3", "index", "fx", "commodity"]
     currency: str
     timeframes: list[str]
     close_only: bool = False

@@ -18,7 +18,7 @@ import {
 
 const changeClass = (value: number | null | undefined) => {
   if (value === null || value === undefined || Number.isNaN(value)) return 'text-slate-500 dark:text-slate-400'
-  return value >= 0 ? 'text-emerald-500' : 'text-rose-500'
+  return value >= 0 ? 'text-[var(--ui-positiveInk)]' : 'text-[var(--ui-negativeInk)]'
 }
 
 export function useWeb3MarketRankPage() {

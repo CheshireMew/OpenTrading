@@ -20,6 +20,7 @@ test('network and generic HTTP failures use the localized task recovery message'
   assert.equal(apiErrorMessage(network, fallback), fallback)
   assert.equal(apiErrorMessage(new ApiRequestError('Request failed with status code 500', { status: 500 }), fallback), fallback)
   assert.equal(apiErrorMessage(new ApiRequestError('timeout of 15000ms exceeded'), fallback), fallback)
+  assert.equal(apiErrorMessage(new ApiRequestError('Invalid server response', { status: 504 }), fallback), fallback)
 })
 
 test('a specific backend error remains visible with its context', () => {

@@ -49,7 +49,7 @@ def parse_market_symbol(value: str, *, default_exchange_id: str) -> MarketSymbol
     elif value.endswith(":PERPETUAL"):
         pair, market, exchange = value.removesuffix(":PERPETUAL"), "usdm", "binanceusdm"
     elif ":" in value:
-        # CCXT's perpetual fetch identity is accepted without becoming a spot key.
+        # A settlement-qualified perpetual identity must not become a spot key.
         pair, quote = value.rsplit(":", 1)
         if pair.rsplit("/", 1)[-1] != quote:
             return None

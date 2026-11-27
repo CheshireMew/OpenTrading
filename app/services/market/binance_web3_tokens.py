@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import time
 import uuid
 
@@ -10,7 +9,8 @@ from app.contracts.dto.binance.web3 import (
     BinanceWeb3TokenDynamicResponse,
     BinanceWeb3TokenKlineResponse,
 )
-from app.domain.market.constants import KLINE_SYMBOL_MAX_LENGTH, timeframe_to_milliseconds
+from app.domain.market.constants import timeframe_to_milliseconds
+from app.domain.market.web3_chains import normalize_web3_address, web3_storage_symbol
 from app.services.market.history_range_coordinator import HistoryRangeCoordinator, merge_ohlcv_rows
 from app.services.market.history_ranges import is_recent_cache_usable
 from app.application.persistence_ports import KlineStorePort
@@ -56,8 +56,8 @@ class BinanceWeb3TokenService:
         if not address or not platform or not interval:
             raise InvalidRequestError("address, platform and interval are required")
 
-        address_key = address.strip().lower()
         platform_key = platform.strip().lower()
+        address_key = normalize_web3_address(address, platform_key)
         interval_key = interval.strip()
         limit_value = int(limit or 240)
         storage_symbol = self._storage_symbol(address=address_key, platform=platform_key)
@@ -227,9 +227,4 @@ class BinanceWeb3TokenService:
 
     @staticmethod
     def _storage_symbol(*, address: str, platform: str) -> str:
-        candidate = f"WEB3:{platform}:{address}"
-        if len(candidate) <= KLINE_SYMBOL_MAX_LENGTH:
-            return candidate
-        digest = hashlib.sha256(candidate.encode("utf-8")).hexdigest()[:40]
-        platform_prefix_length = max(1, KLINE_SYMBOL_MAX_LENGTH - len("WEB3::") - len(digest))
-        return f"WEB3:{platform[:platform_prefix_length]}:{digest}"
+        return web3_storage_symbol(address, platform)

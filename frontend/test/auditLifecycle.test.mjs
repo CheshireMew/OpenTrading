@@ -125,6 +125,7 @@ test('chart HTTP requests bound stalled responses and preserve caller cancellati
   const { request } = loadSource(new URL('../src/modules/chartWorkspace/api.ts', import.meta.url), {
     '@/api/request': { ApiRequestError: Error }, '@/app/publicSite': { PUBLIC_SITE: false },
     './browserDocuments': { createBrowserDocuments: () => ({}) }, './browserPineRuns': {},
+    './barRequests': loadSource(new URL('../src/modules/chartWorkspace/barRequests.ts', import.meta.url)),
   })
   let signal
   t.mock.method(globalThis, 'fetch', (_url, options) => new Promise((_resolve, reject) => {
@@ -138,6 +139,21 @@ test('chart HTTP requests bound stalled responses and preserve caller cancellati
   controller.abort(reason)
   await assert.rejects(pending, error => error === reason)
   assert.equal(signal.aborted, true)
+})
+
+test('chart HTTP errors retain status for localized recovery and preserve useful backend details', async t => {
+  class RequestError extends Error {
+    constructor(message, options) { super(message); Object.assign(this, options) }
+  }
+  const { request } = loadSource(new URL('../src/modules/chartWorkspace/api.ts', import.meta.url), {
+    '@/api/request': { ApiRequestError: RequestError }, '@/app/publicSite': { PUBLIC_SITE: false },
+    './browserDocuments': { createBrowserDocuments: () => ({}) }, './browserPineRuns': {},
+    './barRequests': loadSource(new URL('../src/modules/chartWorkspace/barRequests.ts', import.meta.url)),
+  })
+  t.mock.method(globalThis, 'fetch', async () => new Response('<html>gateway timeout</html>', { status: 504 }))
+  await assert.rejects(request('/bars'), error => error.status === 504)
+  t.mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify({ detail: '历史行情暂时加载失败，请重试' }), { status: 502 }))
+  await assert.rejects(request('/bars'), error => error.status === 502 && error.message === '历史行情暂时加载失败，请重试')
 })
 
 test('market resource drops pending data and cannot restart timers after its scope is disposed', async t => {

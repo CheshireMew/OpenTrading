@@ -102,6 +102,7 @@ const routeTemplates = {
   restore_research_watchlist: "/research/watchlists/{watchlist_id}/restore",
   restore_trade_signal: "/research/signals/{signal_id}/restore",
   run_market_screener: "/research/screeners/{screener_id}/run",
+  search_chart_symbols: "/chart-workspace/symbols/search",
   signal_lab_inventory: "/signal-lab/database",
   signal_lab_liquidity: "/signal-lab/liquidity",
   signal_lab_price_download: "/signal-lab/prices/download",
@@ -231,6 +232,7 @@ const endpointQueryContracts = {
   restore_research_watchlist: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   restore_trade_signal: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   run_market_screener: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
+  search_chart_symbols: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   signal_lab_inventory: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   signal_lab_liquidity: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
   signal_lab_price_download: {"repeatedKeys": [], "aliases": {}} as EndpointQueryContract,
@@ -328,6 +330,7 @@ export type ApiRouteResponseMap = {
   restore_research_watchlist: ResearchTypes.ResearchWatchlistResponse
   restore_trade_signal: ResearchTypes.TradeSignalResponse
   run_market_screener: ResearchTypes.MarketScreenerRunResponse
+  search_chart_symbols: Array<ChartWorkspaceTypes.ChartSymbol>
   signal_lab_inventory: MarketTypes.SignalLabInventoryResponse
   signal_lab_liquidity: MarketTypes.SignalLabLiquidityResponse
   signal_lab_price_download: unknown
@@ -425,6 +428,7 @@ export type ApiRouteBodyMap = {
   restore_research_watchlist: ResearchTypes.ResearchArchiveCommand
   restore_trade_signal: ResearchTypes.ResearchArchiveCommand
   run_market_screener: ResearchTypes.MarketScreenerRunCommand
+  search_chart_symbols: never
   signal_lab_inventory: never
   signal_lab_liquidity: never
   signal_lab_price_download: never
@@ -522,6 +526,7 @@ export type ApiRoutePathMap = {
   restore_research_watchlist: { watchlist_id: string | number }
   restore_trade_signal: { signal_id: string | number }
   run_market_screener: { screener_id: string | number }
+  search_chart_symbols: never
   signal_lab_inventory: never
   signal_lab_liquidity: never
   signal_lab_price_download: never
@@ -619,6 +624,7 @@ export type ApiRouteQueryMap = {
   restore_research_watchlist: never
   restore_trade_signal: never
   run_market_screener: never
+  search_chart_symbols: ChartWorkspaceTypes.SearchChartSymbolsQueryParams
   signal_lab_inventory: never
   signal_lab_liquidity: MarketTypes.SignalLabLiquidityQueryParams
   signal_lab_price_download: MarketTypes.SignalLabPriceDownloadQueryParams

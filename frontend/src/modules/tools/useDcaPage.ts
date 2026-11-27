@@ -209,8 +209,8 @@ export function useDcaPage() {
     && (config.strategy === 'standard' || config.strategy === 'value_averaging' || config.strategy_params.multiplier > 0)
   ))
   const sentimentClass = computed(() => ((marketData.sentiment || 0) >= 50
-    ? 'text-green-600 dark:text-green-400'
-    : 'text-red-500 dark:text-red-400'))
+    ? 'text-[var(--ui-positiveInk)]'
+    : 'text-[var(--ui-negativeInk)]'))
 
   return {
     config,

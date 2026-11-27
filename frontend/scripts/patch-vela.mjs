@@ -191,6 +191,30 @@ for (const name of files) {
   const file = new URL('dist/' + name, root)
   const original = fs.readFileSync(file, 'utf8')
   let source = original
+  const warmBefore = '    if (cached && lastCached && cached.length >= n - 1 && this.inner.loadRange) return this.load(cfg);'
+  const warmAfter = '    if (cached && lastCached && cached.length >= n - 1 && this.inner.loadRange) {\n      // OpenTrading: paint known history before refreshing its live tail.\n      onBatch(cached.slice(-n));\n      return this.load(cfg);\n    }'
+  if (!source.includes(warmAfter)) {
+    if (!source.includes(warmBefore)) throw new Error(`Unexpected Vela warm-history path: ${name}`)
+    source = source.replace(warmBefore, warmAfter)
+  }
+  const progressiveBefore = '      console.warn(`[vela] progressive fetch failed for ${ticker} ${cfg.timeframe ?? "60"} \\u2014 ${e instanceof Error ? e.message : String(e)}`);\n      return [];'
+  const progressiveAfter = '      console.warn(`[vela] progressive fetch failed for ${ticker} ${cfg.timeframe ?? "60"} \\u2014 ${e instanceof Error ? e.message : String(e)}`);\n      // OpenTrading: retain the painted preview and report interrupted history.\n      throw e;'
+  if (!source.includes(progressiveAfter)) {
+    if (!source.includes(progressiveBefore)) throw new Error(`Unexpected Vela progressive error path: ${name}`)
+    source = source.replace(progressiveBefore, progressiveAfter)
+  }
+  const rangeBefore = '    console.warn(`[vela] data fetch failed for ${ticker} ${tf} \\u2014 ${e instanceof Error ? e.message : String(e)}`);\n    return [];'
+  const rangeAfter = '    console.warn(`[vela] data fetch failed for ${ticker} ${tf} \\u2014 ${e instanceof Error ? e.message : String(e)}`);\n    // OpenTrading: a failed request is not the beginning of market history.\n    throw e;'
+  if (!source.includes(rangeAfter)) {
+    if (!source.includes(rangeBefore)) throw new Error(`Unexpected Vela history error path: ${name}`)
+    source = source.replace(rangeBefore, rangeAfter)
+  }
+  const retryBefore = '    const depthChanged = next.bars !== void 0 && next.bars !== m.bars;'
+  const retryAfter = '    // OpenTrading: the same requested depth can resume an interrupted load.\n    const depthChanged = next.bars !== void 0 && (next.bars !== m.bars || this.historyCompleted && this.rawBars.length < next.bars);'
+  if (!source.includes(retryAfter)) {
+    if (!source.includes(retryBefore)) throw new Error(`Unexpected Vela history retry path: ${name}`)
+    source = source.replace(retryBefore, retryAfter)
+  }
   if (source.includes(pickingMarker)) {
     const start = source.indexOf(pickingMarker), end = source.indexOf('      case "logScale":', start)
     if (end < 0) throw new Error(`Unexpected Vela indicator bridge boundary: ${name}`)
@@ -205,9 +229,17 @@ for (const name of files) {
     '    const tabDefs = tabInputs(row.inputs);\n    const help = { id: row.id, tabs: [] };\n    host.dispatchEvent(new CustomEvent("opentrading:indicator-settings", { bubbles: true, detail: help }));\n    tabDefs.push(...help.tabs);',
     '    const tabDefs = tabInputs(row.inputs);\n    tabDefs.push(...help.tabs);',
   )
+  source = source.replace(
+    '    const help = { id: row.id, tabs: [], values: row.values, propValues: row.propValues };',
+    '    const help = { id: row.id, tabs: [], values: row.values, propValues: row.propValues, commit: (key, value) => this.commit(row, { key }, value) };',
+  )
+  source = source.replace(
+    '    const tabDefs = tabInputs(row.inputs);\n    tabDefs.push(...help.tabs);',
+    '    const tabDefs = tabInputs(row.inputs);\n    if (help.inputBody && tabDefs[0]) tabDefs[0].body = help.inputBody;\n    tabDefs.push(...help.tabs);',
+  )
   for (const [before, after] of [
-    ['    this.openId = row.id;\n    this.snapshot = { ...row.values };', '    this.openId = row.id;\n    const help = { id: row.id, tabs: [], values: row.values, propValues: row.propValues };\n    this.host.container.dispatchEvent(new CustomEvent("opentrading:indicator-settings", { bubbles: true, detail: help }));\n    row.values = { ...help.values };\n    row.propValues = { ...help.propValues };\n    this.snapshot = { ...row.values };'],
-    ['    const tabDefs = tabInputs(row.inputs);', '    const tabDefs = tabInputs(row.inputs);\n    tabDefs.push(...help.tabs);'],
+    ['    this.openId = row.id;\n    this.snapshot = { ...row.values };', '    this.openId = row.id;\n    const help = { id: row.id, tabs: [], values: row.values, propValues: row.propValues, commit: (key, value) => this.commit(row, { key }, value) };\n    this.host.container.dispatchEvent(new CustomEvent("opentrading:indicator-settings", { bubbles: true, detail: help }));\n    row.values = { ...help.values };\n    row.propValues = { ...help.propValues };\n    this.snapshot = { ...row.values };'],
+    ['    const tabDefs = tabInputs(row.inputs);', '    const tabDefs = tabInputs(row.inputs);\n    if (help.inputBody && tabDefs[0]) tabDefs[0].body = help.inputBody;\n    tabDefs.push(...help.tabs);'],
     ['      bodies.push(this.buildTabBody(def.inputs, row, gates));', '      bodies.push(def.body ?? this.buildTabBody(def.inputs, row, gates));'],
     ['      if (def.inputs.every((d) => d.when)) {', '      if (def.inputs.length > 0 && def.inputs.every((d) => d.when)) {'],
     ['    this.rowMenuId = id;\n    const items = [{', '    this.rowMenuId = id;\n    const items = [{ id: "settings", label: "Settings\u2026" }, {'],

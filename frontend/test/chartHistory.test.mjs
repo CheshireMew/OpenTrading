@@ -238,14 +238,21 @@ test('the real workspace loads beyond 1000 candles, preserves the view and conti
       if (!failures++) throw new Error('controlled temporary history failure');
       return original(...args);
     };
+    let failureState;
+    const stopFailure = chart.on('history:complete', event => {
+      if (event.reason === 'aborted') failureState = {
+        visible: chart.getVisibleRange(), errorReported: control.feedError.value.includes('controlled temporary'),
+      };
+    });
     const oldest = historyEvents.at(-1).oldestTime;
     chart.setVisibleRange({ from: oldest - 20 * 300000, to: oldest + 20 * 300000 });
-    await waitFor(() => historyEvents.at(-1).reason === 'aborted');
-    const visibleAfterError = chart.getVisibleRange();
-    const errorReported = control.feedError.value.includes('controlled temporary');
+    // A subsequent viewport event can retry before the next polling tick.
+    // Observe the failure itself rather than requiring it to remain last.
+    await waitFor(() => failureState !== undefined);
+    stopFailure();
     await waitFor(() => historyEvents.at(-1).oldestTime < oldest && historyEvents.at(-1).reason === 'depth');
     return { retried: failures > 1, recovered: historyEvents.at(-1).oldestTime < oldest,
-      retained: visibleAfterError !== null, errorReported, errorCleared: !control.feedError.value };
+      retained: failureState.visible !== null, errorReported: failureState.errorReported, errorCleared: !control.feedError.value };
   `)
   assert.deepEqual(recovered, { retried: true, recovered: true, retained: true, errorReported: true, errorCleared: true })
   await page.evaluate('control.dispose()')

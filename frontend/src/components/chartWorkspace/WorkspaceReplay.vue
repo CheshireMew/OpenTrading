@@ -16,11 +16,11 @@
       <div v-for="line in visibleLines" :key="line.target" class="cw-replay-order" :class="{'cw-replay-draggable':line.draggable || line.target==='entry' && t.account.position}" :style="{top:line.labelY+'px',right:Math.max(4,(overlayHost?.clientWidth??geometry.right)-geometry.right+4)+'px',maxWidth:Math.max(1,geometry.right-8)+'px',borderColor:line.color}" @pointerdown.stop="beginLineDrag($event,line)" @dblclick.stop="line.draggable && openEditor(line.target,line.price)">
         <button class="cw-replay-handle" :style="{color:line.color}" :aria-label="line.label">{{ line.label }} {{ formatNumber(line.price,8) }}</button>
         <template v-if="line.target==='entry'">
-          <span>{{ t.account.position?formatNumber(t.account.unrealized):cw('replayPending') }} {{ t.symbol.value?.currency }}</span>
+          <span>{{ t.account.position?formatNumber(t.account.unrealized):cw('replayPending') }} {{ symbolUnit(t.symbol.value) }}</span>
           <button :aria-label="cw('replayAddExit')" @pointerdown.stop="beginDrag($event,'new')" @dblclick.stop>{{ cw('replayAddExit') }} ↕</button>
         </template>
         <template v-else>
-          <span>{{ formatNumber(estimate(line.price,line.quantity)) }} {{ t.symbol.value?.currency }}</span>
+          <span>{{ formatNumber(estimate(line.price,line.quantity)) }} {{ symbolUnit(t.symbol.value) }}</span>
         </template>
         <button class="cw-replay-close" :disabled="line.target==='exit:0'" :aria-label="cw(line.target==='entry' && t.account.position?'replayClose':'replayCancel')" @pointerdown.stop @dblclick.stop @click.stop="remove(line.target)">×</button>
       </div>
@@ -42,7 +42,7 @@ import type { WorkspacePaper } from '@/modules/chartWorkspace/workspacePaper'
 import { createWorkspaceTradingOrders } from '@/modules/chartWorkspace/workspaceTradingOrders'
 import { createWorkspaceTradingInteraction } from '@/modules/chartWorkspace/workspaceTradingInteraction'
 import { useWorkspaceReplayNavigation } from '@/modules/chartWorkspace/workspaceReplayNavigation'
-import { cw, formatNumber } from '@/modules/chartWorkspace/locale'
+import { cw, symbolUnit, formatNumber } from '@/modules/chartWorkspace/locale'
 import WorkspaceReplayDatePicker from './WorkspaceReplayDatePicker.vue'
 import WorkspaceReplayControls from './WorkspaceReplayControls.vue'
 import WorkspaceQuantityField from './WorkspaceQuantityField.vue'

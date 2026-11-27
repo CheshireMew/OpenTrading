@@ -45,13 +45,14 @@
       <div v-else-if="watchlist" class="watch-empty"><p>{{ cw('emptyWatchlist') }}</p><button type="button" class="mt-2 underline" @click="emit('add')">{{ cw('addWatchSymbol') }}</button></div>
     </div>
     <section v-if="activeSymbol" class="watch-instrument">
-      <strong>{{ activeSymbol.name }}</strong>
+      <strong>{{ symbolName(activeSymbol) }}</strong>
       <small>{{ workspaceMarketLabel(activeSymbol.id) }}</small>
-      <div class="watch-price" :class="quoteClass(activeSymbol.id)">{{ priceText(activeQuote?.price) }} <small>{{ activeSymbol.currency }}</small></div>
+      <div class="watch-price" :class="quoteClass(activeSymbol.id)">{{ priceText(activeQuote?.price) }} <small>{{ symbolUnit(activeSymbol) }}</small></div>
+      <p v-if="activeSymbol.metadata?.data_status === 'delayed'" class="watch-source">{{ sourceHint }}</p>
       <p v-if="activeQuote?.error" class="watch-quote-error">{{ messageText(activeQuote.error) }}</p>
       <dl>
-        <dt>{{ cw('unit') }}</dt><dd>{{ activeSymbol.metadata?.basecurrency ?? cw('notProvided') }}</dd>
-        <dt>{{ cw('quoteCurrency') }}</dt><dd>{{ activeSymbol.currency }}</dd>
+        <dt>{{ cw('unit') }}</dt><dd>{{ activeSymbol.metadata?.quote_unit === 'points' ? symbolUnit(activeSymbol) : activeSymbol.metadata?.basecurrency ?? cw('notProvided') }}</dd>
+        <dt>{{ cw(activeSymbol.metadata?.quote_unit === 'points' ? 'quoteUnit' : 'quoteCurrency') }}</dt><dd>{{ symbolUnit(activeSymbol) }}</dd>
         <dt>{{ cw('change') }}</dt><dd>{{ priceText(activeQuote?.change) }}</dd>
         <dt>{{ cw('minimumTick') }}</dt><dd>{{ activeSymbol.metadata?.mintick ?? cw('notProvided') }}</dd>
         <dt>{{ cw('updatedAt') }}</dt><dd>{{ activeQuote?.updated_at ? formatDate(activeQuote.updated_at, true) : '—' }}</dd>
@@ -78,7 +79,7 @@ import { useI18n } from 'vue-i18n'
 import WorkspacePopover from './WorkspacePopover.vue'
 import WorkspaceSymbolIcon from './WorkspaceSymbolIcon.vue'
 import { useModalDialog } from '@/composables/useModalDialog'
-import { cw, formatDate, formatNumber, messageText, workspaceMarketLabel } from '@/modules/chartWorkspace/locale'
+import { cw, formatDate, formatNumber, messageText, workspaceMarketLabel, symbolName, symbolUnit, symbolTicker } from '@/modules/chartWorkspace/locale'
 import type { ChartSymbol } from '@/modules/chartWorkspace/api'
 import type { WorkspaceWatchlists } from '@/modules/chartWorkspace/workspaceWatchlists'
 
@@ -91,6 +92,12 @@ const props = defineProps<{
   width: number
   embedded?: boolean
 }>()
+const sourceHint = computed(() => {
+  const metadata = activeSymbol.value?.metadata
+  const days = metadata?.intraday_retention_days as Record<string, number> | undefined
+  return cw('delayedIndexSource', { source: String(metadata?.intraday_source ?? 'Yahoo Finance'),
+    minuteDays: days?.['1m'] ?? 29, otherDays: days?.['5m'] ?? 59, hourDays: days?.['1h'] ?? 729 })
+})
 const emit = defineEmits<{ add: []; select: [id: string]; preload: [id: string]; close: [] }>()
 const { watchlists, watchlist, watchlistId, watchSymbols, pendingWatch, quotes, dragIndex } = props.controller
 const { dialogRef } = useModalDialog(computed(() => props.visible && props.compact && !props.embedded), () => emit('close'))
@@ -104,10 +111,11 @@ async function removeList(){optionsMenu.value?.close();const list=watchlist.valu
 function listAction(action: () => unknown) { optionsMenu.value?.close(); void action() }
 const displaySymbol = (id: string) => {
   const symbol = symbolsById.value.get(id)
+  if (symbol?.metadata?.display_symbol) return symbolName(symbol)
   const ticker = symbol?.market === 'alpha' || symbol?.market === 'web3' ? symbol.name.split('/')[0] : symbol?.symbol
   return (ticker ?? id.split(':').pop() ?? id) + (symbol?.market === 'usdm' ? '.P' : '')
 }
-const symbolTitle = (id: string) => [displaySymbol(id), workspaceMarketLabel(id), quotes.value[id]?.basis === '交易日' ? cw('tradingDay') : '24h'].join(' · ')
+const symbolTitle = (id: string) => [displaySymbol(id), symbolTicker(symbolsById.value.get(id)), workspaceMarketLabel(id), messageText(quotes.value[id]?.basis)].filter(Boolean).join(' · ')
 const priceText = (value: unknown) => formatNumber(value, 8)
 const signedText = (value: unknown) => typeof value === 'number' && Number.isFinite(value) ? (value > 0 ? '+' : '') + priceText(value) : '—'
 const percentText = (value: unknown) => typeof value === 'number' && Number.isFinite(value) ? `${value > 0 ? '+' : ''}${value.toFixed(2)}%` : '—'

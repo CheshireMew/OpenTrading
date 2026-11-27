@@ -15,6 +15,7 @@ from app.infra.market_data.index_history_http import (
 )
 from app.infra.market_data.index_history_parsing import redact_exception_message
 from app.infra.market_data.index_history_sina import SinaIndexHistoryProvider
+from app.infra.market_data.index_history_tencent import TencentIndexHistoryProvider
 from app.infra.market_data.index_source_catalog import (
     IndexSourceBinding,
     get_index_source_binding,
@@ -33,6 +34,7 @@ class IndexHistorySources:
         self.sina = SinaIndexHistoryProvider()
         self.currency = IndexCurrencyHistoryProvider()
         self.providers: tuple[HistoryProvider, ...] = (
+            TencentIndexHistoryProvider().fetch_history,
             self.sina.fetch_hk_history,
             self.sina.fetch_cn_history,
             self.sina.fetch_us_history,
@@ -61,7 +63,8 @@ class IndexHistorySources:
             # Eastmoney includes the pre-launch back series (from 2014-12-31);
             # Sina currently begins in August 2020. Keep the other fallbacks.
             providers = tuple(sorted(providers, key=lambda provider: (
-                not isinstance(getattr(provider, "__self__", None), EastmoneyIndexHistoryProvider)
+                0 if isinstance(getattr(provider, "__self__", None), TencentIndexHistoryProvider) else
+                1 if isinstance(getattr(provider, "__self__", None), EastmoneyIndexHistoryProvider) else 2
             )))
         for provider in providers:
             try:

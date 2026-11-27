@@ -59,7 +59,7 @@ export function createWorkspaceChart(deps: {
     return history ? cw('historyBars', { count: formatNumber(history.loaded, 0) }) +
       (history.state === 'loading' ? ' · ' + cw('loading') : history.state === 'aborted' ? ' · ' + cw('incomplete') : '') : cw('loadingHistory')
   })
-  const feedText = computed(() => replay.active.value ? cw('replay') : ({ connecting: cw('connecting'), live: cw('live'), polling: cw('polling'), offline: cw('offline'), error: cw('dataError') }[feedStatus.value] ?? feedStatus.value))
+  const feedText = computed(() => replay.active.value ? cw('replay') : ({ connecting: cw('connecting'), live: cw('live'), polling: cw('polling'), delayed: cw('delayedQuotes'), offline: cw('offline'), error: cw('dataError') }[feedStatus.value] ?? feedStatus.value))
   const engines = new Set<OpenTradingPineEngine>(), configuredCharts = new WeakSet<Vela>()
   const cellTimeframes = new Map<string, () => void>()
   const cellHistories = new Map<string, ReturnType<typeof installChartHistory>>()

@@ -2,9 +2,15 @@ import i18n from '@/i18n'
 import zh from '@/i18n/zh-CN.json'
 import en from '@/i18n/en.json'
 import { createMessageTranslator } from './messageTranslation.mjs'
+import type { ChartSymbol } from './generatedContracts'
 
 export const cw = (key: string, params: Record<string, string | number> = {}) =>
   i18n.global.t('chartWorkspace.' + key, params)
+
+export const symbolName = (symbol?: ChartSymbol): string => symbol
+  ? String((i18n.global.locale.value.startsWith('zh') ? symbol.metadata?.name_zh : symbol.metadata?.name_en) ?? symbol.name) : ''
+export const symbolUnit = (symbol?: ChartSymbol) => symbol?.metadata?.quote_unit === 'points' ? cw('points') : symbol?.currency ?? ''
+export const symbolTicker = (symbol?: ChartSymbol): string => String(symbol?.metadata?.display_symbol ?? symbol?.symbol ?? '')
 
 export const messageText = createMessageTranslator(
   [zh.chartWorkspace, en.chartWorkspace, {

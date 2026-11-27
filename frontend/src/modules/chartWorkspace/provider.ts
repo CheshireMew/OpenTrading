@@ -232,7 +232,7 @@ export class OpenTradingProvider implements DataProvider {
         if (!current()) return
         if (bar.time < (this.lastBars.get(key) ?? 0)) continue
         const expected = this.lastCloses.get(key)
-        if (expected !== undefined && bar.time > expected) throw new Error(cw('loadFailed'))
+        if (info.session === '24x7' && expected !== undefined && bar.time > expected) throw new Error(cw('loadFailed'))
         this.publish(key, bar)
       }
       this.repairs.delete(key)

@@ -9,7 +9,7 @@
         </div>
         <div class="symbol-results">
           <button v-for="item in results" :key="item.id" type="button" @pointerenter="emit('preload',item.id)" @focus="emit('preload',item.id)" @click="pick(item.id)">
-            <strong>{{ item.name }}</strong><small>{{ workspaceMarketLabel(item.id) }}</small>
+            <strong>{{ symbolName(item) }}</strong><small>{{ workspaceMarketLabel(item.id) }}</small>
           </button>
           <p v-if="!results.length && !searching && !searchError">{{ cw('noSymbols') }}</p>
           <p v-if="searching" role="status">{{ cw('searchingOnchain') }}</p>
@@ -26,7 +26,7 @@ import { XMarkIcon } from '@heroicons/vue/24/outline'
 import { useModalDialog } from '@/composables/useModalDialog'
 import type { ChartSymbol } from '@/modules/chartWorkspace/api'
 import { chartApi } from '@/modules/chartWorkspace/api'
-import { cw, workspaceMarketLabel } from '@/modules/chartWorkspace/locale'
+import { cw, workspaceMarketLabel, symbolName } from '@/modules/chartWorkspace/locale'
 import { isOnchainAddressQuery, matchesChartSymbol } from '@/modules/chartWorkspace/symbolSearch'
 
 const props = defineProps<{ symbols: ChartSymbol[]; title: 'addWatch' | 'switchSymbol' }>()

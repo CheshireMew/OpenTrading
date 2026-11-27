@@ -32,7 +32,7 @@ async def test_forward_daily_page_crosses_a_long_exchange_holiday():
                                    source='fixture', is_close_only=False, native_currency='CNY', price_basis='index')
 
     market = ChartWorkspaceMarket(None, Index())
-    info = ChartSymbol(id='index:index:CN_SHCOMP', symbol='CN_SHCOMP', name='Shanghai Composite',
+    info = ChartSymbol(id='index:index:CN_SSE_COMP', symbol='CN_SSE_COMP', name='Shanghai Composite',
                        exchange='SSE', market='index', currency='CNY', timeframes=['1d'])
 
     async def resolve(_):
@@ -132,7 +132,8 @@ async def test_catalog_contains_daily_assets_when_exchange_metadata_is_unavailab
         assert {"US_VIX", "US_DXY", "GC1.COMEX", "SI1.COMEX", "CL1.NYMEX", "EUR/USD", "USD/JPY"} <= symbols.keys()
         assert "美元指数" in symbols["US_DXY"].aliases
         assert "黄金期货" in symbols["GC1.COMEX"].aliases
-        assert all(item.timeframes == ["1d"] for item in symbols.values())
+        assert all(item.timeframes == ["1d"] for item in symbols.values() if item.market != "index")
+        assert all(item.timeframes == ['1m','5m','15m','30m','1h','4h','1d','1w','1M'] for item in symbols.values() if item.market == "index")
         assert symbols["GC1.COMEX"].metadata["is_continuous"]
         assert symbols["EUR/USD"].market == "fx"
     finally:

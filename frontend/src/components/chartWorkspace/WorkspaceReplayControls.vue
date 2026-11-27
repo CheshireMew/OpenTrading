@@ -19,13 +19,13 @@
         <button v-if="!r.open.value" type="button" class="cw-replay-grip" :aria-label="cw('replayMovePanel')" :title="cw('replayMovePanel')" @pointerdown="startMove" @keydown="moveKey"><IconGripVertical aria-hidden="true" /></button>
         <div class="cw-replay-quick">
           <button type="button" class="cw-replay-sell" :disabled="!t.symbol.value || t.hasOrder.value || t.loading.value" :aria-label="cw('replayShort')" :title="cw('replayShort')" @click="emit('place',-1)"><IconArrowDownRight aria-hidden="true" />{{ cw('replaySell') }}</button>
-          <WorkspaceQuantityField v-model="t.amount.value" :label="cw('replayAmount')" :unit="t.symbol.value?.currency" compact />
+          <WorkspaceQuantityField v-model="t.amount.value" :label="cw('replayAmount')" :unit="symbolUnit(t.symbol.value)" compact />
           <button type="button" class="cw-replay-buy" :disabled="!t.symbol.value || t.hasOrder.value || t.loading.value" :aria-label="cw('replayLong')" :title="cw('replayLong')" @click="emit('place',1)"><IconArrowUpRight aria-hidden="true" />{{ cw('replayBuy') }}</button>
         </div>
         <div v-if="tradingVisible" class="cw-replay-results">
           <span v-if="!r.open.value" class="cw-paper-label">{{ cw('paperTrading') }}</span>
-          <span class="cw-replay-metric" :class="profitClass(t.account.realized)" :aria-label="cw('replayRealized')+' '+formatNumber(t.account.realized)+' '+t.symbol.value?.currency" :title="cw('replayRealized')"><IconWallet aria-hidden="true" /><b>{{ formatNumber(t.account.realized) }}</b><small>{{ t.symbol.value?.currency }}</small></span>
-          <span v-if="t.account.position" class="cw-replay-metric" :class="profitClass(t.account.unrealized)" :aria-label="cw('replayUnrealized')+' '+formatNumber(t.account.unrealized)+' '+t.symbol.value?.currency" :title="cw('replayUnrealized')"><IconChartLine aria-hidden="true" /><b>{{ formatNumber(t.account.unrealized) }}</b></span>
+          <span class="cw-replay-metric" :class="profitClass(t.account.realized)" :aria-label="cw('replayRealized')+' '+formatNumber(t.account.realized)+' '+symbolUnit(t.symbol.value)" :title="cw('replayRealized')"><IconWallet aria-hidden="true" /><b>{{ formatNumber(t.account.realized) }}</b><small>{{ symbolUnit(t.symbol.value) }}</small></span>
+          <span v-if="t.account.position" class="cw-replay-metric" :class="profitClass(t.account.unrealized)" :aria-label="cw('replayUnrealized')+' '+formatNumber(t.account.unrealized)+' '+symbolUnit(t.symbol.value)" :title="cw('replayUnrealized')"><IconChartLine aria-hidden="true" /><b>{{ formatNumber(t.account.unrealized) }}</b></span>
           <button v-if="t.account.trades.length" type="button" class="cw-replay-trades-toggle" :aria-expanded="tradesOpen" :aria-label="cw('replayTrades',{count:t.account.trades.length})" :title="cw('replayTrades',{count:t.account.trades.length})" @click="tradesOpen=!tradesOpen"><IconListDetails aria-hidden="true" /><span>{{ t.account.trades.length }}</span></button>
         </div>
       </div>
@@ -56,7 +56,7 @@ import type { WorkspaceReplay } from '@/modules/chartWorkspace/workspaceReplay'
 import type { WorkspacePaper } from '@/modules/chartWorkspace/workspacePaper'
 import type { ReplayGeometry } from '@/modules/chartWorkspace/replayOrderLayer'
 import type { Side } from '@/modules/chartWorkspace/replayModel'
-import { cw, formatDate, formatNumber } from '@/modules/chartWorkspace/locale'
+import { cw, symbolUnit, formatDate, formatNumber } from '@/modules/chartWorkspace/locale'
 import { formatQuantity } from '@/modules/chartWorkspace/replayQuantity'
 import WorkspaceQuantityField from './WorkspaceQuantityField.vue'
 

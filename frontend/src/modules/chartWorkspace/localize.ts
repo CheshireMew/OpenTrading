@@ -1,6 +1,6 @@
 import { watch } from 'vue'
 import i18n from '@/i18n'
-import { cw, messageText, workspaceMarketLabel } from './locale'
+import { cw, messageText, workspaceMarketLabel, symbolName } from './locale'
 import type { ChartSymbol } from './api'
 
 // Vela 0.7.6 exposes English chrome but no locale option. Keep the translation
@@ -87,12 +87,15 @@ export function localizeChart(host:HTMLElement, symbols: () => ChartSymbol[] = (
   // never change an English label when the user switches back to English.
   const originals = new WeakMap<Node, Map<string, { source: string; rendered: string }>>()
   const translate=(value:string):string=>{
+    if (value === 'PTS') return cw('points')
     const replayLabel=value.replace(/\bREPLAY\d+\b/g,cw('replay'))
     if(replayLabel!==value)return replayLabel
     if (/^REPLAY\d*$/.test(value)) return cw('replay')
     const id = value.replace(/^(?:opentrading|heimdall|replay\d*):/, '')
     const symbol = symbols().find(item => item.id === id)
-    if (symbol) return `${symbol.name} · ${workspaceMarketLabel(symbol.id)}`
+    if (symbol) return `${symbolName(symbol)} · ${workspaceMarketLabel(symbol.id)}`
+    const named = symbols().find(item => item.metadata?.name_zh && [item.name, item.metadata.name_en, item.metadata.name_zh].includes(value))
+    if (named) return symbolName(named)
     const key=keys.get(value)
     if(key)return i18n.global.t('chartNative.'+key.key)
     if(value.startsWith('Chart style — '))return i18n.global.t('chartNative.'+keys.get('Chart style')!.key)+' — '+translate(value.slice(14))

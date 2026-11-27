@@ -3,7 +3,7 @@ import type { DataProvider, BarRange, OHLCV, Vela } from '@luxalgo/vela'
 import type { VelaWorkspace } from '@luxalgo/vela/workspace'
 import { chartApi, type ChartBar, type ChartSymbol } from './api'
 import { fromVela, velaSymbol, timeframes } from './provider'
-import { ReplayAccount, ReplayPacer, aggregateMinute, periodStart, periodEnd, periodDuration, MINUTE, type Side, type OrderKind } from './replayModel'
+import { ReplayAccount, ReplayPacer, aggregateMinute as aggregateSource, periodStart as candleStart, periodEnd as candleEnd, periodDuration, MINUTE, type Side, type OrderKind } from './replayModel'
 import { quantityForAmount } from './replayQuantity'
 import { cw } from './locale'
 import { catalogSymbolIcon } from './symbolIcons'
@@ -20,6 +20,10 @@ export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | und
   const listeners = new Set<(bar: OHLCV) => void>(), pulses = new Set<(now: number) => void>()
   const sourceListeners = new Set<(event: ReplaySourceBar) => void>(), sessionId = ref('')
   const sourceStep = ref('1m'), symbol = ref<ChartSymbol>(), timeframe = ref('5m'), cellId = ref('')
+  const candleOffset = (tf: string): number => Number((symbol.value?.metadata?.candle_offset_ms as Record<string, number> | undefined)?.[tf]) || 0
+  const periodStart = (at: number, tf: string) => candleStart(at, tf, candleOffset(tf))
+  const periodEnd = (at: number, tf: string) => candleEnd(at, tf, candleOffset(tf))
+  const aggregateMinute = (previous: ChartBar | undefined, minute: ChartBar, tf: string) => aggregateSource(previous, minute, tf, candleOffset(tf))
   let target: Vela | undefined, history: ChartBar[] = [], buffer: ChartBar[] = [], offset = 0
   let nextSource = 0, ceiling = 0, generation = 0, abort = new AbortController(), disposed = false
   let fetchAhead: Promise<void> | undefined, busy = false, anchor = 0, providerName = '', failedStart: number | 'random' | undefined
@@ -139,17 +143,19 @@ export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | und
     const upper = periodStart(Date.now(), info.timeframes.includes('1m') ? '1m' : '1d')
     // Monthly history covers the instrument's lifetime without downloading minute history.
     const monthly = info.timeframes.includes('1M')
-    const overview = await chartApi.replayBars({ symbol: info.id, timeframe: monthly ? '1M' : '1d', end: upper,
-      limit: 1000, ...(monthly ? { start: 0 } : {}) }, signal)
+    const minuteRetention = Number((info.metadata?.intraday_retention_days as Record<string,number> | undefined)?.['1m'])
+    const earliest = minuteRetention > 0 ? upper - (minuteRetention - 1) * 86400000 : 0
+    const overview = await chartApi.replayBars({ symbol: info.id, timeframe: monthly && !earliest ? '1M' : '1d', end: upper,
+      limit: 1000, ...(earliest ? { start: earliest } : monthly ? { start: 0 } : {}) }, signal)
     const known = overview.bars.filter(bar => bar.closed && bar.closeTime < upper)
-    const spans = monthly ? known.map(bar => ({ from: bar.time, to: bar.closeTime })) : []
-    if (monthly && known.length && known[known.length-1]!.closeTime < upper)
+    const spans = monthly && !earliest ? known.map(bar => ({ from: bar.time, to: bar.closeTime })) : []
+    if (monthly && !earliest && known.length && known[known.length-1]!.closeTime < upper)
       spans.push({ from: known[known.length-1]!.closeTime, to: upper })
     for(let attempt=0;attempt<6;attempt++){
       if(signal.aborted)throw new DOMException('Aborted','AbortError')
       const span=spans[Math.floor(Math.random()*spans.length)]
       const result=span?await chartApi.replayBars({symbol:info.id,timeframe:'1d',start:span.from,end:span.to,limit:1000},signal):
-        monthly?await chartApi.replayBars({symbol:info.id,timeframe:'1d',end:upper,limit:1000},signal):overview
+        monthly&&!earliest?await chartApi.replayBars({symbol:info.id,timeframe:'1d',end:upper,limit:1000},signal):overview
       const first=result.bars[0]
       if(!first)continue
       // Start after a known trading day, leaving both prior context and unrevealed history.
@@ -174,7 +180,7 @@ export function createWorkspaceReplay(deps: { workspace: Ref<VelaWorkspace | und
     try {
       const signal = abort.signal, excluded = new Set<number>()
       const prepare = async (chosen: number) => {
-        const startAt = periodStart(chosen, tf)
+        const startAt = candleStart(chosen, tf, Number((info.metadata?.candle_offset_ms as Record<string, number> | undefined)?.[tf]) || 0)
         if (startAt >= ceiling) throw new Error(cw('replayPastDate'))
         failedStart = startAt
         // The bounded history endpoint fills cache gaps from the venue before returning.

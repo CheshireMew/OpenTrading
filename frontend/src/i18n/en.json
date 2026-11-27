@@ -1406,6 +1406,10 @@
     "resetHint": "Restore the full view, or double-click the chart"
   },
   "chartWorkspace": {
+    "points": "points",
+    "quoteUnit": "Quote unit",
+    "delayedQuotes": "Delayed data",
+    "delayedIndexSource": "Intraday: {source} (delayed). Upstream history: about {minuteDays} days of 1m, {otherDays} days of other minutes and {hourDays} days of hourly data. Saved history remains available beyond these limits.",
     "retryRequest": "Retry",
     "runRequestFailed": "Backtest status is temporarily unavailable. Please retry.",
     "runRecordsFailed": "Backtest results are temporarily unavailable. Please retry.",

@@ -40,23 +40,23 @@ export interface ReplayTrade {
   profit: number; reason: 'manual' | 'tp' | 'sl'
 }
 
-export function periodStart(time: number, timeframe: string): number {
+export function periodStart(time: number, timeframe: string, offset = 0): number {
   if (timeframe === '1M') { const d = new Date(time); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1) }
   const size = periodDuration(timeframe), origin = timeframe === '1w' ? 4 * 86_400_000 : 0
-  return Math.floor((time - origin) / size) * size + origin
+  return Math.floor((time - origin - offset) / size) * size + origin + offset
 }
 export function periodDuration(timeframe: string): number {
   const match = /^(\d+)([mhdw])$/.exec(timeframe)
   if (!match) throw new Error('Unsupported replay interval: ' + timeframe)
   return Number(match[1]) * ({ m: MINUTE, h: 60 * MINUTE, d: 1440 * MINUTE, w: 10080 * MINUTE }[match[2]!]!)
 }
-export function periodEnd(time: number, timeframe: string): number {
-  const start = periodStart(time, timeframe)
+export function periodEnd(time: number, timeframe: string, offset = 0): number {
+  const start = periodStart(time, timeframe, offset)
   if (timeframe === '1M') { const d = new Date(start); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1) }
   return start + periodDuration(timeframe)
 }
-export function aggregateMinute(previous: ChartBar | undefined, minute: ChartBar, timeframe: string): ChartBar {
-  const time = periodStart(minute.time, timeframe), closeTime = periodEnd(minute.time, timeframe)
+export function aggregateMinute(previous: ChartBar | undefined, minute: ChartBar, timeframe: string, offset = 0): ChartBar {
+  const time = periodStart(minute.time, timeframe, offset), closeTime = periodEnd(minute.time, timeframe, offset)
   const same = previous?.time === time
   return { time, closeTime, open: same ? previous!.open : minute.open,
     high: same ? Math.max(previous!.high, minute.high) : minute.high,

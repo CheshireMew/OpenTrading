@@ -2,7 +2,7 @@ import { watchEffect, type Ref } from 'vue'
 import type { ChartCell } from '@luxalgo/vela/workspace'
 import { timeframeLabel } from '@luxalgo/vela/widget'
 import type { ChartSymbol } from './api'
-import { cw } from './locale'
+import { cw, symbolName } from './locale'
 import { fromVela, timeframes } from './provider'
 
 const periods = [
@@ -44,7 +44,7 @@ export function installCellTimeframe(cell: ChartCell, deps: {
     select.value = options.find(item => timeframes[item.value] === (timeframes[cell.timeframe] ?? cell.timeframe))?.value ?? ''
     select.disabled = !options.length
     select.hidden = name?.style.display === 'none'
-    select.setAttribute('aria-label', `${symbol?.name ?? fromVela(cell.symbol)} · ${cw('timeframe')}`)
+    select.setAttribute('aria-label', `${symbol ? symbolName(symbol) : fromVela(cell.symbol)} · ${cw('timeframe')}`)
     // Remove only the native period text; retain the venue and its separator.
     const label = timeframeLabel(cell.timeframe), text = meta!.textContent ?? ''
     if (text.endsWith(`· ${label}`)) meta!.textContent = text.slice(0, -label.length).trimEnd()

@@ -3,6 +3,7 @@ const QUOTES = ['FDUSD', 'USDT', 'USDC', 'BUSD', 'TUSD', 'USD', 'EUR', 'BTC', 'E
 const rawTicker = (value: string) => value.split(':').pop()!.replace(/\.P$/i, '').toUpperCase()
 
 export function symbolAssetCode(symbol?: ChartSymbol, fallback = ''): string {
+  if (symbol?.metadata?.display_symbol) return String(symbol.metadata.display_symbol)
   const base = symbol?.metadata?.basecurrency
   if (typeof base === 'string' && base.trim()) return base.trim().toUpperCase()
   const name = symbol?.name.split('/')[0]

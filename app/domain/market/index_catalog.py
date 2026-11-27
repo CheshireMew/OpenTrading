@@ -41,7 +41,7 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
         pricing_name="Fidelity Nasdaq Composite Index ETF",
         pricing_currency="USD",
         pricing_storage_symbol="proxy:US:NASDAQ_COMP:ONEQ",
-        aliases=("纳斯达克", "纳斯达克综合", "纳指", "NASDAQ", "IXIC", "NDX"),
+        aliases=("纳斯达克", "纳斯达克综合", "纳指", "NASDAQ", "IXIC"),
     ),
     "US_NASDAQ100": IndexInstrument(
         symbol="US_NASDAQ100",

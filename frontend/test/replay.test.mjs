@@ -17,6 +17,16 @@ const { formatQuantity, quantityAtPercent, quantityPercent, quantityForAmount } 
 const { ReplayPacer, ReplayAccount, aggregateMinute, periodStart, periodEnd, replayDateTime, replayDateInput } = model
 const minute = (time, open = 100, high = 104, low = 98, close = 102) => ({ time, closeTime: time + 60000, open, high, low, close, volume: 2, closed: true })
 
+test('index hour aggregation keeps the half-hour boundary used by native history', () => {
+  const start=Date.UTC(2026,10,25,14,30), offset=30*60000
+  assert.equal(periodStart(start+10*60000,'1h',offset),start)
+  assert.equal(periodEnd(start+10*60000,'1h',offset),start+3600000)
+  const current=aggregateMinute(undefined,minute(start+10*60000),'1h',offset)
+  assert.equal(current.time,start)
+  assert.equal(current.closeTime,start+3600000)
+  assert.equal(current.closed,false)
+})
+
 test('quantity sizing uses plain decimals and rounds percentages down to the contract step', () => {
   assert.equal(formatQuantity(1e-8), '0.00000001')
   assert.equal(formatQuantity(1.25e-7), '0.000000125')
@@ -467,6 +477,22 @@ test('random replay samples verified history across months and starts playing th
       return replayViewReply(query,start,symbol)
     },{timeframe:'15',symbol:{timeframes:['1m','15m','1d','1M']}})
   }finally{Math.random=previousRandom}
+})
+
+test('random VIX replay selects within the minute vendor retention window',async()=>{
+  const requests=[], day=86400000, recent=Math.floor(Date.now()/day)*day-10*day
+  await replayFixture(async replay=>{
+    await replay.startRandom()
+    assert.equal(replay.active.value,true)
+    const discovery=requests.find(query=>query.timeframe==='1d'&&query.start!==undefined)
+    assert.ok(discovery.start>Date.now()-29*day)
+    assert.ok(!requests.some(query=>query.timeframe==='1M'&&query.start===0))
+  },(query,start,symbol)=>{
+    requests.push(query)
+    if(query.timeframe==='1d'&&query.start!==undefined)
+      return {symbol,bars:[{...minute(recent),closeTime:recent+day},{...minute(recent+day),closeTime:recent+2*day}]}
+    return replayViewReply(query,start,symbol)
+  },{timeframe:'15',symbol:{id:'index:index:US_VIX',symbol:'US_VIX',timeframes:['1m','15m','1d','1M'],metadata:{intraday_retention_days:{'1m':29}}}})
 })
 
 test('random replay replaces dates with no minute source and validates the new candidate before starting',async()=>{

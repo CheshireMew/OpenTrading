@@ -8,7 +8,7 @@ from app.infra.market_data.chart import ChartMarketClient
 from app.infra.market_data.symbol_icons import SymbolIconClient
 
 from app.contracts.chart_workspace import ChartBar, ChartBars, ChartQuote, ChartSymbol
-from app.services.market.symbol_catalog import list_market_search_items
+from app.domain.market.index_catalog import INDEX_CATALOG
 from app.services.chart_daily_history import daily_chart_symbols
 from app.domain.market.candles import candle_end_ms, current_candle_open_ms
 from app.domain.market.constants import timeframe_to_milliseconds
@@ -19,6 +19,8 @@ from app.services.market.history_range_coordinator import HistoryRangeCoordinato
 from config import settings
 from app.infra.market_data.exchange import normalize_ohlcv
 from utils.logger import logger
+from app.services.chart_index_market import ChartIndexMarket
+from app.services.chart_index_catalog import index_symbol
 
 TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w", "1M"]
 
@@ -33,6 +35,7 @@ class ChartWorkspaceMarket:
         self.index = index
         self.daily_history = daily_history
         self.onchain = onchain
+        self.indices = ChartIndexMarket(index, kline_store)
         self.kline_store = kline_store
         self.http = ChartMarketClient()
         self.icons = SymbolIconClient()
@@ -68,13 +71,9 @@ class ChartWorkspaceMarket:
         if self._static_catalog_ready:
             return
         self._static_catalog_ready = True
-        for row in list_market_search_items():
-            if row["asset_class"] == "index":
-                key = f"index:index:{row['symbol']}"
-                self.catalog.setdefault(key, ChartSymbol(id=key, symbol=row["symbol"], name=row["name"],
-                    exchange=str(row["exchange"]), market="index", currency=row["currency"], timeframes=["1d"],
-                    close_only=True, aliases=list(row.get("aliases", [])), session="regular",
-                    metadata={"price_basis": "index", "capability_pending": True}))
+        for symbol in INDEX_CATALOG:
+            info = index_symbol(symbol)
+            self.catalog.setdefault(info.id, info)
         if self.daily_history is not None:
             for item in daily_chart_symbols():
                 self.catalog.setdefault(item.id, item)
@@ -181,9 +180,11 @@ class ChartWorkspaceMarket:
             raise ValueError(f"{info.name} 不支持 {timeframe} 周期")
         now = int(time.time()*1000)
         end = min(end if end is not None else now, now)
+        if info.market == "index":
+            return await self.indices.bars(info.symbol, timeframe, limit, start, end)
         rows = []
         source = "binance-alpha" if info.market == "alpha" else "binance-web3" if info.market == "web3" else info.exchange
-        if info.market in {"index", "fx", "commodity"}:
+        if info.market in {"fx", "commodity"}:
             span = max(limit * 2, 14) * 86400000
             lower = start if start is not None else end - span
             upper = min(end, lower + span) if start is not None else end
@@ -192,15 +193,7 @@ class ChartWorkspaceMarket:
                           datetime.fromtimestamp(now / 1000, timezone.utc).date() - timedelta(days=1))
             if start_day > end_day:
                 return ChartBars(symbol=info, timeframe=timeframe, bars=[], source=source)
-        if info.market == "index":
-            result = await self.index.get_history_async(symbol=info.symbol, timeframe="1d",
-                start_date=start_day.isoformat(), end_date=end_day.isoformat())
-            rows = [r.as_row() for r in result.data]
-            source = result.source
-            info = info.model_copy(update={"close_only": result.is_close_only,
-                "currency":result.native_currency, "metadata": {"price_basis":result.price_basis, "source":source}})
-            self.catalog[key] = info
-        elif info.market in {"fx", "commodity"}:
+        if info.market in {"fx", "commodity"}:
             if self.daily_history is None:
                 raise ValueError("日线行情服务尚未就绪")
             snapshot = await self.daily_history.snapshot(info.symbol, start_day, end_day)
@@ -351,6 +344,8 @@ class ChartWorkspaceMarket:
         async def quote(key):
             try:
                 info = await self.resolve(key)
+                if info.market == "index":
+                    return await self.indices.quote(info.symbol)
                 if info.market in {"alpha", "web3"}:
                     return await self.onchain.quote(info)
                 if info.exchange == "binance":
@@ -416,13 +411,13 @@ class ChartWorkspaceMarket:
                     stream_url = f"{host}/{info.symbol.lower()}@kline_{timeframe}"
                 else:
                     stream_url = None
-                emit("status", status="connecting" if stream_url else "polling")
+                emit("status", status="connecting" if stream_url else "delayed" if info.metadata.get("data_status") == "delayed" else "polling")
                 # Heal from the last received bar before resuming native updates.
                 cursor = last_open
                 while True:
                     data = await self.bars(key,timeframe,limit=1000 if cursor else 2,start=cursor)
                     for bar in data.bars:
-                        polling_quote = not stream_url and bar is data.bars[-1]
+                        polling_quote = not stream_url and info.metadata.get("data_status") != "delayed" and bar is data.bars[-1]
                         emit("bar", live=polling_quote,
                              observed_at=(bar.closeTime if bar.closed else int(time.time() * 1000)) if polling_quote else None,
                              bar=bar.model_dump())
@@ -474,6 +469,7 @@ class ChartWorkspaceMarket:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
         self.channels.clear()
+        await self.indices.close()
         if self.daily_history is not None:
             await self.daily_history.close()
         if self.onchain is not None:

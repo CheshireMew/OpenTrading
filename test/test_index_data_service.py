@@ -11,6 +11,7 @@ from app.domain.market.session_history import daily_session_prices, SessionHisto
 
 from app.domain.market.constants import KLINE_SYMBOL_MAX_LENGTH
 from app.domain.market.index_catalog import INDEX_CATALOG, get_index_instrument, get_supported_index_symbols
+from app.domain.market.index_fetch import IndexFetchResult
 from app.services.market.index_data_service import IndexDataService
 from app.services.market.index_history_sources import IndexHistorySources
 from app.infra.market_data.index_source_catalog import get_index_source_binding
@@ -174,7 +175,14 @@ def test_index_storage_symbols_fit_kline_cache_contract():
     assert max(len(symbol) for symbol in storage_symbols) <= KLINE_SYMBOL_MAX_LENGTH
 
 
-def test_eastmoney_history_is_normalized_and_cached(monkeypatch):
+@pytest.fixture
+def legacy_daily_sources(monkeypatch):
+    # Provider-specific normalization tests must not call the newer primary feed.
+    monkeypatch.setattr('app.infra.market_data.index_history_tencent.TencentIndexHistoryProvider.fetch_history',
+        lambda *_: IndexFetchResult(data=[], source='tencent'))
+
+
+def test_eastmoney_history_is_normalized_and_cached(monkeypatch, legacy_daily_sources):
     service = IndexDataService(kline_store=FakeKlineStore())
 
     def fake_get(*args, **kwargs):
@@ -212,7 +220,7 @@ def test_eastmoney_history_is_normalized_and_cached(monkeypatch):
     assert service.kline_store.saved[0][0] == "index:CN:CSI300"
 
 
-def test_sina_hk_history_is_normalized_and_cached(monkeypatch):
+def test_sina_hk_history_is_normalized_and_cached(monkeypatch, legacy_daily_sources):
     service = IndexDataService(kline_store=FakeKlineStore())
 
     fake_akshare = types.SimpleNamespace(
@@ -244,7 +252,7 @@ def test_sina_hk_history_is_normalized_and_cached(monkeypatch):
     assert service.kline_store.saved[0][0] == "index:HK:HSI"
 
 
-def test_sina_cn_history_is_normalized_and_cached(monkeypatch):
+def test_sina_cn_history_is_normalized_and_cached(monkeypatch, legacy_daily_sources):
     service = IndexDataService(kline_store=FakeKlineStore())
 
     fake_akshare = types.SimpleNamespace(
@@ -508,8 +516,12 @@ def test_hstech_prefers_longer_index_history_and_keeps_sina_fallback(monkeypatch
     from app.domain.market.index_fetch import IndexFetchResult
     from app.infra.market_data.index_history_http import EastmoneyIndexHistoryProvider
     from app.infra.market_data.index_history_sina import SinaIndexHistoryProvider
+    from app.infra.market_data.index_history_tencent import TencentIndexHistoryProvider
 
     calls = []
+    def tencent(self, *args):
+        calls.append("tencent")
+        return IndexFetchResult(data=[], source="tencent")
     def eastmoney(self, *args):
         calls.append("eastmoney")
         return IndexFetchResult(data=[], source="eastmoney")
@@ -518,8 +530,9 @@ def test_hstech_prefers_longer_index_history_and_keeps_sina_fallback(monkeypatch
         return IndexFetchResult(data=[[1, 10, 11, 9, 10, 0]], source="sina_hk")
     monkeypatch.setattr(EastmoneyIndexHistoryProvider, "fetch_history", eastmoney)
     monkeypatch.setattr(SinaIndexHistoryProvider, "fetch_hk_history", sina)
+    monkeypatch.setattr(TencentIndexHistoryProvider, "fetch_history", tencent)
     sources = IndexHistorySources()
     now = datetime.now(timezone.utc)
     result = sources.fetch_history(INDEX_CATALOG["HK_HSTECH"], now, now)
-    assert calls == ["eastmoney", "sina"]
+    assert calls == ["tencent", "eastmoney", "sina"]
     assert result.source == "sina_hk"

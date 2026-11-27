@@ -2,3 +2,8 @@
 /strategies/pine/eth_ema55_manual_chart_v7_2.pine -text
 /docs/PINE_CODE_STANDARD.md -text whitespace=cr-at-eol
 /frontend/test/fixtures/pine-runtime/* -text whitespace=cr-at-eol
+
+# Third-party notices must retain the exact bytes published by each package.
+/docs/licenses/chart-workspace/**/LICENSE -text whitespace=cr-at-eol
+/docs/licenses/chart-workspace/**/NOTICE -text whitespace=cr-at-eol
+/docs/licenses/chart-workspace/**/ThirdPartyNotices.txt -text whitespace=cr-at-eol

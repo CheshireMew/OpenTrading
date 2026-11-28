@@ -97,15 +97,20 @@ async def test_concurrent_intraday_reads_share_work_and_cancelled_visitor_does_n
     calls=[]
 
     async def run(operation):
-        calls.append(True); started.set(); await release.wait(); return operation()
+        calls.append(True)
+        started.set()
+        await release.wait()
+        return operation()
 
     monkeypatch.setattr('app.services.chart_index_market.run_external_io',run)
     client=SimpleNamespace(history=lambda *_: [row('2026-11-25')])
     market=ChartVixMarket(None,client=client)
     first=asyncio.create_task(market._intraday('1m',1,2))
     second=asyncio.create_task(market._intraday('1m',1,2))
-    await started.wait(); first.cancel()
-    with pytest.raises(asyncio.CancelledError): await first
+    await started.wait()
+    first.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await first
     release.set()
     assert await second == [row('2026-11-25')]
     assert await market._intraday('1m',1,2) == [row('2026-11-25')]
@@ -149,7 +154,8 @@ def test_yahoo_adapter_rejects_an_etf_identity(monkeypatch):
     try:
         with pytest.raises(MarketDataError, match='不是 VIX'):
             client.history('1m',stamp('2026-11-25'),stamp('2026-11-26'))
-    finally: client.close()
+    finally:
+        client.close()
 
 
 def test_native_yahoo_feed_folds_live_sample_into_its_candle_and_excludes_future_observations():
@@ -162,7 +168,8 @@ def test_native_yahoo_feed_folds_live_sample_into_its_candle_and_excludes_future
     client=VixIntradayClient(httpx.MockTransport(lambda _:httpx.Response(200,json=payload)))
     try:
         assert client.history('5m', first, first+300_000)==[[first,20,23,19,23,0]]
-    finally: client.close()
+    finally:
+        client.close()
 
 
 @pytest.mark.asyncio
@@ -170,12 +177,15 @@ async def test_cache_has_a_bar_budget_and_failed_fetches_are_retryable():
     calls=[]
     def history(*args):
         calls.append(args)
-        if len(calls)==1: raise MarketDataError('temporary failure')
+        if len(calls)==1:
+            raise MarketDataError('temporary failure')
         return [row('2026-11-25') for _ in range(10_000)]
     market=ChartVixMarket(None,client=SimpleNamespace(history=history))
-    with pytest.raises(MarketDataError): await market._intraday('1m',1,2)
+    with pytest.raises(MarketDataError):
+        await market._intraday('1m',1,2)
     await market._intraday('1m',1,2)
-    for number in range(3,8): await market._intraday('1m',number,number+1)
+    for number in range(3,8):
+        await market._intraday('1m',number,number+1)
     assert sum(len(value[1]) for value in market._cache.values())<=32_000
     assert len(market._tasks)==0
     await market.close()
@@ -212,7 +222,8 @@ def test_yahoo_failure_tries_second_host_and_never_becomes_an_empty_page():
         with pytest.raises(MarketDataError,match='暂不可用'):
             client.history('1m',stamp('2026-11-25'),stamp('2026-11-26'))
         assert hosts==['query1.finance.yahoo.com','query2.finance.yahoo.com']
-    finally: client.close()
+    finally:
+        client.close()
 
 
 def test_http_vix_chart_and_replay_keep_units_periods_and_closed_bar_cutoff(monkeypatch):

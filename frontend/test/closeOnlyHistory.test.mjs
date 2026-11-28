@@ -111,8 +111,21 @@ test('panning into published close-only history preserves candles, the viewport,
   await verifyHistory(t,file?JSON.parse(fs.readFileSync(file,'utf8')):undefined)
 })
 
-test('real published HSTECH history ends at launch with candles intact',{
-  timeout:60_000,skip:!process.env.OPENTRADING_TEST_BROWSER||!process.env.OPENTRADING_PUBLISHED_INDEX_FIXTURE,
+test('published HSTECH history ends at launch with candles intact',{
+  timeout:60_000,skip:!process.env.OPENTRADING_TEST_BROWSER,
 },async t=>{
-  await verifyHistory(t,JSON.parse(fs.readFileSync(process.env.OPENTRADING_PUBLISHED_INDEX_FIXTURE,'utf8')))
+  const file=process.env.OPENTRADING_PUBLISHED_INDEX_FIXTURE
+  const fixture=file?JSON.parse(fs.readFileSync(file,'utf8')):{
+    symbol:{id:'index:index:HK_HSTECH',symbol:'HK_HSTECH',name:'Hang Seng TECH Index',exchange:'HSI',
+      market:'index',currency:'PTS',timeframes:['1d','1w','1M'],timezone:'Asia/Hong_Kong',
+      session:'0930-1200,1300-1600:23456',close_only:false,
+      metadata:{name_zh:'恒生科技指数',name_en:'Hang Seng TECH Index',display_symbol:'HSTECH',
+        quote_unit:'points',icon_url:'/brand-icons/hstech.svg',pricescale:100,mintick:.01,has_volume:false}},
+    bars:Array.from({length:1500},(_,i)=>{
+      const time=Date.UTC(2020,6,27)+i*86400000,close=6500+i%200
+      return {time,closeTime:time+86400000,open:close-5,high:close+10,low:close-10,close,
+        volume:0,closed:true,closeOnly:false}
+    }),
+  }
+  await verifyHistory(t,fixture)
 })

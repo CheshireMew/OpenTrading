@@ -7,8 +7,8 @@ import pytest
 from app.domain.market.index_catalog import INDEX_CATALOG
 from app.infra.market_data.index_chart import IndexChartClient
 from app.infra.market_data.index_source_catalog import get_index_source_binding
-from app.services.chart_index_catalog import index_symbol, PERIODS
-from app.services.chart_index_market import ChartIndexMarket, aggregate, DAY
+from app.services.chart_index_catalog import PERIODS
+from app.services.chart_index_market import ChartIndexMarket, aggregate
 from app.services.chart_workspace_market import ChartWorkspaceMarket
 from app.infra.market_data.index_history_tencent import TencentIndexHistoryProvider
 
@@ -151,7 +151,8 @@ async def test_index_backward_daily_pages_do_not_skip_the_previous_session():
         actual=[]
         while True:
             page=await market.bars('HK_HSTECH','1d',1,None,end)
-            if not page.bars: break
+            if not page.bars:
+                break
             actual.extend(bar.time for bar in page.bars)
             end=page.bars[0].time-1
         assert actual==[row[0] for row in reversed(rows)]
@@ -172,7 +173,8 @@ async def test_index_caches_do_not_mix_symbols_and_share_one_global_bar_budget()
         assert (await market._history('US_DXY','1m',1,2))[0][4] == 100
         assert (await market._history('US_SP500','1m',1,2))[0][4] == 5000
         await market._history('US_DXY','1m',1,2)
-        for number in range(4): await market._history('HK_HSI','1m',number,10)
+        for number in range(4):
+            await market._history('HK_HSI','1m',number,10)
         assert calls.count('US_DXY') == 1
         assert sum(len(value[1]) for value in market._cache.values()) <= 32_000
     finally:

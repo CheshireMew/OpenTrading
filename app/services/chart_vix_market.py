@@ -1,8 +1,8 @@
 """VIX convenience interface backed by the shared index implementation."""
-import time
+import time as time
 from app.infra.market_data.vix import VixIntradayClient
-from app.services.chart_index_catalog import index_symbol, PERIODS, RETENTION
-from app.services.chart_index_market import ChartIndexMarket, aggregate, DAY
+from app.services.chart_index_catalog import index_symbol, PERIODS as PERIODS, RETENTION as RETENTION
+from app.services.chart_index_market import ChartIndexMarket, aggregate as aggregate, DAY as DAY
 
 VIX_ID = "index:index:US_VIX"
 

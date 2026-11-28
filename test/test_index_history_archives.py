@@ -1,5 +1,4 @@
 from datetime import datetime,timezone
-from types import SimpleNamespace
 
 import httpx
 import pandas as pd

@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import math
 
 from app.domain.market.index_catalog import INDEX_CATALOG, IndexInstrument
-from app.domain.market.candles import utc_datetime
+from app.domain.market.candles import utc_datetime as utc_datetime
 
 
 def live_start_ms(instrument: IndexInstrument | str) -> int:
@@ -16,10 +16,11 @@ def live_start_ms(instrument: IndexInstrument | str) -> int:
 def valid_index_row(row) -> bool:
     if len(row) < 6:
         return False
-    o, h, l, c, v = map(float, row[1:6])
+    opened, high, low, close, volume = map(float, row[1:6])
     # Older vendor floats can differ by less than one declared 0.01 index point.
-    return (all(math.isfinite(value) for value in (o, h, l, c, v)) and min(o,h,l,c)>0 and v>=0
-        and round(l,2) <= min(round(o,2),round(c,2)) <= max(round(o,2),round(c,2)) <= round(h,2))
+    return (all(math.isfinite(value) for value in (opened, high, low, close, volume))
+        and min(opened,high,low,close)>0 and volume>=0
+        and round(low,2) <= min(round(opened,2),round(close,2)) <= max(round(opened,2),round(close,2)) <= round(high,2))
 
 
 def full_index_row(row) -> bool:

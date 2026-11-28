@@ -161,6 +161,7 @@ def test_yahoo_index_preserves_the_session_date_in_both_dst_offsets(monkeypatch,
     import pandas as pd
     from app.services.market.index_history_sources import IndexHistorySources
     from app.infra.market_data.index_source_catalog import get_index_source_binding
+    from app.infra.market_data.index_history_http import YFinanceIndexHistoryProvider
 
     requested = []
     frame = pd.DataFrame({"Open": [103.0], "High": [104.0], "Low": [102.0], "Close": [103.5], "Volume": [0]},
@@ -172,7 +173,10 @@ def test_yahoo_index_preserves_the_session_date_in_both_dst_offsets(monkeypatch,
             return frame
     monkeypatch.setitem(sys.modules, "yfinance", SimpleNamespace(Ticker=Ticker))
     assert get_index_source_binding("US_DXY").yfinance_symbol == "DX-Y.NYB"
-    result = IndexDataService(FakeKlineStore(), IndexHistorySources()).get_history(
+    sources = IndexHistorySources()
+    # Exercise the SDK fallback without calling the native primary or network.
+    sources.providers = (YFinanceIndexHistoryProvider().fetch_history,)
+    result = IndexDataService(FakeKlineStore(), sources).get_history(
         symbol="US_DXY", timeframe="1d", start_date=day, end_date=day)
     assert [point.timestamp for point in result.data] == [stamp(day)]
     assert requested == ["DX-Y.NYB"] and result.source == "yfinance"

@@ -11,6 +11,7 @@ import httpx
 from app.domain.market.candles import current_candle_open_ms
 from app.infra.market_data.exchange import MarketDataError
 from app.infra.market_data.index_source_catalog import get_index_source_binding
+from app.domain.market.index_history_policy import live_index_rows, live_start_ms, utc_datetime
 from config import settings
 
 
@@ -21,6 +22,9 @@ class IndexChartClient:
         self._transport = transport
 
     def history(self, symbol: str, interval: str, start: int, end: int) -> list[list[float]]:
+        start = max(start, live_start_ms(symbol))
+        if end < start:
+            return []
         ticker = get_index_source_binding(symbol).yfinance_symbol
         if not ticker:
             raise MarketDataError(f"{symbol} 尚未配置指数数据源")
@@ -78,7 +82,7 @@ class IndexChartClient:
             raw = [prices[key][index] for key in ("open", "high", "low", "close")]
             if any(value is None for value in raw):
                 continue
-            session = datetime.fromtimestamp(timestamp, zone)
+            session = utc_datetime(int(timestamp*1000)).astimezone(zone)
             stamp = (int(datetime(session.year, session.month, session.day, tzinfo=timezone.utc).timestamp() * 1000)
                 if interval == "1d" else current_candle_open_ms(int(timestamp * 1000) - offset,
                     "1h" if interval == "60m" else interval) + offset)
@@ -91,7 +95,7 @@ class IndexChartClient:
                 bar[2], bar[3], bar[4] = max(bar[2], values[1]), min(bar[3], values[2]), values[3]
             else:
                 rows[stamp] = [stamp, *values, 0.0]
-        return [rows[stamp] for stamp in sorted(rows)]
+        return live_index_rows(symbol, [rows[stamp] for stamp in sorted(rows)])
 
     def close(self):
         with self._lock:

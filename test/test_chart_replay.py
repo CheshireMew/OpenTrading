@@ -59,6 +59,30 @@ async def test_replay_route_validates_ranges_and_public_history_cache():
     assert public_route(SimpleNamespace(name="chart_replay_bars"))
 
 
+def test_replay_http_route_accepts_real_pre1970_index_history():
+    from datetime import datetime,timezone
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    from app.routers.chart_workspace import router,services
+    from app.services.chart_index_catalog import index_symbol
+    first=int(datetime(1957,3,4,tzinfo=timezone.utc).timestamp()*1000)
+    calls=[]
+    class Market:
+        async def replay_bars(self,*args):
+            calls.append(args)
+            return ChartBars(symbol=index_symbol('US_SP500'),timeframe='1d',source='cache',bars=[
+                ChartBar(time=first,open=44.06,high=44.21,low=43.85,close=44.06,
+                    closeTime=first+86400000,closed=True)])
+    app=FastAPI()
+    app.include_router(router)
+    app.dependency_overrides[services]=lambda:SimpleNamespace(market=Market())
+    with TestClient(app) as client:
+        result=client.get('/chart-workspace/replay/bars',params={'symbol':'index:index:US_SP500',
+            'timeframe':'1d','start':first,'end':first+86400000,'limit':1})
+    assert result.status_code==200 and result.json()['bars'][0]['time']==first
+    assert calls==[('index:index:US_SP500','1d',1,first,first+86400000)]
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("cached_count", [0, 2])
 async def test_replay_downloads_only_missing_minutes_near_the_start_and_reuses_them(cached_count):

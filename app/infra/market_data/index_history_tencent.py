@@ -1,15 +1,18 @@
 """Free Tencent daily index archive, paged without loading a market SDK."""
 from datetime import datetime, timedelta, timezone
-import math
 
 import httpx
 
 from app.domain.market.index_fetch import IndexFetchResult
+from app.domain.market.index_history_policy import live_index_rows, live_start_ms, utc_datetime, valid_index_row
 from config import settings
 
 
 class TencentIndexHistoryProvider:
     def fetch_history(self, instrument, source, start_dt, end_dt):
+        start_dt = max(start_dt, utc_datetime(live_start_ms(instrument)))
+        if end_dt < start_dt:
+            return IndexFetchResult(data=[], source="not-launched")
         code = (source.baostock_code or "").replace(".", "") if instrument.market == "CN" else (
             "hk" + source.sina_hk_symbol if instrument.market == "HK" and source.sina_hk_symbol else "")
         if not code:
@@ -36,11 +39,10 @@ class TencentIndexHistoryProvider:
                     if not start_dt.date() <= day.date() <= end_dt.date():
                         continue
                     values = [float(row[index]) for index in (1, 3, 4, 2)]
-                    if not all(math.isfinite(value) and value > 0 for value in values) or not (
-                        values[2] <= min(values[0], values[3]) <= max(values[0], values[3]) <= values[1]):
-                        raise ValueError(f"腾讯指数日线数值无效：{code}")
                     stamp = int(day.timestamp() * 1000)
-                    rows[stamp] = [stamp, *values, 0.0]
+                    observation = [stamp, *values, 0.0]
+                    if valid_index_row(observation):
+                        rows[stamp] = observation
                 oldest = min(dates)
                 if len(page) < 640 or oldest <= start_dt.date():
                     break
@@ -49,9 +51,4 @@ class TencentIndexHistoryProvider:
                     raise ValueError(f"腾讯指数历史分页没有前进：{code}")
                 cursor = next_cursor
         result = [rows[stamp] for stamp in sorted(rows)]
-        # Other archives may contain pre-launch back series which Tencent lacks.
-        # Fall through rather than silently replacing that history with a later
-        # beginning (e.g. CSI A500's 2004 back series versus its 2024 launch).
-        if result and result[0][0] - int(start_dt.timestamp()*1000) > 14 * 86_400_000:
-            result = []
-        return IndexFetchResult(data=result, source="tencent")
+        return IndexFetchResult(data=live_index_rows(instrument,result), source="tencent")

@@ -34,6 +34,7 @@ class ChartBar(BaseModel):
     volume: float = 0
     closeTime: int
     closed: bool
+    closeOnly: bool = False
 
 
 class ChartBars(BaseModel):

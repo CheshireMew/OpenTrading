@@ -1,13 +1,18 @@
 """Candle time boundaries and observation metadata, independent of transport."""
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from app.domain.market.constants import timeframe_to_milliseconds
 
 
+def utc_datetime(timestamp_ms: int) -> datetime:
+    """Convert Unix milliseconds, including pre-1970 observations on Windows."""
+    return datetime(1970, 1, 1, tzinfo=timezone.utc) + timedelta(milliseconds=timestamp_ms)
+
+
 def candle_end_ms(timestamp: int, timeframe: str) -> int:
     if timeframe.endswith("M") and timeframe[:-1].isdigit():
-        start = datetime.fromtimestamp(timestamp / 1000, timezone.utc)
+        start = utc_datetime(timestamp)
         months = start.year * 12 + start.month - 1 + int(timeframe[:-1])
         return int(start.replace(year=months // 12, month=months % 12 + 1, day=1).timestamp() * 1000)
     interval = timeframe_to_milliseconds(timeframe)
@@ -22,7 +27,7 @@ def closed_candles(rows: list[list[float]], timeframe: str, observed_at_ms: int)
 
 def current_candle_open_ms(now_ms: int, timeframe: str) -> int:
     if timeframe.endswith("M") and timeframe[:-1].isdigit():
-        now = datetime.fromtimestamp(now_ms / 1000, timezone.utc)
+        now = utc_datetime(now_ms)
         months = now.year * 12 + now.month - 1
         months -= months % int(timeframe[:-1])
         return int(datetime(months // 12, months % 12 + 1, 1, tzinfo=timezone.utc).timestamp() * 1000)
@@ -40,8 +45,8 @@ def candle_count_between(first_ms: int, last_ms: int, timeframe: str) -> int:
     first = current_candle_open_ms(first_ms, timeframe)
     last = current_candle_open_ms(last_ms, timeframe)
     if timeframe.endswith("M"):
-        left = datetime.fromtimestamp(first / 1000, timezone.utc)
-        right = datetime.fromtimestamp(last / 1000, timezone.utc)
+        left = utc_datetime(first)
+        right = utc_datetime(last)
         return ((right.year - left.year) * 12 + right.month - left.month) // int(timeframe[:-1]) + 1
     return (last - first) // timeframe_to_milliseconds(timeframe) + 1
 

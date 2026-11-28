@@ -98,7 +98,7 @@ async def chart_quotes(symbols:str,service=Depends(services)):
 
 @router.get("/replay/bars", response_model=ChartBars)
 async def chart_replay_bars(response: Response, symbol: str, timeframe: str,
-                            end: int = Query(..., ge=1), start: int | None = Query(None, ge=0),
+                            end: int = Query(...), start: int | None = Query(None),
                             limit: int = Query(1000, ge=1, le=1000), service=Depends(services)):
     upper = min(end, int(time.time() * 1000))
     if start is not None and start >= upper:

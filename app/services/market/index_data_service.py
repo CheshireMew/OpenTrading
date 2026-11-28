@@ -5,6 +5,7 @@ from app.application.errors import InvalidRequestError
 from datetime import datetime, timezone, timedelta
 from app.infra.market_calendar import session_dates
 from app.domain.market.session_history import SessionHistoryCoverage
+from app.domain.market.index_history_policy import full_index_row, valid_index_row, live_index_rows, live_start_ms, utc_datetime
 
 from app.domain.market.index_catalog import (
     IndexInstrument,
@@ -139,6 +140,9 @@ class IndexDataService:
         if start_dt > end_dt:
             raise InvalidRequestError("start_date 不能晚于 end_date")
 
+        if price_basis == "index":
+            start_dt = max(start_dt, utc_datetime(live_start_ms(instrument)))
+
         start_ts = int(start_dt.timestamp() * 1000)
         # Daily research covers completed UTC dates only. Never count today's
         # still-changing provider row as a historical observation.
@@ -151,14 +155,18 @@ class IndexDataService:
             calendar_error = str(exc)
         expected_timestamps = {int(datetime.fromisoformat(day).replace(tzinfo=timezone.utc).timestamp() * 1000) for day in expected}
         def missing_sessions(rows):
-            found = {int(row[0]) for row in rows if float(row[4]) > 0}
+            found = {int(row[0]) for row in rows if float(row[4]) > 0 and
+                (price_basis != "index" or valid_index_row(row))}
             return [(stamp, stamp + 86_400_000) for stamp in sorted(expected_timestamps - found)]
         source = "none"
+        cached_rows = self.kline_store.get_range(storage_symbol,timeframe,start_ts,
+            max(start_ts,end_ts_exclusive-1))
+        existing = {row[0]:row for row in cached_rows}
 
         def fetch_gap(gap_start: int, gap_end: int) -> list[list[float]]:
             nonlocal source
-            window_start = datetime.fromtimestamp(gap_start / 1000, tz=timezone.utc)
-            window_end = datetime.fromtimestamp(max(gap_start, gap_end - 1) / 1000, tz=timezone.utc)
+            window_start = utc_datetime(gap_start)
+            window_end = utc_datetime(max(gap_start, gap_end - 1))
             fetch_result = fetcher(instrument, window_start, window_end)
             if not fetch_result.data:
                 return []
@@ -179,7 +187,10 @@ class IndexDataService:
                     return []
 
             source = fetch_result.source
-            return fetch_result.data
+            if price_basis != "index":
+                return fetch_result.data
+            return [row for row in live_index_rows(instrument,fetch_result.data)
+                if row[0] not in existing or not full_index_row(existing[row[0]]) or full_index_row(row)]
 
         range_result = self.history_ranges.load(
             storage_symbol=storage_symbol,
@@ -187,11 +198,14 @@ class IndexDataService:
             start_ts=start_ts,
             end_ts_exclusive=end_ts_exclusive,
             fetch_gap=fetch_gap,
+            cached_rows=cached_rows,
             coalesce_gaps=True,
             missing_ranges=missing_sessions if calendar_error is None else None,
         )
-        data = [row for row in range_result.rows if int(row[0]) in expected_timestamps and float(row[4]) > 0]
-        missing = [datetime.fromtimestamp(stamp / 1000, timezone.utc).date().isoformat() for stamp, _ in missing_sessions(data)]
+        data = [row for row in range_result.rows if (calendar_error is not None or int(row[0]) in expected_timestamps) and float(row[4]) > 0]
+        if price_basis == "index":
+            data = live_index_rows(instrument,data)
+        missing = [utc_datetime(stamp).date().isoformat() for stamp, _ in missing_sessions(data)]
         if source == "none" and range_result.cached_rows:
             source = "cache"
         return MarketIndexHistoryRecord(
@@ -209,7 +223,7 @@ class IndexDataService:
             is_close_only=bool(data) and self._rows_are_close_only(data),
             data=[self._ohlcv_record(row) for row in data],
             coverage=SessionHistoryCoverage(complete=calendar_error is None and not missing, calendar=calendar,
-                start_date=start_date, end_date=closed_end.isoformat(), expected_sessions=expected,
+                start_date=start_dt.date().isoformat(), end_date=closed_end.isoformat(), expected_sessions=expected,
                 missing_sessions=missing, non_trading_dates=holidays, error=calendar_error),
         )
 

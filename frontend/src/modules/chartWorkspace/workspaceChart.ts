@@ -47,11 +47,6 @@ export function createWorkspaceChart(deps: {
   const feedStatus = ref('connecting'), feedError = ref('')
   const sync = ref<Record<string, boolean>>({ viewport: false, crosshair: true, symbol: false, timeframe: false })
   const activeSymbol = computed(() => symbols.value.find(symbol => symbol.id === activeSymbolId.value))
-  watch(() => activeSymbol.value?.close_only, (closeOnly, previous) => {
-    if (closeOnly !== undefined && previous !== undefined && closeOnly !== previous) {
-      workspace.value?.context().setPriceStyle(closeOnly ? 'line' : 'candles')
-    }
-  })
   const backendPeriod = computed(() => timeframes[activeTimeframe.value] ?? activeTimeframe.value)
   const historyText = computed(() => {
     const history = historyByCell.value[activeCell.value]

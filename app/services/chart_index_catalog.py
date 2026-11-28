@@ -2,6 +2,7 @@
 from app.contracts.chart_workspace import ChartSymbol
 from app.domain.market.index_catalog import INDEX_CATALOG
 from app.infra.market_data.index_source_catalog import get_index_source_binding
+from app.domain.market.index_history_policy import live_start_ms
 
 PERIODS = ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w", "1M"]
 RETENTION = {"1m": 29, "5m": 59, "15m": 59, "30m": 59, "1h": 729, "4h": 729}
@@ -47,6 +48,7 @@ def index_symbol(symbol: str) -> ChartSymbol:
         market="index", currency="PTS", timezone=timezone, session=session, timeframes=PERIODS,
         aliases=list(dict.fromkeys([instrument.name, *instrument.aliases, ticker, source_ticker, name_zh, name_en])),
         metadata={"display_symbol": ticker, "name_zh": name_zh, "name_en": name_en,
+            "launch_date": instrument.launch_date, "history_start": live_start_ms(instrument), "history_policy": "live-only",
             "quote_unit": "points", "icon_url": f"/brand-icons/{ticker.lower()}.svg", "price_basis": "index",
             "mintick": 0.01, "minmove": 1, "pricescale": 100, "pointvalue": 1, "has_volume": False,
             "intraday_source": f"Yahoo Finance · {source_ticker}", "data_status": "delayed",

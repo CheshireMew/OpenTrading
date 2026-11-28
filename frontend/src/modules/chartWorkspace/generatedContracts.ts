@@ -97,6 +97,7 @@ export interface ChartBar {
   volume?: number
   closeTime: number
   closed: boolean
+  closeOnly?: boolean
 }
 
 export interface PineProgress {

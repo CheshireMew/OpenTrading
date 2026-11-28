@@ -5,6 +5,7 @@ import { PRICE_ALERT_LAYER, type PriceAlertLayerSource } from './priceAlertLayer
 import { localizeCanvasDates } from './canvasLocale'
 import { REPLAY_ORDER_LAYER, type ReplayLayerSource } from './replayOrderLayer'
 import { INDICATOR_SELECTION_LAYER, installIndicatorInteraction, type IndicatorPicking } from './indicatorInteraction'
+import './closeOnlyHistory'
 
 export const CHART_FONT = 'Arial, "Microsoft YaHei", sans-serif'
 // Native candle bodies occupy 70% of this pitch: 14px gives a roughly 10px

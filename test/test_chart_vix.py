@@ -65,8 +65,9 @@ async def test_weekly_monthly_ohlc_respect_holidays_and_calendar(period, expecte
 @pytest.mark.asyncio
 async def test_historical_partial_week_never_contains_later_days():
     market = ChartVixMarket(DailyIndex([row('2024-02-05'), row('2024-02-06',23,30,17,26), row('2024-02-07',100,200,90,150)]))
-    result = await market.bars('1w', 1, None, stamp('2024-02-07T12:00:00'))
+    result = await market.bars('1w', 1, None, stamp('2024-02-07')-1)
     assert len(result.bars)==1 and result.bars[0].close==26 and result.bars[0].high==30
+    assert market.index.calls[0]['end_date']=='2024-02-06'
 
 
 @pytest.mark.asyncio
@@ -133,7 +134,7 @@ async def test_current_day_forward_poll_does_not_request_an_inverted_daily_histo
     now=stamp('2026-11-27T16:00:00')
     monkeypatch.setattr('app.services.chart_vix_market.time.time',lambda:now/1000)
     index=DailyIndex([])
-    market=ChartVixMarket(index,client=SimpleNamespace(history=lambda *_:[row('2026-11-27',close=25)]))
+    market=ChartVixMarket(index,client=SimpleNamespace(history=lambda *_:[row('2026-11-27',high=26,close=25)]))
     result=await market.bars('1d',1000,stamp('2026-11-27'),now)
     assert len(result.bars)==1 and result.bars[0].close==25 and not result.bars[0].closed
     assert index.calls==[]

@@ -1407,6 +1407,7 @@
   },
   "chartWorkspace": {
     "points": "points",
+    "closeOnlyHistory": "Only closing prices are available in this range",
     "quoteUnit": "Quote unit",
     "delayedQuotes": "Delayed data",
     "delayedIndexSource": "Intraday: {source} (delayed). Upstream history: about {minuteDays} days of 1m, {otherDays} days of other minutes and {hourDays} days of hourly data. Saved history remains available beyond these limits.",

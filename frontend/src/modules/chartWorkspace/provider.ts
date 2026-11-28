@@ -116,7 +116,10 @@ export class OpenTradingProvider implements DataProvider {
         const query:Record<string,string|number> = {symbol:info.id,timeframe:tf,end,limit:Math.min(target-collected.length,1000)}
         if (start!==undefined) query.start = start
         const result = await chartApi.bars(query,abort.signal)
-        Object.assign(info,result.symbol)
+        // A page's historical close-only flag must not mutate the catalog's
+        // capability or the user's active price style during a history load.
+        const { close_only: _pageCloseOnly, ...symbol } = result.symbol
+        Object.assign(info,symbol)
         if (!result.bars.length) break
         collected.push(...result.bars)
         if(!forward)onBatch?.([...collected].sort((a,b)=>a.time-b.time))

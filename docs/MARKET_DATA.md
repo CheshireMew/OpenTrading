@@ -29,6 +29,15 @@ OpenTrading 的「美元流动性」位于 `/indicators/market-data`。页面展
 
 旧版命令留下的分钟和小时快照会在同步时优先用于填补共享缓存缺口，不覆盖共享缓存中已有的行情修正，也不删除原始快照。
 
+`data index-sync` 将现有 19 个指数的免费真实历史保存到同一份图表数据库，默认补充源可提供的日线及盘中历史。`--symbol`、`--timeframe` 可以重复指定；日线按正式发布日期截断，分钟和小时线受上游当前可下载范围限制。发布前的回溯数据不下载，旧缓存中的这部分也不会显示。仅保存已收盘且越过 15 分钟延迟的盘中 K 线；已有完整 OHLC 保留，缺少 OHLC 的记录在来源确实提供时修复。周、月线读取已存日线聚合，30 分钟及 4 小时线保存聚合结果及对应基础周期。
+
+```powershell
+.\venv\Scripts\python.exe -m scripts.market_data_cli data index-sync
+.\venv\Scripts\python.exe -m scripts.market_data_cli data index-sync --symbol HK_HSTECH --timeframe 1d
+```
+
+命令标准输出为 `opentrading.index-sync.v1` JSON，进度写入标准错误。结果中的 `added`、`repaired`、`first`、`last` 表示实际持久化情况；`saved` 表示这次请求已处理，不能解释为覆盖了所有历史。日线另列交易日缺口和仅收盘数量，日历不支持的旧日期明确列出 `calendar_error`；请求失败时退出码为 1，可按失败的品种和周期重新执行。已经超过来源滚动窗口、且本地从未保存的分钟数据仍无法凭空补回。
+
 ## 从 Signal Lab 导入
 
 结构化数据使用主项目的 `DATABASE_URL`。原始接口响应和 Parquet 文件默认继续保存在 `RUNTIME_ROOT_DIR/signal-lab`，以沿用已有数据；可用 `MARKET_DATA_DIR` 指定文件位置。旧的 `SIGNAL_LAB_DATA_DIR` 和存储配额变量仍作为配置别名支持，新变量优先。公开流动性数据无需密钥，Tiingo 和带密钥的 FRED 数据入口可分别配置 `TIINGO_API_TOKEN` 和 `FRED_API_KEY`。

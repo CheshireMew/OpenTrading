@@ -1407,6 +1407,7 @@
   },
   "chartWorkspace": {
     "points": "点",
+    "closeOnlyHistory": "该区间仅提供收盘价",
     "quoteUnit": "报价单位",
     "delayedQuotes": "延迟行情",
     "delayedIndexSource": "盘中：{source}（延迟行情）。上游可回溯约 {minuteDays} 天的 1 分钟、{otherDays} 天的其他分钟及 {hourDays} 天的小时数据。已保存历史可继续加载，不受此期限限制。",

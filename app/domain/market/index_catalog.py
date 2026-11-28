@@ -16,11 +16,13 @@ class IndexInstrument:
     pricing_storage_symbol: str | None = None
     aliases: tuple[str, ...] = ()
     calendar: str | None = None
+    launch_date: str | None = None
 
 
 INDEX_CATALOG: dict[str, IndexInstrument] = {
     "US_SP500": IndexInstrument(
         symbol="US_SP500",
+        launch_date="1957-03-04",
         name="S&P 500",
         market="US",
         currency="USD",
@@ -33,6 +35,7 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
     ),
     "US_NASDAQ_COMP": IndexInstrument(
         symbol="US_NASDAQ_COMP",
+        launch_date="1971-02-05",
         name="Nasdaq Composite",
         market="US",
         currency="USD",
@@ -45,6 +48,7 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
     ),
     "US_NASDAQ100": IndexInstrument(
         symbol="US_NASDAQ100",
+        launch_date="1985-01-31",
         name="Nasdaq 100",
         market="US",
         currency="USD",
@@ -57,6 +61,7 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
     ),
     "US_DOW": IndexInstrument(
         symbol="US_DOW",
+        launch_date="1896-05-26",
         name="Dow Jones Industrial Average",
         market="US",
         currency="USD",
@@ -69,6 +74,7 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
     ),
     "US_RUSSELL2000": IndexInstrument(
         symbol="US_RUSSELL2000",
+        launch_date="1984-01-01",
         name="Russell 2000",
         market="US",
         currency="USD",
@@ -81,6 +87,8 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
     ),
     "US_VIX": IndexInstrument(
         symbol="US_VIX",
+        # Current SPX-based VIX; earlier values in its CSV are back-calculated.
+        launch_date="2003-09-22",
         name="CBOE Volatility Index",
         market="US",
         currency="USD",
@@ -93,6 +101,7 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
     ),
     "US_DXY": IndexInstrument(
         symbol="US_DXY",
+        launch_date="1973-03-01",
         name="US Dollar Index (DXY)",
         market="US",
         currency="USD",
@@ -102,6 +111,7 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
     ),
     "CN_CSI300": IndexInstrument(
         symbol="CN_CSI300",
+        launch_date="2005-04-08",
         name="沪深300",
         market="CN",
         currency="CNY",
@@ -114,6 +124,7 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
     ),
     "CN_CSI_A500": IndexInstrument(
         symbol="CN_CSI_A500",
+        launch_date="2024-09-23",
         name="中证A500",
         market="CN",
         currency="CNY",
@@ -126,6 +137,7 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
     ),
     "CN_SSE50": IndexInstrument(
         symbol="CN_SSE50",
+        launch_date="2004-01-02",
         name="上证50",
         market="CN",
         currency="CNY",
@@ -138,6 +150,7 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
     ),
     "CN_CSI500": IndexInstrument(
         symbol="CN_CSI500",
+        launch_date="2007-01-15",
         name="中证500",
         market="CN",
         currency="CNY",
@@ -150,6 +163,7 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
     ),
     "CN_CSI1000": IndexInstrument(
         symbol="CN_CSI1000",
+        launch_date="2014-10-17",
         name="中证1000",
         market="CN",
         currency="CNY",
@@ -162,6 +176,7 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
     ),
     "CN_SSE_COMP": IndexInstrument(
         symbol="CN_SSE_COMP",
+        launch_date="1991-07-15",
         name="上证指数",
         market="CN",
         currency="CNY",
@@ -174,6 +189,7 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
     ),
     "CN_SZSE_COMPONENT": IndexInstrument(
         symbol="CN_SZSE_COMPONENT",
+        launch_date="1995-01-23",
         name="深证成指",
         market="CN",
         currency="CNY",
@@ -186,6 +202,7 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
     ),
     "CN_CHINEXT": IndexInstrument(
         symbol="CN_CHINEXT",
+        launch_date="2010-06-01",
         name="创业板指",
         market="CN",
         currency="CNY",
@@ -198,6 +215,7 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
     ),
     "CN_STAR50": IndexInstrument(
         symbol="CN_STAR50",
+        launch_date="2020-07-23",
         name="科创50",
         market="CN",
         currency="CNY",
@@ -210,6 +228,7 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
     ),
     "HK_HSI": IndexInstrument(
         symbol="HK_HSI",
+        launch_date="1969-11-24",
         name="恒生指数",
         market="HK",
         currency="HKD",
@@ -222,6 +241,7 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
     ),
     "HK_HSTECH": IndexInstrument(
         symbol="HK_HSTECH",
+        launch_date="2020-07-27",
         name="恒生科技指数",
         market="HK",
         currency="HKD",
@@ -234,6 +254,7 @@ INDEX_CATALOG: dict[str, IndexInstrument] = {
     ),
     "HK_HSCEI": IndexInstrument(
         symbol="HK_HSCEI",
+        launch_date="1994-08-08",
         name="恒生中国企业指数",
         market="HK",
         currency="HKD",

@@ -101,6 +101,15 @@ def test_verified_weekend_can_be_filled_but_missing_session_cannot():
         daily_session_prices({"2024-01-05": 100}, coverage, date(2024, 1, 5), date(2024, 1, 8))
 
 
+def test_pre1970_holidays_and_confirmed_hk_weather_closures_are_not_missing_candles():
+    from app.infra.market_calendar import session_dates
+    _,sessions,holidays=session_dates('US',date(1957,7,3),date(1957,7,5))
+    assert sessions==['1957-07-03','1957-07-05'] and holidays==['1957-07-04']
+    _,sessions,holidays=session_dates('HK',date(2023,9,1),date(2023,9,8))
+    assert '2023-09-01' not in sessions and '2023-09-08' not in sessions
+    assert '2023-09-01' in holidays and '2023-09-08' in holidays
+
+
 def test_holiday_only_calendar_range_is_complete_without_fetching():
     source = FakeIndexHistorySources({})
     result = IndexDataService(FakeKlineStore(), source).get_history(
@@ -176,14 +185,20 @@ def test_index_storage_symbols_fit_kline_cache_contract():
 
 
 @pytest.fixture
-def legacy_daily_sources(monkeypatch):
-    # Provider-specific normalization tests must not call the newer primary feed.
-    monkeypatch.setattr('app.infra.market_data.index_history_tencent.TencentIndexHistoryProvider.fetch_history',
-        lambda *_: IndexFetchResult(data=[], source='tencent'))
+def legacy_daily_sources():
+    # Isolate normalization from unrelated live sources, including fallbacks.
+    from app.infra.market_data.index_history_http import EastmoneyIndexHistoryProvider
+    def create(name):
+        sources=IndexHistorySources()
+        sources.providers=({'eastmoney':EastmoneyIndexHistoryProvider().fetch_history,
+            'sina_hk':sources.sina.fetch_hk_history,'sina_cn':sources.sina.fetch_cn_history,
+            'sina_us':sources.sina.fetch_us_history}[name],)
+        return sources
+    return create
 
 
 def test_eastmoney_history_is_normalized_and_cached(monkeypatch, legacy_daily_sources):
-    service = IndexDataService(kline_store=FakeKlineStore())
+    service = IndexDataService(kline_store=FakeKlineStore(),history_sources=legacy_daily_sources('eastmoney'))
 
     def fake_get(*args, **kwargs):
         return FakeResponse(
@@ -221,7 +236,7 @@ def test_eastmoney_history_is_normalized_and_cached(monkeypatch, legacy_daily_so
 
 
 def test_sina_hk_history_is_normalized_and_cached(monkeypatch, legacy_daily_sources):
-    service = IndexDataService(kline_store=FakeKlineStore())
+    service = IndexDataService(kline_store=FakeKlineStore(),history_sources=legacy_daily_sources('sina_hk'))
 
     fake_akshare = types.SimpleNamespace(
         stock_hk_index_daily_sina=lambda symbol: pd.DataFrame([
@@ -253,7 +268,7 @@ def test_sina_hk_history_is_normalized_and_cached(monkeypatch, legacy_daily_sour
 
 
 def test_sina_cn_history_is_normalized_and_cached(monkeypatch, legacy_daily_sources):
-    service = IndexDataService(kline_store=FakeKlineStore())
+    service = IndexDataService(kline_store=FakeKlineStore(),history_sources=legacy_daily_sources('sina_cn'))
 
     fake_akshare = types.SimpleNamespace(
         stock_zh_index_daily=lambda symbol: pd.DataFrame([
@@ -284,8 +299,8 @@ def test_sina_cn_history_is_normalized_and_cached(monkeypatch, legacy_daily_sour
     assert service.kline_store.saved[0][0] == "index:CN:CSI_A500"
 
 
-def test_sina_us_history_is_normalized_and_cached(monkeypatch):
-    service = IndexDataService(kline_store=FakeKlineStore())
+def test_sina_us_history_is_normalized_and_cached(monkeypatch, legacy_daily_sources):
+    service = IndexDataService(kline_store=FakeKlineStore(),history_sources=legacy_daily_sources('sina_us'))
 
     fake_akshare = types.SimpleNamespace(
         index_us_stock_sina=lambda symbol: pd.DataFrame([
@@ -488,6 +503,17 @@ def test_index_history_repairs_middle_gap():
     ]
 
 
+def test_gap_repair_never_downgrades_cached_full_ohlc_to_a_close_only_row():
+    stamp=int(datetime(2024,1,2,tzinfo=timezone.utc).timestamp()*1000)
+    full=[stamp+86400000,100,110,90,105,0]
+    sources=FakeIndexHistorySources({('2024-01-02','2024-01-04'):[
+        [stamp,10,12,9,11,0],[stamp+86400000,105,105,105,105,0],
+        [stamp+2*86400000,11,13,10,12,0]]})
+    result=IndexDataService(FakeKlineStore([full]),sources).get_history(symbol='US_SP500',
+        timeframe='1d',start_date='2024-01-02',end_date='2024-01-04')
+    assert result.data[1].as_row()==full
+
+
 def test_verified_weekends_do_not_trigger_redundant_hydration():
     def row(day):
         return [int(datetime(2024, 1, day, tzinfo=timezone.utc).timestamp() * 1000), 10, 11, 9, 10, 0]
@@ -512,7 +538,7 @@ def test_open_ended_index_history_excludes_the_unclosed_daily_bar():
     assert result.data == []
 
 
-def test_hstech_prefers_longer_index_history_and_keeps_sina_fallback(monkeypatch):
+def test_hstech_uses_published_history_and_keeps_sina_fallback(monkeypatch):
     from app.domain.market.index_fetch import IndexFetchResult
     from app.infra.market_data.index_history_http import EastmoneyIndexHistoryProvider
     from app.infra.market_data.index_history_sina import SinaIndexHistoryProvider
@@ -527,12 +553,54 @@ def test_hstech_prefers_longer_index_history_and_keeps_sina_fallback(monkeypatch
         return IndexFetchResult(data=[], source="eastmoney")
     def sina(self, *args):
         calls.append("sina")
-        return IndexFetchResult(data=[[1, 10, 11, 9, 10, 0]], source="sina_hk")
+        return IndexFetchResult(data=[[int(datetime(2024,1,2,tzinfo=timezone.utc).timestamp()*1000), 10, 11, 9, 10, 0]], source="sina_hk")
     monkeypatch.setattr(EastmoneyIndexHistoryProvider, "fetch_history", eastmoney)
     monkeypatch.setattr(SinaIndexHistoryProvider, "fetch_hk_history", sina)
     monkeypatch.setattr(TencentIndexHistoryProvider, "fetch_history", tencent)
     sources = IndexHistorySources()
-    now = datetime.now(timezone.utc)
-    result = sources.fetch_history(INDEX_CATALOG["HK_HSTECH"], now, now)
-    assert calls == ["tencent", "eastmoney", "sina"]
+    day = datetime(2024,1,2,tzinfo=timezone.utc)
+    result = sources.fetch_history(INDEX_CATALOG["HK_HSTECH"], day, day)
+    assert calls == ["tencent", "sina"]
     assert result.source == "sina_hk"
+
+
+def test_partial_sources_merge_real_rows_and_replace_missing_ohlc_only():
+    first=int(datetime(2024,1,2,tzinfo=timezone.utc).timestamp()*1000)
+    def source_a(*_):
+        return IndexFetchResult(data=[[first,10,12,9,11,0],[first+86400000,12,12,12,12,0]],source='a')
+    def source_b(*_):
+        return IndexFetchResult(data=[[first,100,120,90,110,0],[first+86400000,11,13,10,12,0]],source='b')
+    sources=IndexHistorySources()
+    sources.providers=(source_a,source_b)
+    result=sources.fetch_history(INDEX_CATALOG['US_SP500'],datetime(2024,1,2,tzinfo=timezone.utc),datetime(2024,1,3,tzinfo=timezone.utc))
+    assert result.data==[[first,10,12,9,11,0],[first+86400000,11,13,10,12,0]]
+    assert result.source=='a+b' and not result.is_close_only
+
+
+def test_unsupported_old_calendar_does_not_stop_at_a_partial_source(monkeypatch):
+    def unavailable_calendar(*_):
+        raise ValueError('calendar does not cover this old range')
+    monkeypatch.setattr('app.services.market.index_history_sources.session_dates',unavailable_calendar)
+    old=int(datetime(1994,8,8,tzinfo=timezone.utc).timestamp()*1000)
+    recent=int(datetime(2024,1,2,tzinfo=timezone.utc).timestamp()*1000)
+    sources=IndexHistorySources()
+    sources.providers=(lambda *_:IndexFetchResult(data=[[recent,10,12,9,11,0]],source='recent'),
+        lambda *_:IndexFetchResult(data=[[old,5,7,4,6,0]],source='older'))
+    result=sources.fetch_history(INDEX_CATALOG['HK_HSCEI'],datetime(1994,8,8,tzinfo=timezone.utc),datetime(2024,1,2,tzinfo=timezone.utc))
+    assert [row[0] for row in result.data]==[old,recent] and result.source=='recent+older'
+
+
+@pytest.mark.parametrize('symbol',['HK_HSTECH','CN_CSI_A500','US_VIX'])
+def test_prelaunch_cache_never_leaks_into_published_history(symbol):
+    from app.domain.market.index_history_policy import live_start_ms,utc_datetime
+    launch=live_start_ms(symbol)
+    valid=[launch,10,12,9,11,0]
+    cache=FakeKlineStore([[launch-86400000,8,8,8,8,0],valid])
+    sources=FakeIndexHistorySources({})
+    start=utc_datetime(launch-86400000).date().isoformat()
+    day=utc_datetime(launch).date().isoformat()
+    result=IndexDataService(cache,sources).get_history(symbol=symbol,timeframe='1d',start_date=start,end_date=day)
+    assert [row.as_row() for row in result.data]==[valid]
+    assert result.coverage.start_date==day and sources.calls==[]
+    before=IndexDataService(cache,sources).get_history(symbol=symbol,timeframe='1d',start_date=start,end_date=start)
+    assert before.data==[] and sources.calls==[]
